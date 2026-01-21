@@ -1,0 +1,101 @@
+const { contextBridge, ipcRenderer } = require('electron');
+
+/**
+ * Preload script - Exposes secure APIs to renderer process
+ * This creates a bridge between React app and Electron main process
+ */
+
+contextBridge.exposeInMainWorld('electronAPI', {
+  // Check if running in Electron
+  isElectron: true,
+
+  // Get internal authentication token for API calls
+  getInternalToken: () => ipcRenderer.invoke('get-internal-token'),
+
+  // Mobile Access Password management
+  setMobilePassword: (password) => ipcRenderer.invoke('set-mobile-password', password),
+  getMobileAccessStatus: () => ipcRenderer.invoke('get-mobile-access-status'),
+  verifyPassword: (password) => ipcRenderer.invoke('verify-password', password),
+
+  // LocalStorage sync (for reading/writing from main process)
+  getLocalStorage: (key) => ipcRenderer.invoke('get-localStorage', key),
+  setLocalStorage: (key, value) => ipcRenderer.invoke('set-localStorage', key, value),
+
+  // Claude API calls (direct from desktop, no proxy needed)
+  callClaude: (message, context, options) => ipcRenderer.invoke('call-claude', message, context, options),
+
+  // Auto-updater functions
+  checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
+  getAppVersion: () => ipcRenderer.invoke('get-app-version'),
+  installUpdate: () => ipcRenderer.invoke('install-update'),
+
+  // Auto-updater event listeners
+  onUpdateAvailable: (callback) => {
+    ipcRenderer.on('update-available', (event, info) => callback(info));
+  },
+  onUpdateDownloading: (callback) => {
+    ipcRenderer.on('update-downloading', () => callback());
+  },
+  onUpdateProgress: (callback) => {
+    ipcRenderer.on('update-progress', (event, progress) => callback(progress));
+  },
+  onUpdateDownloaded: (callback) => {
+    ipcRenderer.on('update-downloaded', (event, info) => callback(info));
+  },
+  onUpdateError: (callback) => {
+    ipcRenderer.on('update-error', (event, error) => callback(error));
+  },
+
+  // Encrypted Backup System
+  getAutoBackupSettings: () => ipcRenderer.invoke('get-auto-backup-settings'),
+  setAutoBackupSettings: (settings) => ipcRenderer.invoke('set-auto-backup-settings', settings),
+  listBackups: () => ipcRenderer.invoke('list-backups'),
+  createBackup: (password) => ipcRenderer.invoke('create-backup', password),
+  restoreBackup: (filepath, password) => ipcRenderer.invoke('restore-backup', filepath, password),
+  deleteBackup: (filepath) => ipcRenderer.invoke('delete-backup', filepath),
+  getBackupsFolder: () => ipcRenderer.invoke('get-backups-folder'),
+
+  // License Validation
+  validateLicense: () => ipcRenderer.invoke('validate-license'),
+  getLicenseStatus: () => ipcRenderer.invoke('get-license-status'),
+  onLicenseStatus: (callback) => {
+    ipcRenderer.on('license-status', (event, status) => callback(status));
+  },
+  removeLicenseStatusListener: () => {
+    ipcRenderer.removeAllListeners('license-status');
+  },
+
+  // PCRS Statement Automation
+  pcrs: {
+    start: (options) => ipcRenderer.invoke('pcrs:start', options),
+    checkSession: () => ipcRenderer.invoke('pcrs:checkSession'),
+    clearSession: () => ipcRenderer.invoke('pcrs:clearSession'),
+    getPanels: () => ipcRenderer.invoke('pcrs:getPanels'),
+    getStatements: (panelId) => ipcRenderer.invoke('pcrs:getStatements', panelId),
+    downloadStatements: (options) => ipcRenderer.invoke('pcrs:downloadStatements', options),
+    close: () => ipcRenderer.invoke('pcrs:close'),
+    setBounds: (bounds) => ipcRenderer.invoke('pcrs:setBounds', bounds),
+    getDownloadPath: () => ipcRenderer.invoke('pcrs:getDownloadPath'),
+    getDownloadedFiles: () => ipcRenderer.invoke('pcrs:getDownloadedFiles'),
+    // Event listeners
+    onStatus: (callback) => {
+      ipcRenderer.on('pcrs:status', (event, data) => callback(data));
+    },
+    onAuthStateChanged: (callback) => {
+      ipcRenderer.on('pcrs:authStateChanged', (event, data) => callback(data));
+    },
+    removeStatusListener: () => {
+      ipcRenderer.removeAllListeners('pcrs:status');
+    },
+    removeAuthListener: () => {
+      ipcRenderer.removeAllListeners('pcrs:authStateChanged');
+    }
+  },
+
+  // Platform info
+  platform: process.platform,
+  version: process.versions.electron
+});
+
+// Log that preload is loaded
+console.log('[Preload] Electron API bridge initialized');

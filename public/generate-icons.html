@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate PWA Icons - Sláinte Finance</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f3f4f6;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1e40af;
+            margin-bottom: 10px;
+        }
+        .description {
+            color: #6b7280;
+            margin-bottom: 30px;
+        }
+        .preview {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        .preview-item {
+            text-align: center;
+        }
+        canvas {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            max-width: 100%;
+        }
+        button {
+            background: #1e40af;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #1e3a8a;
+        }
+        .success {
+            background: #10b981;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+        .instructions {
+            background: #eff6ff;
+            border-left: 4px solid #1e40af;
+            padding: 16px;
+            border-radius: 4px;
+            margin-top: 30px;
+        }
+        .instructions h3 {
+            color: #1e40af;
+            margin-top: 0;
+        }
+        .instructions ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Generate PWA Icons</h1>
+        <p class="description">Generate icon-192.png and icon-512.png for your Progressive Web App</p>
+
+        <div class="preview">
+            <div class="preview-item">
+                <h3>192x192 Icon</h3>
+                <canvas id="canvas-192" width="192" height="192"></canvas>
+                <button onclick="downloadIcon(192)">Download icon-192.png</button>
+            </div>
+            <div class="preview-item">
+                <h3>512x512 Icon</h3>
+                <canvas id="canvas-512" width="512" height="512"></canvas>
+                <button onclick="downloadIcon(512)">Download icon-512.png</button>
+            </div>
+        </div>
+
+        <button onclick="downloadBoth()" style="background: #10b981;">
+            ⬇️ Download Both Icons
+        </button>
+
+        <div class="success" id="success">
+            ✓ Icons generated successfully!
+        </div>
+
+        <div class="instructions">
+            <h3>📋 After Downloading:</h3>
+            <ol>
+                <li>Save both icons to the <code>/public</code> folder</li>
+                <li>Refresh your browser (Ctrl+Shift+R)</li>
+                <li>The console error should disappear</li>
+                <li>Test PWA install on your phone</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        const COLORS = {
+            darkGray: '#374151',
+            slainteBlue: '#1e40af',
+            white: '#ffffff'
+        };
+
+        function drawLogo(canvas, size) {
+            const ctx = canvas.getContext('2d');
+
+            // Fill background
+            ctx.fillStyle = COLORS.white;
+            ctx.fillRect(0, 0, size, size);
+
+            // Calculate scaling and positioning
+            const scale = size / 512;
+            const logoWidth = 240 * scale;
+            const logoHeight = 100 * scale;
+            const x = (size - logoWidth) / 2;
+            const y = (size - logoHeight) / 2;
+
+            // Set text properties
+            ctx.textBaseline = 'top';
+            ctx.textAlign = 'left';
+
+            // Draw "sl[AI]nte" - larger font
+            const mainFontSize = 64 * scale;
+            ctx.font = `bold ${mainFontSize}px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
+
+            let currentX = x;
+            const textY = y + 10 * scale;
+
+            // "sl"
+            ctx.fillStyle = COLORS.darkGray;
+            ctx.fillText('sl', currentX, textY);
+            currentX += ctx.measureText('sl').width;
+
+            // "[AI]"
+            ctx.fillStyle = COLORS.slainteBlue;
+            ctx.fillText('[AI]', currentX, textY);
+            currentX += ctx.measureText('[AI]').width;
+
+            // "nte"
+            ctx.fillStyle = COLORS.darkGray;
+            ctx.fillText('nte', currentX, textY);
+
+            // Draw "Finance" subtitle
+            const subFontSize = 28 * scale;
+            ctx.font = `500 ${subFontSize}px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
+            ctx.fillStyle = COLORS.slainteBlue;
+            const financeX = x + 52 * scale;
+            const financeY = y + 68 * scale;
+            ctx.fillText('Finance', financeX, financeY);
+
+            // Optional: Add subtle border for better visibility
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(1, 1, size - 2, size - 2);
+        }
+
+        function downloadIcon(size) {
+            const canvas = document.getElementById(`canvas-${size}`);
+            canvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `icon-${size}.png`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                document.getElementById('success').style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('success').style.display = 'none';
+                }, 3000);
+            }, 'image/png');
+        }
+
+        function downloadBoth() {
+            downloadIcon(192);
+            setTimeout(() => downloadIcon(512), 500);
+        }
+
+        // Draw icons on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            drawLogo(document.getElementById('canvas-192'), 192);
+            drawLogo(document.getElementById('canvas-512'), 512);
+        });
+    </script>
+</body>
+</html>
