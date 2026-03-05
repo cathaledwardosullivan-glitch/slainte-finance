@@ -1,7 +1,7 @@
 {
   "name": "slainte-finance-v2",
   "private": true,
-  "version": "2.2.1",
+  "version": "2.2.2",
   "description": "Sláinte Finance - GP Practice Financial Management",
   "author": "Sláinte Health <slainte.finance@gmail.com>",
   "main": "electron/main.cjs",

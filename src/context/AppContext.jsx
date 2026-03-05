@@ -307,6 +307,12 @@ export const AppProvider = ({ children }) => {
             }
             return year;
         }));
+        // Also include years from PCRS/GMS payment analysis data
+        if (paymentAnalysisData && paymentAnalysisData.length > 0) {
+            paymentAnalysisData.forEach(d => {
+                if (d.year) years.add(Number(d.year));
+            });
+        }
         return Array.from(years).filter(Boolean).sort((a, b) => b - a);
     };
 
