@@ -178,7 +178,7 @@ const GMSOverview = ({ setCurrentView }) => {
         }}
       >
         {activeSubView === 'dashboard' && (
-          <PaymentAnalysis setCurrentView={setCurrentView} selectedYear={selectedYear.toString()} setSelectedYear={(year) => setSelectedYear(parseInt(year))} />
+          <PaymentAnalysis setCurrentView={setCurrentView} selectedYear={selectedYear.toString()} setSelectedYear={(year) => setSelectedYear(parseInt(year))} useRollingYear={useRollingYear} />
         )}
         {activeSubView === 'health-check' && (
           <GMSHealthCheck setCurrentView={setCurrentView} />

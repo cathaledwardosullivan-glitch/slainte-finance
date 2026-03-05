@@ -17,7 +17,7 @@ import {
     ResponsiveContainer
 } from 'recharts';
 
-const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSelectedYear: propSetSelectedYear }) => {
+const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSelectedYear: propSetSelectedYear, useRollingYear = false }) => {
     const {
         paymentAnalysisData,
         setPaymentAnalysisData
@@ -670,7 +670,7 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
                     }
                 };
 
-                // Build monthly data for each year
+                // Build monthly data for a given year
                 const buildMonthlyData = (year) => {
                     const yearData = paymentAnalysisData.filter(d => d.year === year.toString());
                     return MONTHS.map(month => {
@@ -688,15 +688,49 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
                     });
                 };
 
-                const currentYearData = buildMonthlyData(currentYear);
-                const previousYearData = buildMonthlyData(previousYear);
+                // Build rolling 12-month data
+                const buildRolling12MonthData = (offsetYears = 0) => {
+                    const today = new Date();
+                    const result = [];
+                    for (let i = 11; i >= 0; i--) {
+                        const date = new Date(today.getFullYear() - offsetYears, today.getMonth() - i, 1);
+                        const year = date.getFullYear().toString();
+                        const month = MONTHS[date.getMonth()];
+                        const label = `${month} ${date.getFullYear().toString().slice(2)}`;
 
-                // Combine into comparison data
-                const comparisonData = MONTHS.map((month, idx) => ({
-                    month,
-                    current: currentYearData[idx][gmsChartMode] || 0,
-                    previous: previousYearData[idx][gmsChartMode] || 0
-                }));
+                        const monthData = paymentAnalysisData.filter(d => d.year === year && d.month === month);
+                        const totals = {};
+
+                        Object.keys(categoryGroups).forEach(groupKey => {
+                            const group = categoryGroups[groupKey];
+                            totals[groupKey] = monthData.reduce((sum, data) => {
+                                return sum + group.categories.reduce((catSum, cat) => catSum + (data.payments?.[cat] || 0), 0);
+                            }, 0);
+                        });
+
+                        result.push({ month: label, ...totals });
+                    }
+                    return result;
+                };
+
+                let comparisonData;
+                if (useRollingYear) {
+                    const currentRolling = buildRolling12MonthData(0);
+                    const previousRolling = buildRolling12MonthData(1);
+                    comparisonData = currentRolling.map((d, idx) => ({
+                        month: d.month,
+                        current: d[gmsChartMode] || 0,
+                        previous: previousRolling[idx][gmsChartMode] || 0
+                    }));
+                } else {
+                    const currentYearData = buildMonthlyData(currentYear);
+                    const previousYearData = buildMonthlyData(previousYear);
+                    comparisonData = MONTHS.map((month, idx) => ({
+                        month,
+                        current: currentYearData[idx][gmsChartMode] || 0,
+                        previous: previousYearData[idx][gmsChartMode] || 0
+                    }));
+                }
 
                 const config = categoryGroups[gmsChartMode];
 
@@ -711,7 +745,7 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-semibold flex items-center" style={{ color: COLORS.darkGray }}>
                                 <TrendingUp className="h-5 w-5 mr-2" style={{ color: config.color }} />
-                                {config.label}: {currentYear} vs {previousYear}
+                                {config.label}: {useRollingYear ? 'Last 12 Months vs Prior 12' : `${currentYear} vs ${previousYear}`}
                             </h3>
                         </div>
 
@@ -748,7 +782,7 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
                                 <Tooltip
                                     formatter={(value, name) => [
                                         `€${value.toLocaleString()}`,
-                                        name === 'current' ? currentYear : previousYear
+                                        name === 'current' ? (useRollingYear ? 'Last 12 Months' : currentYear) : (useRollingYear ? 'Prior 12 Months' : previousYear)
                                     ]}
                                     contentStyle={{
                                         backgroundColor: 'white',
@@ -758,7 +792,7 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
                                     }}
                                 />
                                 <Legend
-                                    formatter={(value) => value === 'current' ? currentYear : previousYear}
+                                    formatter={(value) => value === 'current' ? (useRollingYear ? 'Last 12 Months' : currentYear) : (useRollingYear ? 'Prior 12 Months' : previousYear)}
                                 />
                                 <Line
                                     type="monotone"
@@ -786,13 +820,13 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
                         <div className="mt-4 pt-4 border-t flex items-center justify-between" style={{ borderColor: COLORS.lightGray }}>
                             <div className="flex items-center gap-6">
                                 <div>
-                                    <p className="text-xs" style={{ color: COLORS.mediumGray }}>{currentYear} Total</p>
+                                    <p className="text-xs" style={{ color: COLORS.mediumGray }}>{useRollingYear ? 'Last 12 Months' : `${currentYear} Total`}</p>
                                     <p className="text-lg font-semibold" style={{ color: config.color }}>
                                         {`€${Math.round(currentTotal).toLocaleString()}`}
                                     </p>
                                 </div>
                                 <div>
-                                    <p className="text-xs" style={{ color: COLORS.mediumGray }}>{previousYear} Total</p>
+                                    <p className="text-xs" style={{ color: COLORS.mediumGray }}>{useRollingYear ? 'Prior 12 Months' : `${previousYear} Total`}</p>
                                     <p className="text-lg font-semibold" style={{ color: config.lightColor }}>
                                         {`€${Math.round(previousTotal).toLocaleString()}`}
                                     </p>
