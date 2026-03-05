@@ -226,8 +226,8 @@ const GMSTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
   return (
     <>
       {/* Main Modal - View All Tasks */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-        <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[80vh] flex flex-col" style={{ border: `1px solid ${COLORS.lightGray}` }}>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 overflow-y-auto">
+        <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl flex flex-col" style={{ border: `1px solid ${COLORS.lightGray}`, maxHeight: 'calc(100vh - 2rem)' }}>
           <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: COLORS.lightGray }}>
             <div className="flex items-center gap-3">
               <Target className="h-5 w-5" style={{ color: COLORS.slainteBlue }} />

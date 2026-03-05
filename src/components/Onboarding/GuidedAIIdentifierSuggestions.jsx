@@ -3,34 +3,12 @@ import { CheckCircle, ArrowRight, User, MessageCircle, Users, Brain, Loader, Plu
 import COLORS from '../../utils/colors';
 import { useAppContext } from '../../context/AppContext';
 import { callClaude } from '../../utils/claudeAPI';
+import { MODELS } from '../../data/modelConfig';
 import { getRoleCode } from '../../utils/categoryGenerator';
 
-// Typing animation hook
-const useTypingEffect = (text, speed = 30) => {
-  const [displayedText, setDisplayedText] = useState('');
-  const [isComplete, setIsComplete] = useState(false);
-
-  useEffect(() => {
-    if (!text) return;
-
-    let index = 0;
-    setDisplayedText('');
-    setIsComplete(false);
-
-    const timer = setInterval(() => {
-      if (index < text.length) {
-        setDisplayedText(text.substring(0, index + 1));
-        index++;
-      } else {
-        setIsComplete(true);
-        clearInterval(timer);
-      }
-    }, speed);
-
-    return () => clearInterval(timer);
-  }, [text, speed]);
-
-  return { displayedText, isComplete };
+// Instant text display (typing animation disabled)
+const useTypingEffect = (text) => {
+  return { displayedText: text || '', isComplete: true };
 };
 
 export default function GuidedAIIdentifierSuggestions({ onComplete }) {
@@ -166,7 +144,7 @@ If no useful patterns found, return empty array: []`;
 
       // Call Claude API
       const response = await callClaude(prompt, {
-        model: 'claude-haiku-4-5-20251001',
+        model: MODELS.FAST,
         maxTokens: 2000,
         apiKey: apiKey
       });
@@ -441,7 +419,7 @@ If no useful patterns found, return empty array: []`;
       margin: '0 auto',
       height: 'min(75vh, 700px)'
     }}>
-      {/* Left side - Cara Chat Box */}
+      {/* Left side - Finn Chat Box */}
       <div style={{
         flex: '1 1 45%',
         minWidth: '450px',
@@ -476,7 +454,7 @@ If no useful patterns found, return empty array: []`;
             <User style={{ height: '1.25rem', width: '1.25rem' }} />
           </div>
           <div>
-            <div style={{ fontWeight: 600, fontSize: '1rem' }}>Cara</div>
+            <div style={{ fontWeight: 600, fontSize: '1rem' }}>Finn</div>
             <div style={{ fontSize: '0.75rem', opacity: 0.9 }}>Sláinte Guide</div>
           </div>
         </div>

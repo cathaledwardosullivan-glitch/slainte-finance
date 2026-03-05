@@ -11,6 +11,71 @@
 import { CATEGORY_MAPPING as DEFAULT_CATEGORY_MAPPING } from '../data/categoryMappings';
 
 /**
+ * Generate comprehensive identifier variations for a name
+ * Handles Irish names (O'Sullivan, Mc, Mac), special characters, and common bank format variations
+ *
+ * @param {string} name - The name to generate identifiers for
+ * @returns {Array<string>} Array of unique identifier variations
+ */
+function generateNameIdentifiers(name) {
+    if (!name || name.trim().length === 0) return [];
+
+    const identifiers = new Set();
+
+    // Clean the name - remove Dr. prefix if present
+    const cleanedName = name.replace(/^Dr\.?\s*/i, '').trim();
+    if (cleanedName.length === 0) return [];
+
+    // Add the original name (without Dr.)
+    identifiers.add(cleanedName);
+
+    // Split into parts
+    const nameParts = cleanedName.split(/\s+/);
+
+    // Add individual parts if long enough
+    for (const part of nameParts) {
+        if (part.length >= 3) {
+            identifiers.add(part);
+        }
+    }
+
+    // Handle Irish prefixes (O', Mc, Mac) - very common in Irish bank transactions
+    // Bank often formats as "O SULLIVAN" instead of "O'Sullivan"
+    const irishPrefixPattern = /^(O['']?|Mc|Mac)(.+)$/i;
+    for (const part of nameParts) {
+        const match = part.match(irishPrefixPattern);
+        if (match) {
+            const prefix = match[1].replace(/['']/, '').toUpperCase(); // "O'" → "O"
+            const rest = match[2];
+
+            // Add variations: "O SULLIVAN", "OSULLIVAN", "O'SULLIVAN"
+            identifiers.add(`${prefix} ${rest}`);  // "O SULLIVAN"
+            identifiers.add(`${prefix}${rest}`);   // "OSULLIVAN"
+            identifiers.add(rest);                  // "SULLIVAN" (just the surname part)
+        }
+    }
+
+    // Add letters-only version (handles any special characters)
+    const lettersOnly = cleanedName.replace(/[^A-Za-z\s]/g, '').replace(/\s+/g, ' ').trim();
+    if (lettersOnly && lettersOnly !== cleanedName && lettersOnly.length >= 3) {
+        identifiers.add(lettersOnly);
+        // Also add without spaces
+        const noSpaces = lettersOnly.replace(/\s/g, '');
+        if (noSpaces.length >= 3) {
+            identifiers.add(noSpaces);
+        }
+    }
+
+    // Add full name without any spaces or special chars (common bank format)
+    const compacted = cleanedName.replace(/[^A-Za-z]/g, '');
+    if (compacted.length >= 3 && compacted !== cleanedName) {
+        identifiers.add(compacted);
+    }
+
+    return Array.from(identifiers).filter(id => id.length >= 3);
+}
+
+/**
  * Generate complete category mapping from unified profile
  *
  * @param {Object} profile - Unified practice profile
@@ -31,27 +96,9 @@ export function generateCategoriesFromProfile(profile) {
     // 1. Generate PARTNER DRAWING categories (90.x)
     if (profile.gps?.partners?.length > 0) {
         profile.gps.partners.forEach((partner, index) => {
-            // Remove "Dr." prefix from name for identifiers
-            const nameWithoutTitle = partner.name.replace(/^Dr\.?\s*/i, '').trim();
-            const identifiers = [];
-
-            // Add name variations for matching (without Dr. prefix)
-            const nameParts = nameWithoutTitle.split(/\s+/);
-            if (nameParts.length > 1) {
-                // Add last name first (most likely to appear in transactions)
-                if (nameParts[nameParts.length - 1].length >= 3) {
-                    identifiers.push(nameParts[nameParts.length - 1]);
-                }
-                // Add full name without title
-                identifiers.push(nameWithoutTitle);
-                // Add first name if reasonable length
-                if (nameParts[0].length >= 3) {
-                    identifiers.push(nameParts[0]);
-                }
-            } else {
-                // Single name part - just use it
-                identifiers.push(nameWithoutTitle);
-            }
+            // Generate comprehensive identifier variations for partner name
+            // Handles Irish names (O'Sullivan → O SULLIVAN, OSULLIVAN, etc.)
+            const identifiers = generateNameIdentifiers(partner.name);
 
             const categoryCode = `90.${index + 1}`;
 
@@ -87,18 +134,8 @@ export function generateCategoriesFromProfile(profile) {
         let nextIndex = existing6xCodes.length > 0 ? Math.max(...existing6xCodes) + 1 : 1;
 
         profile.gps.salaried.forEach((salariedGP, index) => {
-            const identifiers = [salariedGP.name];
-
-            // Add name variations
-            const nameParts = salariedGP.name.replace(/^Dr\.?\s*/i, '').split(/\s+/);
-            if (nameParts.length > 1) {
-                if (nameParts[nameParts.length - 1].length >= 3) {
-                    identifiers.push(nameParts[nameParts.length - 1]);
-                }
-                if (nameParts[0].length >= 3) {
-                    identifiers.push(nameParts[0]);
-                }
-            }
+            // Generate comprehensive identifier variations for salaried GP name
+            const identifiers = generateNameIdentifiers(salariedGP.name);
 
             const categoryCode = `6.${nextIndex + index}`;
 
@@ -136,23 +173,8 @@ export function generateCategoriesFromProfile(profile) {
             members.forEach((member, index) => {
                 const categoryCode = `${roleCode}.${index + 1}`;
 
-                // Generate identifiers
-                const identifiers = [member.name];
-                const nameParts = member.name.split(/\s+/);
-                if (nameParts.length > 1) {
-                    if (nameParts[0].length >= 3) {
-                        identifiers.push(nameParts[0]);
-                    }
-                    if (nameParts[nameParts.length - 1].length >= 3) {
-                        identifiers.push(nameParts[nameParts.length - 1]);
-                    }
-                }
-
-                // Clean name (remove special characters)
-                const cleanName = member.name.replace(/[^A-Za-z]/g, '');
-                if (cleanName && cleanName !== member.name && cleanName.length >= 3) {
-                    identifiers.push(cleanName);
-                }
+                // Generate comprehensive identifier variations for staff member name
+                const identifiers = generateNameIdentifiers(member.name);
 
                 // Get role name for display
                 const roleName = getRoleDisplayName(member.role);

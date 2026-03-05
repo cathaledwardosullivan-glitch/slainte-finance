@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Activity, DollarSign } from 'lucide-react';
+import { Stethoscope, Euro } from 'lucide-react';
 
 // Import the AppProvider to make the context available
 import { AppProvider, useAppContext } from './context/AppContext';
@@ -10,24 +10,29 @@ import { FinnProvider } from './context/FinnContext';
 // Import TasksProvider for the tasks widget
 import { TasksProvider } from './context/TasksContext';
 
+// Import ProcessingFlow for transaction processing
+import { ProcessingFlowProvider } from './components/ProcessingFlow';
+
 // Import color constants
 import COLORS from './utils/colors';
 
 // Import components
 import { FloatingFinancialChat } from './components/FloatingFinancialChat';
 import UnifiedFinnWidget from './components/UnifiedFinnWidget';
+import FloatingFeedbackButton from './components/UnifiedFinnWidget/FloatingFeedbackButton';
 import TasksWidget from './components/TasksWidget';
 import SlainteLogo from './components/SlainteLogo';
 import ModuleSelector from './components/ModuleSelector';
 import UnifiedOnboarding from './components/UnifiedOnboarding';
-import FinancesOverview from './components/FinancesOverview';
-import GMSOverview from './components/GMSOverview';
+import BusinessOverview from './components/BusinessOverview';
+import NewGMSHealthCheck from './components/NewGMSHealthCheck';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import PWAUpdateNotification from './components/PWAUpdateNotification';
 import LoginScreen from './components/LoginScreen';
 import LicenseLockout from './components/LicenseLockout';
 import SettingsModal from './components/Settings';
 import SettingsButton from './components/Settings/SettingsButton';
+import DaraSupport from './components/DaraSupport';
 
 /**
  * Legacy view mapping - redirects old view IDs to new consolidated tabs
@@ -36,19 +41,25 @@ import SettingsButton from './components/Settings/SettingsButton';
  */
 const mapLegacyView = (viewId) => {
   const legacyMapping = {
-    // Financial views -> Finances Overview
-    'dashboard': 'finances-overview',
-    'export': 'finances-overview',
-    'transactions': 'finances-overview',
-    'chat': 'finances-overview',
-    // GMS views -> GMS Overview
-    'gms-panel': 'gms-overview',
-    'gms-health-check': 'gms-overview',
-    'interactive-health-check': 'gms-overview',
+    // Financial views -> Business Overview
+    'dashboard': 'business-overview',
+    'export': 'business-overview',
+    'transactions': 'business-overview',
+    'chat': 'business-overview',
+    'finances-overview': 'business-overview',
+    // GMS dashboard views -> Business Overview
+    'gms-panel': 'business-overview',
+    'gms-overview': 'business-overview',
+    // GMS Health Check views -> GMS Health Check tab
+    'gms-health-check': 'gms-health-check',
+    'interactive-health-check': 'gms-health-check',
+    'new-health-check': 'gms-health-check',
     // Admin -> Opens Settings modal (handled separately)
-    'admin': 'finances-overview', // Default to finances, settings modal opens via callback
-    // Upload -> Finances Overview (upload is in Settings now)
-    'upload': 'finances-overview'
+    'admin': 'business-overview', // Default to business, settings modal opens via callback
+    // Upload -> Business Overview (upload is in Settings now)
+    'upload': 'business-overview',
+    // Dara EHR Support -> passes through
+    'dara-support': 'dara-support'
   };
   return legacyMapping[viewId] || viewId;
 };
@@ -60,9 +71,40 @@ import { TourProvider, TourOverlay } from './components/Tour';
 import LANMobileWrapper from './components/LANMobileWrapper';
 import { isLANMode } from './hooks/useLANMode';
 
+/**
+ * ConnectedPracticeBanner — Shows a subtle amber banner when this install
+ * is connected to another practice computer and data is stale (>24h).
+ */
+function ConnectedPracticeBanner() {
+  const address = localStorage.getItem('connected_practice_address');
+  const lastRefresh = localStorage.getItem('connected_practice_last_refresh');
+  const practiceName = localStorage.getItem('connected_practice_name');
+
+  if (!address || !lastRefresh) return null;
+
+  const hoursSince = (Date.now() - new Date(lastRefresh).getTime()) / 3600000;
+  if (hoursSince < 24) return null;
+
+  const daysAgo = Math.floor(hoursSince / 24);
+  const timeLabel = daysAgo === 1 ? '1 day ago' : `${daysAgo} days ago`;
+
+  return (
+    <div style={{
+      backgroundColor: 'rgba(255, 210, 60, 0.12)',
+      borderBottom: `1px solid rgba(255, 210, 60, 0.3)`,
+      padding: '0.5rem 1rem',
+      textAlign: 'center',
+      fontSize: '0.8125rem',
+      color: '#8B6914'
+    }}>
+      Practice data from {practiceName || address} last refreshed {timeLabel} — open Settings &rarr; Connected Practice to refresh
+    </div>
+  );
+}
+
 // This is the main layout component, now with mobile responsiveness.
 function AppLayout() {
-    const [currentView, setCurrentViewInternal] = useState('finances-overview');
+    const [currentView, setCurrentViewInternal] = useState('business-overview');
     const [isMobile, setIsMobile] = useState(false);
     const [showOnboarding, setShowOnboarding] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
@@ -92,7 +134,6 @@ function AppLayout() {
         transactions = [],
         unidentifiedTransactions = [],
         paymentAnalysisData = [],
-        showSensitiveData = true,
         selectedYear = new Date().getFullYear(),
         categoryMapping = []
     } = contextData;
@@ -148,13 +189,47 @@ function AppLayout() {
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
+    // Listen for tour events to open/close Settings modal
+    useEffect(() => {
+        const handleOpenSettings = () => setShowSettings(true);
+        const handleCloseSettings = () => setShowSettings(false);
+        const handleNavigateToSettings = (e) => {
+            setShowSettings(true);
+            if (e.detail?.section) {
+                // Delay slightly so Settings modal mounts before switching section
+                setTimeout(() => {
+                    window.dispatchEvent(new CustomEvent('tour:switchSettingsSection', { detail: e.detail.section }));
+                }, 50);
+            }
+        };
+
+        window.addEventListener('tour:openSettingsModal', handleOpenSettings);
+        window.addEventListener('tour:closeSettingsModal', handleCloseSettings);
+        window.addEventListener('navigate-to-settings', handleNavigateToSettings);
+
+        return () => {
+            window.removeEventListener('tour:openSettingsModal', handleOpenSettings);
+            window.removeEventListener('tour:closeSettingsModal', handleCloseSettings);
+            window.removeEventListener('navigate-to-settings', handleNavigateToSettings);
+        };
+    }, []);
+
+    // Listen for health check navigation events (from PaymentAnalysis KPI boxes)
+    useEffect(() => {
+        const handleSwitchToHealthCheck = () => setCurrentView('gms-health-check');
+        window.addEventListener('tour:switchToHealthCheck', handleSwitchToHealthCheck);
+        return () => window.removeEventListener('tour:switchToHealthCheck', handleSwitchToHealthCheck);
+    }, [setCurrentView]);
+
     // Handle onboarding completion
     const handleOnboardingComplete = (result) => {
         console.log('Onboarding completed:', result);
         setShowOnboarding(false);
 
-        // Reload to apply new categories and profile
-        window.location.reload();
+        // Navigate with tour offer flag in URL (localStorage unreliable across Electron reload)
+        const url = new URL(window.location.href);
+        url.searchParams.set('tour', 'offer');
+        window.location.href = url.toString();
     };
 
     // Handle onboarding skip
@@ -166,10 +241,12 @@ function AppLayout() {
     // Show onboarding if needed
     if (showOnboarding) {
         return (
-            <UnifiedOnboarding
-                onComplete={handleOnboardingComplete}
-                onSkip={handleOnboardingSkip}
-            />
+            <ProcessingFlowProvider>
+                <UnifiedOnboarding
+                    onComplete={handleOnboardingComplete}
+                    onSkip={handleOnboardingSkip}
+                />
+            </ProcessingFlowProvider>
         );
     }
 
@@ -191,8 +268,12 @@ function AppLayout() {
 
     // Desktop layout (your existing layout)
     return (
-        <TourProvider setCurrentView={setCurrentView} currentView={currentView}>
-        <div className="min-h-screen" style={{ backgroundColor: COLORS.backgroundGray }}>
+        <TourProvider setCurrentView={setCurrentView} currentView={currentView} onTourStart={() => setShowSettings(false)}>
+        <ProcessingFlowProvider>
+        <div className="min-h-screen" style={{
+            backgroundColor: COLORS.backgroundGray,
+            ...(currentView === 'dara-support' ? { height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' } : {})
+        }}>
             <header className="shadow-sm" style={{ backgroundColor: COLORS.white, borderBottom: `1px solid ${COLORS.lightGray}` }}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center py-4">
@@ -202,17 +283,17 @@ function AppLayout() {
                                 Putting Ai at the Heart of Healthcare
                             </span>
                         </div>
-                        <ModuleSelector />
+                        <ModuleSelector onNavigate={setCurrentView} />
                     </div>
                 </div>
             </header>
 
-            <nav style={{ backgroundColor: COLORS.white, borderBottom: `1px solid ${COLORS.lightGray}` }} data-tour-id="nav-tabs">
+            {currentView !== 'dara-support' && <nav style={{ backgroundColor: COLORS.white, borderBottom: `1px solid ${COLORS.lightGray}` }} data-tour-id="nav-tabs">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex space-x-8 justify-center">
                             {[
-                                { id: 'finances-overview', label: 'Finances Overview', icon: DollarSign },
-                                { id: 'gms-overview', label: 'GMS Overview', icon: Activity }
+                                { id: 'business-overview', label: 'Business Overview', icon: Euro },
+                                { id: 'gms-health-check', label: 'GMS Health Check', icon: Stethoscope }
                             ].map((item) => (
                                 <button
                                     key={item.id}
@@ -239,17 +320,27 @@ function AppLayout() {
                             ))}
                     </div>
                 </div>
-            </nav>
+            </nav>}
 
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {currentView === 'finances-overview' && <FinancesOverview setCurrentView={setCurrentView} />}
-                {currentView === 'gms-overview' && <GMSOverview setCurrentView={setCurrentView} />}
-            </main>
+            {/* Stale data indicator for connected installs */}
+            <ConnectedPracticeBanner />
+
+            {currentView === 'dara-support' ? (
+              <main style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+                <DaraSupport />
+              </main>
+            ) : (
+              <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {currentView === 'business-overview' && <BusinessOverview setCurrentView={setCurrentView} />}
+                {currentView === 'gms-health-check' && <NewGMSHealthCheck />}
+              </main>
+            )}
 
             {/* Chat Widget - Conditionally render unified Finn or legacy Cara */}
             {useUnifiedFinn ? (
               <FinnProvider>
                 <UnifiedFinnWidget currentView={currentView} />
+                <FloatingFeedbackButton />
               </FinnProvider>
             ) : (
               <FloatingFinancialChat currentView={currentView} />
@@ -268,8 +359,8 @@ function AppLayout() {
             <PWAInstallPrompt />
             <PWAUpdateNotification />
 
-            {/* Footer */}
-            <footer className="mt-12" style={{ backgroundColor: COLORS.white, borderTop: `1px solid ${COLORS.lightGray}` }}>
+            {/* Footer — hidden on Dara view to preserve fixed layout */}
+            <footer className="mt-12" style={{ backgroundColor: COLORS.white, borderTop: `1px solid ${COLORS.lightGray}`, ...(currentView === 'dara-support' ? { display: 'none' } : {}) }}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2 text-sm" style={{ color: COLORS.mediumGray }}>
@@ -286,6 +377,7 @@ function AppLayout() {
 
         {/* Tour Overlay - renders when tour is active */}
         <TourOverlay />
+        </ProcessingFlowProvider>
         </TourProvider>
     );
 }
@@ -460,9 +552,17 @@ export default function App() {
         setIsAuthenticated(true);
     };
 
+    const handleLicenseRetry = async () => {
+        if (!window.electronAPI?.validateLicense) return;
+        const result = await window.electronAPI.validateLicense();
+        if (result.valid) {
+            setIsLicenseLocked(false);
+        }
+    };
+
     // Show lockout screen FIRST if license is locked (highest priority)
     if (isLicenseLocked) {
-        return <LicenseLockout />;
+        return <LicenseLockout onRetry={handleLicenseRetry} />;
     }
 
     // Show loading while checking auth or license

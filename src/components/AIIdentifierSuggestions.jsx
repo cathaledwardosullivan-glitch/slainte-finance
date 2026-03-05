@@ -3,6 +3,7 @@ import { Brain, Plus, X, CheckCircle, Loader } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import COLORS from '../utils/colors';
 import { callClaude } from '../utils/claudeAPI';
+import { MODELS } from '../data/modelConfig';
 
 /**
  * AIIdentifierSuggestions
@@ -121,7 +122,7 @@ If no useful patterns found, return empty array: []`;
 
       // Call Claude API using unified helper
       const response = await callClaude(prompt, {
-        model: 'claude-haiku-4-5-20251001',
+        model: MODELS.FAST,
         maxTokens: 2000,
         apiKey: apiKey
       });

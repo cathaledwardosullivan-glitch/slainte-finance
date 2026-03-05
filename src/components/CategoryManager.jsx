@@ -111,7 +111,6 @@ export default function CategoryManager() {
         paymentAnalysisData,
         setPaymentAnalysisData,
         selectedYear,
-        showSensitiveData,
         clearAllData,
         reapplyCategories
     } = useAppContext();
@@ -361,12 +360,12 @@ export default function CategoryManager() {
                 subGroupName = 'Medical Supplies';
             } else if (category.section === 'PREMISES COSTS') {
                 subGroupName = 'Premises';
-            } else if (category.section === 'OFFICE & ADMIN' || category.section === 'SOFTWARE & IT') {
+            } else if (category.section === 'OFFICE & IT') {
                 subGroupName = 'Office & IT';
             } else if (category.section === 'PROFESSIONAL FEES' || category.section === 'PROFESSIONAL DEV') {
                 subGroupName = 'Professional';
-            } else if (['MOTOR & TRANSPORT', 'CAPITAL & DEPRECIATION', 'OTHER EXPENSES'].includes(category.section)) {
-                subGroupName = 'Other Expenses';
+            } else if (['MOTOR & TRANSPORT', 'CAPITAL & DEPRECIATION', 'PETTY CASH / OTHER EXPENSES'].includes(category.section)) {
+                subGroupName = 'Petty Cash / Other';
             }
 
             if (subGroupName) {
@@ -485,7 +484,7 @@ export default function CategoryManager() {
         }
 
         // 4. Office & IT (combines Office & Admin + Software & IT)
-        const officeITSections = ['OFFICE & ADMIN', 'SOFTWARE & IT'];
+        const officeITSections = ['OFFICE & IT'];
         const officeITCategories = categoryMapping.filter(c =>
             c.type === 'expense' && officeITSections.includes(c.section)
         );
@@ -512,14 +511,14 @@ export default function CategoryManager() {
             });
         }
 
-        // 6. Other Expenses (Motor, Capital, Other)
-        const otherSections = ['MOTOR & TRANSPORT', 'CAPITAL & DEPRECIATION', 'OTHER EXPENSES'];
+        // 6. Petty Cash / Other (Motor, Capital, Other)
+        const otherSections = ['MOTOR & TRANSPORT', 'CAPITAL & DEPRECIATION', 'PETTY CASH / OTHER EXPENSES'];
         const otherCategories = categoryMapping.filter(c =>
             c.type === 'expense' && otherSections.includes(c.section)
         );
         if (otherCategories.length > 0) {
             subGroups.push({
-                name: 'Other Expenses',
+                name: 'Petty Cash / Other',
                 icon: '📊',
                 categories: otherCategories,
                 description: 'Motor, capital, depreciation, and other expenses'
@@ -2702,8 +2701,7 @@ export default function CategoryManager() {
                                             categoryMapping,
                                             paymentAnalysisData,
                                             settings: {
-                                                selectedYear,
-                                                showSensitiveData
+                                                selectedYear
                                             },
                                             practiceProfile: localStorage.getItem('slainte_practice_profile'),
                                             savedReports: JSON.parse(localStorage.getItem('gp_finance_saved_reports') || '[]'),
@@ -3011,9 +3009,67 @@ export default function CategoryManager() {
             <PCRSDownloader
                 isOpen={showPCRSDownloader}
                 onClose={() => setShowPCRSDownloader(false)}
-                onStatementsDownloaded={(downloads) => {
+                onStatementsDownloaded={async (downloads) => {
                     console.log('PCRS statements downloaded:', downloads);
-                    // Could trigger auto-processing of PDFs here if needed
+
+                    // Auto-parse and import the downloaded PDFs
+                    if (!window.electronAPI?.pcrs?.readFile) {
+                        console.warn('readFile API not available');
+                        return;
+                    }
+
+                    let successCount = 0;
+                    let errorCount = 0;
+
+                    for (const download of downloads) {
+                        try {
+                            // Read the file content from main process
+                            const arrayBuffer = await window.electronAPI.pcrs.readFile(download.filename);
+
+                            if (!arrayBuffer) {
+                                console.error('Failed to read file:', download.filename);
+                                errorCount++;
+                                continue;
+                            }
+
+                            // Create a File-like object for the parser
+                            const fileBlob = new Blob([arrayBuffer], { type: 'application/pdf' });
+                            const file = new File([fileBlob], download.filename, { type: 'application/pdf' });
+
+                            // Parse the PDF
+                            const result = await parsePCRSPaymentPDF(file);
+
+                            if (result && validateExtractedData(result)) {
+                                // Add panel info to the result
+                                result.panelId = download.panelId;
+                                result.panelName = download.panelName;
+
+                                setPaymentAnalysisData(prev => {
+                                    // Check for duplicates
+                                    const exists = prev.some(p =>
+                                        p.paymentDate === result.paymentDate &&
+                                        p.totalAmount === result.totalAmount &&
+                                        (p.panelId === result.panelId || !p.panelId)
+                                    );
+                                    if (exists) {
+                                        console.log('Skipping duplicate:', download.filename);
+                                        return prev;
+                                    }
+                                    console.log('Added payment data:', download.filename);
+                                    return [...prev, result];
+                                });
+                                successCount++;
+                            } else {
+                                console.error('Failed to parse/validate:', download.filename);
+                                errorCount++;
+                            }
+                        } catch (error) {
+                            console.error('Error processing downloaded PDF:', download.filename, error);
+                            errorCount++;
+                        }
+                    }
+
+                    console.log(`Auto-import complete: ${successCount} succeeded, ${errorCount} failed`);
                 }}
             />
 

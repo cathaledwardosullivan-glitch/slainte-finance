@@ -2,35 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { User, MessageCircle, CheckCircle, ArrowRight, Loader, AlertCircle, ChevronDown, ChevronRight, Edit2, Check, X } from 'lucide-react';
 import COLORS from '../../utils/colors';
 import { callClaude } from '../../utils/claudeAPI';
+import { MODELS } from '../../data/modelConfig';
 import { PARENT_CATEGORIES } from '../../utils/parentCategoryMapping';
 import { useAppContext } from '../../context/AppContext';
 
-// Typing animation hook
-const useTypingEffect = (text, speed = 30) => {
-  const [displayedText, setDisplayedText] = useState('');
-  const [isComplete, setIsComplete] = useState(false);
-
-  useEffect(() => {
-    if (!text) return;
-
-    let index = 0;
-    setDisplayedText('');
-    setIsComplete(false);
-
-    const timer = setInterval(() => {
-      if (index < text.length) {
-        setDisplayedText(text.substring(0, index + 1));
-        index++;
-      } else {
-        setIsComplete(true);
-        clearInterval(timer);
-      }
-    }, speed);
-
-    return () => clearInterval(timer);
-  }, [text, speed]);
-
-  return { displayedText, isComplete };
+// Instant text display (typing animation disabled)
+const useTypingEffect = (text) => {
+  return { displayedText: text || '', isComplete: true };
 };
 
 // Common synonyms and variations for exact matching
@@ -441,7 +419,7 @@ REMEMBER:
 - Return ALL ${needsAIMatching.length} mappings`;
 
         const response = await callClaude(prompt, {
-          model: 'claude-sonnet-4-5-20250929',
+          model: MODELS.STANDARD,
           maxTokens: 4000,
           apiKey: apiKey
         });
@@ -619,7 +597,7 @@ REMEMBER:
       margin: '0 auto',
       height: 'min(80vh, 750px)'
     }}>
-      {/* Left side - Cara Chat Box */}
+      {/* Left side - Finn Chat Box */}
       <div style={{
         flex: '1 1 40%',
         minWidth: '400px',
@@ -654,7 +632,7 @@ REMEMBER:
             <User style={{ height: '1.25rem', width: '1.25rem' }} />
           </div>
           <div>
-            <div style={{ fontWeight: 600, fontSize: '1rem' }}>Cara</div>
+            <div style={{ fontWeight: 600, fontSize: '1rem' }}>Finn</div>
             <div style={{ fontSize: '0.75rem', opacity: 0.9 }}>Sláinte Guide</div>
           </div>
         </div>

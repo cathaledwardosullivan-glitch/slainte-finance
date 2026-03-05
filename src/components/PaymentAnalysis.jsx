@@ -20,8 +20,7 @@ import {
 const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSelectedYear: propSetSelectedYear }) => {
     const {
         paymentAnalysisData,
-        setPaymentAnalysisData,
-        showSensitiveData
+        setPaymentAnalysisData
     } = useAppContext();
     const [uploadedFiles, setUploadedFiles] = useState([]);
     // Use prop if provided, otherwise use local state (for standalone usage)
@@ -243,7 +242,7 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
         .reduce((sum, data) => sum + data.totalGrossPayment, 0);
 
     return (
-        <div className="space-y-6" style={{ padding: '1.5rem' }}>
+        <div className="space-y-6">
             {/* GMS KPI Boxes */}
             {(() => {
                 const hasHealthCheckData = profile?.healthCheckData?.healthCheckComplete === true;
@@ -317,24 +316,25 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
                     }
                 }
 
-                // Check for recent GMS data
-                const currentDate = new Date();
-                const currentMonth = currentDate.getMonth();
-                const currentYear = currentDate.getFullYear();
-                gmsMetrics.hasRecentGMSData = paymentAnalysisData.some(data => {
-                    if (!data.year || !data.month) return false;
-                    const dataDate = new Date(parseInt(data.year), MONTHS.indexOf(data.month), 1);
-                    const dataMonth = dataDate.getMonth();
-                    const dataYear = dataDate.getFullYear();
-                    const monthsAgo = (currentYear - dataYear) * 12 + (currentMonth - dataMonth);
-                    return monthsAgo < 2;
-                });
+                // Fallback: compute panel size from raw paymentAnalysisData if health check hasn't been run
+                if (gmsMetrics.panelSize === 0 && paymentAnalysisData.length > 0) {
+                    const { monthData } = getLatestMonthData();
+                    if (monthData.length > 0) {
+                        gmsMetrics.panelSize = monthData.reduce((sum, data) => sum + (data.panelSize || 0), 0);
+                    } else {
+                        // No data for selected year — try all data
+                        gmsMetrics.panelSize = paymentAnalysisData.reduce((max, data) => Math.max(max, data.panelSize || 0), 0);
+                    }
+                }
+
+                // Check for GMS data availability
+                gmsMetrics.hasRecentGMSData = paymentAnalysisData.length > 0;
 
                 return (
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4" data-tour-id="gms-overview-section">
                         {/* Unclaimed GMS Income */}
                         <div
-                            onClick={() => hasHealthCheckData ? setShowGMSKPIModal('unclaimed') : (setCurrentView && setCurrentView('gms-health-check'))}
+                            onClick={() => hasHealthCheckData ? setShowGMSKPIModal('unclaimed') : window.dispatchEvent(new CustomEvent('tour:switchToHealthCheck'))}
                             className="p-4 rounded-lg cursor-pointer transition-all shadow-md hover:shadow-lg"
                             style={{ backgroundColor: COLORS.incomeColor }}
                         >
@@ -343,7 +343,7 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
                                     <p className="text-sm font-medium text-white opacity-90">Unclaimed GMS Income</p>
                                     <p className="text-2xl font-bold text-white mt-1">
                                         {hasHealthCheckData
-                                            ? (showSensitiveData ? `€${Math.round(gmsMetrics.unclaimedAmount).toLocaleString()}` : '€***,***')
+                                            ? `€${Math.round(gmsMetrics.unclaimedAmount).toLocaleString()}`
                                             : 'Run Check'}
                                     </p>
                                     <p className="text-xs text-white opacity-90 mt-1">
@@ -356,7 +356,7 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
 
                         {/* Total Panel Size */}
                         <div
-                            onClick={() => hasHealthCheckData && gmsMetrics.panelSize > 0 ? setShowGMSKPIModal('panel') : (setCurrentView && setCurrentView('upload'))}
+                            onClick={() => gmsMetrics.panelSize > 0 ? setShowGMSKPIModal('panel') : window.dispatchEvent(new CustomEvent('navigate-to-settings', { detail: { section: 'data' } }))}
                             className="p-4 rounded-lg cursor-pointer transition-all shadow-md hover:shadow-lg"
                             style={{ backgroundColor: COLORS.expenseColor }}
                         >
@@ -380,9 +380,8 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
                         <div
                             onClick={() => {
                                 if (!gmsMetrics.hasRecentGMSData) {
-                                    // Navigate to Admin Settings and trigger PCRS upload
-                                    localStorage.setItem('admin_trigger_upload', 'pcrs');
-                                    setCurrentView && setCurrentView('admin');
+                                    // Navigate to Settings > Data section for GMS upload
+                                    window.dispatchEvent(new CustomEvent('navigate-to-settings', { detail: { section: 'data' } }));
                                 } else {
                                     setShowGMSKPIModal('upload');
                                 }
@@ -394,10 +393,14 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
                                 <div>
                                     <p className="text-sm font-medium text-white opacity-90">GMS Panel Data</p>
                                     <p className="text-2xl font-bold text-white mt-1">
-                                        {gmsMetrics.hasRecentGMSData ? 'Current' : 'Upload Due'}
+                                        {(() => {
+                                            if (!gmsMetrics.hasRecentGMSData) return 'Upload Due';
+                                            const uniqueMonths = new Set(paymentAnalysisData.map(d => `${d.month}-${d.year}`)).size;
+                                            return `${uniqueMonths} Month${uniqueMonths !== 1 ? 's' : ''}`;
+                                        })()}
                                     </p>
                                     <p className="text-xs text-white opacity-90 mt-1">
-                                        {gmsMetrics.hasRecentGMSData ? 'Up to date' : 'Click to upload'}
+                                        {gmsMetrics.hasRecentGMSData ? 'Data uploaded' : 'Click to upload'}
                                     </p>
                                 </div>
                                 {gmsMetrics.hasRecentGMSData
@@ -409,7 +412,7 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
 
                         {/* Unclaimed Leave */}
                         <div
-                            onClick={() => hasHealthCheckData ? setShowGMSKPIModal('leave') : (setCurrentView && setCurrentView('gms-health-check'))}
+                            onClick={() => hasHealthCheckData ? setShowGMSKPIModal('leave') : window.dispatchEvent(new CustomEvent('tour:switchToHealthCheck'))}
                             className="p-4 rounded-lg cursor-pointer transition-all shadow-md hover:shadow-lg"
                             style={{ backgroundColor: '#8B5CF6' }}
                         >
@@ -418,7 +421,7 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
                                     <p className="text-sm font-medium text-white opacity-90">Unclaimed Leave</p>
                                     <p className="text-2xl font-bold text-white mt-1">
                                         {hasHealthCheckData
-                                            ? (showSensitiveData ? `€${Math.round(gmsMetrics.leaveUnclaimed).toLocaleString()}` : '€***,***')
+                                            ? `€${Math.round(gmsMetrics.leaveUnclaimed).toLocaleString()}`
                                             : 'Run Check'}
                                     </p>
                                     <p className="text-xs text-white opacity-90 mt-1">
@@ -486,6 +489,28 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
                     }
                 }
 
+                // Fallback: compute panel size from raw paymentAnalysisData if health check hasn't been run
+                if (gmsMetrics.panelSize === 0 && paymentAnalysisData.length > 0) {
+                    const { monthData } = getLatestMonthData();
+                    if (monthData.length > 0) {
+                        gmsMetrics.panelSize = monthData.reduce((sum, data) => sum + (data.panelSize || 0), 0);
+                    } else {
+                        gmsMetrics.panelSize = paymentAnalysisData.reduce((max, data) => Math.max(max, data.panelSize || 0), 0);
+                    }
+                }
+
+                // Fallback: compute demographics from raw paymentAnalysisData if health check hasn't been run
+                if (!gmsMetrics.demographics && paymentAnalysisData.length > 0) {
+                    const { monthData } = getLatestMonthData();
+                    const sourceData = monthData.length > 0 ? monthData : paymentAnalysisData;
+                    const under6 = sourceData.reduce((sum, d) => sum + (d.demographics?.totalUnder6 || 0), 0);
+                    const over70 = sourceData.reduce((sum, d) => sum + (d.demographics?.total70PlusAllCategories || d.demographics?.total70Plus || 0), 0);
+                    const nursingHome = sourceData.reduce((sum, d) => sum + (d.demographics?.nursingHome70Plus || 0), 0);
+                    if (under6 > 0 || over70 > 0 || nursingHome > 0) {
+                        gmsMetrics.demographics = { under6, over70, nursingHome };
+                    }
+                }
+
                 const modalConfig = {
                     unclaimed: { title: 'Unclaimed GMS Income Breakdown', color: COLORS.incomeColor, icon: DollarSign },
                     panel: { title: 'Panel Size Details', color: COLORS.expenseColor, icon: Users },
@@ -512,7 +537,7 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
                                 {showGMSKPIModal === 'unclaimed' && (
                                     <div className="space-y-4">
                                         <div className="p-4 rounded-lg" style={{ backgroundColor: `${COLORS.incomeColor}15` }}>
-                                            <div className="text-2xl font-bold" style={{ color: COLORS.incomeColor }}>{showSensitiveData ? `€${Math.round(gmsMetrics.unclaimedAmount).toLocaleString()}` : '€***,***'}</div>
+                                            <div className="text-2xl font-bold" style={{ color: COLORS.incomeColor }}>{`€${Math.round(gmsMetrics.unclaimedAmount).toLocaleString()}`}</div>
                                             <div className="text-sm" style={{ color: COLORS.incomeColor }}>Total Unclaimed Income</div>
                                         </div>
                                         {gmsMetrics.unclaimedBreakdown.length > 0 ? (
@@ -520,7 +545,7 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
                                                 {gmsMetrics.unclaimedBreakdown.map((item, idx) => (
                                                     <div key={idx} className="flex items-center justify-between p-3 rounded-lg border" style={{ borderColor: COLORS.lightGray }}>
                                                         <span style={{ color: COLORS.darkGray }}>{item.label}</span>
-                                                        <span className="font-bold" style={{ color: COLORS.incomeColor }}>{showSensitiveData ? `€${Math.round(item.value).toLocaleString()}` : '€***'}</span>
+                                                        <span className="font-bold" style={{ color: COLORS.incomeColor }}>{`€${Math.round(item.value).toLocaleString()}`}</span>
                                                     </div>
                                                 ))}
                                             </div>
@@ -565,7 +590,7 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
                                 {showGMSKPIModal === 'leave' && (
                                     <div className="space-y-4">
                                         <div className="p-4 rounded-lg" style={{ backgroundColor: '#8B5CF615' }}>
-                                            <div className="text-2xl font-bold" style={{ color: '#8B5CF6' }}>{showSensitiveData ? `€${Math.round(gmsMetrics.leaveUnclaimed).toLocaleString()}` : '€***,***'}</div>
+                                            <div className="text-2xl font-bold" style={{ color: '#8B5CF6' }}>{`€${Math.round(gmsMetrics.leaveUnclaimed).toLocaleString()}`}</div>
                                             <div className="text-sm" style={{ color: '#8B5CF6' }}>Total Unclaimed Leave Value</div>
                                         </div>
                                         {gmsMetrics.leaveBreakdown.length > 0 && (
@@ -574,9 +599,9 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
                                                     <div key={idx} className="p-3 rounded-lg border" style={{ borderColor: COLORS.lightGray }}>
                                                         <div className="font-medium mb-2" style={{ color: COLORS.darkGray }}>{leave.label}</div>
                                                         <div className="grid grid-cols-3 gap-2 text-sm">
-                                                            <div><span style={{ color: COLORS.mediumGray }}>Entitled:</span> <span className="font-medium">{showSensitiveData ? `€${Math.round(leave.entitled).toLocaleString()}` : '€***'}</span></div>
-                                                            <div><span style={{ color: COLORS.mediumGray }}>Claimed:</span> <span className="font-medium">{showSensitiveData ? `€${Math.round(leave.claimed).toLocaleString()}` : '€***'}</span></div>
-                                                            <div><span style={{ color: COLORS.mediumGray }}>Unclaimed:</span> <span className="font-bold" style={{ color: '#8B5CF6' }}>{showSensitiveData ? `€${Math.round(leave.unclaimed).toLocaleString()}` : '€***'}</span></div>
+                                                            <div><span style={{ color: COLORS.mediumGray }}>Entitled:</span> <span className="font-medium">{`€${Math.round(leave.entitled).toLocaleString()}`}</span></div>
+                                                            <div><span style={{ color: COLORS.mediumGray }}>Claimed:</span> <span className="font-medium">{`€${Math.round(leave.claimed).toLocaleString()}`}</span></div>
+                                                            <div><span style={{ color: COLORS.mediumGray }}>Unclaimed:</span> <span className="font-bold" style={{ color: '#8B5CF6' }}>{`€${Math.round(leave.unclaimed).toLocaleString()}`}</span></div>
                                                         </div>
                                                         <div className="text-xs mt-2" style={{ color: COLORS.mediumGray }}>{leave.daysClaimed} of {leave.daysEntitled} days claimed</div>
                                                     </div>
@@ -682,7 +707,7 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
                 const isPositive = change >= 0;
 
                 return (
-                    <div className="bg-white p-6 rounded-lg border" style={{ borderColor: COLORS.lightGray }}>
+                    <div className="bg-white p-6 rounded-lg border" style={{ borderColor: COLORS.lightGray }} data-tour-id="gms-dashboard-chart">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-semibold flex items-center" style={{ color: COLORS.darkGray }}>
                                 <TrendingUp className="h-5 w-5 mr-2" style={{ color: config.color }} />
@@ -718,11 +743,11 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
                                 <YAxis
                                     tick={{ fill: COLORS.mediumGray, fontSize: 12 }}
                                     axisLine={{ stroke: COLORS.lightGray }}
-                                    tickFormatter={(value) => showSensitiveData ? `€${(value / 1000).toFixed(0)}k` : '€***'}
+                                    tickFormatter={(value) => `€${(value / 1000).toFixed(0)}k`}
                                 />
                                 <Tooltip
                                     formatter={(value, name) => [
-                                        showSensitiveData ? `€${value.toLocaleString()}` : '€***',
+                                        `€${value.toLocaleString()}`,
                                         name === 'current' ? currentYear : previousYear
                                     ]}
                                     contentStyle={{
@@ -763,20 +788,20 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
                                 <div>
                                     <p className="text-xs" style={{ color: COLORS.mediumGray }}>{currentYear} Total</p>
                                     <p className="text-lg font-semibold" style={{ color: config.color }}>
-                                        {showSensitiveData ? `€${Math.round(currentTotal).toLocaleString()}` : '€***,***'}
+                                        {`€${Math.round(currentTotal).toLocaleString()}`}
                                     </p>
                                 </div>
                                 <div>
                                     <p className="text-xs" style={{ color: COLORS.mediumGray }}>{previousYear} Total</p>
                                     <p className="text-lg font-semibold" style={{ color: config.lightColor }}>
-                                        {showSensitiveData ? `€${Math.round(previousTotal).toLocaleString()}` : '€***,***'}
+                                        {`€${Math.round(previousTotal).toLocaleString()}`}
                                     </p>
                                 </div>
                             </div>
                             <div className="text-right">
                                 <p className="text-xs" style={{ color: COLORS.mediumGray }}>Year-over-Year</p>
                                 <p className="text-lg font-semibold flex items-center justify-end gap-1" style={{ color: isPositive ? COLORS.incomeColor : COLORS.expenseColor }}>
-                                    {isPositive ? '↗' : '↘'} {showSensitiveData ? `${Math.abs(change).toFixed(1)}%` : '**%'}
+                                    {isPositive ? '↗' : '↘'} {`${Math.abs(change).toFixed(1)}%`}
                                 </p>
                             </div>
                         </div>
@@ -844,7 +869,7 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
                         }}>
                             <h4 style={{ fontSize: '0.875rem', fontWeight: 600, color: COLORS.darkGray, marginBottom: '0.25rem' }}>Total Payments</h4>
                             <p style={{ fontSize: '1.5rem', fontWeight: 700, color: COLORS.slainteBlue, margin: 0 }}>
-                                {showSensitiveData ? `€${totalGrossPayment.toLocaleString()}` : '€***,***'}
+                                {`€${totalGrossPayment.toLocaleString()}`}
                             </p>
                             <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginTop: '0.25rem' }}>
                                 {paymentAnalysisData.filter(d => d.year === selectedYear).length} statements processed

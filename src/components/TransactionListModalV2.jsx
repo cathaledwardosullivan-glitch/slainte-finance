@@ -1,14 +1,13 @@
 import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
 import COLORS from '../utils/colors';
-import TransactionList from './TransactionList';
+import TransactionListV2 from './TransactionListV2';
 
 /**
- * TransactionListModal - Full-screen modal wrapper for TransactionList
- * Used in Finances Overview to manage transactions without leaving the page
+ * TransactionListModalV2 - Full-screen modal wrapper for the redesigned TransactionListV2
+ * Drop-in replacement for TransactionListModal with identical props interface
  */
-const TransactionListModal = ({ isOpen, onClose }) => {
-  // Handle escape key to close
+const TransactionListModalV2 = ({ isOpen, onClose }) => {
   useEffect(() => {
     const handleEscape = (e) => {
       if (e.key === 'Escape' && isOpen) {
@@ -91,7 +90,7 @@ const TransactionListModal = ({ isOpen, onClose }) => {
           </button>
         </div>
 
-        {/* Content - TransactionList */}
+        {/* Content */}
         <div
           style={{
             flex: 1,
@@ -99,11 +98,11 @@ const TransactionListModal = ({ isOpen, onClose }) => {
             padding: '1.5rem'
           }}
         >
-          <TransactionList />
+          <TransactionListV2 />
         </div>
       </div>
     </div>
   );
 };
 
-export default TransactionListModal;
+export default TransactionListModalV2;

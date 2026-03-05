@@ -7,6 +7,8 @@ const PCRS_URLS = {
   BASE: 'https://secure.sspcrs.ie',
   LOGIN: 'https://secure.sspcrs.ie/portal/userAdmin/login',
   SWITCH_DOCTOR: 'https://secure.sspcrs.ie/doctor/sec/switchDoc',
+  PANEL_MANAGEMENT: 'https://secure.sspcrs.ie/doctor/sec/panel',
+  LISTINGS_WELCOME: 'https://secure.sspcrs.ie/secure/listings/sec/doctor',
   STATEMENTS_LIST: 'https://secure.sspcrs.ie/secure/listings/sec/doctor/list/itemised',
   STATEMENT_DOWNLOAD_BASE: '/secure/listings/sec/doctor/view/itemised'
 };
@@ -69,9 +71,9 @@ const TIMEOUTS = {
   SESSION_CHECK: 10000,
   PAGE_LOAD: 20000,
   NAVIGATION: 15000,
-  DOWNLOAD: 30000,
+  DOWNLOAD: 60000,  // Increased to 60s for slow connections
   PANEL_SWITCH: 5000,
-  BETWEEN_DOWNLOADS: 1000,
+  BETWEEN_DOWNLOADS: 2000,  // Increased to give server time between requests
   LOGIN_DETECTION: 500
 };
 

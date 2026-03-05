@@ -20,7 +20,8 @@ const UnifiedFinnWidget = ({ currentView = 'dashboard' }) => {
     closeWidget,
     backgroundTask,
     hasData,
-    setCurrentView
+    setCurrentView,
+    localOnlyMode
   } = useFinn();
 
   const { isActive: isTourActive, currentStepData } = useTour();
@@ -75,7 +76,9 @@ const UnifiedFinnWidget = ({ currentView = 'dashboard' }) => {
           <MessageCircle style={{ height: '1.5rem', width: '1.5rem' }} />
           <div style={{ textAlign: 'left' }}>
             <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>Finn</div>
-            <div style={{ fontSize: '0.75rem', opacity: 0.9 }}>Financial Advisor</div>
+            <div style={{ fontSize: '0.75rem', opacity: 0.9 }}>
+              {localOnlyMode ? 'Local Only' : 'Financial Advisor'}
+            </div>
           </div>
 
           {/* Badge for background task */}
@@ -113,7 +116,7 @@ const UnifiedFinnWidget = ({ currentView = 'dashboard' }) => {
         position: 'fixed',
         top: '5rem',
         left: '1.5rem',
-        bottom: '5.5rem', // Leave space for settings button area
+        bottom: '5.5rem', // Leave space for floating feedback button below
         zIndex: 50,
         backgroundColor: COLORS.white,
         borderRadius: '0.75rem',
@@ -155,7 +158,20 @@ const UnifiedFinnWidget = ({ currentView = 'dashboard' }) => {
           </div>
           <div>
             <div style={{ fontWeight: 600, fontSize: '0.9375rem' }}>Finn</div>
-            <div style={{ fontSize: '0.75rem', opacity: 0.9 }}>Financial Advisor</div>
+            <div style={{ fontSize: '0.75rem', opacity: 0.9, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              {localOnlyMode ? (
+                <>
+                  <span style={{
+                    backgroundColor: 'rgba(255,255,255,0.25)',
+                    padding: '0.1rem 0.4rem',
+                    borderRadius: '0.25rem',
+                    fontSize: '0.65rem',
+                    fontWeight: 600,
+                    letterSpacing: '0.03em'
+                  }}>LOCAL ONLY</span>
+                </>
+              ) : 'Financial Advisor'}
+            </div>
           </div>
         </div>
 
@@ -247,6 +263,7 @@ const UnifiedFinnWidget = ({ currentView = 'dashboard' }) => {
           <FinnReportsPanel />
         )}
       </div>
+
     </div>
   );
 };

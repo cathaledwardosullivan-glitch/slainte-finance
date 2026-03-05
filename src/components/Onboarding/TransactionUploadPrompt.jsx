@@ -1,45 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, SkipForward, CheckCircle, ArrowRight, User, MessageCircle, FileSpreadsheet } from 'lucide-react';
+import { Upload, SkipForward, CheckCircle, ArrowRight, User, MessageCircle, FileSpreadsheet, FileText, Loader, AlertCircle } from 'lucide-react';
 import COLORS from '../../utils/colors';
+import { parseBankStatementPDF, getSupportedBanks } from '../../utils/bankStatementParser';
 
-// Typing animation hook
-const useTypingEffect = (text, speed = 30) => {
-  const [displayedText, setDisplayedText] = useState('');
-  const [isComplete, setIsComplete] = useState(false);
-
-  useEffect(() => {
-    if (!text) return;
-
-    let index = 0;
-    setDisplayedText('');
-    setIsComplete(false);
-
-    const timer = setInterval(() => {
-      if (index < text.length) {
-        setDisplayedText(text.substring(0, index + 1));
-        index++;
-      } else {
-        setIsComplete(true);
-        clearInterval(timer);
-      }
-    }, speed);
-
-    return () => clearInterval(timer);
-  }, [text, speed]);
-
-  return { displayedText, isComplete };
+// Instant text display (typing animation disabled)
+const useTypingEffect = (text) => {
+  return { displayedText: text || '', isComplete: true };
 };
 
 export default function TransactionUploadPrompt({ onUpload, onSkip }) {
-  const [file, setFile] = useState(null);
+  const [files, setFiles] = useState([]);
+  const [fileType, setFileType] = useState(null); // 'csv' or 'pdf'
   const [dragActive, setDragActive] = useState(false);
+  const [isParsing, setIsParsing] = useState(false);
+  const [parseError, setParseError] = useState(null);
+  const [parsedTransactions, setParsedTransactions] = useState([]);
+  const [detectedBank, setDetectedBank] = useState(null);
 
   const [showGreeting, setShowGreeting] = useState(false);
   const [showMessage, setShowMessage] = useState(false);
   const [showSteps, setShowSteps] = useState(false);
 
   const greetingText = "Great progress! Now let's import your data.";
-  const messageText = "Upload your bank transactions and I'll help identify staff payments and categorize expenses automatically. This usually takes just 2-3 minutes.";
+  const messageText = "Upload your bank transactions - either a CSV export or a PDF bank statement. I'll help identify staff payments and categorize expenses automatically.";
 
   const { displayedText: greeting, isComplete: greetingComplete } = useTypingEffect(showGreeting ? greetingText : '', 25);
   const { displayedText: message, isComplete: messageComplete } = useTypingEffect(showMessage ? messageText : '', 15);
@@ -79,32 +62,82 @@ export default function TransactionUploadPrompt({ onUpload, onSkip }) {
     e.stopPropagation();
     setDragActive(false);
 
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFile(e.dataTransfer.files[0]);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFiles(Array.from(e.dataTransfer.files));
     }
   };
 
   const handleChange = (e) => {
     e.preventDefault();
-    if (e.target.files && e.target.files[0]) {
-      handleFile(e.target.files[0]);
+    if (e.target.files && e.target.files.length > 0) {
+      handleFiles(Array.from(e.target.files));
     }
   };
 
-  const handleFile = (selectedFile) => {
-    const fileName = selectedFile.name.toLowerCase();
-    const isValid = fileName.endsWith('.csv');
+  const handleFiles = async (selectedFiles) => {
+    // Filter to only valid file types
+    const validFiles = selectedFiles.filter(f => {
+      const name = f.name.toLowerCase();
+      return name.endsWith('.csv') || name.endsWith('.pdf');
+    });
 
-    if (isValid) {
-      setFile(selectedFile);
-    } else {
-      alert('Please upload a CSV file');
+    if (validFiles.length === 0) {
+      setParseError('Please upload CSV or PDF files');
+      return;
+    }
+
+    // Check if mixed types (we only support one type at a time)
+    const hasCsv = validFiles.some(f => f.name.toLowerCase().endsWith('.csv'));
+    const hasPdf = validFiles.some(f => f.name.toLowerCase().endsWith('.pdf'));
+
+    if (hasCsv && hasPdf) {
+      setParseError('Please upload either CSV or PDF files, not both');
+      return;
+    }
+
+    const type = hasPdf ? 'pdf' : 'csv';
+    setFiles(validFiles);
+    setFileType(type);
+    setParseError(null);
+    setParsedTransactions([]);
+    setDetectedBank(null);
+
+    // If PDFs, parse them immediately to show preview
+    if (type === 'pdf') {
+      setIsParsing(true);
+      try {
+        let allTransactions = [];
+        let bank = null;
+
+        for (const pdfFile of validFiles) {
+          const result = await parseBankStatementPDF(pdfFile);
+          allTransactions = [...allTransactions, ...result.transactions];
+          if (!bank) bank = result.bank;
+        }
+
+        setParsedTransactions(allTransactions);
+        setDetectedBank(bank);
+        console.log('[TransactionUpload] Parsed', validFiles.length, 'PDFs:', allTransactions.length, 'transactions from', bank);
+      } catch (error) {
+        console.error('[TransactionUpload] PDF parse error:', error);
+        setParseError(error.message || 'Failed to parse PDF. Please try a CSV file instead.');
+        setFiles([]);
+        setFileType(null);
+      } finally {
+        setIsParsing(false);
+      }
     }
   };
 
   const handleUploadClick = () => {
-    if (file) {
-      onUpload(file);
+    if (files.length > 0) {
+      if (fileType === 'pdf' && parsedTransactions.length > 0) {
+        // For PDFs, pass the parsed transactions directly
+        onUpload(files, { parsedTransactions, bank: detectedBank, fileType: 'pdf' });
+      } else {
+        // For CSV, just pass the files
+        onUpload(files, { fileType: 'csv' });
+      }
     }
   };
 
@@ -117,7 +150,7 @@ export default function TransactionUploadPrompt({ onUpload, onSkip }) {
       margin: '0 auto',
       height: 'min(70vh, 650px)'
     }}>
-      {/* Left side - Cara Chat Box */}
+      {/* Left side - Finn Chat Box */}
       <div style={{
         flex: '1 1 45%',
         minWidth: '450px',
@@ -152,7 +185,7 @@ export default function TransactionUploadPrompt({ onUpload, onSkip }) {
             <User style={{ height: '1.25rem', width: '1.25rem' }} />
           </div>
           <div>
-            <div style={{ fontWeight: 600, fontSize: '1rem' }}>Cara</div>
+            <div style={{ fontWeight: 600, fontSize: '1rem' }}>Finn</div>
             <div style={{ fontSize: '0.75rem', opacity: 0.9 }}>Sláinte Guide</div>
           </div>
         </div>
@@ -270,7 +303,7 @@ export default function TransactionUploadPrompt({ onUpload, onSkip }) {
           )}
 
           {/* File selected message */}
-          {file && (
+          {files.length > 0 && !isParsing && !parseError && (
             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
               <div style={{ width: '32px', flexShrink: 0 }} />
               <div style={{
@@ -288,7 +321,43 @@ export default function TransactionUploadPrompt({ onUpload, onSkip }) {
                   fontSize: '0.9375rem'
                 }}>
                   <CheckCircle style={{ width: '18px', height: '18px', color: COLORS.incomeColor }} />
-                  File ready: <strong>{file.name}</strong>
+                  {fileType === 'pdf' && parsedTransactions.length > 0 ? (
+                    <span>
+                      Found <strong>{parsedTransactions.length} transactions</strong> in {files.length} file{files.length > 1 ? 's' : ''}
+                    </span>
+                  ) : (
+                    <span>{files.length} file{files.length > 1 ? 's' : ''} ready: <strong>{files.map(f => f.name).join(', ')}</strong></span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Parsing message */}
+          {isParsing && (
+            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+              <div style={{ width: '32px', flexShrink: 0 }} />
+              <div style={{
+                backgroundColor: `${COLORS.slainteBlue}15`,
+                padding: '0.875rem 1rem',
+                borderRadius: '12px',
+                maxWidth: '85%',
+                border: `1px solid ${COLORS.slainteBlue}`
+              }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  color: COLORS.darkGray,
+                  fontSize: '0.9375rem'
+                }}>
+                  <Loader style={{
+                    width: '18px',
+                    height: '18px',
+                    color: COLORS.slainteBlue,
+                    animation: 'spin 1s linear infinite'
+                  }} />
+                  Reading your bank statement...
                 </div>
               </div>
             </div>
@@ -345,7 +414,7 @@ export default function TransactionUploadPrompt({ onUpload, onSkip }) {
                 color: COLORS.mediumGray,
                 lineHeight: 1.6
               }}>
-                Export a CSV file from your bank's online banking portal.
+                Export a CSV from online banking, or upload a PDF bank statement.
               </p>
             </div>
           </div>
@@ -357,12 +426,12 @@ export default function TransactionUploadPrompt({ onUpload, onSkip }) {
             onDragOver={handleDrag}
             onDrop={handleDrop}
             style={{
-              border: `2px dashed ${dragActive ? COLORS.slainteBlue : file ? COLORS.incomeColor : COLORS.lightGray}`,
+              border: `2px dashed ${dragActive ? COLORS.slainteBlue : files.length > 0 ? COLORS.incomeColor : COLORS.lightGray}`,
               borderRadius: '12px',
               padding: '2rem 1.5rem',
               textAlign: 'center',
               marginBottom: '1.5rem',
-              backgroundColor: dragActive ? `${COLORS.slainteBlue}05` : file ? `${COLORS.incomeColor}05` : COLORS.backgroundGray,
+              backgroundColor: dragActive ? `${COLORS.slainteBlue}05` : files.length > 0 ? `${COLORS.incomeColor}05` : COLORS.backgroundGray,
               cursor: 'pointer',
               transition: 'all 0.3s ease'
             }}
@@ -371,27 +440,82 @@ export default function TransactionUploadPrompt({ onUpload, onSkip }) {
             <input
               id="file-upload"
               type="file"
-              accept=".csv"
+              accept=".csv,.pdf"
+              multiple
               onChange={handleChange}
               style={{ display: 'none' }}
             />
 
-            {!file ? (
+            {isParsing ? (
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '0.75rem'
+              }}>
+                <Loader style={{
+                  width: '40px',
+                  height: '40px',
+                  color: COLORS.slainteBlue,
+                  animation: 'spin 1s linear infinite'
+                }} />
+                <p style={{ fontSize: '0.9375rem', color: COLORS.darkGray }}>
+                  Parsing bank statement...
+                </p>
+              </div>
+            ) : parseError ? (
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '0.75rem'
+              }}>
+                <AlertCircle style={{ width: '40px', height: '40px', color: COLORS.expenseColor }} />
+                <p style={{ fontSize: '0.875rem', color: COLORS.expenseColor, textAlign: 'center' }}>
+                  {parseError}
+                </p>
+                <p style={{ fontSize: '0.8125rem', color: COLORS.mediumGray }}>
+                  Click to try another file
+                </p>
+              </div>
+            ) : files.length === 0 ? (
               <>
-                <Upload style={{ width: '40px', height: '40px', color: COLORS.mediumGray, margin: '0 auto 0.75rem' }} />
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  gap: '1.5rem',
+                  marginBottom: '0.75rem'
+                }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <FileSpreadsheet style={{ width: '32px', height: '32px', color: COLORS.slainteBlue }} />
+                    <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginTop: '0.25rem' }}>CSV</p>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <FileText style={{ width: '32px', height: '32px', color: COLORS.slainteBlue }} />
+                    <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginTop: '0.25rem' }}>PDF</p>
+                  </div>
+                </div>
                 <h3 style={{
                   fontSize: '1rem',
                   fontWeight: 600,
                   color: COLORS.darkGray,
                   marginBottom: '0.375rem'
                 }}>
-                  Drop your CSV file here
+                  Drop your files here
                 </h3>
                 <p style={{
                   fontSize: '0.875rem',
                   color: COLORS.mediumGray
                 }}>
-                  or click to browse
+                  CSV or PDF bank statements (multiple files supported)
+                </p>
+                <p style={{
+                  fontSize: '0.75rem',
+                  color: COLORS.mediumGray,
+                  marginTop: '0.5rem',
+                  fontStyle: 'italic'
+                }}>
+                  PDF supported: Bank of Ireland
                 </p>
               </>
             ) : (
@@ -409,13 +533,16 @@ export default function TransactionUploadPrompt({ onUpload, onSkip }) {
                     color: COLORS.darkGray,
                     marginBottom: '0.125rem'
                   }}>
-                    {file.name}
+                    {files.length} file{files.length > 1 ? 's' : ''} selected
                   </h3>
                   <p style={{
                     fontSize: '0.8125rem',
                     color: COLORS.mediumGray
                   }}>
-                    {(file.size / 1024).toFixed(1)} KB - Click to change
+                    {fileType === 'pdf' && parsedTransactions.length > 0
+                      ? `${parsedTransactions.length} transactions found`
+                      : files.map(f => f.name).join(', ')}
+                    {' - Click to change'}
                   </p>
                 </div>
               </div>
@@ -425,18 +552,18 @@ export default function TransactionUploadPrompt({ onUpload, onSkip }) {
           {/* Continue button */}
           <button
             onClick={handleUploadClick}
-            disabled={!file}
+            disabled={files.length === 0 || isParsing || parseError}
             style={{
               width: '100%',
               padding: '1rem',
               fontSize: '1rem',
               fontWeight: 600,
               color: COLORS.white,
-              backgroundColor: file ? COLORS.incomeColor : COLORS.slainteBlue,
+              backgroundColor: (files.length > 0 && !isParsing && !parseError) ? COLORS.incomeColor : COLORS.slainteBlue,
               border: 'none',
               borderRadius: '8px',
-              cursor: file ? 'pointer' : 'not-allowed',
-              opacity: file ? 1 : 0.6,
+              cursor: (files.length > 0 && !isParsing && !parseError) ? 'pointer' : 'not-allowed',
+              opacity: (files.length > 0 && !isParsing && !parseError) ? 1 : 0.6,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -444,7 +571,7 @@ export default function TransactionUploadPrompt({ onUpload, onSkip }) {
               transition: 'all 0.2s'
             }}
           >
-            {file ? 'Continue with This File' : 'Select a File to Continue'}
+            {isParsing ? 'Parsing...' : files.length > 0 ? `Continue with ${files.length} File${files.length > 1 ? 's' : ''}` : 'Select Files to Continue'}
             <ArrowRight style={{ width: '20px', height: '20px' }} />
           </button>
         </div>
@@ -484,6 +611,14 @@ export default function TransactionUploadPrompt({ onUpload, onSkip }) {
           </button>
         </div>
       </div>
+
+      {/* CSS for spin animation */}
+      <style>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }

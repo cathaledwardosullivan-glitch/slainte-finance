@@ -1,83 +1,101 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { usePracticeProfile } from '../hooks/usePracticeProfile';
 import { createUnifiedProfile } from '../data/practiceProfileSchemaV2';
 import { generateCategoriesFromProfile } from '../utils/categoryGenerator';
 import * as storage from '../storage/practiceProfileStorage';
-import { saveTransactions, saveCategoryMapping } from '../utils/storageUtils';
+import { CURRENT_VERSION as TERMS_VERSION } from '../data/termsAndConditions';
+import { saveTransactions, saveCategoryMapping, saveUnidentifiedTransactions } from '../utils/storageUtils';
+import { analyzeWebsite } from '../utils/websiteAnalyzer';
+import { processTransactionsWithEngine } from '../utils/transactionProcessor';
+import { batchAICategorization } from '../utils/aiCategorization';
+import { COHORTS } from './ProcessingFlow/ProcessingFlowContext';
 import COLORS from '../utils/colors';
-import { DEMO_PROFILE, generateDemoTransactions, generateDemoGMSPanelData, DEMO_CATEGORY_MAPPING } from '../data/demoData';
+import { DEMO_PROFILE, generateDemoTransactions, generateDemoGMSPanelData, DEMO_CATEGORY_MAPPING, generateDemoChatData, generateDemoSavedReport, generateDemoTasks } from '../data/demoData';
 
 // Step components
+import TermsAndConditions from './Onboarding/TermsAndConditions';
 import APIKeySetup from './Onboarding/APIKeySetup';
 import PathSelection from './Onboarding/PathSelection';
-import StructureExplanation from './Onboarding/StructureExplanation';
 import WebsiteAnalysis from './Onboarding/WebsiteAnalysis';
-import ConversationalSetup from './Onboarding/ConversationalSetup';
-import ProgressCheckpoint from './Onboarding/ProgressCheckpoint';
-import CategoryPreferences from './Onboarding/CategoryPreferences';
-import ReviewAndComplete from './Onboarding/ReviewAndComplete';
-import TransactionUploadTypeSelection from './Onboarding/TransactionUploadTypeSelection';
-import TransactionUploadPrompt from './Onboarding/TransactionUploadPrompt';
-import LabelledTransactionImport from './Onboarding/LabelledTransactionImport';
-import CategoryMappingReview from './Onboarding/CategoryMappingReview';
-import LabelledIdentifierExtraction from './Onboarding/LabelledIdentifierExtraction';
-import GuidedAIIdentifierSuggestions from './Onboarding/GuidedAIIdentifierSuggestions';
-import GuidedAIExpenseCategorization from './Onboarding/GuidedAIExpenseCategorization';
+import StaffProfileForm from './Onboarding/StaffProfileForm';
+import OnboardingBankUpload from './Onboarding/OnboardingBankUpload';
+import OnboardingTransactionUpload from './Onboarding/OnboardingTransactionUpload';
 import GMSPanelUploadPrompt from './Onboarding/GMSPanelUploadPrompt';
-import FeatureTour from './Onboarding/FeatureTour';
+import QuickConnectSetup from './Onboarding/QuickConnectSetup';
+
 
 const STEPS = {
+  TERMS: -1,
   API_KEY: 0,
+  PRIVACY_CHOICE: 0.5,
   PATH_SELECTION: 1,
-  STRUCTURE: 2,
-  WEBSITE: 3,
-  CONVERSATION: 4,
-  PROGRESS_CHECKPOINT: 5,
-  CATEGORIES: 6,
-  REVIEW: 7,
-  UPLOAD_TYPE_SELECTION: 8,
-  TRANSACTION_UPLOAD: 9,
-  LABELLED_IMPORT: 10,
-  CATEGORY_MAPPING: 11,
-  LABELLED_EXTRACTION: 12,
-  AI_STAFF: 13,
-  AI_CATEGORIZATION: 14,
-  GMS_PANEL: 15,
-  FEATURE_TOUR: 16,
-  COMPLETE: 17
+  QUICK_CONNECT: 1.5,       // Connect to another practice computer on LAN
+  WEBSITE_URL: 2,            // Enter URL only (non-blocking)
+  BANK_UPLOAD: 3,            // Single 1-month bank statement → parse only
+  PRACTICE_PROFILE: 4,       // Staff profile form (pre-populated from website)
+  GMS_PANEL: 5,              // GMS panel upload (synchronous)
+  TRANSACTION_PROCESSING: 6, // Review pre-categorized transactions
+  COMPLETE: 7
 };
 
+// Steps used for progress bar calculation (excluding TERMS, API_KEY, PATH_SELECTION)
+const PROGRESS_STEPS = [
+  STEPS.WEBSITE_URL,
+  STEPS.BANK_UPLOAD,
+  STEPS.PRACTICE_PROFILE,
+  STEPS.GMS_PANEL,
+  STEPS.TRANSACTION_PROCESSING,
+  STEPS.COMPLETE
+];
+
 export default function UnifiedOnboarding({ onComplete, onSkip }) {
-  const { setCategoryMapping, uploadTransactions, setTransactions, setPaymentAnalysisData } = useAppContext();
+  const { transactions, categoryMapping, setCategoryMapping, uploadTransactions, setTransactions, setPaymentAnalysisData, setUnidentifiedTransactions, setSelectedYear } = useAppContext();
   const { updateProfile, completeSetup } = usePracticeProfile();
 
   const [currentStep, setCurrentStep] = useState(null); // Start as null until we check API key
   const [apiKey, setApiKey] = useState('');
   const [profile, setProfile] = useState(createUnifiedProfile());
-  const [websiteData, setWebsiteData] = useState(null);
   const [uploadedFile, setUploadedFile] = useState(null);
   const [isDemoMode, setIsDemoMode] = useState(false);
   const [isCheckingApiKey, setIsCheckingApiKey] = useState(true);
-  const [labelledImportData, setLabelledImportData] = useState(null);
-  const [categoryMappingData, setCategoryMappingData] = useState(null);
 
-  // Check for existing API key on mount
+  // Background website analysis state
+  const [websiteAnalysisResult, setWebsiteAnalysisResult] = useState(null);
+  const [websiteAnalysisError, setWebsiteAnalysisError] = useState(null);
+  const [isWebsiteAnalyzing, setIsWebsiteAnalyzing] = useState(false);
+
+  // Raw parsed transactions (from bank upload, before categorization)
+  const [rawParsedTransactions, setRawParsedTransactions] = useState([]);
+
+  // Background transaction categorization
+  const [categorizationResult, setCategorizationResult] = useState(null);
+  const [isCategorizationRunning, setIsCategorizationRunning] = useState(false);
+
+  // Check for terms acceptance and existing API key on mount
   useEffect(() => {
-    const checkApiKey = async () => {
+    const checkTermsAndApiKey = async () => {
       setIsCheckingApiKey(true);
-      let savedApiKey = null;
 
-      // Check via Electron API first (preferred)
-      if (window.electronAPI?.isElectron) {
-        savedApiKey = await window.electronAPI.getLocalStorage('claude_api_key');
-        console.log('[UnifiedOnboarding] Electron API key check result:', savedApiKey ? 'Found' : 'Not found');
+      // First, check if terms have been accepted
+      const termsAccepted = storage.hasAcceptedTerms(TERMS_VERSION);
+      console.log('[UnifiedOnboarding] Terms accepted:', termsAccepted, 'Required version:', TERMS_VERSION);
+
+      if (!termsAccepted) {
+        setCurrentStep(STEPS.TERMS);
+        setIsCheckingApiKey(false);
+        return;
       }
 
-      // Fallback to localStorage for backwards compatibility
+      // Terms accepted, now check for API key
+      let savedApiKey = null;
+
+      if (window.electronAPI?.isElectron) {
+        savedApiKey = await window.electronAPI.getLocalStorage('claude_api_key');
+      }
+
       if (!savedApiKey) {
         savedApiKey = localStorage.getItem('anthropic_api_key');
-        console.log('[UnifiedOnboarding] localStorage API key check result:', savedApiKey ? 'Found' : 'Not found');
       }
 
       if (savedApiKey) {
@@ -89,329 +107,380 @@ export default function UnifiedOnboarding({ onComplete, onSkip }) {
       setIsCheckingApiKey(false);
     };
 
-    checkApiKey();
+    checkTermsAndApiKey();
   }, []);
 
-  // Handle API key setup
-  const handleAPIKeyComplete = (key) => {
-    setApiKey(key);
-    // API key is already saved via Electron IPC in APIKeySetup component
-    // No need to save to localStorage here
-    setCurrentStep(STEPS.PATH_SELECTION);
+  // ─── Terms & API Key Handlers ───
+
+  const handleTermsAccept = (termsData) => {
+    storage.acceptTerms(termsData);
+    setCurrentStep(STEPS.API_KEY);
   };
 
-  // Handle path selection
-  const handlePathSetup = () => {
+  const clearDemoData = () => {
+    console.log('[UnifiedOnboarding] Clearing demo data before proper setup');
+    localStorage.removeItem('gp_finance_transactions');
+    localStorage.removeItem('gp_finance_unidentified');
+    localStorage.removeItem('gp_finance_category_mapping');
+    localStorage.removeItem('gp_finance_payment_analysis');
+    localStorage.removeItem('gp_finance_saved_reports');
+    localStorage.removeItem('ciaran_chats');
+    localStorage.removeItem('ciaran_current_chat_id');
+    setTransactions([]);
+    setUnidentifiedTransactions([]);
+    setCategoryMapping([]);
+    setPaymentAnalysisData([]);
+    setProfile(createUnifiedProfile());
     setIsDemoMode(false);
-    // Skip structure explanation and go directly to website analysis
-    setCurrentStep(STEPS.WEBSITE);
+  };
+
+  const handleAPIKeyComplete = (key) => {
+    setApiKey(key);
+    clearDemoData();
+    setCurrentStep(STEPS.PRIVACY_CHOICE);
+  };
+
+  // ─── Privacy Choice Handler ───
+
+  const handlePrivacyChoice = (enableAI) => {
+    if (!enableAI) {
+      storage.setLocalOnlyMode(true);
+      // Local Only: skip website analysis, go straight to bank upload
+      setCurrentStep(STEPS.BANK_UPLOAD);
+    } else {
+      storage.setLocalOnlyMode(false);
+      setCurrentStep(STEPS.WEBSITE_URL);
+    }
+  };
+
+  // ─── Path Selection Handlers ───
+
+  const handlePathQuickConnect = () => {
+    setCurrentStep(STEPS.QUICK_CONNECT);
+  };
+
+  const handleQuickConnectComplete = ({ practiceName }) => {
+    console.log('[UnifiedOnboarding] Quick connect complete, pulled data from:', practiceName);
+    // The pulled profile includes setupComplete: true, so completeSetup is handled.
+    // Reload to pick up the pulled practice profile and all data cleanly.
+    if (completeSetup) completeSetup();
+    alert(`Connected to ${practiceName}! The app will now reload with your practice data.`);
+    window.location.reload();
+  };
+
+  const handlePathSetup = () => {
+    clearDemoData();
+    setCurrentStep(STEPS.WEBSITE_URL);
   };
 
   const handlePathDemo = () => {
     setIsDemoMode(true);
 
-    // Generate demo data
-    const demoTransactions = generateDemoTransactions();
+    const { transactions: demoTransactions, unidentified: demoUnidentified } = generateDemoTransactions();
     const demoGMSData = generateDemoGMSPanelData();
-    console.log(`[Demo Mode] Generated ${demoTransactions.length} transactions for year ${new Date().getFullYear()}`);
-    console.log(`[Demo Mode] Generated ${demoGMSData.length} GMS panel entries (${demoGMSData.length / 3} months x 3 partners)`);
-    console.log('[Demo Mode] Sample transaction:', demoTransactions[0]);
-    console.log('[Demo Mode] Sample GMS data:', demoGMSData[0]);
-    console.log(`[Demo Mode] Date range: ${demoTransactions[demoTransactions.length - 1]?.date} to ${demoTransactions[0]?.date}`);
+    const demoChatData = generateDemoChatData();
+    const demoReports = generateDemoSavedReport();
+    const demoTasks = generateDemoTasks();
 
-    // Save directly to localStorage (not just React state)
+    const profileWithTasks = {
+      ...DEMO_PROFILE,
+      actionPlan: { actions: demoTasks.actionItems, lastUpdated: new Date().toISOString() },
+      financialActionPlan: { tasks: demoTasks.financialTasks, lastUpdated: new Date().toISOString() }
+    };
+
     saveTransactions(demoTransactions);
+    saveUnidentifiedTransactions(demoUnidentified);
     saveCategoryMapping(DEMO_CATEGORY_MAPPING);
     localStorage.setItem('gp_finance_payment_analysis', JSON.stringify(demoGMSData));
-    storage.save(DEMO_PROFILE);
+    localStorage.setItem('gp_finance_saved_reports', JSON.stringify(demoReports));
+    localStorage.setItem('ciaran_chats', JSON.stringify(demoChatData.chats));
+    localStorage.setItem('ciaran_current_chat_id', demoChatData.currentChatId);
+    storage.save(profileWithTasks);
     completeSetup();
 
-    // Also set in React state for immediate use
-    setProfile(DEMO_PROFILE);
+    setProfile(profileWithTasks);
     setCategoryMapping(DEMO_CATEGORY_MAPPING);
     setTransactions(demoTransactions);
+    setUnidentifiedTransactions(demoUnidentified);
     setPaymentAnalysisData(demoGMSData);
-    console.log('[Demo Mode] Demo data saved to localStorage and AppContext');
+    setSelectedYear(new Date().getFullYear() - 1);
 
-    // Jump to feature tour
-    setCurrentStep(STEPS.FEATURE_TOUR);
+    handleFinalComplete();
   };
 
-  // Handle structure explanation
-  const handleStructureExplanationComplete = () => {
-    setCurrentStep(STEPS.WEBSITE);
-  };
+  // ─── Website URL Handler (non-blocking) ───
 
-  // Handle website analysis
   const handleWebsiteComplete = (data) => {
-    setWebsiteData(data);
+    if (data?.url) {
+      console.log('[UnifiedOnboarding] Starting background website analysis for:', data.url);
+      setIsWebsiteAnalyzing(true);
 
-    // Pre-fill profile with website data if available
-    if (data && data.success) {
-      const updatedProfile = { ...profile };
-
-      if (data.data.practiceName) {
-        updatedProfile.practiceDetails.practiceName = data.data.practiceName;
-      }
-      if (data.data.locations?.length > 0) {
-        updatedProfile.practiceDetails.locations = data.data.locations;
-      }
-      if (data.data.services) {
-        updatedProfile.services = {
-          ...updatedProfile.services,
-          ...data.data.services
-        };
-      }
-
-      updatedProfile.practiceDetails.website = data.url;
-      updatedProfile.metadata.websiteAnalyzed = true;
-      updatedProfile.metadata.websiteAnalyzedAt = new Date();
-
-      setProfile(updatedProfile);
+      analyzeWebsite(data.url, apiKey)
+        .then(result => {
+          console.log('[UnifiedOnboarding] Background website analysis complete:', result.success);
+          setWebsiteAnalysisResult(result);
+          setIsWebsiteAnalyzing(false);
+        })
+        .catch(err => {
+          console.error('[UnifiedOnboarding] Background website analysis failed:', err);
+          setWebsiteAnalysisError(err.message);
+          setIsWebsiteAnalyzing(false);
+        });
     }
 
-    setCurrentStep(STEPS.CONVERSATION);
+    setCurrentStep(STEPS.BANK_UPLOAD);
   };
 
-  // Handle website skip
   const handleWebsiteSkip = () => {
-    setCurrentStep(STEPS.CONVERSATION);
+    setCurrentStep(STEPS.BANK_UPLOAD);
   };
 
-  // Handle conversational setup
-  const handleConversationComplete = (updatedProfile) => {
+  // ─── Bank Upload Handler (parse only, no categorization) ───
+
+  const handleBankUploadComplete = (result) => {
+    console.log(`[UnifiedOnboarding] Bank statement parsed: ${result.transactions.length} transactions (${result.bank})`);
+    setRawParsedTransactions(result.transactions);
+    setUploadedFile(result.fileName);
+    setCurrentStep(STEPS.PRACTICE_PROFILE);
+  };
+
+  const handleBankUploadSkip = () => {
+    setCurrentStep(STEPS.PRACTICE_PROFILE);
+  };
+
+  // ─── Practice Profile Handler + Background Categorization ───
+
+  const mergeWebsiteDataIntoProfile = (baseProfile, websiteResult) => {
+    if (!websiteResult?.success) return baseProfile;
+    const merged = JSON.parse(JSON.stringify(baseProfile)); // Deep clone
+    if (websiteResult.data.practiceName) {
+      merged.practiceDetails.practiceName = websiteResult.data.practiceName;
+    }
+    if (websiteResult.data.locations?.length > 0) {
+      merged.practiceDetails.locations = websiteResult.data.locations;
+    }
+    if (websiteResult.data.gpNames?.length > 0) {
+      merged.gps = {
+        ...merged.gps,
+        partners: websiteResult.data.gpNames.map(name => ({ name }))
+      };
+    }
+    merged.practiceDetails.website = websiteResult.data.url || '';
+    merged.metadata.websiteAnalyzed = true;
+    merged.metadata.websiteAnalyzedAt = new Date().toISOString();
+    return merged;
+  };
+
+  const startBackgroundCategorization = useCallback(async (txns, categories) => {
+    console.log(`[UnifiedOnboarding] Starting background categorization for ${txns.length} transactions`);
+    setIsCategorizationRunning(true);
+
+    try {
+      // Step 1: Rule-based processing (fast)
+      const { transactions: processed, stats } = processTransactionsWithEngine(
+        txns, categories, []
+      );
+
+      console.log('[UnifiedOnboarding] Rule-based processing complete:', {
+        total: processed.length,
+        auto: processed.filter(t => t.groupCohort === COHORTS.AUTO).length,
+        needsAI: processed.filter(t => t.groupCohort === COHORTS.AI_ASSIST || t.groupCohort === COHORTS.REVIEW).length
+      });
+
+      // Step 2: AI categorization for uncertain transactions
+      const needsAI = processed.filter(t =>
+        t.groupCohort === COHORTS.AI_ASSIST || t.groupCohort === COHORTS.REVIEW
+      );
+
+      if (needsAI.length > 0) {
+        console.log(`[UnifiedOnboarding] Running AI categorization for ${needsAI.length} transactions...`);
+
+        const aiResults = await batchAICategorization(needsAI, 'group', {
+          existingTransactions: [],
+          corrections: [],
+          categoryMapping: categories
+        });
+
+        // Merge AI results into processed transactions
+        const aiMap = new Map(aiResults.map(r => [r.transactionId, r.suggestion]));
+        const withAI = processed.map(t => {
+          const suggestion = aiMap.get(t.id);
+          if (suggestion?.confidence >= 0.5) {
+            return {
+              ...t,
+              group: suggestion.group,
+              groupReason: suggestion.reasoning,
+              groupAISuggested: true,
+              aiGroupSuggestion: suggestion
+            };
+          }
+          return t;
+        });
+
+        console.log('[UnifiedOnboarding] Background categorization complete (with AI)');
+        setCategorizationResult({ transactions: withAI, stats });
+      } else {
+        console.log('[UnifiedOnboarding] Background categorization complete (no AI needed)');
+        setCategorizationResult({ transactions: processed, stats });
+      }
+    } catch (err) {
+      console.error('[UnifiedOnboarding] Background categorization failed:', err);
+      // Fallback: pass raw transactions to review step (they'll be processed there)
+      setCategorizationResult({ transactions: txns, stats: null, error: true });
+    } finally {
+      setIsCategorizationRunning(false);
+    }
+  }, []);
+
+  const handleProfileComplete = (updatedProfile) => {
     setProfile(updatedProfile);
 
-    // Generate categories from profile (moved from progress checkpoint)
+    // Generate personalized categories from completed profile
     const generatedCategories = generateCategoriesFromProfile(updatedProfile);
     console.log('[UnifiedOnboarding] Generated categories:', generatedCategories.filter(c => c.personalization === 'Personalized').length, 'personalized');
     setCategoryMapping(generatedCategories);
 
-    // Go to upload type selection
-    setCurrentStep(STEPS.UPLOAD_TYPE_SELECTION);
-  };
-
-  // Handle progress checkpoint
-  const handleProgressCheckpointContinue = () => {
-    // Generate categories from profile so AI Staff Analysis can use them
-    const generatedCategories = generateCategoriesFromProfile(profile);
-    console.log('[UnifiedOnboarding] Generated categories after progress checkpoint:', generatedCategories.filter(c => c.personalization === 'Personalized').length, 'personalized categories');
-    console.log('[UnifiedOnboarding] Staff categories:', generatedCategories.filter(c => ['3','4','5','6','7'].includes(c.role)).length);
-    console.log('[UnifiedOnboarding] Partner categories:', generatedCategories.filter(c => c.role === '90').length);
-
-    // Set categories in context so AI Staff Analysis can see them
-    setCategoryMapping(generatedCategories);
-
-    setCurrentStep(STEPS.TRANSACTION_UPLOAD);
-  };
-
-  const handleProgressCheckpointSkip = () => {
-    // Skip directly to feature tour, bypassing data upload
-    handleFinalComplete();
-  };
-
-  // Handle category preferences
-  const handleCategoryPreferencesComplete = (preferences) => {
-    const updatedProfile = {
-      ...profile,
-      categoryPreferences: preferences
-    };
-    setProfile(updatedProfile);
-    setCurrentStep(STEPS.REVIEW);
-  };
-
-  // Handle review complete
-  const handleReviewComplete = () => {
-    // Generate and save categories
-    const finalCategories = generateCategoriesFromProfile(profile);
-    console.log('[UnifiedOnboarding] Generated categories:', finalCategories.filter(c => c.personalization === 'Personalized').length, 'personalized categories');
-    console.log('[UnifiedOnboarding] Partners:', profile.gps?.partners?.length || 0);
-    console.log('[UnifiedOnboarding] Salaried GPs:', profile.gps?.salaried?.length || 0);
-    console.log('[UnifiedOnboarding] Staff:', profile.staff?.length || 0);
-    setCategoryMapping(finalCategories);
-
-    // Mark profile as complete
+    // Save profile to storage
     const completedProfile = {
-      ...profile,
+      ...updatedProfile,
       metadata: {
-        ...profile.metadata,
-        setupComplete: true,
-        setupCompletedAt: new Date()
+        ...updatedProfile.metadata,
+        setupComplete: false, // Not fully complete yet — finalized in handleFinalComplete
+        profileCompletedAt: new Date().toISOString()
       }
     };
-
-    // Save to storage
     storage.save(completedProfile);
-
-    // Update via hook
     if (updateProfile) {
       updateProfile(completedProfile);
     }
-    if (completeSetup) {
-      completeSetup();
+
+    // If we have raw transactions, start background categorization
+    if (rawParsedTransactions.length > 0) {
+      startBackgroundCategorization(rawParsedTransactions, generatedCategories);
     }
 
-    // Move to transaction upload step
-    setCurrentStep(STEPS.TRANSACTION_UPLOAD);
-  };
-
-  // Handle transaction upload
-  const handleTransactionUpload = async (file) => {
-    setUploadedFile(file);
-
-    // Upload transactions using AppContext
-    if (uploadTransactions) {
-      try {
-        await uploadTransactions(file);
-
-        // Wait a moment for transactions to be processed and loaded into context
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        // Move to AI staff suggestions
-        setCurrentStep(STEPS.AI_STAFF);
-      } catch (error) {
-        console.error('Error uploading transactions:', error);
-        alert('Failed to upload transactions. You can try again later from the dashboard.');
-        setCurrentStep(STEPS.AI_STAFF);
-      }
-    } else {
-      // Move to AI staff suggestions anyway
-      setCurrentStep(STEPS.AI_STAFF);
-    }
-  };
-
-  // Handle transaction upload skip
-  const handleTransactionSkip = () => {
-    // Skip to GMS panel (no transactions to categorize)
     setCurrentStep(STEPS.GMS_PANEL);
   };
 
-  // Handle upload type selection
-  const handleUploadTypeRaw = () => {
-    setCurrentStep(STEPS.TRANSACTION_UPLOAD);
-  };
+  // ─── GMS Panel Handlers ───
 
-  const handleUploadTypeLabelled = () => {
-    setCurrentStep(STEPS.LABELLED_IMPORT);
-  };
-
-  const handleUploadTypeBackup = () => {
-    // TODO: Implement backup restore flow
-    // For now, go to raw upload
-    setCurrentStep(STEPS.TRANSACTION_UPLOAD);
-  };
-
-  const handleUploadTypeSkip = () => {
-    setCurrentStep(STEPS.GMS_PANEL);
-  };
-
-  // Handle labelled transaction import
-  const handleLabelledImportComplete = (data) => {
-    setLabelledImportData(data);
-    setCurrentStep(STEPS.CATEGORY_MAPPING);
-  };
-
-  const handleLabelledImportSwitchToRaw = () => {
-    setCurrentStep(STEPS.TRANSACTION_UPLOAD);
-  };
-
-  const handleLabelledImportSkip = () => {
-    setCurrentStep(STEPS.GMS_PANEL);
-  };
-
-  // Handle category mapping review
-  const handleCategoryMappingComplete = (data) => {
-    setCategoryMappingData(data);
-    setCurrentStep(STEPS.LABELLED_EXTRACTION);
-  };
-
-  const handleCategoryMappingBack = () => {
-    setCurrentStep(STEPS.LABELLED_IMPORT);
-  };
-
-  // Handle labelled identifier extraction complete
-  const handleLabelledExtractionComplete = () => {
-    // After labelled import, go to GMS panel (skip AI staff/categorization since data is already categorized)
-    setCurrentStep(STEPS.GMS_PANEL);
-  };
-
-  // Handle AI staff suggestions complete
-  const handleAIStaffComplete = () => {
-    setCurrentStep(STEPS.AI_CATEGORIZATION);
-  };
-
-  // Handle AI categorization complete
-  const handleAICategorizationComplete = () => {
-    setCurrentStep(STEPS.GMS_PANEL);
-  };
-
-  // Handle GMS panel upload
   const handleGMSUpload = (file) => {
-    // File was selected and processed
     if (file) {
       console.log('[UnifiedOnboarding] GMS file selected:', file.name);
     }
-    setCurrentStep(STEPS.FEATURE_TOUR);
+    goToTransactionProcessingOrComplete();
   };
 
-  // Handle GMS panel skip
   const handleGMSSkip = () => {
-    setCurrentStep(STEPS.FEATURE_TOUR);
+    goToTransactionProcessingOrComplete();
   };
 
-  // Handle feature tour
-  const handleFeatureTourComplete = () => {
+  // Helper: go to transaction processing if we have transactions, otherwise complete
+  const goToTransactionProcessingOrComplete = () => {
+    if (rawParsedTransactions.length > 0) {
+      setCurrentStep(STEPS.TRANSACTION_PROCESSING);
+    } else {
+      handleFinalComplete();
+    }
+  };
+
+  // ─── Transaction Processing Handler ───
+
+  const handleTransactionProcessingComplete = (result) => {
+    console.log('[UnifiedOnboarding] Transaction processing complete:', result);
     handleFinalComplete();
   };
 
-  const handleFeatureTourSkip = () => {
-    handleFinalComplete();
-  };
+  // ─── Final Completion ───
 
-  // Final completion
   const handleFinalComplete = () => {
-    // Ensure profile is marked as complete before finishing
-    const completedProfile = {
-      ...profile,
-      metadata: {
-        ...profile.metadata,
-        setupComplete: true,
-        setupCompletedAt: new Date()
-      }
-    };
-
-    // Save to storage
-    storage.save(completedProfile);
-
-    // Also mark via hook
     if (completeSetup) {
       completeSetup();
+    }
+
+    const savedProfile = storage.get();
+
+    // Add post-onboarding tasks
+    if (!isDemoMode && savedProfile) {
+      // Financial task: bulk bank statement upload
+      storage.addFinancialTask({
+        id: `fin-task-bulk-upload-${Date.now()}`,
+        title: 'Upload remaining bank statements (up to 24 months)',
+        description: 'Upload your full set of bank statements to unlock year-on-year comparison and detailed financial trends.',
+        priority: 'medium',
+        category: 'upload',
+        actionLink: 'settings:data',
+        autoGenerated: true,
+        createdDate: new Date().toISOString(),
+        status: 'pending'
+      });
+
+      // GMS task: upload remaining GMS panel data
+      const existingActions = savedProfile.actionPlan?.actions || [];
+      if (!existingActions.some(a => a.id?.startsWith('task-gms-upload'))) {
+        storage.addActionItem({
+          id: `task-gms-upload-${Date.now()}`,
+          title: 'Upload 24 months of GMS panel data',
+          description: 'Upload your PCRS payment PDFs (up to 24 months) to unlock full income analysis, leave tracking, and panel size trends.',
+          category: 'setup',
+          type: 'growth',
+          status: 'pending',
+          actionLink: 'settings:data',
+          showOnDashboard: true,
+          createdDate: new Date().toISOString()
+        });
+      }
+
+      // GMS task: setup automatic PCRS download (Electron only)
+      if (window.electronAPI?.isElectron) {
+        if (!existingActions.some(a => a.id?.startsWith('task-pcrs-setup'))) {
+          storage.addActionItem({
+            id: `task-pcrs-setup-${Date.now()}`,
+            title: 'Set up automatic PCRS downloads',
+            description: 'Configure your PCRS portal credentials to enable automatic monthly download of GMS payment data.',
+            category: 'setup',
+            type: 'growth',
+            status: 'pending',
+            actionLink: 'settings:data',
+            showOnDashboard: true,
+            createdDate: new Date().toISOString()
+          });
+        }
+      }
     }
 
     console.log('[UnifiedOnboarding] Final completion - profile saved with setupComplete=true');
 
-    // Call completion callback
     if (onComplete) {
       onComplete({
-        profile: completedProfile,
+        profile: savedProfile,
         uploadedTransactions: uploadedFile !== null,
-        isDemoMode: isDemoMode
+        isDemoMode: isDemoMode,
+        offerTour: true
       });
     }
   };
 
-  // Calculate progress
-  const totalSteps = Object.keys(STEPS).length;
-  const progress = currentStep !== null ? ((currentStep + 1) / totalSteps) * 100 : 0;
+  // ─── Progress Bar ───
 
-  // Determine if we should show progress bar
-  // Don't show for: API_KEY, PATH_SELECTION, FEATURE_TOUR, or COMPLETE
-  const showProgressBar = currentStep !== null &&
-                          currentStep > STEPS.PATH_SELECTION &&
-                          currentStep < STEPS.FEATURE_TOUR &&
-                          !isDemoMode;
+  const getProgressInfo = () => {
+    if (currentStep === null || currentStep <= STEPS.PATH_SELECTION || isDemoMode) {
+      return { show: false, percent: 0, label: '' };
+    }
 
-  // Show loading while checking for API key
+    const stepIndex = PROGRESS_STEPS.indexOf(currentStep);
+    if (stepIndex === -1) {
+      return { show: false, percent: 0, label: '' };
+    }
+
+    const percent = ((stepIndex + 1) / PROGRESS_STEPS.length) * 100;
+    return { show: true, percent, label: `Step ${stepIndex + 1} of ${PROGRESS_STEPS.length}` };
+  };
+
+  const progressInfo = getProgressInfo();
+
+  // ─── Loading State ───
+
   if (isCheckingApiKey || currentStep === null) {
     return (
       <div style={{
@@ -438,6 +507,14 @@ export default function UnifiedOnboarding({ onComplete, onSkip }) {
     );
   }
 
+  // Determine wide layout steps
+  const isWideStep = [
+    STEPS.PRIVACY_CHOICE, STEPS.PATH_SELECTION, STEPS.WEBSITE_URL,
+    STEPS.BANK_UPLOAD, STEPS.PRACTICE_PROFILE,
+    STEPS.TRANSACTION_PROCESSING,
+    STEPS.GMS_PANEL
+  ].includes(currentStep);
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -445,12 +522,12 @@ export default function UnifiedOnboarding({ onComplete, onSkip }) {
       padding: '2rem 1rem'
     }}>
       <div style={{
-        maxWidth: (currentStep === STEPS.PATH_SELECTION || currentStep === STEPS.WEBSITE || currentStep === STEPS.CONVERSATION || currentStep === STEPS.UPLOAD_TYPE_SELECTION || currentStep === STEPS.TRANSACTION_UPLOAD || currentStep === STEPS.LABELLED_IMPORT || currentStep === STEPS.CATEGORY_MAPPING || currentStep === STEPS.LABELLED_EXTRACTION || currentStep === STEPS.AI_STAFF || currentStep === STEPS.AI_CATEGORIZATION || currentStep === STEPS.GMS_PANEL) ? '1600px' : '900px',
+        maxWidth: isWideStep ? '1600px' : '900px',
         margin: '0 auto',
         transition: 'max-width 0.3s ease'
       }}>
         {/* Progress Bar */}
-        {showProgressBar && (
+        {progressInfo.show && (
           <div style={{ marginBottom: '2rem' }}>
             <div style={{
               display: 'flex',
@@ -460,7 +537,7 @@ export default function UnifiedOnboarding({ onComplete, onSkip }) {
               color: COLORS.mediumGray
             }}>
               <span>Setup Progress</span>
-              <span>Step {currentStep + 1} of {totalSteps}</span>
+              <span>{progressInfo.label}</span>
             </div>
             <div style={{
               width: '100%',
@@ -470,7 +547,7 @@ export default function UnifiedOnboarding({ onComplete, onSkip }) {
               overflow: 'hidden'
             }}>
               <div style={{
-                width: `${progress}%`,
+                width: `${progressInfo.percent}%`,
                 height: '100%',
                 backgroundColor: COLORS.slainteBlue,
                 transition: 'width 0.3s ease'
@@ -483,122 +560,193 @@ export default function UnifiedOnboarding({ onComplete, onSkip }) {
         <div style={{
           backgroundColor: COLORS.white,
           borderRadius: '12px',
-          padding: (currentStep === STEPS.PATH_SELECTION || currentStep === STEPS.WEBSITE || currentStep === STEPS.CONVERSATION || currentStep === STEPS.UPLOAD_TYPE_SELECTION || currentStep === STEPS.TRANSACTION_UPLOAD || currentStep === STEPS.LABELLED_IMPORT || currentStep === STEPS.CATEGORY_MAPPING || currentStep === STEPS.LABELLED_EXTRACTION || currentStep === STEPS.AI_STAFF || currentStep === STEPS.AI_CATEGORIZATION || currentStep === STEPS.GMS_PANEL) ? '2.5rem' : '2rem',
+          padding: isWideStep || currentStep === STEPS.TERMS ? '2.5rem' : '2rem',
           boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
         }}>
+          {currentStep === STEPS.TERMS && (
+            <TermsAndConditions
+              onAccept={handleTermsAccept}
+              onDecline={onSkip}
+            />
+          )}
+
           {currentStep === STEPS.API_KEY && (
             <APIKeySetup
               onComplete={handleAPIKeyComplete}
-              onSkip={onSkip}
+              onDemo={handlePathDemo}
             />
+          )}
+
+          {currentStep === STEPS.PRIVACY_CHOICE && (
+            <div style={{
+              maxWidth: '750px',
+              margin: '0 auto',
+              padding: '2rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1.5rem'
+            }}>
+              <div style={{ textAlign: 'center', marginBottom: '0.5rem' }}>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '0.5rem' }}>
+                  How would you like to use Sláinte?
+                </h2>
+                <p style={{ color: COLORS.darkGray, fontSize: '0.95rem' }}>
+                  You can change this at any time in Settings &gt; Privacy &amp; AI.
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                {/* AI-Powered Option */}
+                <button
+                  onClick={() => handlePrivacyChoice(true)}
+                  style={{
+                    flex: 1,
+                    padding: '1.25rem',
+                    borderRadius: '0.75rem',
+                    border: `2px solid ${COLORS.slainteBlue}`,
+                    backgroundColor: 'rgba(74, 144, 226, 0.05)',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(74, 144, 226, 0.1)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(74, 144, 226, 0.05)'}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                    <span style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.slainteBlue }}>
+                      AI-Powered Mode
+                    </span>
+                    <span style={{
+                      backgroundColor: COLORS.slainteBlue,
+                      color: COLORS.white,
+                      padding: '0.15rem 0.5rem',
+                      borderRadius: '0.25rem',
+                      fontSize: '0.65rem',
+                      fontWeight: 600
+                    }}>RECOMMENDED</span>
+                  </div>
+                  <p style={{ margin: 0, fontSize: '0.85rem', color: COLORS.darkGray, lineHeight: 1.5 }}>
+                    Finn helps categorise transactions, generate reports, and answer questions.
+                    Data is sent securely and never stored externally.
+                  </p>
+                </button>
+
+                {/* Local Only Option */}
+                <button
+                  onClick={() => handlePrivacyChoice(false)}
+                  style={{
+                    flex: 1,
+                    padding: '1.25rem',
+                    borderRadius: '0.75rem',
+                    border: `1px solid ${COLORS.lightGray}`,
+                    backgroundColor: COLORS.white,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.backgroundGray || '#f8f9fa'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.white}
+                >
+                  <div style={{ marginBottom: '0.5rem' }}>
+                    <span style={{ fontSize: '1.125rem', fontWeight: 600 }}>
+                      Local Only Mode
+                    </span>
+                  </div>
+                  <p style={{ margin: 0, fontSize: '0.85rem', color: COLORS.darkGray, lineHeight: 1.5 }}>
+                    No data leaves your computer. AI features are disabled but all core features work.
+                    You can enable AI later in Settings.
+                  </p>
+                </button>
+              </div>
+
+              {/* Comparison Table */}
+              <div style={{
+                border: `1px solid ${COLORS.lightGray}`,
+                borderRadius: '0.75rem',
+                overflow: 'hidden'
+              }}>
+                <table style={{
+                  width: '100%',
+                  borderCollapse: 'collapse',
+                  fontSize: '0.8125rem'
+                }}>
+                  <thead>
+                    <tr style={{ backgroundColor: COLORS.backgroundGray }}>
+                      <th style={{ padding: '0.625rem 1rem', textAlign: 'left', fontWeight: 600, color: COLORS.darkGray, borderBottom: `1px solid ${COLORS.lightGray}` }}>Feature</th>
+                      <th style={{ padding: '0.625rem 1rem', textAlign: 'center', fontWeight: 600, color: COLORS.slainteBlue, borderBottom: `1px solid ${COLORS.lightGray}`, width: '140px' }}>AI-Powered</th>
+                      <th style={{ padding: '0.625rem 1rem', textAlign: 'center', fontWeight: 600, color: COLORS.darkGray, borderBottom: `1px solid ${COLORS.lightGray}`, width: '140px' }}>Local Only</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      ['Financial dashboard & charts', true, true],
+                      ['Transaction categorisation', 'AI + rules', 'Rules only'],
+                      ['Bank statement import', true, true],
+                      ['GMS Health Check analysis', true, true],
+                      ['Encrypted backups', true, true],
+                      ['Mobile partner access', true, true],
+                      ['Finn chat & reports', true, false],
+                      ['PCRS automated downloads', true, false],
+                      ['External connections', 'Anthropic API (encrypted)', 'None'],
+                      ['Data stored externally', 'Never', 'Never'],
+                    ].map(([feature, ai, local], idx) => (
+                      <tr key={idx} style={{
+                        borderBottom: idx < 9 ? `1px solid ${COLORS.lightGray}20` : 'none',
+                        backgroundColor: idx % 2 === 0 ? COLORS.white : `${COLORS.backgroundGray}80`
+                      }}>
+                        <td style={{ padding: '0.5rem 1rem', color: COLORS.darkGray }}>{feature}</td>
+                        <td style={{ padding: '0.5rem 1rem', textAlign: 'center', color: ai === true ? COLORS.incomeColor : ai === false ? COLORS.expenseColor : COLORS.darkGray }}>
+                          {ai === true ? 'Yes' : ai === false ? 'No' : ai}
+                        </td>
+                        <td style={{ padding: '0.5rem 1rem', textAlign: 'center', color: local === true ? COLORS.incomeColor : local === false ? COLORS.expenseColor : COLORS.darkGray }}>
+                          {local === true ? 'Yes' : local === false ? 'No' : local}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           )}
 
           {currentStep === STEPS.PATH_SELECTION && (
             <PathSelection
               onSelectSetup={handlePathSetup}
               onSelectDemo={handlePathDemo}
+              onSelectQuickConnect={handlePathQuickConnect}
             />
           )}
 
-          {currentStep === STEPS.STRUCTURE && (
-            <StructureExplanation
-              practiceName={profile?.practiceDetails?.practiceName}
-              onContinue={handleStructureExplanationComplete}
+          {currentStep === STEPS.QUICK_CONNECT && (
+            <QuickConnectSetup
+              onComplete={handleQuickConnectComplete}
               onBack={() => setCurrentStep(STEPS.PATH_SELECTION)}
             />
           )}
 
-          {currentStep === STEPS.WEBSITE && (
+          {currentStep === STEPS.WEBSITE_URL && (
             <WebsiteAnalysis
-              apiKey={apiKey}
               onComplete={handleWebsiteComplete}
               onSkip={handleWebsiteSkip}
               onBack={() => setCurrentStep(STEPS.PATH_SELECTION)}
             />
           )}
 
-          {currentStep === STEPS.CONVERSATION && (
-            <ConversationalSetup
-              apiKey={apiKey}
-              initialProfile={profile}
-              websiteData={websiteData}
-              onComplete={handleConversationComplete}
-              onBack={() => setCurrentStep(STEPS.WEBSITE)}
+          {currentStep === STEPS.BANK_UPLOAD && (
+            <OnboardingBankUpload
+              onComplete={handleBankUploadComplete}
+              onSkip={handleBankUploadSkip}
+              onBack={() => setCurrentStep(isWebsiteAnalyzing || websiteAnalysisResult ? STEPS.WEBSITE_URL : STEPS.PATH_SELECTION)}
             />
           )}
 
-          {currentStep === STEPS.PROGRESS_CHECKPOINT && (
-            <ProgressCheckpoint
-              profile={profile}
-              onContinue={handleProgressCheckpointContinue}
-              onSkipToUpload={handleProgressCheckpointSkip}
-            />
-          )}
-
-          {currentStep === STEPS.CATEGORIES && (
-            <CategoryPreferences
-              profile={profile}
-              onComplete={handleCategoryPreferencesComplete}
-              onBack={() => setCurrentStep(STEPS.CONVERSATION)}
-            />
-          )}
-
-          {currentStep === STEPS.REVIEW && (
-            <ReviewAndComplete
-              profile={profile}
-              onComplete={handleReviewComplete}
-              onBack={() => setCurrentStep(STEPS.CATEGORIES)}
-            />
-          )}
-
-          {currentStep === STEPS.UPLOAD_TYPE_SELECTION && (
-            <TransactionUploadTypeSelection
-              onSelectRaw={handleUploadTypeRaw}
-              onSelectLabelled={handleUploadTypeLabelled}
-              onSelectBackup={handleUploadTypeBackup}
-              onSkip={handleUploadTypeSkip}
-            />
-          )}
-
-          {currentStep === STEPS.TRANSACTION_UPLOAD && (
-            <TransactionUploadPrompt
-              onUpload={handleTransactionUpload}
-              onSkip={handleTransactionSkip}
-            />
-          )}
-
-          {currentStep === STEPS.LABELLED_IMPORT && (
-            <LabelledTransactionImport
-              onComplete={handleLabelledImportComplete}
-              onSwitchToRaw={handleLabelledImportSwitchToRaw}
-              onSkip={handleLabelledImportSkip}
-            />
-          )}
-
-          {currentStep === STEPS.CATEGORY_MAPPING && (
-            <CategoryMappingReview
-              importData={labelledImportData}
-              onComplete={handleCategoryMappingComplete}
-              onBack={handleCategoryMappingBack}
-            />
-          )}
-
-          {currentStep === STEPS.LABELLED_EXTRACTION && (
-            <LabelledIdentifierExtraction
-              mappingData={categoryMappingData}
-              onComplete={handleLabelledExtractionComplete}
-            />
-          )}
-
-          {currentStep === STEPS.AI_STAFF && (
-            <GuidedAIIdentifierSuggestions
-              onComplete={handleAIStaffComplete}
-            />
-          )}
-
-          {currentStep === STEPS.AI_CATEGORIZATION && (
-            <GuidedAIExpenseCategorization
-              onComplete={handleAICategorizationComplete}
+          {currentStep === STEPS.PRACTICE_PROFILE && (
+            <StaffProfileForm
+              initialProfile={mergeWebsiteDataIntoProfile(profile, websiteAnalysisResult)}
+              websiteData={websiteAnalysisResult}
+              websiteLoading={isWebsiteAnalyzing}
+              onComplete={handleProfileComplete}
+              onBack={() => setCurrentStep(STEPS.BANK_UPLOAD)}
             />
           )}
 
@@ -609,11 +757,40 @@ export default function UnifiedOnboarding({ onComplete, onSkip }) {
             />
           )}
 
-          {currentStep === STEPS.FEATURE_TOUR && (
-            <FeatureTour
-              onComplete={handleFeatureTourComplete}
-              onSkip={handleFeatureTourSkip}
-            />
+          {currentStep === STEPS.TRANSACTION_PROCESSING && (
+            <>
+              {/* Show loading if categorization is still running */}
+              {isCategorizationRunning && !categorizationResult && (
+                <div style={{ textAlign: 'center', padding: '3rem' }}>
+                  <div style={{
+                    width: '48px',
+                    height: '48px',
+                    border: `3px solid ${COLORS.lightGray}`,
+                    borderTopColor: COLORS.slainteBlue,
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite',
+                    margin: '0 auto 1rem'
+                  }} />
+                  <p style={{ color: COLORS.darkGray, fontSize: '1rem', fontWeight: 500 }}>
+                    Finishing up transaction analysis...
+                  </p>
+                  <p style={{ color: COLORS.mediumGray, fontSize: '0.875rem' }}>
+                    This should only take a moment.
+                  </p>
+                  <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+                </div>
+              )}
+
+              {/* Show transaction processing once categorization is ready */}
+              {(!isCategorizationRunning || categorizationResult) && (
+                <OnboardingTransactionUpload
+                  initialTransactions={categorizationResult?.transactions || rawParsedTransactions}
+                  onComplete={handleTransactionProcessingComplete}
+                  onSkip={() => handleFinalComplete()}
+                  onBack={() => setCurrentStep(STEPS.GMS_PANEL)}
+                />
+              )}
+            </>
           )}
         </div>
       </div>

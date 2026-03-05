@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useTasks } from '../../context/TasksContext';
 import {
   Check,
@@ -24,10 +24,19 @@ import ConfirmDialog from './ConfirmDialog';
  * TaskItem - Individual task card in the widget
  */
 const TaskItem = ({ task, onEdit }) => {
-  const { completeTask, startTask, deleteTask } = useTasks();
+  const { completeTask, startTask, deleteTask, highlightedTaskId } = useTasks();
   const [showMenu, setShowMenu] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, type: null });
+  const isHighlighted = highlightedTaskId === task.id;
+  const cardRef = useRef(null);
+
+  // Scroll into view when highlighted
+  useEffect(() => {
+    if (isHighlighted && cardRef.current) {
+      cardRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [isHighlighted]);
 
   const priorityColor = getPriorityColor(task.priority);
   const statusColor = getStatusColor(task.status);
@@ -74,16 +83,37 @@ const TaskItem = ({ task, onEdit }) => {
     }
   };
 
+  const handleNavigate = (e) => {
+    e.stopPropagation();
+    const link = task.actionLink;
+    if (!link) return;
+
+    if (link.startsWith('settings:')) {
+      const section = link.split(':')[1];
+      window.dispatchEvent(new CustomEvent('navigate-to-settings', { detail: { section } }));
+    } else if (link === 'upload') {
+      window.dispatchEvent(new CustomEvent('navigate-to-settings', { detail: { section: 'data' } }));
+    } else if (link === 'transactions') {
+      window.dispatchEvent(new CustomEvent('task:openTransactions'));
+    } else if (link === 'refinement' || link === 'export') {
+      window.dispatchEvent(new CustomEvent('tour:openReportsModal'));
+    } else if (link === 'gms-health-check') {
+      window.dispatchEvent(new CustomEvent('tour:switchToHealthCheck'));
+    }
+  };
+
   return (
     <div
+      ref={cardRef}
       style={{
-        backgroundColor: COLORS.white,
-        border: `1px solid ${overdue ? COLORS.expenseColor : COLORS.lightGray}`,
+        backgroundColor: isHighlighted ? 'rgba(74, 144, 226, 0.08)' : COLORS.white,
+        border: `1px solid ${isHighlighted ? COLORS.slainteBlue : overdue ? COLORS.expenseColor : COLORS.lightGray}`,
         borderRadius: '0.5rem',
         padding: '0.75rem',
         position: 'relative',
-        transition: 'all 0.15s',
-        opacity: isDeleting ? 0.5 : 1
+        transition: 'all 0.3s ease',
+        opacity: isDeleting ? 0.5 : 1,
+        boxShadow: isHighlighted ? `0 0 0 2px rgba(74, 144, 226, 0.3)` : 'none'
       }}
     >
       {/* Header row: Title + Actions */}
@@ -132,11 +162,13 @@ const TaskItem = ({ task, onEdit }) => {
         {/* Title */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div
+            onClick={task.actionLink && task.status !== 'completed' ? handleNavigate : undefined}
             style={{
               fontWeight: 500,
               fontSize: '0.8125rem',
-              color: COLORS.darkGray,
+              color: task.actionLink && task.status !== 'completed' ? COLORS.slainteBlue : COLORS.darkGray,
               lineHeight: 1.3,
+              cursor: task.actionLink && task.status !== 'completed' ? 'pointer' : 'default',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               display: '-webkit-box',

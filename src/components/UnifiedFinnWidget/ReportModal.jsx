@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import DOMPurify from 'dompurify';
 import { ArtifactViewer } from '../FinancialChat/ArtifactViewer';
 import { X, FileText, Download, Copy, Printer, Calendar, BarChart3, AlertCircle } from 'lucide-react';
 import { exportArtifactPDF, exportArtifactMarkdown, copyArtifactToClipboard, formatArtifactHTML } from '../../utils/artifactBuilder';
@@ -434,7 +435,7 @@ const ReportModal = ({ report, onClose }) => {
               <div
                 key={`text-${index}`}
                 className="report-content"
-                dangerouslySetInnerHTML={{ __html: segmentHtml }}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(segmentHtml) }}
               />
             );
           })}

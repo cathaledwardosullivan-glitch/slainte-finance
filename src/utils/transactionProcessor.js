@@ -1,5 +1,6 @@
 // Transaction categorization and processing utilities
 import { autoCategorizeToParen } from './simpleAutoCategorization';
+import { categorizeTransactionBatch } from './categorizationEngine';
 
 export const categorizeTransaction = (details, categoryMapping) => {
   if (!details) return null;
@@ -200,4 +201,170 @@ export const processTransactionData = (results, selectedFile, categorizeTransact
   const autoIncome = processedTransactions.filter(t => t.category === '__AUTO_INCOME__');
 
   return { categorized, unidentified, autoIncome };
+};
+
+/**
+ * Process transactions with layered categorization (new engine)
+ * Returns transactions with confidence scores and cohort assignments
+ *
+ * @param {Array} rawTransactions - Transactions with basic fields (id, details, debit, credit, amount)
+ * @param {Array} categoryMapping - Category definitions with identifiers
+ * @param {Array} existingTransactions - Optional: Already categorized transactions for similarity matching
+ * @returns {Object} { transactions, stats } - Processed transactions and processing statistics
+ */
+export const processTransactionsWithEngine = (rawTransactions, categoryMapping, existingTransactions = []) => {
+  if (!rawTransactions || rawTransactions.length === 0) {
+    return { transactions: [], stats: {} };
+  }
+
+  // Run categorization engine (builds indexes internally)
+  // Pass existing transactions for similar transaction matching
+  const { results, stats } = categorizeTransactionBatch(rawTransactions, categoryMapping, existingTransactions);
+
+  // Enrich results with full category object for backward compatibility
+  const enrichedTransactions = results.map(result => {
+    // Find the full category object if we have a category code
+    const fullCategory = result.categoryCode
+      ? categoryMapping.find(c => c.code === result.categoryCode)
+      : null;
+
+    return {
+      // Original transaction fields
+      id: result.id,
+      date: result.date,
+      details: result.details,
+      debit: result.debit,
+      credit: result.credit,
+      amount: result.amount,
+      balance: result.balance,
+      monthYear: result.monthYear,
+      fileName: result.fileName,
+
+      // Layer 1: Type
+      type: result.type,
+      typeConfidence: result.typeConfidence,
+      typeAnomaly: result.typeAnomaly,
+      typeReviewed: false,
+
+      // Layer 2: Group
+      group: result.group,
+      groupConfidence: result.groupConfidence,
+      groupMatchedIdentifier: result.groupMatchedIdentifier,
+      groupMatchType: result.groupMatchType,  // 'identifier', 'probability', 'none', 'type_derived'
+      groupReason: result.groupReason,        // Explanation for probability matches
+      groupCohort: result.groupCohort,
+      groupConflicts: result.groupConflicts || [],  // Array of conflicting group options
+      groupReviewed: false,
+      groupAISuggested: false,
+
+      // Layer 3: Category
+      categoryCode: result.categoryCode,
+      categoryName: result.categoryName,
+      categoryConfidence: result.categoryConfidence,
+      categoryMatchedIdentifier: result.categoryMatchedIdentifier,
+      categoryMatchType: result.categoryMatchType,  // 'identifier', 'probability', 'none'
+      categoryReason: result.categoryReason,        // Explanation for probability matches
+      categoryCohort: result.categoryCohort,
+      categoryConflicts: result.categoryConflicts || [],  // Array of conflicting category options
+      categoryReviewed: false,
+      categoryAISuggested: false,
+
+      // AI assistance metadata (populated later if AI is called)
+      aiGroupSuggestion: null,      // NEW: { group, confidence, reasoning, alternatives }
+      aiCategorySuggestion: null,   // NEW: { categoryCode, confidence, reasoning, alternatives }
+
+      // Unified confidence scoring (Levenshtein-based)
+      unifiedConfidence: result.unifiedConfidence,
+      unifiedCohort: result.unifiedCohort,
+      calculationDetails: result.calculationDetails,
+      similarTransactionMatch: result.similarTransactionMatch,
+
+      // Backward compatibility - full category object
+      category: fullCategory,
+
+      // Layer 5: User annotations
+      comment: result.comment || '',
+
+      // Legacy flag
+      isIncome: result.type === 'income'
+    };
+  });
+
+  return {
+    transactions: enrichedTransactions,
+    stats
+  };
+};
+
+/**
+ * Upgrade existing transactions with new layered fields
+ * Useful for migrating existing data to new schema
+ *
+ * @param {Array} existingTransactions - Transactions in old format
+ * @param {Array} categoryMapping - Category definitions
+ * @returns {Object} { transactions, stats }
+ */
+export const upgradeTransactionsToLayered = (existingTransactions, categoryMapping) => {
+  if (!existingTransactions || existingTransactions.length === 0) {
+    return { transactions: [], stats: {} };
+  }
+
+  // Process with new engine
+  const { transactions, stats } = processTransactionsWithEngine(existingTransactions, categoryMapping);
+
+  // Preserve original category if it was manually set and differs from engine result
+  const mergedTransactions = transactions.map((newTx, index) => {
+    const oldTx = existingTransactions[index];
+
+    // If original had a manually categorized transaction, keep that info
+    if (oldTx?.category && oldTx.category.code !== newTx.categoryCode) {
+      return {
+        ...newTx,
+        // Keep original category for comparison
+        originalCategoryCode: oldTx.category.code,
+        originalCategoryName: oldTx.category.name,
+        // Mark as needing review since engine disagrees with manual categorization
+        categoryReviewed: true,
+        // Preserve the original category
+        category: oldTx.category,
+        categoryCode: oldTx.category.code,
+        categoryName: oldTx.category.name
+      };
+    }
+
+    // Preserve any existing comments
+    if (oldTx?.comment) {
+      return { ...newTx, comment: oldTx.comment };
+    }
+
+    return newTx;
+  });
+
+  return {
+    transactions: mergedTransactions,
+    stats
+  };
+};
+
+/**
+ * Get transaction key for duplicate detection
+ * Standardized across the codebase
+ *
+ * @param {Object} transaction - Transaction object
+ * @returns {string} Unique key for the transaction
+ */
+export const getTransactionKey = (transaction) => {
+  const dateStr = transaction.date instanceof Date
+    ? transaction.date.toISOString().split('T')[0]
+    : String(transaction.date || '');
+
+  const amount = Math.max(
+    Math.abs(transaction.debit || 0),
+    Math.abs(transaction.credit || 0),
+    Math.abs(transaction.amount || 0)
+  );
+
+  const details = (transaction.details || '').toLowerCase().trim();
+
+  return `${dateStr}|${amount}|${details}`;
 };

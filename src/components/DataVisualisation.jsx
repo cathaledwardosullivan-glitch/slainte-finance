@@ -23,7 +23,7 @@ import { PCRS_PAYMENT_CATEGORIES } from '../data/paymentCategories';
 const CHART_COLORS = [COLORS.slainteBlue, COLORS.incomeColor, COLORS.highlightYellow, COLORS.expenseColor, '#8884D8', '#82CA9D', '#FF8042', '#00C49F', '#FFBB28', '#0088FE', '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B739', '#52B788'];
 
 export default function DataVisualisation() {
-  const { transactions, selectedYear, setSelectedYear, getAvailableYears, showSensitiveData, useRollingYear, setUseRollingYear, paymentAnalysisData } = useAppContext();
+  const { transactions, selectedYear, setSelectedYear, getAvailableYears, useRollingYear, setUseRollingYear, paymentAnalysisData } = useAppContext();
   const summaries = calculateSummaries(transactions, selectedYear, useRollingYear);
 
   if (transactions.length === 0) {
@@ -105,7 +105,7 @@ export default function DataVisualisation() {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="month" />
               <YAxis />
-              <Tooltip formatter={(value) => showSensitiveData ? `€${value.toLocaleString()}` : '€***'} />
+              <Tooltip formatter={(value) => `€${value.toLocaleString()}`} />
               <Legend />
               <Line type="monotone" dataKey="income" stroke={COLORS.incomeColor} strokeWidth={2} name="Income" />
               <Line type="monotone" dataKey="expenses" stroke={COLORS.expenseColor} strokeWidth={2} name="Expenses" />
@@ -179,7 +179,7 @@ export default function DataVisualisation() {
                 <YAxis />
                 <Tooltip
                   formatter={(value, name) => [
-                    showSensitiveData ? `€${value.toLocaleString()}` : '€***',
+                    `€${value.toLocaleString()}`,
                     name
                   ]}
                 />
@@ -218,7 +218,7 @@ export default function DataVisualisation() {
                 summaries.categoryBreakdown
                   .filter(c => c.type === 'expense')
                   .forEach(category => {
-                    const section = category.section || 'Other Expenses';
+                    const section = category.section || 'Petty Cash / Other';
                     if (!currentPeriodSections[section]) {
                       currentPeriodSections[section] = 0;
                     }
@@ -250,7 +250,7 @@ export default function DataVisualisation() {
                 previousPeriodSummaries.categoryBreakdown
                   .filter(c => c.type === 'expense')
                   .forEach(category => {
-                    const section = category.section || 'Other Expenses';
+                    const section = category.section || 'Petty Cash / Other';
                     if (!previousPeriodSections[section]) {
                       previousPeriodSections[section] = 0;
                     }
@@ -286,7 +286,7 @@ export default function DataVisualisation() {
                 <YAxis />
                 <Tooltip
                   formatter={(value, name) => [
-                    showSensitiveData ? `€${value.toLocaleString()}` : '€***',
+                    `€${value.toLocaleString()}`,
                     name
                   ]}
                 />
@@ -333,9 +333,7 @@ export default function DataVisualisation() {
                   cy="50%"
                   outerRadius={120}
                   label={({ name, value, percent }) =>
-                    showSensitiveData
-                      ? `${name.replace(/^\d{2}-/, '')}: €${value.toLocaleString()} (${(percent * 100).toFixed(1)}%)`
-                      : `${name.replace(/^\d{2}-/, '')}: ${(percent * 100).toFixed(1)}%`
+                    `${name.replace(/^\d{2}-/, '')}: €${value.toLocaleString()} (${(percent * 100).toFixed(1)}%)`
                   }
                 >
                   {summaries.salariesBreakdown.map((entry, index) => (
@@ -343,7 +341,7 @@ export default function DataVisualisation() {
                   ))}
                 </Pie>
                 <Tooltip
-                  formatter={(value) => showSensitiveData ? `€${value.toLocaleString()}` : '€***'}
+                  formatter={(value) => `€${value.toLocaleString()}`}
                 />
               </RechartsPieChart>
             </ResponsiveContainer>
@@ -406,18 +404,16 @@ export default function DataVisualisation() {
                           </td>
                           <td className="px-4 py-3 border-b text-right font-mono" style={{ borderColor: COLORS.lightGray, color: COLORS.darkGray }}>
                             {prevYear > 0 ?
-                              (showSensitiveData ? `€${prevYear.toLocaleString()}` : '€***') :
+                              `€${prevYear.toLocaleString()}` :
                               <span style={{ color: COLORS.mediumGray }}>€0</span>
                             }
                           </td>
                           <td className="px-4 py-3 border-b text-right font-mono font-semibold" style={{ borderColor: COLORS.lightGray, color: COLORS.darkGray }}>
-                            {showSensitiveData ? `€${currentYear.toLocaleString()}` : '€***'}
+                            {`€${currentYear.toLocaleString()}`}
                           </td>
                           <td className="px-4 py-3 border-b text-right font-mono font-semibold" style={{ borderColor: COLORS.lightGray, color: change > 0 ? COLORS.expenseColor : change < 0 ? COLORS.incomeColor : COLORS.darkGray }}>
                             {prevYear > 0 ? (
-                              showSensitiveData
-                                ? `${change >= 0 ? '+' : ''}€${change.toLocaleString()}`
-                                : (change === 0 ? '€0' : (change > 0 ? '+€***' : '-€***'))
+                              `${change >= 0 ? '+' : ''}€${change.toLocaleString()}`
                             ) : (
                               <span style={{ color: COLORS.mediumGray }}>N/A</span>
                             )}
@@ -489,7 +485,7 @@ export default function DataVisualisation() {
 
             <div className="mb-4 p-4 rounded-lg" style={{ backgroundColor: `${COLORS.incomeColor}15` }}>
               <div className="text-2xl font-bold" style={{ color: COLORS.incomeColor }}>
-                {showSensitiveData ? `€${totalPayment.toLocaleString()}` : '€***,***'}
+                {`€${totalPayment.toLocaleString()}`}
               </div>
               <div className="text-sm" style={{ color: COLORS.incomeColor }}>Total Gross Payment</div>
             </div>
@@ -505,9 +501,7 @@ export default function DataVisualisation() {
                   label={({ name, value, percent }) => {
                     // Shorten category names for display
                     const shortName = name.length > 25 ? name.substring(0, 22) + '...' : name;
-                    return showSensitiveData
-                      ? `${shortName}: €${value.toLocaleString()} (${(percent * 100).toFixed(1)}%)`
-                      : `${shortName}: ${(percent * 100).toFixed(1)}%`;
+                    return `${shortName}: €${value.toLocaleString()} (${(percent * 100).toFixed(1)}%)`;
                   }}
                   labelLine={{ stroke: COLORS.mediumGray, strokeWidth: 1 }}
                 >
@@ -516,7 +510,7 @@ export default function DataVisualisation() {
                   ))}
                 </Pie>
                 <Tooltip
-                  formatter={(value) => showSensitiveData ? `€${value.toLocaleString()}` : '€***'}
+                  formatter={(value) => `€${value.toLocaleString()}`}
                 />
               </RechartsPieChart>
             </ResponsiveContainer>
@@ -556,7 +550,7 @@ export default function DataVisualisation() {
                             </div>
                           </td>
                           <td className="px-4 py-3 border-b text-right font-mono font-semibold" style={{ borderColor: COLORS.lightGray, color: COLORS.darkGray }}>
-                            {showSensitiveData ? `€${item.value.toLocaleString()}` : '€***'}
+                            {`€${item.value.toLocaleString()}`}
                           </td>
                           <td className="px-4 py-3 border-b text-center font-semibold" style={{ borderColor: COLORS.lightGray, color: COLORS.darkGray }}>
                             {percentage}%
@@ -571,7 +565,7 @@ export default function DataVisualisation() {
                         TOTAL
                       </td>
                       <td className="px-4 py-3 border-t text-right font-mono font-bold" style={{ borderColor: COLORS.lightGray, color: COLORS.incomeColor }}>
-                        {showSensitiveData ? `€${totalPayment.toLocaleString()}` : '€***'}
+                        {`€${totalPayment.toLocaleString()}`}
                       </td>
                       <td className="px-4 py-3 border-t text-center font-bold" style={{ borderColor: COLORS.lightGray, color: COLORS.darkGray }}>
                         100%

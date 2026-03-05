@@ -3,6 +3,9 @@
  * Handles API calls to Claude in both Electron and PWA/Browser environments
  */
 
+import { isAIEnabled } from './privacyGate';
+import { MODELS } from '../data/modelConfig';
+
 // Configuration - Set this to your Cloudflare Tunnel URL when deployed
 const CLOUDFLARE_TUNNEL_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -26,28 +29,84 @@ export function isElectron() {
  */
 export async function callClaude(message, options = {}) {
   const {
-    model = 'claude-haiku-4-5-20251001',
+    model = MODELS.FAST,
     maxTokens = 1024,
     temperature = 1.0,
     apiKey = null,
     context = null
   } = options;
 
+  // Block all external AI calls when Local Only Mode is enabled
+  if (!isAIEnabled()) {
+    console.log('[Claude API] Blocked: Local Only Mode is enabled');
+    return {
+      success: false,
+      error: 'Local Only Mode is enabled. AI features are unavailable.',
+      localOnly: true,
+      source: 'blocked'
+    };
+  }
+
   try {
     if (isElectron()) {
-      // Running in Electron - use IPC
-      console.log('[Claude API] Calling via Electron IPC with model:', model);
+      // Running in Electron — check if we have a local API key
+      const hasLocalKey = await window.electronAPI.getLocalStorage('claude_api_key');
 
-      const response = await window.electronAPI.callClaude(message, context, {
-        model,
-        maxTokens,
-        temperature
-      });
+      if (hasLocalKey) {
+        // Normal IPC path — local API key available
+        console.log('[Claude API] Calling via Electron IPC with model:', model);
 
+        const response = await window.electronAPI.callClaude(message, context, {
+          model,
+          maxTokens,
+          temperature
+        });
+
+        return {
+          success: true,
+          data: response,
+          content: response.content?.[0]?.text || '',
+          source: 'electron'
+        };
+      }
+
+      // No local API key — try hub proxy if this is a connected install
+      const hubAddress = localStorage.getItem('connected_practice_address');
+      const hubToken = localStorage.getItem('connected_practice_token');
+
+      if (hubAddress && hubToken) {
+        console.log('[Claude API] No local key, routing through hub proxy at', hubAddress);
+        const hubBaseURL = `http://${hubAddress.includes(':') ? hubAddress : hubAddress + ':3001'}`;
+
+        const response = await fetch(`${hubBaseURL}/api/chat`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${hubToken}`
+          },
+          body: JSON.stringify({ message, context })
+        });
+
+        if (!response.ok) {
+          if (response.status === 401 || response.status === 403) {
+            throw new Error('Hub connection expired. Go to Settings → Connected Practice to reconnect.');
+          }
+          throw new Error(`Hub API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return {
+          success: true,
+          data: data,
+          content: data.content?.[0]?.text || '',
+          source: 'hub-proxy'
+        };
+      }
+
+      // Neither local key nor hub connection
       return {
-        success: true,
-        data: response,
-        content: response.content?.[0]?.text || '',
+        success: false,
+        error: 'No API key configured. Add your own key in Settings, or connect to the practice network.',
         source: 'electron'
       };
 
@@ -99,6 +158,91 @@ export async function callClaude(message, options = {}) {
       error: error.message,
       source: isElectron() ? 'electron' : 'api'
     };
+  }
+}
+
+/**
+ * Call Claude API with full request — supports tools, system prompt, messages array.
+ * Used by the Finn agentic loop for tool-use conversations.
+ *
+ * @param {object} request - Full Anthropic API request (model, system, messages, tools, tool_choice, max_tokens)
+ * @returns {Promise<object>} - Raw Anthropic API response (content blocks, stop_reason, etc.)
+ */
+export async function callClaudeWithTools(request) {
+  // Block all external AI calls when Local Only Mode is enabled
+  if (!isAIEnabled()) {
+    console.log('[Claude API] Blocked: Local Only Mode is enabled');
+    throw new Error('Local Only Mode is enabled. AI features are unavailable.');
+  }
+
+  try {
+    if (isElectron()) {
+      // Electron desktop — use raw IPC handler
+      const hasLocalKey = await window.electronAPI.getLocalStorage('claude_api_key');
+
+      if (hasLocalKey) {
+        console.log(`[Claude API] Raw call via Electron IPC, model: ${request.model}, tools: ${request.tools?.length || 0}`);
+        return await window.electronAPI.callClaudeRaw(request);
+      }
+
+      // No local key — try hub proxy
+      const hubAddress = localStorage.getItem('connected_practice_address');
+      const hubToken = localStorage.getItem('connected_practice_token');
+
+      if (hubAddress && hubToken) {
+        console.log('[Claude API] Raw call via hub proxy at', hubAddress);
+        const hubBaseURL = `http://${hubAddress.includes(':') ? hubAddress : hubAddress + ':3001'}`;
+
+        const response = await fetch(`${hubBaseURL}/api/chat`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${hubToken}`
+          },
+          body: JSON.stringify({ message: JSON.stringify(request) })
+        });
+
+        if (!response.ok) {
+          if (response.status === 401 || response.status === 403) {
+            throw new Error('Hub connection expired. Go to Settings → Connected Practice to reconnect.');
+          }
+          throw new Error(`Hub API error: ${response.status}`);
+        }
+
+        return await response.json();
+      }
+
+      throw new Error('No API key configured. Add your own key in Settings, or connect to the practice network.');
+
+    } else {
+      // Browser/PWA — use Express proxy
+      const token = localStorage.getItem('partner_token');
+      if (!token) throw new Error('Authentication required. Please log in.');
+
+      console.log(`[Claude API] Raw call via HTTP, model: ${request.model}, tools: ${request.tools?.length || 0}`);
+
+      const response = await fetch(`${CLOUDFLARE_TUNNEL_URL}/api/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ message: JSON.stringify(request) })
+      });
+
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          throw new Error('Authentication expired. Please log in again.');
+        }
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      return await response.json();
+    }
+
+  } catch (error) {
+    console.error('[Claude API] Raw call error:', error);
+    throw error;
   }
 }
 
@@ -155,6 +299,7 @@ export async function checkAPIAvailability() {
 
 export default {
   callClaude,
+  callClaudeWithTools,
   formatClaudeResponse,
   checkAPIAvailability,
   isElectron

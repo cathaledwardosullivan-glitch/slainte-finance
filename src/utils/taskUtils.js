@@ -25,6 +25,7 @@ export function normalizeActionItem(action) {
     effort: action.effort || 'medium',
     showOnDashboard: action.showOnDashboard !== false,
     notes: action.notes || '',
+    actionLink: action.actionLink || null,
     // Keep original data for updates
     _source: 'gms',
     _originalId: action.id,

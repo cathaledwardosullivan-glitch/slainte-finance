@@ -1,37 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowRight, Sparkles, Play, Upload, User, MessageCircle } from 'lucide-react';
+import { ArrowRight, Sparkles, Play, Upload, User, MessageCircle, Wifi } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 import COLORS from '../../utils/colors';
 
-// Typing animation hook
-const useTypingEffect = (text, speed = 30) => {
-  const [displayedText, setDisplayedText] = useState('');
-  const [isComplete, setIsComplete] = useState(false);
-
-  useEffect(() => {
-    if (!text) return;
-
-    let index = 0;
-    setDisplayedText('');
-    setIsComplete(false);
-
-    const timer = setInterval(() => {
-      if (index < text.length) {
-        setDisplayedText(text.substring(0, index + 1));
-        index++;
-      } else {
-        setIsComplete(true);
-        clearInterval(timer);
-      }
-    }, speed);
-
-    return () => clearInterval(timer);
-  }, [text, speed]);
-
-  return { displayedText, isComplete };
+// Instant text display (typing animation disabled)
+const useTypingEffect = (text) => {
+  return { displayedText: text || '', isComplete: true };
 };
 
-export default function PathSelection({ onSelectSetup, onSelectDemo }) {
+export default function PathSelection({ onSelectSetup, onSelectDemo, onSelectQuickConnect }) {
   const {
     setTransactions,
     setUnidentifiedTransactions,
@@ -44,7 +21,7 @@ export default function PathSelection({ onSelectSetup, onSelectDemo }) {
   const [showParagraph2, setShowParagraph2] = useState(false);
   const [showQuestion, setShowQuestion] = useState(false);
 
-  const greetingText = "Hello! I'm Cara, your Sláinte.Finance guide";
+  const greetingText = "Hello! I'm Finn, your Sláinte.Finance guide";
   const paragraph1Text = "I'm here to help you set up your practice's financial management system, and I'll be with you every step of the way through the app. This setup will take about 5-7 minutes, and by the end, you'll have a personalized dashboard showing your practice's financial picture.";
   const paragraph2Text = "To give you the best experience, I'll need to learn a bit about your practice - particularly your team structure. You'll also have the option to upload your bank transactions and PCRS data.";
   const questionText = "How would you like to proceed?";
@@ -91,7 +68,7 @@ export default function PathSelection({ onSelectSetup, onSelectDemo }) {
       margin: '0 auto',
       minHeight: 'min(65vh, 600px)'
     }}>
-      {/* Left side - Cara Chat Box (styled like FloatingFinancialChat) */}
+      {/* Left side - Finn Chat Box (styled like FloatingFinancialChat) */}
       <div style={{
         flex: '1 1 45%',
         minWidth: '450px',
@@ -125,7 +102,7 @@ export default function PathSelection({ onSelectSetup, onSelectDemo }) {
             <User style={{ height: '1.25rem', width: '1.25rem' }} />
           </div>
           <div>
-            <div style={{ fontWeight: 600, fontSize: '1rem' }}>Cara</div>
+            <div style={{ fontWeight: 600, fontSize: '1rem' }}>Finn</div>
             <div style={{ fontSize: '0.75rem', opacity: 0.9 }}>Sláinte Guide</div>
           </div>
         </div>
@@ -424,6 +401,66 @@ export default function PathSelection({ onSelectSetup, onSelectDemo }) {
             </div>
           </div>
         </button>
+
+        {/* Card 3: Connect to Practice Computer */}
+        {onSelectQuickConnect && (
+          <button
+            onClick={onSelectQuickConnect}
+            style={{
+              backgroundColor: COLORS.white,
+              border: `2px solid ${COLORS.lightGray}`,
+              borderRadius: '16px',
+              padding: '1.25rem 2rem',
+              textAlign: 'left',
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.1)';
+              e.currentTarget.style.borderColor = COLORS.mediumGray;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'none';
+              e.currentTarget.style.borderColor = COLORS.lightGray;
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '10px',
+                backgroundColor: COLORS.backgroundGray,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+              }}>
+                <Wifi style={{ width: '20px', height: '20px', color: COLORS.mediumGray }} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <h3 style={{
+                  fontSize: '1.125rem',
+                  fontWeight: 600,
+                  color: COLORS.darkGray,
+                  marginBottom: '0.25rem'
+                }}>
+                  Connect to Practice Computer
+                </h3>
+                <p style={{
+                  fontSize: '0.875rem',
+                  color: COLORS.mediumGray,
+                  margin: 0,
+                  lineHeight: 1.5
+                }}>
+                  Pull data from another computer on your network — ~1 minute
+                </p>
+              </div>
+              <ArrowRight style={{ width: '20px', height: '20px', color: COLORS.mediumGray, flexShrink: 0 }} />
+            </div>
+          </button>
+        )}
 
         {/* Helper Text */}
         <p style={{

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useFinn } from '../../context/FinnContext';
 import { useTour } from '../Tour';
-import { Send, MessageCircle, Loader2, X, FileText, Play, RefreshCw, SkipForward } from 'lucide-react';
+import { Send, MessageCircle, Loader2, X, FileText, Play, RefreshCw, SkipForward, Download, FolderOpen, MessageSquare, CheckCircle, Navigation, Search, FileSearch, BookOpen } from 'lucide-react';
 import COLORS from '../../utils/colors';
 
 /**
@@ -15,14 +15,16 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
     hasData,
     apiKey,
     backgroundTask,
-    startBackgroundReport,
     cancelBackgroundTask,
-    pendingReportOffer,
     setActiveTab,
     getFinancialContext,
     pendingClarifications,
     submitClarifications,
-    skipClarifications
+    skipClarifications,
+    TASK_TYPES,
+    pcrsDownloadProgress,
+    openFeedback,
+    closeWidget
   } = useFinn();
 
   const { startTour } = useTour();
@@ -49,23 +51,6 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
-    }
-  };
-
-  // Check if message is a tour request
-  const isTourRequest = (message) => {
-    const lowerMsg = message.toLowerCase();
-    const tourPhrases = [
-      'tour', 'show me around', 'walk me through', 'guide me',
-      'how does this work', 'getting started'
-    ];
-    return tourPhrases.some(phrase => lowerMsg.includes(phrase));
-  };
-
-  // Handle generate detailed report button click
-  const handleGenerateReport = () => {
-    if (pendingReportOffer) {
-      startBackgroundReport(pendingReportOffer);
     }
   };
 
@@ -118,10 +103,51 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
         >
           {message.content}
 
-          {/* Offer detailed report button */}
-          {message.offerDetailedReport && message.reportContext && backgroundTask?.status !== 'running' && (
+          {/* Tool execution indicators */}
+          {message.toolActions?.length > 0 && (
+            <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              {message.toolActions.map((action, i) => (
+                <div key={i} style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.375rem',
+                  padding: '0.25rem 0.5rem',
+                  borderRadius: '0.375rem',
+                  backgroundColor: `${COLORS.slainteBlue}10`,
+                  fontSize: '0.75rem',
+                  color: COLORS.mediumGray
+                }}>
+                  {action.name === 'navigate' ? (
+                    <Navigation size={12} color={COLORS.slainteBlue} />
+                  ) : action.name === 'search_transactions' ? (
+                    <FileSearch size={12} color={COLORS.slainteBlue} />
+                  ) : action.name === 'generate_report' ? (
+                    <FileText size={12} color={COLORS.slainteBlue} />
+                  ) : action.name === 'lookup_saved_reports' ? (
+                    <BookOpen size={12} color={COLORS.slainteBlue} />
+                  ) : action.name === 'lookup_financial_data' ? (
+                    <Search size={12} color={COLORS.slainteBlue} />
+                  ) : action.name === 'start_app_tour' ? (
+                    <Play size={12} color={COLORS.slainteBlue} />
+                  ) : action.name === 'send_feedback' ? (
+                    <MessageSquare size={12} color={COLORS.slainteBlue} />
+                  ) : (
+                    <CheckCircle size={12} color={COLORS.incomeColor} />
+                  )}
+                  <span>{action.description}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Tour offer action button */}
+          {message.action?.type === 'start_tour' && (
             <button
-              onClick={() => startBackgroundReport(message.reportContext)}
+              onClick={() => {
+                startTour();
+                // Close Finn widget so the tour overlay is visible
+                closeWidget();
+              }}
               style={{
                 marginTop: '0.75rem',
                 width: '100%',
@@ -141,8 +167,8 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.slainteBlueDark || '#3D7BC7'}
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.slainteBlue}
             >
-              <FileText style={{ height: '0.875rem', width: '0.875rem' }} />
-              Generate Detailed Report
+              <Play style={{ height: '0.875rem', width: '0.875rem' }} />
+              {message.action.label || 'Start Tour'}
             </button>
           )}
 
@@ -174,10 +200,64 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
             </button>
           )}
 
-          {/* Retry button for errors */}
-          {message.canRetry && pendingReportOffer && (
+          {/* PCRS download complete notification */}
+          {message.isPCRSNotification && message.pcrsComplete && (
+            <div style={{ marginTop: '0.75rem' }}>
+              {message.downloadedFiles?.length > 0 && (
+                <div style={{
+                  backgroundColor: `${COLORS.incomeColor}15`,
+                  borderRadius: '0.375rem',
+                  padding: '0.5rem 0.75rem',
+                  marginBottom: '0.5rem',
+                  fontSize: '0.75rem'
+                }}>
+                  <div style={{ fontWeight: 500, marginBottom: '0.25rem', color: COLORS.darkGray }}>
+                    Downloaded files:
+                  </div>
+                  {message.downloadedFiles.map((file, idx) => (
+                    <div key={idx} style={{ color: COLORS.mediumGray }}>
+                      {file.panelName}: {file.filename}
+                    </div>
+                  ))}
+                </div>
+              )}
+              <button
+                onClick={() => {
+                  // Navigate to Data section in Settings
+                  // This would typically be handled by a callback or navigation
+                  window.dispatchEvent(new CustomEvent('navigate-to-data-section'));
+                }}
+                style={{
+                  width: '100%',
+                  padding: '0.625rem 1rem',
+                  backgroundColor: COLORS.incomeColor,
+                  color: COLORS.white,
+                  border: 'none',
+                  borderRadius: '0.5rem',
+                  fontSize: '0.8125rem',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3db8ab'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.incomeColor}
+              >
+                <FolderOpen style={{ height: '0.875rem', width: '0.875rem' }} />
+                Import to Payment Analysis
+              </button>
+            </div>
+          )}
+
+          {/* PCRS download error notification */}
+          {message.isPCRSNotification && message.pcrsError && message.canRetryPCRS && (
             <button
-              onClick={handleGenerateReport}
+              onClick={() => {
+                // Re-open the PCRS downloader modal
+                window.dispatchEvent(new CustomEvent('open-pcrs-downloader'));
+              }}
               style={{
                 marginTop: '0.75rem',
                 width: '100%',
@@ -197,32 +277,6 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
             >
               <RefreshCw style={{ height: '0.875rem', width: '0.875rem' }} />
               Try Again
-            </button>
-          )}
-
-          {/* Tour launch button */}
-          {message.showTourButton && (
-            <button
-              onClick={() => startTour()}
-              style={{
-                marginTop: '0.75rem',
-                width: '100%',
-                padding: '0.625rem 1rem',
-                backgroundColor: COLORS.slainteBlue,
-                color: COLORS.white,
-                border: 'none',
-                borderRadius: '0.5rem',
-                fontSize: '0.8125rem',
-                fontWeight: 500,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.5rem'
-              }}
-            >
-              <Play style={{ height: '0.875rem', width: '0.875rem' }} />
-              Start App Tour
             </button>
           )}
 
@@ -321,41 +375,87 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
         {backgroundTask?.status === 'running' && (
           <div
             style={{
-              backgroundColor: `${COLORS.highlightYellow}20`,
-              border: `1px solid ${COLORS.highlightYellow}`,
+              backgroundColor: backgroundTask.type === TASK_TYPES?.PCRS_DOWNLOAD
+                ? `${COLORS.incomeColor}15`
+                : `${COLORS.highlightYellow}20`,
+              border: `1px solid ${backgroundTask.type === TASK_TYPES?.PCRS_DOWNLOAD
+                ? COLORS.incomeColor
+                : COLORS.highlightYellow}`,
               borderRadius: '0.75rem',
               padding: '0.875rem',
               marginBottom: '0.75rem'
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-              <Loader2
-                style={{
-                  height: '1rem',
-                  width: '1rem',
-                  color: COLORS.darkGray,
-                  animation: 'spin 1s linear infinite'
-                }}
-              />
+              {backgroundTask.type === TASK_TYPES?.PCRS_DOWNLOAD ? (
+                <Download
+                  style={{
+                    height: '1rem',
+                    width: '1rem',
+                    color: COLORS.incomeColor
+                  }}
+                />
+              ) : (
+                <Loader2
+                  style={{
+                    height: '1rem',
+                    width: '1rem',
+                    color: COLORS.darkGray,
+                    animation: 'spin 1s linear infinite'
+                  }}
+                />
+              )}
               <span style={{ fontSize: '0.8125rem', fontWeight: 500, color: COLORS.darkGray }}>
-                Working on your report...
+                {backgroundTask.type === TASK_TYPES?.PCRS_DOWNLOAD
+                  ? 'Downloading PCRS statements...'
+                  : 'Working on your report...'}
               </span>
             </div>
-            <button
-              onClick={cancelBackgroundTask}
-              style={{
-                padding: '0.375rem 0.75rem',
-                backgroundColor: 'transparent',
-                border: `1px solid ${COLORS.mediumGray}`,
-                borderRadius: '0.375rem',
-                fontSize: '0.75rem',
-                color: COLORS.mediumGray,
-                cursor: 'pointer'
-              }}
-            >
-              <X style={{ height: '0.75rem', width: '0.75rem', marginRight: '0.25rem', verticalAlign: 'middle' }} />
-              Cancel
-            </button>
+
+            {/* PCRS progress indicator */}
+            {backgroundTask.type === TASK_TYPES?.PCRS_DOWNLOAD && pcrsDownloadProgress && (
+              <div style={{ marginBottom: '0.5rem' }}>
+                <div style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginBottom: '0.25rem' }}>
+                  {pcrsDownloadProgress.currentPanel && `Downloading: ${pcrsDownloadProgress.currentPanel}`}
+                </div>
+                {pcrsDownloadProgress.total > 0 && (
+                  <div style={{
+                    height: '4px',
+                    backgroundColor: `${COLORS.incomeColor}30`,
+                    borderRadius: '2px',
+                    overflow: 'hidden'
+                  }}>
+                    <div style={{
+                      height: '100%',
+                      width: `${(pcrsDownloadProgress.completed / pcrsDownloadProgress.total) * 100}%`,
+                      backgroundColor: COLORS.incomeColor,
+                      transition: 'width 0.3s ease'
+                    }} />
+                  </div>
+                )}
+                <div style={{ fontSize: '0.6875rem', color: COLORS.mediumGray, marginTop: '0.25rem' }}>
+                  {pcrsDownloadProgress.completed} of {pcrsDownloadProgress.total} panels complete
+                </div>
+              </div>
+            )}
+
+            {backgroundTask.type !== TASK_TYPES?.PCRS_DOWNLOAD && (
+              <button
+                onClick={cancelBackgroundTask}
+                style={{
+                  padding: '0.375rem 0.75rem',
+                  backgroundColor: 'transparent',
+                  border: `1px solid ${COLORS.mediumGray}`,
+                  borderRadius: '0.375rem',
+                  fontSize: '0.75rem',
+                  color: COLORS.mediumGray,
+                  cursor: 'pointer'
+                }}
+              >
+                <X style={{ height: '0.75rem', width: '0.75rem', marginRight: '0.25rem', verticalAlign: 'middle' }} />
+                Cancel
+              </button>
+            )}
           </div>
         )}
 
@@ -552,6 +652,24 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
             API key required. Configure in Admin Settings.
           </div>
         )}
+      </div>
+
+      {/* Persistent disclaimer footer */}
+      <div style={{
+        padding: '0.5rem 0.75rem',
+        backgroundColor: COLORS.backgroundGray,
+        borderTop: `1px solid ${COLORS.lightGray}`,
+        fontSize: '0.875rem',
+        color: COLORS.mediumGray,
+        textAlign: 'center',
+        lineHeight: '1.4',
+        flexShrink: 0
+      }}>
+        Finn provides financial insights, not professional advice. Always verify important information.{' '}
+        <span
+          onClick={() => window.dispatchEvent(new CustomEvent('navigate-to-settings', { detail: { section: 'privacy' } }))}
+          style={{ textDecoration: 'underline', cursor: 'pointer' }}
+        >Learn more</span>
       </div>
 
       <style>{`

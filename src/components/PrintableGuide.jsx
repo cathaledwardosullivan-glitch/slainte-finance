@@ -9,7 +9,6 @@ import {
   FileText,
   CreditCard,
   MessageSquare,
-  PieChart,
   Activity,
   Settings,
   HelpCircle
@@ -17,28 +16,17 @@ import {
 
 // Map page names to icons
 const pageIcons = {
-  'dashboard': Home,
-  'export': FileText,
-  'transactions': CreditCard,
-  'chat': MessageSquare,
-  'gms-panel': PieChart,
-  'gms-health-check': Activity,
-  'admin': Settings,
+  'business-overview': Home,
 };
 
-// Group steps by section for better organization
+// Group steps by section for better organization (updated for 2-tab structure)
 const groupStepsBySection = (steps) => {
   const sections = [
-    { name: 'Welcome', steps: steps.filter(s => s.id === 'welcome') },
-    { name: 'Navigation', steps: steps.filter(s => s.id === 'navigation') },
-    { name: 'Finances - Home', steps: steps.filter(s => ['summary-cards', 'charts-section', 'action-plans'].includes(s.id)) },
-    { name: 'Reports', steps: steps.filter(s => ['reports', 'report-types'].includes(s.id)) },
-    { name: 'Transactions', steps: steps.filter(s => ['transaction-table', 'repeating-transactions'].includes(s.id)) },
-    { name: 'Financial Consultation', steps: steps.filter(s => s.id === 'financial-consultation') },
-    { name: 'GMS Overview', steps: steps.filter(s => ['gms-overview', 'gms-action-plan'].includes(s.id)) },
-    { name: 'GMS Health Check', steps: steps.filter(s => s.id.startsWith('gms-health-check') || s.id.startsWith('hc-')) },
-    { name: 'Admin Settings', steps: steps.filter(s => s.id === 'admin-settings') },
-    { name: 'Getting Help', steps: steps.filter(s => ['meet-cara', 'complete'].includes(s.id)) },
+    { name: 'Welcome & Introduction', steps: steps.filter(s => ['welcome', 'navigation'].includes(s.id)) },
+    { name: 'Financial Overview', steps: steps.filter(s => ['kpi-cards', 'trends-chart', 'reports-box', 'reports-modal', 'transactions-box', 'smart-categorization'].includes(s.id)) },
+    { name: 'GMS Overview', steps: steps.filter(s => ['gms-overview', 'gms-dashboard', 'gms-health-check-intro'].includes(s.id)) },
+    { name: 'GMS Health Check', steps: steps.filter(s => s.id.startsWith('hc-')) },
+    { name: 'Tasks, Settings & Completion', steps: steps.filter(s => ['tasks-widget', 'settings-button', 'settings-data-tab', 'settings-categories-tab', 'complete'].includes(s.id)) },
   ];
   return sections.filter(s => s.steps.length > 0);
 };
@@ -584,7 +572,7 @@ const PrintableGuide = ({ onClose }) => {
                           fontSize: '15px',
                           margin: 0,
                           fontStyle: 'italic',
-                        }}>"{step.caraText}"</p>
+                        }}>"{step.finnText || step.caraText}"</p>
                       </div>
                     </div>
                   );

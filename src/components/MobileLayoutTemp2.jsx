@@ -42,7 +42,6 @@ const MobileLayout = () => {
         unidentifiedTransactions = [],
         setUnidentifiedTransactions,  // Add this
         paymentAnalysisData = [],  // ← Add this
-        showSensitiveData = true,
         selectedYear = new Date().getFullYear(),
         setLearnedIdentifiers,  // Add this
         categoryMapping = []
@@ -80,7 +79,7 @@ const MobileLayout = () => {
     // Format currency for mobile
     const formatCurrency = (amount) => {
         if (typeof amount !== 'number') return '€0';
-        return showSensitiveData ? `€${Math.abs(amount).toLocaleString()}` : '€***';
+        return `€${Math.abs(amount).toLocaleString()}`;
     };
 
     // Get change indicator
@@ -704,7 +703,7 @@ const MobileLayout = () => {
         };
 
         const formatCurrency = (amount) => {
-            return showSensitiveData ? `€${Math.abs(amount).toLocaleString()}` : '€***';
+            return `€${Math.abs(amount).toLocaleString()}`;
         };
 
         return (

@@ -1,4 +1,5 @@
 ﻿import React, { useState } from 'react';
+import DOMPurify from 'dompurify';
 import {
     Activity,
     BarChart3,
@@ -43,6 +44,7 @@ import { DEMO_PROFILE, generateDemoTransactions, generateDemoGMSPanelData, DEMO_
 import { saveTransactions, saveCategoryMapping } from '../utils/storageUtils';
 import * as storage from '../storage/practiceProfileStorage';
 import COLORS from '../utils/colors';
+import { MODELS } from '../data/modelConfig';
 import SlainteLogo from './SlainteLogo';
 import SyncManager from './SyncManager';
 
@@ -90,7 +92,6 @@ const MobileLayout = () => {
         setUnidentifiedTransactions,  // Add this
         paymentAnalysisData = [],  // ← Add this
         setPaymentAnalysisData,
-        showSensitiveData = true,
         selectedYear = new Date().getFullYear(),
         setSelectedYear,
         setLearnedIdentifiers,  // Add this
@@ -255,7 +256,7 @@ const MobileLayout = () => {
         if (typeof amount !== 'number') return '€0';
         // Round to whole number (no decimals)
         const rounded = Math.round(Math.abs(amount));
-        return showSensitiveData ? `€${rounded.toLocaleString()}` : '€***';
+        return `€${rounded.toLocaleString()}`;
     };
 
     // Get change indicator
@@ -1089,7 +1090,7 @@ ${practiceContext}
                     },
                     body: JSON.stringify({
                         message: JSON.stringify({
-                            model: "claude-sonnet-4-5-20250929",
+                            model: MODELS.STANDARD,
                             max_tokens: 1500,
                             messages: messages
                         })
@@ -1439,7 +1440,7 @@ ${practiceContext}
 
                     {/* Content */}
                     <div className="p-4 overflow-y-auto flex-1 text-sm" style={{ color: COLORS.darkGray }}>
-                        <div dangerouslySetInnerHTML={{ __html: artifact.content }} />
+                        <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(artifact.content) }} />
                     </div>
                 </div>
             </div>
@@ -1513,7 +1514,7 @@ ${practiceContext}
                                     stroke={COLORS.mediumGray}
                                 />
                                 <Tooltip
-                                    formatter={(value) => showSensitiveData ? `€${value.toLocaleString()}` : '€***'}
+                                    formatter={(value) => `€${value.toLocaleString()}`}
                                     contentStyle={{ fontSize: '12px' }}
                                 />
                                 <Legend wrapperStyle={{ fontSize: '12px' }} />
@@ -1560,7 +1561,7 @@ ${practiceContext}
                                     ))}
                                 </Pie>
                                 <Tooltip
-                                    formatter={(value) => showSensitiveData ? `€${value.toLocaleString()}` : '€***'}
+                                    formatter={(value) => `€${value.toLocaleString()}`}
                                     contentStyle={{ fontSize: '12px' }}
                                 />
                             </RechartsPieChart>
@@ -1577,7 +1578,7 @@ ${practiceContext}
                                         <span style={{ color: COLORS.darkGray }}>{cat.category}</span>
                                     </div>
                                     <span className="font-semibold" style={{ color: COLORS.incomeColor }}>
-                                        {showSensitiveData ? formatCurrency(cat.amount) : '€***'}
+                                        {formatCurrency(cat.amount)}
                                     </span>
                                 </div>
                             ))}
@@ -1607,7 +1608,7 @@ ${practiceContext}
                                     ))}
                                 </Pie>
                                 <Tooltip
-                                    formatter={(value) => showSensitiveData ? `€${value.toLocaleString()}` : '€***'}
+                                    formatter={(value) => `€${value.toLocaleString()}`}
                                     contentStyle={{ fontSize: '12px' }}
                                 />
                             </RechartsPieChart>
@@ -1624,7 +1625,7 @@ ${practiceContext}
                                         <span style={{ color: COLORS.darkGray }}>{cat.category}</span>
                                     </div>
                                     <span className="font-semibold" style={{ color: COLORS.expenseColor }}>
-                                        {showSensitiveData ? formatCurrency(cat.amount) : '€***'}
+                                        {formatCurrency(cat.amount)}
                                     </span>
                                 </div>
                             ))}
@@ -1887,7 +1888,7 @@ ${practiceContext}
                     `}</style>
                     <div
                         className="gms-report-content"
-                        dangerouslySetInnerHTML={{ __html: reportContent }}
+                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(reportContent) }}
                     />
                 </div>
             </div>

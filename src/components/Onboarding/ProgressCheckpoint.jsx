@@ -2,32 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { CheckCircle, ArrowRight, SkipForward } from 'lucide-react';
 import COLORS from '../../utils/colors';
 
-// Typing animation hook
-const useTypingEffect = (text, speed = 30) => {
-  const [displayedText, setDisplayedText] = useState('');
-  const [isComplete, setIsComplete] = useState(false);
-
-  useEffect(() => {
-    if (!text) return;
-
-    let index = 0;
-    setDisplayedText('');
-    setIsComplete(false);
-
-    const timer = setInterval(() => {
-      if (index < text.length) {
-        setDisplayedText(text.substring(0, index + 1));
-        index++;
-      } else {
-        setIsComplete(true);
-        clearInterval(timer);
-      }
-    }, speed);
-
-    return () => clearInterval(timer);
-  }, [text, speed]);
-
-  return { displayedText, isComplete };
+// Instant text display (typing animation disabled)
+const useTypingEffect = (text) => {
+  return { displayedText: text || '', isComplete: true };
 };
 
 export default function ProgressCheckpoint({ profile, onContinue, onSkipToUpload }) {
@@ -418,7 +395,7 @@ export default function ProgressCheckpoint({ profile, onContinue, onSkipToUpload
         )}
       </div>
 
-      {/* Cara's Next Steps */}
+      {/* Finn's Next Steps */}
       {revealStage >= 2 && (
         <div style={{
           backgroundColor: `${COLORS.slainteBlue}10`,

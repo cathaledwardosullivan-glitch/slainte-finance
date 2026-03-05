@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import {
+  get as getProfile,
   getActionItems,
   getFinancialTasks,
   updateActionItem,
@@ -25,7 +26,7 @@ const TasksContext = createContext(null);
 
 export const TasksProvider = ({ children }) => {
   // Get transaction data from AppContext for auto-generation
-  const { transactions, unidentifiedTransactions } = useAppContext();
+  const { transactions, unidentifiedTransactions, paymentAnalysisData } = useAppContext();
 
   // Widget UI state
   const [isOpen, setIsOpen] = useState(false);
@@ -33,6 +34,9 @@ export const TasksProvider = ({ children }) => {
   // Collapsible sections state - collapsed by default for cleaner appearance
   const [gmsExpanded, setGmsExpanded] = useState(false);
   const [financialExpanded, setFinancialExpanded] = useState(false);
+
+  // Highlighted task (for cross-component navigation from Health Check donut)
+  const [highlightedTaskId, setHighlightedTaskId] = useState(null);
 
   // Tasks data
   const [tasks, setTasks] = useState([]);
@@ -57,6 +61,29 @@ export const TasksProvider = ({ children }) => {
   useEffect(() => {
     loadTasks();
   }, [loadTasks]);
+
+  // Listen for external task refresh events (e.g. from NewGMSHealthCheck AreaTaskPanel)
+  useEffect(() => {
+    const handleRefresh = () => loadTasks();
+    window.addEventListener('tasks:refresh', handleRefresh);
+    return () => window.removeEventListener('tasks:refresh', handleRefresh);
+  }, [loadTasks]);
+
+  // Listen for "open widget and highlight a specific task" events (from Health Check donut)
+  useEffect(() => {
+    const handleOpenAndHighlight = (e) => {
+      const taskId = e.detail?.taskId;
+      setIsOpen(true);
+      setGmsExpanded(true);
+      if (taskId) {
+        setHighlightedTaskId(taskId);
+        // Clear highlight after 2 seconds
+        setTimeout(() => setHighlightedTaskId(null), 2000);
+      }
+    };
+    window.addEventListener('tasks:openAndHighlight', handleOpenAndHighlight);
+    return () => window.removeEventListener('tasks:openAndHighlight', handleOpenAndHighlight);
+  }, []);
 
   // Auto-generate financial tasks based on system status
   useEffect(() => {
@@ -158,6 +185,30 @@ export const TasksProvider = ({ children }) => {
         addFinancialTask(task);
       }
 
+      // 6. GMS HEALTH CHECK - Once 12+ months of GMS data uploaded and health check not yet run
+      if (paymentAnalysisData && paymentAnalysisData.length > 0) {
+        const uniqueGMSMonths = new Set(paymentAnalysisData.map(d => `${d.month}-${d.year}`)).size;
+        const profile = getProfile();
+        const healthCheckDone = profile?.healthCheckData?.healthCheckComplete === true;
+
+        if (uniqueGMSMonths >= 12 && !healthCheckDone) {
+          const existingActions = getActionItems();
+          if (!existingActions.some(a => a.id?.startsWith('task-gms-healthcheck') && a.status !== 'completed')) {
+            addActionItem({
+              id: `task-gms-healthcheck-${Date.now()}`,
+              title: 'Run GMS Health Check',
+              description: `You have ${uniqueGMSMonths} months of GMS data uploaded. Run the Health Check to identify unclaimed income, leave entitlements, and panel trends.`,
+              category: 'analysis',
+              type: 'priority',
+              status: 'pending',
+              actionLink: 'gms-health-check',
+              showOnDashboard: true,
+              createdDate: new Date().toISOString()
+            });
+          }
+        }
+      }
+
       // Reload tasks after generating
       loadTasks();
     };
@@ -166,7 +217,7 @@ export const TasksProvider = ({ children }) => {
     if (transactions !== undefined) {
       generateAutoTasks();
     }
-  }, [transactions?.length, unidentifiedTransactions?.length, loadTasks]);
+  }, [transactions?.length, unidentifiedTransactions?.length, paymentAnalysisData?.length, loadTasks]);
 
   // Refresh tasks (call this after external changes)
   const refreshTasks = useCallback(() => {
@@ -242,9 +293,13 @@ export const TasksProvider = ({ children }) => {
     return success;
   }, [tasks, loadTasks]);
 
-  // Complete a task
+  // Complete a task and notify other components (e.g. Health Check donut)
   const completeTask = useCallback((taskId) => {
-    return updateTask(taskId, { status: 'completed' });
+    const result = updateTask(taskId, { status: 'completed' });
+    if (result) {
+      window.dispatchEvent(new Event('tasks:refresh'));
+    }
+    return result;
   }, [updateTask]);
 
   // Start a task (set to in_progress)
@@ -328,6 +383,7 @@ export const TasksProvider = ({ children }) => {
     tasks,
     isLoading,
     stats,
+    highlightedTaskId,
 
     // Filtered task getters
     getActiveTasks,

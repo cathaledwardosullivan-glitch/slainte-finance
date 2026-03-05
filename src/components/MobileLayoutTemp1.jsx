@@ -34,7 +34,6 @@ const MobileLayout = () => {
         transactions = [],
         unidentifiedTransactions = [],
         paymentAnalysisData = [],  // ← Add this
-        showSensitiveData = true,
         selectedYear = new Date().getFullYear(),
         categoryMapping = []
     } = contextData;
@@ -71,7 +70,7 @@ const MobileLayout = () => {
     // Format currency for mobile
     const formatCurrency = (amount) => {
         if (typeof amount !== 'number') return '€0';
-        return showSensitiveData ? `€${Math.abs(amount).toLocaleString()}` : '€***';
+        return `€${Math.abs(amount).toLocaleString()}`;
     };
 
     // Get change indicator

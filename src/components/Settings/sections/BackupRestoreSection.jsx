@@ -5,9 +5,9 @@ import {
   Download,
   Shield,
   Clock,
-  ChevronDown,
   RefreshCw,
-  CheckCircle
+  CheckCircle,
+  AlertTriangle
 } from 'lucide-react';
 import COLORS from '../../../utils/colors';
 
@@ -113,7 +113,6 @@ const BackupRestoreSection = () => {
     paymentAnalysisData,
     setPaymentAnalysisData,
     selectedYear,
-    showSensitiveData,
     clearAllData
   } = useAppContext();
 
@@ -159,7 +158,7 @@ const BackupRestoreSection = () => {
   // Backup download handler
   const handleBackupDownload = () => {
     const dataToExport = {
-      version: '2.0',
+      version: '2.1',
       appVersion: 'Slainte Finance V2',
       exportDate: new Date().toISOString(),
       transactions,
@@ -167,13 +166,16 @@ const BackupRestoreSection = () => {
       categoryMapping,
       paymentAnalysisData,
       settings: {
-        selectedYear,
-        showSensitiveData
+        selectedYear
       },
       practiceProfile: localStorage.getItem('slainte_practice_profile'),
       savedReports: JSON.parse(localStorage.getItem('gp_finance_saved_reports') || '[]'),
       aiCorrections: localStorage.getItem('slainte_ai_corrections'),
-      categoryPreferences: localStorage.getItem('gp_finance_category_preferences')
+      categoryPreferences: localStorage.getItem('gp_finance_category_preferences'),
+      // v2.1: Added chat history and learned patterns
+      chatHistory: localStorage.getItem('ciaran_chats'),
+      currentChatId: localStorage.getItem('ciaran_current_chat_id'),
+      learnedPatterns: localStorage.getItem('gp_finance_learned_patterns')
     };
     const jsonData = JSON.stringify(dataToExport, null, 2);
     const blob = new Blob([jsonData], { type: 'application/json' });
@@ -205,13 +207,24 @@ const BackupRestoreSection = () => {
         const unidentCount = (data.unidentifiedTransactions || []).length;
         const pcrsCount = (data.paymentAnalysisData || []).length;
 
+        // Count chat conversations if present (v2.1+)
+        let chatCount = 0;
+        if (data.chatHistory) {
+          try {
+            const chats = JSON.parse(data.chatHistory);
+            chatCount = Array.isArray(chats) ? chats.length : 0;
+          } catch { chatCount = 0; }
+        }
+
         if (window.confirm(
           `Restore backup from ${backupDate}?\n\n` +
           `This backup contains:\n` +
           `• ${transCount} categorised transactions\n` +
           `• ${unidentCount} unidentified transactions\n` +
-          `• ${pcrsCount} PCRS payment records\n\n` +
-          `This will REPLACE all current data. Continue?`
+          `• ${pcrsCount} PCRS payment records\n` +
+          (chatCount > 0 ? `• ${chatCount} Finn chat conversations\n` : '') +
+          (data.learnedPatterns ? `• Learned transaction patterns\n` : '') +
+          `\nThis will REPLACE all current data. Continue?`
         )) {
           setTransactions(data.transactions || []);
           setUnidentifiedTransactions(data.unidentifiedTransactions || []);
@@ -229,6 +242,17 @@ const BackupRestoreSection = () => {
           }
           if (data.categoryPreferences) {
             localStorage.setItem('gp_finance_category_preferences', data.categoryPreferences);
+          }
+
+          // v2.1: Restore chat history and learned patterns
+          if (data.chatHistory) {
+            localStorage.setItem('ciaran_chats', data.chatHistory);
+          }
+          if (data.currentChatId) {
+            localStorage.setItem('ciaran_current_chat_id', data.currentChatId);
+          }
+          if (data.learnedPatterns) {
+            localStorage.setItem('gp_finance_learned_patterns', data.learnedPatterns);
           }
 
           alert('Backup restored successfully! The page will now reload.');
@@ -276,7 +300,7 @@ const BackupRestoreSection = () => {
           Save your progress before app updates or restore from a previous backup
         </p>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
           {/* Backup */}
           <div style={{ padding: '1rem', border: `2px solid ${COLORS.incomeColor}`, borderRadius: '0.5rem', backgroundColor: `${COLORS.incomeColor}10` }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
@@ -284,7 +308,7 @@ const BackupRestoreSection = () => {
               <h4 style={{ fontWeight: 600, color: COLORS.incomeColor }}>Backup All Data</h4>
             </div>
             <p style={{ fontSize: '0.875rem', color: COLORS.darkGray, marginBottom: '1rem' }}>
-              Creates a complete backup including all transactions, categories, identifiers, PCRS data, practice profile, and settings.
+              Creates a complete backup including all transactions, categories, identifiers, PCRS data, practice profile, Finn chat history, and settings.
             </p>
             <button
               onClick={handleBackupDownload}
@@ -376,6 +400,12 @@ const BackupRestoreSection = () => {
                 <div
                   onClick={async () => {
                     const newValue = !autoBackupEnabled;
+                    if (!newValue) {
+                      const confirmed = window.confirm(
+                        'Disabling auto-backup means your data will no longer be encrypted and backed up automatically when you close the app.\n\nAre you sure you want to disable this?'
+                      );
+                      if (!confirmed) return;
+                    }
                     setAutoBackupEnabled(newValue);
                     if (window.electronAPI?.setAutoBackupSettings) {
                       await window.electronAPI.setAutoBackupSettings({ enabled: newValue });
@@ -488,6 +518,40 @@ const BackupRestoreSection = () => {
           )}
         </div>
       )}
+
+      {/* Restart Onboarding */}
+      <div style={{ backgroundColor: COLORS.white, padding: '1.5rem', borderRadius: '0.5rem', border: `1px solid ${COLORS.lightGray}` }}>
+        <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.darkGray, marginBottom: '0.5rem' }}>
+          Restart Onboarding
+        </h3>
+        <p style={{ fontSize: '0.875rem', color: COLORS.darkGray, marginBottom: '1rem' }}>
+          Clear your practice profile and personalized categories to restart the onboarding wizard. Transaction data and PCRS records will be preserved.
+        </p>
+        <button
+          onClick={() => {
+            if (window.confirm('This will remove all personalized categories and restart onboarding. Transaction data will NOT be deleted. Continue?')) {
+              localStorage.removeItem('slainte_practice_profile');
+              localStorage.removeItem('slainte_onboarding_complete');
+              window.location.reload();
+            }
+          }}
+          style={{
+            padding: '0.5rem 1rem',
+            borderRadius: '0.375rem',
+            fontWeight: 500,
+            backgroundColor: COLORS.highlightYellow,
+            color: COLORS.darkGray,
+            border: 'none',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}
+        >
+          <RefreshCw style={{ height: '1rem', width: '1rem' }} />
+          Restart Onboarding
+        </button>
+      </div>
 
       {/* Danger Zone */}
       <div style={{ backgroundColor: COLORS.white, padding: '1.5rem', borderRadius: '0.5rem', border: `2px solid ${COLORS.expenseColor}` }}>

@@ -3,6 +3,7 @@ import { MessageCircle, Send, Loader, User, Bot, ArrowLeft, Building2, MapPin, U
 import COLORS from '../../utils/colors';
 import { getRoleCode } from '../../utils/categoryGenerator';
 import { callClaude as callClaudeAPI } from '../../utils/claudeAPI';
+import { MODELS } from '../../data/modelConfig';
 
 export default function ConversationalSetup({ apiKey, initialProfile, websiteData, onComplete, onBack, editMode }) {
   const [messages, setMessages] = useState([]);
@@ -80,7 +81,7 @@ export default function ConversationalSetup({ apiKey, initialProfile, websiteDat
   };
 
   const buildSystemPrompt = () => {
-    let prompt = `You are Cara, a friendly AI assistant helping ${editMode ? 'update' : 'set up'} a GP practice in Ireland for financial tracking.
+    let prompt = `You are Finn, a friendly AI assistant helping ${editMode ? 'update' : 'set up'} a GP practice in Ireland for financial tracking.
 
 ${editMode ? `MODE: EDIT PROFILE
 The user already has a profile set up. They want to update/change some information.
@@ -134,7 +135,7 @@ ${buildProgressSummary()}
     if (messages.length > 0) {
       prompt += `CONVERSATION SO FAR:\n`;
       messages.forEach(msg => {
-        prompt += `${msg.type === 'user' ? 'User' : 'Cara'}: ${msg.content}\n`;
+        prompt += `${msg.type === 'user' ? 'User' : 'Finn'}: ${msg.content}\n`;
       });
       prompt += '\n';
     }
@@ -202,7 +203,7 @@ ${buildProgressSummary()}
   const callClaude = async (systemPrompt, userMessage) => {
     const fullPrompt = `${systemPrompt}\n\nUser: ${userMessage}`;
     const response = await callClaudeAPI(fullPrompt, {
-      model: "claude-sonnet-4-5-20250929",
+      model: MODELS.STANDARD,
       maxTokens: 1000,
       apiKey: apiKey
     });
@@ -295,7 +296,7 @@ KEY RULES:
 Return ONLY valid JSON, nothing else.`;
 
       const extractResponse = await callClaudeAPI(extractionPrompt, {
-        model: "claude-sonnet-4-5-20250929",
+        model: MODELS.STANDARD,
         maxTokens: 800,
         apiKey: apiKey
       });
@@ -387,7 +388,7 @@ Return ONLY valid JSON, nothing else.`;
       margin: '0 auto',
       height: 'min(70vh, 650px)'
     }}>
-      {/* Left side - Cara Chat Box */}
+      {/* Left side - Finn Chat Box */}
       <div style={{
         flex: '1 1 45%',
         minWidth: '450px',
@@ -423,7 +424,7 @@ Return ONLY valid JSON, nothing else.`;
               <User style={{ height: '1.25rem', width: '1.25rem' }} />
             </div>
             <div>
-              <div style={{ fontWeight: 600, fontSize: '1rem' }}>Cara</div>
+              <div style={{ fontWeight: 600, fontSize: '1rem' }}>Finn</div>
               <div style={{ fontSize: '0.75rem', opacity: 0.9 }}>Sláinte Guide</div>
             </div>
           </div>

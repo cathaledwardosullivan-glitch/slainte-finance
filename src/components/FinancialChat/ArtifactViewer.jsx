@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import DOMPurify from 'dompurify';
 import { FileText, Download, Copy, Printer, X, ExternalLink, Save, GitBranch, BarChart3 } from 'lucide-react';
 import {
   formatArtifactHTML,
@@ -22,11 +23,11 @@ async function getMermaid() {
         mermaidInstance.initialize({
           startOnLoad: false,
           theme: 'default',
-          securityLevel: 'loose',
+          securityLevel: 'strict',
           fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
           flowchart: {
             useMaxWidth: true,
-            htmlLabels: true,
+            htmlLabels: false,
             curve: 'basis'
           },
           themeVariables: {
@@ -187,13 +188,13 @@ export function ArtifactViewer({ artifact, onClose }) {
 
   const handleSaveToReports = () => {
     // Generate full HTML document for the report
-    const html = formatArtifactHTML(artifact);
+    const html = DOMPurify.sanitize(formatArtifactHTML(artifact));
 
     const htmlContent = `
       <!DOCTYPE html>
       <html>
       <head>
-        <title>${artifact.title}</title>
+        <title>${DOMPurify.sanitize(artifact.title)}</title>
         <style>
           body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -451,7 +452,7 @@ export function ArtifactViewer({ artifact, onClose }) {
               {mermaidSvg ? (
                 <div
                   ref={mermaidRef}
-                  dangerouslySetInnerHTML={{ __html: mermaidSvg }}
+                  dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(mermaidSvg, { USE_PROFILES: { svg: true, svgFilters: true } }) }}
                   style={{
                     display: 'flex',
                     justifyContent: 'center',
@@ -550,7 +551,7 @@ export function ArtifactViewer({ artifact, onClose }) {
             // Regular HTML content
             <div
               className="artifact-content"
-              dangerouslySetInnerHTML={{ __html: html }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(html) }}
             />
           )}
         </div>
@@ -719,7 +720,7 @@ export function InlineArtifact({ artifact, onExpand }) {
       }}>
         {isMermaid && previewSvg ? (
           <div
-            dangerouslySetInnerHTML={{ __html: previewSvg }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(previewSvg, { USE_PROFILES: { svg: true, svgFilters: true } }) }}
             style={{
               transform: 'scale(0.5)',
               transformOrigin: 'top left',

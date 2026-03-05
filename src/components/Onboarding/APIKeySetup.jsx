@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Key, AlertCircle, Sparkles, Shield, Eye, EyeOff, CheckCircle } from 'lucide-react';
+import { Key, AlertCircle, Sparkles, Shield, Eye, EyeOff, CheckCircle, Play, ArrowRight } from 'lucide-react';
 import COLORS from '../../utils/colors';
 
-export default function APIKeySetup({ onComplete, onSkip }) {
+export default function APIKeySetup({ onComplete, onDemo }) {
   const [apiKey, setApiKey] = useState('');
   const [isValidating, setIsValidating] = useState(false);
   const [error, setError] = useState('');
@@ -80,8 +80,16 @@ export default function APIKeySetup({ onComplete, onSkip }) {
     setMobileError('');
 
     // Validate password
-    if (mobilePassword.length < 6) {
-      setMobileError('Password must be at least 6 characters');
+    if (mobilePassword.length < 8) {
+      setMobileError('Password must be at least 8 characters');
+      return;
+    }
+    if (!/[a-zA-Z]/.test(mobilePassword)) {
+      setMobileError('Password must contain at least one letter');
+      return;
+    }
+    if (!/[0-9]/.test(mobilePassword)) {
+      setMobileError('Password must contain at least one number');
       return;
     }
 
@@ -94,10 +102,10 @@ export default function APIKeySetup({ onComplete, onSkip }) {
 
     try {
       // Save the mobile password via IPC
-      const success = await window.electronAPI.setMobilePassword(mobilePassword);
+      const result = await window.electronAPI.setMobilePassword(mobilePassword);
 
-      if (!success) {
-        throw new Error('Failed to save mobile password');
+      if (result !== true) {
+        throw new Error(result?.error || 'Failed to save mobile password');
       }
 
       // Complete setup with the validated API key
@@ -211,7 +219,7 @@ export default function APIKeySetup({ onComplete, onSkip }) {
           <div style={{ position: 'relative' }}>
             <input
               type={showPassword ? 'text' : 'password'}
-              placeholder="Enter a password (min 6 characters)"
+              placeholder="Min 8 characters, with letters and numbers"
               value={mobilePassword}
               onChange={(e) => {
                 setMobilePassword(e.target.value);
@@ -337,33 +345,7 @@ export default function APIKeySetup({ onComplete, onSkip }) {
             {isSavingMobile ? 'Saving...' : 'Save & Continue'}
           </button>
 
-          <button
-            onClick={handleSkipMobileSetup}
-            disabled={isSavingMobile}
-            style={{
-              padding: '0.875rem 2rem',
-              fontSize: '1rem',
-              fontWeight: 500,
-              color: COLORS.mediumGray,
-              backgroundColor: 'transparent',
-              border: `2px solid ${COLORS.lightGray}`,
-              borderRadius: '8px',
-              cursor: isSavingMobile ? 'not-allowed' : 'pointer',
-              transition: 'all 0.2s'
-            }}
-          >
-            Skip for now
-          </button>
         </div>
-
-        {/* Help Text */}
-        <p style={{
-          fontSize: '0.75rem',
-          color: COLORS.mediumGray,
-          marginTop: '1.5rem'
-        }}>
-          You can set this up later in Admin Settings if you skip now.
-        </p>
       </div>
     );
   }
@@ -390,7 +372,7 @@ export default function APIKeySetup({ onComplete, onSkip }) {
         color: COLORS.darkGray,
         marginBottom: '1rem'
       }}>
-        Welcome to Slainte Finance Manager
+        Welcome to Sláinte Finance App
       </h2>
 
       <p style={{
@@ -402,8 +384,7 @@ export default function APIKeySetup({ onComplete, onSkip }) {
         marginRight: 'auto',
         lineHeight: 1.6
       }}>
-        This AI-powered setup will help you configure your practice in just a few minutes.
-        We'll analyze your practice website and guide you through a personalized conversation.
+        We'll help you configure your practice setup in just a few minutes.
       </p>
 
       {/* Info Box */}
@@ -539,47 +520,59 @@ export default function APIKeySetup({ onComplete, onSkip }) {
           {isValidating ? 'Validating...' : 'Continue'}
         </button>
 
-        {onSkip && (
+      </div>
+
+      {/* Explore with Demo Data */}
+      {onDemo && (
+        <div style={{
+          marginTop: '2rem',
+          paddingTop: '1.5rem',
+          borderTop: `1px solid ${COLORS.lightGray}`,
+          textAlign: 'center'
+        }}>
           <button
-            onClick={onSkip}
+            onClick={onDemo}
             disabled={isValidating}
             style={{
-              padding: '0.875rem 2rem',
-              fontSize: '1rem',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.75rem 1.5rem',
+              fontSize: '0.9375rem',
               fontWeight: 500,
               color: COLORS.mediumGray,
               backgroundColor: 'transparent',
-              border: `2px solid ${COLORS.lightGray}`,
+              border: `1px solid ${COLORS.lightGray}`,
               borderRadius: '8px',
               cursor: isValidating ? 'not-allowed' : 'pointer',
               transition: 'all 0.2s'
             }}
             onMouseEnter={(e) => {
               if (!isValidating) {
-                e.target.style.borderColor = COLORS.mediumGray;
-                e.target.style.color = COLORS.darkGray;
+                e.currentTarget.style.backgroundColor = COLORS.backgroundGray;
+                e.currentTarget.style.borderColor = COLORS.mediumGray;
               }
             }}
             onMouseLeave={(e) => {
               if (!isValidating) {
-                e.target.style.borderColor = COLORS.lightGray;
-                e.target.style.color = COLORS.mediumGray;
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.borderColor = COLORS.lightGray;
               }
             }}
           >
-            Skip for now
+            <Play style={{ width: '16px', height: '16px' }} />
+            Explore with Demo Data
+            <ArrowRight style={{ width: '16px', height: '16px' }} />
           </button>
-        )}
-      </div>
-
-      {/* Help Text */}
-      <p style={{
-        fontSize: '0.75rem',
-        color: COLORS.mediumGray,
-        marginTop: '1.5rem'
-      }}>
-        Don't worry - you can add this later in Settings if you skip now.
-      </p>
+          <p style={{
+            fontSize: '0.75rem',
+            color: COLORS.mediumGray,
+            marginTop: '0.5rem'
+          }}>
+            Take a quick tour with sample data before setting up your own practice.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

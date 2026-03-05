@@ -5,6 +5,7 @@ import { MessageCircle, X, Minimize2, User, Send, Play, ChevronLeft, ChevronRigh
 import { calculateSummaries } from '../utils/financialCalculations';
 import COLORS from '../utils/colors';
 import { callClaude, formatClaudeResponse } from '../utils/claudeAPI';
+import { MODELS } from '../data/modelConfig';
 import { useTour } from './Tour';
 
 export const FloatingFinancialChat = ({
@@ -83,7 +84,7 @@ The user has a follow-up question: "${tourQuestion}"
 Provide a helpful, concise answer (2-3 sentences max) that addresses their question in the context of this feature. Be friendly and encouraging. If the question is unrelated to the current feature, briefly acknowledge it and suggest they explore after the tour.`;
 
       const response = await callClaude(prompt, {
-        model: 'claude-haiku-4-5-20251001',
+        model: MODELS.FAST,
         maxTokens: 300,
         apiKey: apiKey,
       });
@@ -269,7 +270,7 @@ KEY FEATURES BY LOCATION:
 - Category Management: View/edit category identifiers
 
 CATEGORIES (7 parent types):
-Income, Staff Costs, Medical Supplies (includes Uniforms, PPE), Premises, Office & IT, Professional Fees, Other Expenses
+Income, Staff Costs, Medical Supplies (includes Uniforms, PPE), Premises, Office & IT, Professional Fees, Petty Cash / Other
 
 === END REFERENCE ===
 
@@ -287,7 +288,7 @@ Respond as Cara:`;
 
         // Call Claude API using the unified helper (works in both Electron and PWA)
         const response = await callClaude(prompt, {
-            model: "claude-haiku-4-5-20251001",
+            model: MODELS.FAST,
             maxTokens: 1000,
             apiKey: apiKey
         });
@@ -427,7 +428,7 @@ Respond as Cara:`;
                 overflowY: 'auto',
               }}
             >
-              {currentStepData.caraText}
+              {currentStepData.finnText || currentStepData.caraText}
             </div>
 
             {/* Q&A Section */}

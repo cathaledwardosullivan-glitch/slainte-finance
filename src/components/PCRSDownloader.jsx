@@ -1,12 +1,41 @@
 import React, { useState, useEffect } from 'react';
-import { Download, RefreshCw, CheckCircle, AlertCircle, Loader, X, Shield, Clock, Users } from 'lucide-react';
+import { Download, RefreshCw, CheckCircle, AlertCircle, Loader, X, Shield, Clock, Users, PlayCircle, Calendar } from 'lucide-react';
 import COLORS from '../utils/colors';
+import { useFinnSafe } from '../context/FinnContext';
+
+// Generate array of month strings (YYYYMM format) for the last N months
+const generateMonthRange = (numMonths) => {
+  const months = [];
+  const now = new Date();
+  for (let i = 0; i < numMonths; i++) {
+    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    months.push(`${year}${month}`);
+  }
+  return months;
+};
+
+// Format month string for display (e.g., "202501" -> "Jan 2025")
+const formatMonth = (monthStr) => {
+  if (!monthStr || monthStr.length !== 6) return monthStr;
+  const year = monthStr.substring(0, 4);
+  const month = parseInt(monthStr.substring(4, 6), 10);
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${monthNames[month - 1]} ${year}`;
+};
 
 /**
  * PCRSDownloader Component
  * Modal for downloading PCRS statements using embedded BrowserView authentication
  */
-export default function PCRSDownloader({ isOpen, onClose, onStatementsDownloaded }) {
+export default function PCRSDownloader({
+  isOpen,
+  onClose,
+  onStatementsDownloaded,
+  defaultMode = 'latest',
+  defaultQuickSelect = 'latest'  // 'latest', '6', '12', '24', 'all'
+}) {
   const [status, setStatus] = useState('idle'); // idle, checking, login-required, authenticated, downloading, complete, error
   const [panels, setPanels] = useState([]);
   const [selectedPanels, setSelectedPanels] = useState([]);
@@ -14,6 +43,35 @@ export default function PCRSDownloader({ isOpen, onClose, onStatementsDownloaded
   const [errorMessage, setErrorMessage] = useState('');
   const [currentAction, setCurrentAction] = useState('');
   const [sessionInfo, setSessionInfo] = useState(null);
+
+  // Initialize download mode and months based on default props
+  const getInitialMode = () => defaultQuickSelect === 'latest' ? 'latest' : 'bulk';
+  const getInitialMonths = () => {
+    if (defaultQuickSelect === 'latest') return ['latest'];
+    const numMonths = defaultQuickSelect === 'all' ? 36 : parseInt(defaultQuickSelect, 10);
+    return generateMonthRange(numMonths);
+  };
+
+  // Download mode: 'latest' (single month) or 'bulk' (multiple months)
+  const [downloadMode, setDownloadMode] = useState(getInitialMode);
+  // Selected months for bulk download (YYYYMM format)
+  const [selectedMonths, setSelectedMonths] = useState(getInitialMonths);
+  // Quick select option: 'latest', '6', '12', '24', 'all'
+  const [quickSelect, setQuickSelect] = useState(defaultQuickSelect);
+
+  // Get Finn context for background downloads (may be null if outside FinnProvider)
+  const finnContext = useFinnSafe();
+  const startPCRSDownload = finnContext?.startPCRSDownload;
+  const backgroundTask = finnContext?.backgroundTask;
+  const TASK_TYPES = finnContext?.TASK_TYPES;
+  const TASK_STATUS = finnContext?.TASK_STATUS;
+
+  // Check if a PCRS download is already running in background
+  const isBackgroundDownloadRunning = !!finnContext && backgroundTask?.type === TASK_TYPES?.PCRS_DOWNLOAD &&
+    backgroundTask?.status === TASK_STATUS?.RUNNING;
+
+  // Check if background download feature is available
+  const backgroundDownloadAvailable = !!startPCRSDownload;
 
   useEffect(() => {
     if (!isOpen) return;
@@ -33,9 +91,15 @@ export default function PCRSDownloader({ isOpen, onClose, onStatementsDownloaded
       }
     };
 
+    // Forward main process logs to DevTools console
+    const handleLog = (data) => {
+      console.log(data.message);
+    };
+
     if (window.electronAPI?.pcrs) {
       window.electronAPI.pcrs.onStatus(handleStatus);
       window.electronAPI.pcrs.onAuthStateChanged(handleAuthChange);
+      window.electronAPI.pcrs.onLog(handleLog);
     }
 
     return () => {
@@ -43,6 +107,7 @@ export default function PCRSDownloader({ isOpen, onClose, onStatementsDownloaded
       if (window.electronAPI?.pcrs) {
         window.electronAPI.pcrs.removeStatusListener();
         window.electronAPI.pcrs.removeAuthListener();
+        window.electronAPI.pcrs.removeLogListener();
       }
     };
   }, [isOpen]);
@@ -153,17 +218,44 @@ export default function PCRSDownloader({ isOpen, onClose, onStatementsDownloaded
     );
   };
 
+  // Handle quick select change for month range
+  const handleQuickSelect = (option) => {
+    setQuickSelect(option);
+    if (option === 'latest') {
+      setDownloadMode('latest');
+      setSelectedMonths(['latest']);
+    } else {
+      setDownloadMode('bulk');
+      const numMonths = option === 'all' ? 36 : parseInt(option, 10); // 'all' = 3 years
+      setSelectedMonths(generateMonthRange(numMonths));
+    }
+  };
+
+  // Estimate download time based on selections
+  const getTimeEstimate = () => {
+    if (downloadMode === 'latest') return null;
+    const numFiles = selectedPanels.length * selectedMonths.length;
+    const minSeconds = numFiles * 3; // Optimistic: 3 sec per file
+    const maxSeconds = numFiles * 8; // Pessimistic: 8 sec per file
+    const minMinutes = Math.ceil(minSeconds / 60);
+    const maxMinutes = Math.ceil(maxSeconds / 60);
+    if (maxMinutes <= 1) return 'Less than a minute';
+    if (minMinutes === maxMinutes) return `About ${minMinutes} minutes`;
+    return `${minMinutes}-${maxMinutes} minutes`;
+  };
+
   const startDownload = async () => {
     if (selectedPanels.length === 0) return;
 
     setStatus('downloading');
-    setCurrentAction('Starting download...');
+    const monthCount = downloadMode === 'bulk' ? selectedMonths.length : 1;
+    setCurrentAction(`Starting download (${monthCount} month${monthCount > 1 ? 's' : ''})...`);
 
     try {
       const panelsToDownload = panels.filter(p => selectedPanels.includes(p.id));
       const result = await window.electronAPI.pcrs.downloadStatements({
         panels: panelsToDownload,
-        months: ['latest']
+        months: selectedMonths
       });
 
       if (result.success) {
@@ -181,6 +273,24 @@ export default function PCRSDownloader({ isOpen, onClose, onStatementsDownloaded
     } catch (error) {
       setStatus('error');
       setErrorMessage(error.message || 'Download failed');
+    }
+  };
+
+  // Start download in background and let Finn handle notifications
+  const startBackgroundDownload = async () => {
+    if (selectedPanels.length === 0) return;
+
+    const panelsToDownload = panels.filter(p => selectedPanels.includes(p.id));
+
+    // Start background download via FinnContext
+    const started = await startPCRSDownload({
+      panels: panelsToDownload,
+      months: selectedMonths
+    });
+
+    if (started) {
+      // Close the modal - Finn will handle the rest
+      if (onClose) onClose();
     }
   };
 
@@ -315,26 +425,143 @@ export default function PCRSDownloader({ isOpen, onClose, onStatementsDownloaded
               </div>
             )}
 
-            <button
-              onClick={startDownload}
-              disabled={selectedPanels.length === 0}
-              style={{
-                width: '100%',
-                padding: '0.75rem 1rem',
-                backgroundColor: selectedPanels.length === 0 ? COLORS.lightGray : COLORS.slainteBlue,
-                color: COLORS.white,
-                border: 'none',
+            {/* Month Range Selection */}
+            <div style={{ marginBottom: '1rem' }}>
+              <h4 style={{ fontWeight: '500', color: COLORS.darkGray, marginBottom: '0.5rem' }}>
+                <Calendar style={{ width: '16px', height: '16px', display: 'inline', marginRight: '0.5rem' }} />
+                Download Range
+              </h4>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                {[
+                  { value: 'latest', label: 'Latest Month' },
+                  { value: '6', label: 'Last 6 Months' },
+                  { value: '12', label: 'Last 12 Months' },
+                  { value: '24', label: 'Last 24 Months' }
+                ].map(option => (
+                  <button
+                    key={option.value}
+                    onClick={() => handleQuickSelect(option.value)}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      borderRadius: '8px',
+                      border: quickSelect === option.value
+                        ? `2px solid ${COLORS.slainteBlue}`
+                        : `1px solid ${COLORS.lightGray}`,
+                      backgroundColor: quickSelect === option.value
+                        ? `${COLORS.slainteBlue}15`
+                        : COLORS.white,
+                      color: quickSelect === option.value
+                        ? COLORS.slainteBlue
+                        : COLORS.darkGray,
+                      cursor: 'pointer',
+                      fontWeight: quickSelect === option.value ? '600' : '400',
+                      fontSize: '0.875rem',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+              {downloadMode === 'bulk' && (
+                <div style={{
+                  marginTop: '0.75rem',
+                  padding: '0.75rem',
+                  backgroundColor: `${COLORS.slainteBlue}10`,
+                  borderRadius: '8px',
+                  fontSize: '0.8125rem'
+                }}>
+                  <div style={{ color: COLORS.darkGray, marginBottom: '0.25rem' }}>
+                    <strong>{selectedMonths.length}</strong> months selected
+                    ({formatMonth(selectedMonths[selectedMonths.length - 1])} to {formatMonth(selectedMonths[0])})
+                  </div>
+                  {getTimeEstimate() && (
+                    <div style={{ color: COLORS.mediumGray, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <Clock style={{ width: '12px', height: '12px' }} />
+                      Estimated time: {getTimeEstimate()}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Show message if background download is already running */}
+            {backgroundDownloadAvailable && isBackgroundDownloadRunning && (
+              <div style={{
+                backgroundColor: '#FEF3C7',
+                border: '1px solid #F59E0B',
                 borderRadius: '8px',
-                cursor: selectedPanels.length === 0 ? 'not-allowed' : 'pointer',
+                padding: '0.75rem 1rem',
+                marginBottom: '1rem',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: '500'
-              }}
-            >
-              <Download style={{ width: '20px', height: '20px', marginRight: '0.5rem' }} />
-              Download Latest Statements
-            </button>
+                gap: '0.5rem'
+              }}>
+                <Loader style={{ width: '16px', height: '16px', color: '#D97706' }} className="animate-spin" />
+                <span style={{ color: '#92400E', fontSize: '0.875rem' }}>
+                  A background download is already in progress. Finn will notify you when it's done.
+                </span>
+              </div>
+            )}
+
+            {/* Download buttons */}
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button
+                onClick={startDownload}
+                disabled={selectedPanels.length === 0 || isBackgroundDownloadRunning}
+                style={{
+                  flex: 1,
+                  padding: '0.75rem 1rem',
+                  backgroundColor: (selectedPanels.length === 0 || isBackgroundDownloadRunning) ? COLORS.lightGray : COLORS.slainteBlue,
+                  color: COLORS.white,
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: (selectedPanels.length === 0 || isBackgroundDownloadRunning) ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: '500'
+                }}
+              >
+                <Download style={{ width: '18px', height: '18px', marginRight: '0.5rem' }} />
+                {downloadMode === 'bulk'
+                  ? `Download ${selectedMonths.length} Months`
+                  : (backgroundDownloadAvailable ? 'Download Now' : 'Download Latest')}
+              </button>
+              {backgroundDownloadAvailable && (
+                <button
+                  onClick={startBackgroundDownload}
+                  disabled={selectedPanels.length === 0 || isBackgroundDownloadRunning}
+                  title="Download in background - Finn will notify you when done"
+                  style={{
+                    flex: 1,
+                    padding: '0.75rem 1rem',
+                    backgroundColor: (selectedPanels.length === 0 || isBackgroundDownloadRunning) ? COLORS.lightGray : COLORS.incomeColor,
+                    color: COLORS.white,
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: (selectedPanels.length === 0 || isBackgroundDownloadRunning) ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: '500'
+                  }}
+                >
+                  <PlayCircle style={{ width: '18px', height: '18px', marginRight: '0.5rem' }} />
+                  Download in Background
+                </button>
+              )}
+            </div>
+            {backgroundDownloadAvailable && (
+              <p style={{
+                fontSize: '0.75rem',
+                color: COLORS.mediumGray,
+                marginTop: '0.5rem',
+                textAlign: 'center'
+              }}>
+                Use "Download in Background" to continue using the app while statements download.
+              </p>
+            )}
           </div>
         );
 

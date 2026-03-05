@@ -18,7 +18,7 @@ export default function StructureExplanation({ practiceName, onContinue, onBack 
 
   return (
     <div>
-      {/* Cara's Introduction */}
+      {/* Finn's Introduction */}
       <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
         <div style={{
           display: 'inline-flex',
@@ -288,7 +288,7 @@ export default function StructureExplanation({ practiceName, onContinue, onBack 
         )}
       </div>
 
-      {/* Cara's Closing or Continue Button */}
+      {/* Finn's Closing or Continue Button */}
       <div style={{
         backgroundColor: COLORS.white,
         borderRadius: '12px',

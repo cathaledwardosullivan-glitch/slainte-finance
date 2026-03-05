@@ -255,7 +255,7 @@ function buildExpensesSection(expenses) {
         parts.push(`Insurance: €${expenses.insurance.toLocaleString()}/year`);
     }
     if (expenses.otherExpenses) {
-        parts.push(`Other Expenses: €${expenses.otherExpenses.toLocaleString()}/year`);
+        parts.push(`Petty Cash / Other: €${expenses.otherExpenses.toLocaleString()}/year`);
     }
 
     const totalExpenses = expenses.totalAnnualExpenses || calculateTotalExpenses(expenses);

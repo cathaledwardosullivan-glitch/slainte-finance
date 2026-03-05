@@ -5,6 +5,7 @@
 
 import { callClaude } from './claudeAPI';
 import { buildInteractiveGMSContext, buildCondensedSummary } from './gmsHealthCheckContext';
+import { MODELS } from '../data/modelConfig';
 
 /**
  * Generate AI insights for GMS Health Check results
@@ -41,7 +42,7 @@ export async function generateGMSInsights(analysisResults, formData, practicePro
 
     // Call Claude API
     const response = await callClaude(prompt, {
-      model: 'claude-sonnet-4-20250514',  // Use Sonnet for quality analysis
+      model: MODELS.STANDARD,  // Use Sonnet for quality analysis
       maxTokens: 2048,
       temperature: 0.7,  // Some creativity for helpful insights
       context: null  // Context is embedded in prompt

@@ -2,32 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { FileSpreadsheet, Tag, Database, User, MessageCircle, ArrowRight, SkipForward } from 'lucide-react';
 import COLORS from '../../utils/colors';
 
-// Typing animation hook
-const useTypingEffect = (text, speed = 30) => {
-  const [displayedText, setDisplayedText] = useState('');
-  const [isComplete, setIsComplete] = useState(false);
-
-  useEffect(() => {
-    if (!text) return;
-
-    let index = 0;
-    setDisplayedText('');
-    setIsComplete(false);
-
-    const timer = setInterval(() => {
-      if (index < text.length) {
-        setDisplayedText(text.substring(0, index + 1));
-        index++;
-      } else {
-        setIsComplete(true);
-        clearInterval(timer);
-      }
-    }, speed);
-
-    return () => clearInterval(timer);
-  }, [text, speed]);
-
-  return { displayedText, isComplete };
+// Instant text display (typing animation disabled)
+const useTypingEffect = (text) => {
+  return { displayedText: text || '', isComplete: true };
 };
 
 export default function TransactionUploadTypeSelection({ onSelectRaw, onSelectLabelled, onSelectBackup, onSkip }) {
@@ -66,7 +43,7 @@ export default function TransactionUploadTypeSelection({ onSelectRaw, onSelectLa
       id: 'labelled',
       icon: Tag,
       title: 'Pre-Labelled Transactions',
-      description: 'I have a CSV with my own category labels (from a spreadsheet, accounting software, etc.)',
+      description: 'I have transactions with my own category labels (from a spreadsheet or accounting software)',
       highlight: true,
       recommended: true,
       onClick: onSelectLabelled
@@ -74,8 +51,8 @@ export default function TransactionUploadTypeSelection({ onSelectRaw, onSelectLa
     {
       id: 'raw',
       icon: FileSpreadsheet,
-      title: 'Raw Bank Transactions',
-      description: 'I have a CSV export from my bank without any category labels',
+      title: 'Bank Statements',
+      description: 'I have bank statements (PDF or CSV) without any category labels',
       highlight: false,
       onClick: onSelectRaw
     },
@@ -83,7 +60,7 @@ export default function TransactionUploadTypeSelection({ onSelectRaw, onSelectLa
       id: 'backup',
       icon: Database,
       title: 'Sláinte Backup',
-      description: 'I have a backup JSON file from a previous Sláinte installation',
+      description: 'I have a backup file from a previous Sláinte installation',
       highlight: false,
       onClick: onSelectBackup
     }
@@ -98,7 +75,7 @@ export default function TransactionUploadTypeSelection({ onSelectRaw, onSelectLa
       margin: '0 auto',
       height: 'min(70vh, 650px)'
     }}>
-      {/* Left side - Cara Chat Box */}
+      {/* Left side - Finn Chat Box */}
       <div style={{
         flex: '1 1 45%',
         minWidth: '450px',
@@ -133,7 +110,7 @@ export default function TransactionUploadTypeSelection({ onSelectRaw, onSelectLa
             <User style={{ height: '1.25rem', width: '1.25rem' }} />
           </div>
           <div>
-            <div style={{ fontWeight: 600, fontSize: '1rem' }}>Cara</div>
+            <div style={{ fontWeight: 600, fontSize: '1rem' }}>Finn</div>
             <div style={{ fontSize: '0.75rem', opacity: 0.9 }}>Sláinte Guide</div>
           </div>
         </div>

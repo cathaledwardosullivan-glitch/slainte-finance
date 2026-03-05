@@ -51,7 +51,7 @@ export const PARENT_CATEGORIES = {
     name: 'Office & IT',
     icon: '💻',
     color: '#06B6D4',
-    sections: ['OFFICE & ADMIN', 'SOFTWARE & IT'],
+    sections: ['OFFICE & IT'],
     defaultCategory: '30.0', // Office & Admin Unclassified
     description: 'Stationery, software, phones, internet'
   },
@@ -66,11 +66,11 @@ export const PARENT_CATEGORIES = {
   },
   OTHER: {
     id: 'OTHER',
-    name: 'Other Expenses',
+    name: 'Petty Cash / Other',
     icon: '📊',
     color: '#6B7280',
-    sections: ['MOTOR & TRANSPORT', 'CAPITAL & DEPRECIATION', 'OTHER EXPENSES'],
-    defaultCategory: '80.0', // Other Expenses Unclassified
+    sections: ['MOTOR & TRANSPORT', 'CAPITAL & DEPRECIATION', 'PETTY CASH / OTHER EXPENSES'],
+    defaultCategory: '80.0', // Petty Cash / Other Unclassified
     description: 'Motor costs, equipment purchases, miscellaneous'
   },
   NON_BUSINESS: {

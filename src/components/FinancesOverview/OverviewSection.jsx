@@ -6,9 +6,6 @@ import {
   TrendingUp,
   BarChart3,
   PieChart,
-  Calendar,
-  Eye,
-  EyeOff,
   X,
   ChevronRight,
   Info,
@@ -37,12 +34,7 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
     transactions,
     paymentAnalysisData,
     selectedYear,
-    setSelectedYear,
-    showSensitiveData,
-    setShowSensitiveData,
-    useRollingYear,
-    setUseRollingYear,
-    getAvailableYears
+    useRollingYear
   } = useAppContext();
 
   const [selectedMetric, setSelectedMetric] = useState(null);
@@ -71,7 +63,7 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
     summaries.categoryBreakdown
       .filter(c => c.type === 'expense')
       .forEach(category => {
-        const section = category.section || 'Other Expenses';
+        const section = category.section || 'Petty Cash / Other';
         if (!expenseGroups[section]) {
           expenseGroups[section] = { value: 0, categories: [] };
         }
@@ -127,7 +119,7 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
           </h3>
           <div style={{ marginBottom: '1rem', padding: '1rem', borderRadius: '0.5rem', backgroundColor: `${COLORS.incomeColor}15` }}>
             <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: COLORS.incomeColor }}>
-              {showSensitiveData ? `€${Math.round(summaries.income).toLocaleString()}` : '€***,***'}
+              {`€${Math.round(summaries.income).toLocaleString()}`}
             </div>
             <div style={{ fontSize: '0.875rem', color: COLORS.incomeColor }}>Total Income</div>
           </div>
@@ -150,7 +142,7 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
                   <div style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>{category.percentage}% of total income</div>
                 </div>
                 <div style={{ fontWeight: 'bold', color: COLORS.incomeColor }}>
-                  {showSensitiveData ? `€${category.value.toLocaleString()}` : '€***'}
+                  {`€${category.value.toLocaleString()}`}
                 </div>
               </div>
             ))}
@@ -214,7 +206,7 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
                     </div>
                   </div>
                   <div style={{ fontWeight: 'bold', color: COLORS.expenseColor }}>
-                    {showSensitiveData ? `€${category.value.toLocaleString()}` : '€***'}
+                    {`€${category.value.toLocaleString()}`}
                   </div>
                 </div>
               ))}
@@ -230,7 +222,7 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
           </h3>
           <div style={{ marginBottom: '1rem', padding: '1rem', borderRadius: '0.5rem', backgroundColor: `${COLORS.expenseColor}15` }}>
             <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: COLORS.expenseColor }}>
-              {showSensitiveData ? `€${Math.round(summaries.expenses).toLocaleString()}` : '€***,***'}
+              {`€${Math.round(summaries.expenses).toLocaleString()}`}
             </div>
             <div style={{ fontSize: '0.875rem', color: COLORS.expenseColor }}>Total Expenses</div>
           </div>
@@ -256,7 +248,7 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center' }}>
                   <div style={{ fontWeight: 'bold', color: COLORS.expenseColor }}>
-                    {showSensitiveData ? `€${group.value.toLocaleString()}` : '€***'}
+                    {`€${group.value.toLocaleString()}`}
                   </div>
                   <ChevronRight style={{ height: '1rem', width: '1rem', marginLeft: '0.5rem', color: COLORS.mediumGray }} />
                 </div>
@@ -282,7 +274,7 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
             <div style={{ padding: '1rem', borderRadius: '0.5rem', backgroundColor: `${COLORS.slainteBlue}15` }}>
               <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: profit >= 0 ? COLORS.incomeColor : COLORS.expenseColor }}>
-                {showSensitiveData ? `€${profit.toLocaleString()}` : '€***,***'}
+                {`€${profit.toLocaleString()}`}
               </div>
               <div style={{ fontSize: '0.875rem', color: COLORS.slainteBlue }}>Total Profit</div>
             </div>
@@ -294,7 +286,7 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
             </div>
             <div style={{ padding: '1rem', borderRadius: '0.5rem', backgroundColor: `${COLORS.slainteBlue}20` }}>
               <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: profitData.averageMonthlyProfit >= 0 ? COLORS.slainteBlue : COLORS.expenseColor }}>
-                {showSensitiveData ? `€${Math.round(profitData.averageMonthlyProfit).toLocaleString()}` : '€***'}
+                {`€${Math.round(profitData.averageMonthlyProfit).toLocaleString()}`}
               </div>
               <div style={{ fontSize: '0.875rem', color: COLORS.slainteBlue }}>Avg Monthly Profit</div>
             </div>
@@ -306,14 +298,14 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
                 <h4 style={{ fontWeight: 600, marginBottom: '0.5rem', color: COLORS.incomeColor }}>Best Month</h4>
                 <div style={{ fontSize: '1.125rem', fontWeight: 'bold', color: COLORS.incomeColor }}>{profitData.bestMonth.month}</div>
                 <div style={{ fontSize: '0.875rem', color: COLORS.incomeColor }}>
-                  {showSensitiveData ? `€${profitData.bestMonth.profit.toLocaleString()}` : '€***'} profit
+                  {`€${profitData.bestMonth.profit.toLocaleString()}`} profit
                 </div>
               </div>
               <div style={{ padding: '1rem', borderRadius: '0.5rem', backgroundColor: `${COLORS.expenseColor}15` }}>
                 <h4 style={{ fontWeight: 600, marginBottom: '0.5rem', color: COLORS.expenseColor }}>Lowest Month</h4>
                 <div style={{ fontSize: '1.125rem', fontWeight: 'bold', color: COLORS.expenseColor }}>{profitData.worstMonth.month}</div>
                 <div style={{ fontSize: '0.875rem', color: COLORS.expenseColor }}>
-                  {showSensitiveData ? `€${profitData.worstMonth.profit.toLocaleString()}` : '€***'} profit
+                  {`€${profitData.worstMonth.profit.toLocaleString()}`} profit
                 </div>
               </div>
             </div>
@@ -337,7 +329,7 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
                 <div style={{ fontWeight: 500, color: COLORS.darkGray }}>{month.month}</div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontWeight: 'bold', color: month.profit >= 0 ? COLORS.incomeColor : COLORS.expenseColor }}>
-                    {showSensitiveData ? `€${month.profit.toLocaleString()}` : '€***'}
+                    {`€${month.profit.toLocaleString()}`}
                   </div>
                   <div style={{ fontSize: '0.75rem', color: COLORS.mediumGray }}>{month.margin}% margin</div>
                 </div>
@@ -359,17 +351,17 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
             <div style={{ padding: '1rem', borderRadius: '0.5rem', backgroundColor: `${COLORS.expenseColor}15` }}>
               <div style={{ fontSize: '0.875rem', marginBottom: '0.25rem', color: COLORS.mediumGray }}>GMS Withholding Tax</div>
               <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: COLORS.expenseColor }}>
-                {showSensitiveData ? `€${withholdingTaxData.gmsWithholdingTax.toLocaleString()}` : '€***,***'}
+                {`€${withholdingTaxData.gmsWithholdingTax.toLocaleString()}`}
               </div>
               <div style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: COLORS.mediumGray }}>From PCRS payments</div>
             </div>
             <div style={{ padding: '1rem', borderRadius: '0.5rem', backgroundColor: `${COLORS.expenseColor}15` }}>
               <div style={{ fontSize: '0.875rem', marginBottom: '0.25rem', color: COLORS.mediumGray }}>State Contract Tax</div>
               <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: COLORS.expenseColor }}>
-                {showSensitiveData ? `€${withholdingTaxData.stateContractTax.toLocaleString()}` : '€***,***'}
+                {`€${withholdingTaxData.stateContractTax.toLocaleString()}`}
               </div>
               <div style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: COLORS.mediumGray }}>
-                {withholdingTaxData.stateContractRate}% of €{showSensitiveData ? withholdingTaxData.stateContractIncome.toLocaleString() : '***,***'}
+                {withholdingTaxData.stateContractRate}% of €{withholdingTaxData.stateContractIncome.toLocaleString()}
               </div>
             </div>
           </div>
@@ -378,7 +370,7 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontWeight: 600, color: COLORS.darkGray }}>Total Withholding Tax:</span>
               <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: COLORS.expenseColor }}>
-                {showSensitiveData ? `€${withholdingTaxData.total.toLocaleString()}` : '€***,***'}
+                {`€${withholdingTaxData.total.toLocaleString()}`}
               </span>
             </div>
           </div>
@@ -445,85 +437,8 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      {/* Year Selector */}
-      <div style={{ backgroundColor: 'white', padding: '1rem', borderRadius: '0.5rem', border: `1px solid ${COLORS.lightGray}` }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.darkGray }}>Financial Overview</h3>
-            <span
-              style={{
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                padding: '0.25rem 0.75rem',
-                borderRadius: '9999px',
-                backgroundColor: COLORS.highlightYellow,
-                color: COLORS.darkGray
-              }}
-            >
-              {summaries.periodLabel || `${selectedYear} YTD`}
-            </span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            {/* Toggle: Calendar Year vs Rolling 12 Months */}
-            <button
-              onClick={() => setUseRollingYear(!useRollingYear)}
-              style={{
-                padding: '0.25rem 0.75rem',
-                borderRadius: '0.25rem',
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                border: `1px solid ${COLORS.slainteBlue}`,
-                backgroundColor: useRollingYear ? COLORS.slainteBlue : 'white',
-                color: useRollingYear ? 'white' : COLORS.slainteBlue,
-                cursor: 'pointer'
-              }}
-            >
-              {useRollingYear ? 'Last 12 Months' : 'Calendar Year'}
-            </button>
-
-            {/* Year Selector - only shown in calendar year mode */}
-            {!useRollingYear && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Calendar style={{ height: '1rem', width: '1rem', color: COLORS.mediumGray }} />
-                <select
-                  value={selectedYear}
-                  onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                  style={{
-                    padding: '0.25rem 0.75rem',
-                    borderRadius: '0.25rem',
-                    border: `1px solid ${COLORS.lightGray}`
-                  }}
-                >
-                  {getAvailableYears().length > 0 ? getAvailableYears().map(year => (
-                    <option key={year} value={year}>{year}</option>
-                  )) : (
-                    <option value={new Date().getFullYear()}>{new Date().getFullYear()}</option>
-                  )}
-                </select>
-              </div>
-            )}
-
-            {/* Sensitive data toggle */}
-            <button
-              onClick={() => setShowSensitiveData(!showSensitiveData)}
-              style={{
-                padding: '0.5rem',
-                borderRadius: '0.25rem',
-                border: 'none',
-                background: 'transparent',
-                cursor: 'pointer',
-                color: COLORS.mediumGray
-              }}
-              title={showSensitiveData ? 'Hide sensitive data' : 'Show sensitive data'}
-            >
-              {showSensitiveData ? <Eye style={{ height: '1.25rem', width: '1.25rem' }} /> : <EyeOff style={{ height: '1.25rem', width: '1.25rem' }} />}
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Key Metrics - Income, Expenses, Profit, Withholding Tax */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
+      <div data-tour-id="finance-kpi-cards" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
         {/* Income */}
         <div
           onClick={() => setSelectedMetric('income')}
@@ -539,7 +454,7 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
             <div>
               <p style={{ fontSize: '0.875rem', fontWeight: 500, color: 'white', opacity: 0.9 }}>Total Income</p>
               <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white', marginTop: '0.25rem' }}>
-                {showSensitiveData ? `€${Math.round(summaries.income).toLocaleString()}` : '€***,***'}
+                {`€${Math.round(summaries.income).toLocaleString()}`}
               </p>
               {summaries.yearComparison && (
                 <p style={{ fontSize: '0.75rem', color: 'white', opacity: 0.9, marginTop: '0.25rem' }}>
@@ -566,7 +481,7 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
             <div>
               <p style={{ fontSize: '0.875rem', fontWeight: 500, color: 'white', opacity: 0.9 }}>Total Expenses</p>
               <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white', marginTop: '0.25rem' }}>
-                {showSensitiveData ? `€${Math.round(summaries.expenses).toLocaleString()}` : '€***,***'}
+                {`€${Math.round(summaries.expenses).toLocaleString()}`}
               </p>
               {summaries.yearComparison && (
                 <p style={{ fontSize: '0.75rem', color: 'white', opacity: 0.9, marginTop: '0.25rem' }}>
@@ -593,7 +508,7 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
             <div>
               <p style={{ fontSize: '0.875rem', fontWeight: 500, color: 'white', opacity: 0.9 }}>Net Profit</p>
               <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white', marginTop: '0.25rem' }}>
-                {showSensitiveData ? `€${profit.toLocaleString()}` : '€***,***'}
+                {`€${profit.toLocaleString()}`}
               </p>
               <p style={{ fontSize: '0.75rem', color: 'white', opacity: 0.9, marginTop: '0.25rem' }}>
                 {profitMargin}% profit margin
@@ -618,7 +533,7 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
             <div>
               <p style={{ fontSize: '0.875rem', fontWeight: 500, color: 'white', opacity: 0.9 }}>Withholding Tax</p>
               <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white', marginTop: '0.25rem' }}>
-                {showSensitiveData ? `€${withholdingTaxData.total.toLocaleString()}` : '€***,***'}
+                {`€${withholdingTaxData.total.toLocaleString()}`}
               </p>
               <p style={{ fontSize: '0.75rem', color: 'white', opacity: 0.9, marginTop: '0.25rem' }}>
                 Tax credit available
@@ -682,7 +597,7 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
         const config = chartConfig[dashboardChartMode];
 
         return (
-          <div style={{ backgroundColor: 'white', padding: '1.5rem', borderRadius: '0.5rem', border: `1px solid ${COLORS.lightGray}` }}>
+          <div data-tour-id="finance-chart" style={{ backgroundColor: 'white', padding: '1.5rem', borderRadius: '0.5rem', border: `1px solid ${COLORS.lightGray}` }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
               <h3 style={{ fontSize: '1.125rem', fontWeight: 600, display: 'flex', alignItems: 'center', color: COLORS.darkGray }}>
                 <TrendingUp style={{ height: '1.25rem', width: '1.25rem', marginRight: '0.5rem', color: COLORS.slainteBlue }} />
@@ -747,11 +662,11 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
                 <YAxis
                   tick={{ fill: COLORS.mediumGray, fontSize: 12 }}
                   axisLine={{ stroke: COLORS.lightGray }}
-                  tickFormatter={(value) => showSensitiveData ? `€${(value / 1000).toFixed(0)}k` : '€***'}
+                  tickFormatter={(value) => `€${(value / 1000).toFixed(0)}k`}
                 />
                 <Tooltip
                   formatter={(value, name) => [
-                    showSensitiveData ? `€${value.toLocaleString()}` : '€***',
+                    `€${value.toLocaleString()}`,
                     name
                   ]}
                   contentStyle={{
@@ -796,20 +711,20 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
                     <div>
                       <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray }}>{selectedYear} Total</p>
                       <p style={{ fontSize: '1.125rem', fontWeight: 600, color: config.currentColor }}>
-                        {showSensitiveData ? `€${Math.round(currentTotal).toLocaleString()}` : '€***,***'}
+                        {`€${Math.round(currentTotal).toLocaleString()}`}
                       </p>
                     </div>
                     <div>
                       <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray }}>{selectedYear - 1} Total</p>
                       <p style={{ fontSize: '1.125rem', fontWeight: 600, color: config.previousColor }}>
-                        {showSensitiveData ? `€${Math.round(previousTotal).toLocaleString()}` : '€***,***'}
+                        {`€${Math.round(previousTotal).toLocaleString()}`}
                       </p>
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray }}>Year-over-Year</p>
                     <p style={{ fontSize: '1.125rem', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.25rem', color: isPositive ? COLORS.incomeColor : COLORS.expenseColor }}>
-                      {isPositive ? '↗' : '↘'} {showSensitiveData ? `${Math.abs(change).toFixed(1)}%` : '**%'}
+                      {isPositive ? '↗' : '↘'} {`${Math.abs(change).toFixed(1)}%`}
                     </p>
                   </div>
                 </div>
@@ -823,6 +738,7 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
         {/* Reports Box */}
         <div
+          data-tour-id="finance-reports-box"
           onClick={onOpenReports}
           style={{
             padding: '1rem',
@@ -862,6 +778,7 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
 
         {/* Transactions Box */}
         <div
+          data-tour-id="finance-transactions-box"
           onClick={onOpenTransactions}
           style={{
             padding: '1rem',

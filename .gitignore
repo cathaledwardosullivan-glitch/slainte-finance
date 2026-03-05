@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# Claude Code local settings (may contain tokens)
+.claude/settings.local.json
+
+# Environment
+.env
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

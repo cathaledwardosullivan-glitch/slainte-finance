@@ -1,7 +1,7 @@
 /**
- * BOI Bank Statement PDF Parser Test Script v2
+ * Bank Statement PDF Parser Test Script v2
  *
- * This script tests the feasibility of parsing Bank of Ireland PDF statements
+ * This script tests the parsing of bank statement PDFs (BOI, AIB)
  * by comparing extracted data against a known-good CSV export.
  *
  * Usage:
@@ -246,20 +246,25 @@ function parseCSV(csvPath) {
   console.log(`   Rows: ${result.data.length}`);
   console.log(`   Columns: ${Object.keys(result.data[0] || {}).join(', ')}`);
 
-  // Normalize CSV data
+  // Normalize CSV data - handles BOI, AIB, and other formats
+  // AIB exports have leading spaces in column names (e.g., " Posted Transactions Date")
   const transactions = result.data.map((row, index) => {
     const date = row.Date || row.date || row['Transaction Date'] || row['Value Date'] ||
-                 row['Processing Date'] || row.TransactionDate || '';
+                 row['Processing Date'] || row.TransactionDate ||
+                 row[' Posted Transactions Date'] || '';
 
     const description = row.Details || row.details || row.Description || row.description ||
                        row.Particulars || row.particulars || row.Transaction || row.transaction ||
-                       row.Narrative || row.narrative || row.Reference || row.reference || '';
+                       row.Narrative || row.narrative || row.Reference || row.reference ||
+                       row[' Description'] || '';
 
     const debit = row.Debit || row.debit || row['Debit Amount'] || row.DR || row.dr ||
-                  row.Out || row.out || row.Withdrawal || row.withdrawal || '';
+                  row.Out || row.out || row.Withdrawal || row.withdrawal ||
+                  row[' Debit Amount'] || '';
 
     const credit = row.Credit || row.credit || row['Credit Amount'] || row.CR || row.cr ||
-                   row.In || row.in || row.Deposit || row.deposit || '';
+                   row.In || row.in || row.Deposit || row.deposit ||
+                   row[' Credit Amount'] || '';
 
     const balance = row.Balance || row.balance || row['Running Balance'] || row['Closing Balance'] || '';
 
@@ -272,7 +277,23 @@ function parseCSV(csvPath) {
       raw: JSON.stringify(row),
       rowIndex: index + 1
     };
-  }).filter(t => t.date !== null);
+  }).filter(t => {
+    if (t.date === null) return false;
+    // Filter out AIB informational rows (0.00 credits with no real transaction)
+    // These include: Interest Rate, Lending @, FX rate lines, account references
+    if (t.debit === null && (t.credit === null || t.credit === 0)) {
+      const desc = t.description.toLowerCase();
+      if (desc.includes('interest rate') || desc.includes('lending @') ||
+          /^\d+\.\d+ (usd|gbp|eur)@/i.test(t.description) ||
+          /^\d+\.\d{4,}$/.test(t.description) ||
+          /^incl fx fee/i.test(t.description) ||
+          /^ie\d{14,}/i.test(t.description) ||
+          /^\d{6,}-\d+$/.test(t.description)) {
+        return false;
+      }
+    }
+    return true;
+  });
 
   console.log(`   Valid transactions: ${transactions.length}`);
 
@@ -292,6 +313,14 @@ function parseDate(dateStr) {
   let match = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   if (match) {
     return new Date(parseInt(match[3]), parseInt(match[2]) - 1, parseInt(match[1]));
+  }
+
+  // DD/MM/YY (2-digit year, e.g., AIB format "28/01/26")
+  match = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/);
+  if (match) {
+    const year = parseInt(match[3]);
+    const fullYear = year < 50 ? 2000 + year : 1900 + year;
+    return new Date(fullYear, parseInt(match[2]) - 1, parseInt(match[1]));
   }
 
   // DD-MM-YYYY
@@ -508,7 +537,7 @@ function calculateStringSimilarity(str1, str2) {
 function generateReport(pdfFiles, csvTransactions, allResults) {
   console.log('\n');
   console.log('═'.repeat(80));
-  console.log('                    BOI PDF PARSER ACCURACY REPORT v2');
+  console.log('                 BANK STATEMENT PDF PARSER ACCURACY REPORT v2');
   console.log('═'.repeat(80));
 
   // Aggregate results
@@ -654,7 +683,7 @@ function generateReport(pdfFiles, csvTransactions, allResults) {
 
 async function main() {
   console.log('═'.repeat(80));
-  console.log('        BOI Bank Statement PDF Parser Test v2');
+  console.log('        Bank Statement PDF Parser Test v2');
   console.log('        All processing happens locally - no data sent externally');
   console.log('═'.repeat(80));
 

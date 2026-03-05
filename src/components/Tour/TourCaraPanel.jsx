@@ -3,6 +3,7 @@ import { useTour } from './TourProvider';
 import { COLORS } from '../../utils/colors';
 import { MessageCircle, Send, HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { callClaude } from '../../utils/claudeAPI';
+import { MODELS } from '../../data/modelConfig';
 
 const TourCaraPanel = () => {
   const { currentStepData, isTransitioning } = useTour();
@@ -66,7 +67,7 @@ The user has a follow-up question: "${question}"
 Provide a helpful, concise answer (2-3 sentences max) that addresses their question in the context of this feature. Be friendly and encouraging. If the question is unrelated to the current feature, briefly acknowledge it and suggest they explore after the tour.`;
 
       const response = await callClaude(prompt, {
-        model: 'claude-haiku-4-5-20251001',
+        model: MODELS.FAST,
         maxTokens: 300,
         apiKey: apiKey,
       });
@@ -175,7 +176,7 @@ Provide a helpful, concise answer (2-3 sentences max) that addresses their quest
               overflowY: 'auto',
             }}
           >
-            {currentStepData.caraText}
+            {currentStepData.finnText || currentStepData.caraText}
           </div>
 
           {/* Q&A Section */}

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { usePracticeProfile } from '../../../hooks/usePracticeProfile';
+import { useAppContext } from '../../../context/AppContext';
 import {
   Building2,
   UserCog,
@@ -7,16 +8,38 @@ import {
   Edit3
 } from 'lucide-react';
 import COLORS from '../../../utils/colors';
-import PracticeOnboarding from '../../PracticeOnboarding';
+import StaffProfileForm from '../../Onboarding/StaffProfileForm';
+import { generateCategoriesFromProfile } from '../../../utils/categoryGenerator';
 
 /**
  * PracticeProfileSection - Practice profile viewer and editor
  */
 const PracticeProfileSection = () => {
-  const { profile } = usePracticeProfile();
+  const { profile, updateProfile } = usePracticeProfile();
+  const { setCategoryMapping } = useAppContext();
 
   // Practice Profile state
   const [showOnboardingEdit, setShowOnboardingEdit] = useState(false);
+
+  // Handle profile save from StaffProfileForm
+  const handleProfileSave = (updatedProfile) => {
+    // 1. Regenerate category mappings from updated profile
+    const generatedCategories = generateCategoriesFromProfile(updatedProfile);
+    setCategoryMapping(generatedCategories);
+
+    // 2. Save profile with metadata
+    updateProfile({
+      ...updatedProfile,
+      metadata: {
+        ...updatedProfile.metadata,
+        setupComplete: true,
+        lastUpdated: new Date().toISOString()
+      }
+    });
+
+    // 3. Close the edit modal
+    setShowOnboardingEdit(false);
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -104,6 +127,22 @@ const PracticeProfileSection = () => {
                 if (partners > 1) return 'Partnership';
                 if (partners === 1) return 'Single-Handed';
                 return profile?.practiceDetails?.practiceType || <em style={{ color: '#9CA3AF' }}>Not set</em>;
+              })()}
+            </p>
+          </div>
+          <div>
+            <span style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>Electronic Health Record (EHR):</span>
+            <p style={{ fontWeight: 500, color: COLORS.darkGray }}>
+              {(() => {
+                const ehrLabels = {
+                  socrates: 'Socrates',
+                  healthone: 'HealthOne',
+                  practicemanager: 'Helix Practice Manager',
+                  completegp: 'CompleteGP',
+                  other: 'Other'
+                };
+                const ehr = profile?.practiceDetails?.ehrSystem;
+                return ehr ? (ehrLabels[ehr] || ehr) : <em style={{ color: '#9CA3AF' }}>Not set</em>;
               })()}
             </p>
           </div>
@@ -198,13 +237,43 @@ const PracticeProfileSection = () => {
         </div>
       )}
 
-      {/* Practice Onboarding Edit Modal */}
+      {/* Profile Edit Modal */}
       {showOnboardingEdit && (
-        <PracticeOnboarding
-          isEditMode={true}
-          onComplete={() => setShowOnboardingEdit(false)}
-          onCancel={() => setShowOnboardingEdit(false)}
-        />
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 10001,
+            padding: '2rem'
+          }}
+          onClick={() => setShowOnboardingEdit(false)}
+        >
+          <div
+            style={{
+              backgroundColor: COLORS.backgroundGray,
+              borderRadius: '16px',
+              maxWidth: '1400px',
+              width: '100%',
+              padding: '2rem',
+              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+              maxHeight: '90vh',
+              overflow: 'auto'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <StaffProfileForm
+              initialProfile={profile}
+              onComplete={handleProfileSave}
+              onBack={() => setShowOnboardingEdit(false)}
+              submitLabel="Save Changes"
+              backLabel="Cancel"
+            />
+          </div>
+        </div>
       )}
     </div>
   );

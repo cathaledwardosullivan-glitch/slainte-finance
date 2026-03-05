@@ -4,6 +4,7 @@ import { useAppContext } from '../context/AppContext';
 import COLORS from '../utils/colors';
 import SimpleCategoryPicker from './SimpleCategoryPicker';
 import { callClaude } from '../utils/claudeAPI';
+import { MODELS } from '../data/modelConfig';
 import { PARENT_CATEGORIES } from '../utils/parentCategoryMapping';
 
 /**
@@ -82,7 +83,7 @@ export default function AIExpenseCategorization({ onClose, initialApiKey = '', h
       localStorage.setItem('anthropic_api_key', apiKey);
 
       // PHASE 1: Pre-filter transactions to find potential recurring patterns
-      // IMPORTANT: Uses EXACT SAME logic as TransactionList.jsx groupUnidentifiedTransactions()
+      // Pre-filter transactions to find potential recurring patterns
       const extractPattern = (details) => {
         if (!details) return '';
 
@@ -403,7 +404,7 @@ IMPORTANT:
 
       // Call Claude API for first batch only
       const response = await callClaude(prompt, {
-        model: 'claude-haiku-4-5-20251001',
+        model: MODELS.FAST,
         maxTokens: 8000, // Max for Haiku 4.5
         apiKey: apiKey
       });
@@ -786,7 +787,7 @@ IMPORTANT:
 - Be concise with reasoning`;
 
       const response = await callClaude(prompt, {
-        model: 'claude-haiku-4-5-20251001',
+        model: MODELS.FAST,
         maxTokens: 8000,
         apiKey: apiKey
       });

@@ -3,32 +3,9 @@ import { Upload, FileSpreadsheet, User, MessageCircle, CheckCircle, ArrowRight, 
 import COLORS from '../../utils/colors';
 import Papa from 'papaparse';
 
-// Typing animation hook
-const useTypingEffect = (text, speed = 30) => {
-  const [displayedText, setDisplayedText] = useState('');
-  const [isComplete, setIsComplete] = useState(false);
-
-  useEffect(() => {
-    if (!text) return;
-
-    let index = 0;
-    setDisplayedText('');
-    setIsComplete(false);
-
-    const timer = setInterval(() => {
-      if (index < text.length) {
-        setDisplayedText(text.substring(0, index + 1));
-        index++;
-      } else {
-        setIsComplete(true);
-        clearInterval(timer);
-      }
-    }, speed);
-
-    return () => clearInterval(timer);
-  }, [text, speed]);
-
-  return { displayedText, isComplete };
+// Instant text display (typing animation disabled)
+const useTypingEffect = (text) => {
+  return { displayedText: text || '', isComplete: true };
 };
 
 export default function LabelledTransactionImport({ onComplete, onSwitchToRaw, onSkip }) {
@@ -297,7 +274,7 @@ export default function LabelledTransactionImport({ onComplete, onSwitchToRaw, o
       margin: '0 auto',
       height: 'min(75vh, 700px)'
     }}>
-      {/* Left side - Cara Chat Box */}
+      {/* Left side - Finn Chat Box */}
       <div style={{
         flex: '1 1 45%',
         minWidth: '450px',
@@ -332,7 +309,7 @@ export default function LabelledTransactionImport({ onComplete, onSwitchToRaw, o
             <User style={{ height: '1.25rem', width: '1.25rem' }} />
           </div>
           <div>
-            <div style={{ fontWeight: 600, fontSize: '1rem' }}>Cara</div>
+            <div style={{ fontWeight: 600, fontSize: '1rem' }}>Finn</div>
             <div style={{ fontSize: '0.75rem', opacity: 0.9 }}>Sláinte Guide</div>
           </div>
         </div>

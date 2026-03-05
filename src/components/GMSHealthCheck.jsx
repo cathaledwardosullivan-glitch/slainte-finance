@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, AlertCircle } from 'lucide-react';
+import { FileText, AlertCircle, Play } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { usePracticeProfile } from '../hooks/usePracticeProfile';
+import { useTour } from './Tour';
 import COLORS from '../utils/colors';
 import HealthCheckDataForm from './HealthCheckDataForm';
 import GMSHealthCheckReport from './GMSHealthCheckReport';
@@ -14,6 +15,7 @@ import { analyzeGMSIncome, generateRecommendations } from '../utils/healthCheckC
 export default function GMSHealthCheck({ setCurrentView }) {
   const { transactions, paymentAnalysisData } = useAppContext();
   const { profile, updateProfile, isLoading } = usePracticeProfile();
+  const { startGMSHealthCheckTour, getGMSHCTourCompletionDate } = useTour();
 
   const [showDataForm, setShowDataForm] = useState(false);
   const [showReport, setShowReport] = useState(false);
@@ -1388,6 +1390,7 @@ export default function GMSHealthCheck({ setCurrentView }) {
     return (
       <HealthCheckDataForm
         practiceProfile={profile}
+        paymentAnalysisData={paymentAnalysisData}
         onComplete={handleCompleteDataForm}
         onCancel={() => {
           setShowDataForm(false);
@@ -1420,8 +1423,24 @@ export default function GMSHealthCheck({ setCurrentView }) {
           onOpenPCRSUpload={handleOpenPCRSUpload}
         />
 
-        {/* Update Data Button */}
-        <div className="mt-6 flex justify-center">
+        {/* Action Buttons */}
+        <div className="mt-6 flex justify-center gap-3">
+          <button
+            onClick={startGMSHealthCheckTour}
+            className="px-4 py-2 rounded border font-medium transition-colors"
+            style={{
+              borderColor: COLORS.slainteBlue,
+              color: COLORS.slainteBlue,
+              backgroundColor: `${COLORS.slainteBlue}10`
+            }}
+            onMouseEnter={(e) => e.target.style.backgroundColor = `${COLORS.slainteBlue}20`}
+            onMouseLeave={(e) => e.target.style.backgroundColor = `${COLORS.slainteBlue}10`}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Play style={{ width: '1rem', height: '1rem' }} />
+              {getGMSHCTourCompletionDate() ? 'Replay Health Check Tour' : 'Take Health Check Tour'}
+            </span>
+          </button>
           <button
             onClick={handleUpdateData}
             className="px-4 py-2 rounded border font-medium transition-colors hover:bg-gray-50"

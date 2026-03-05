@@ -2,6 +2,7 @@
  * Artifact Builder for Finn
  * Generates structured, exportable reports and analyses
  */
+import DOMPurify from 'dompurify';
 
 /**
  * Parse response for artifact tags and separate intro/conclusion from content
@@ -142,9 +143,50 @@ export function createArtifact(content, metadata = {}) {
 
 /**
  * Format artifact for display (convert markdown to HTML)
+ * Uses placeholder extraction to prevent tables/charts from being
+ * corrupted by paragraph wrapping (tables inside <p> = invalid HTML)
  */
 export function formatArtifactHTML(artifact) {
   let html = artifact.content;
+  const placeholders = {};
+  let placeholderIndex = 0;
+
+  const makePlaceholder = (type) => {
+    const key = `\x00PH_${type}_${placeholderIndex++}\x00`;
+    return key;
+  };
+
+  // --- Phase 1: Extract complex blocks BEFORE paragraph conversion ---
+
+  // 1a. Extract vega-lite / code blocks → chart placeholder
+  html = html.replace(/```vega-lite\s*\n([\s\S]*?)```/g, (match, spec) => {
+    const key = makePlaceholder('CHART');
+    // Try to extract title from the spec for the placeholder label
+    let chartTitle = 'Chart';
+    try {
+      const parsed = JSON.parse(spec.trim());
+      if (parsed.title) chartTitle = parsed.title;
+    } catch (e) { /* ignore parse errors */ }
+    placeholders[key] = `<div class="chart-placeholder"><div class="chart-placeholder-icon">📊</div><div class="chart-placeholder-title">${chartTitle}</div><div class="chart-placeholder-note">Interactive chart available in the app view</div></div>`;
+    return key;
+  });
+
+  // 1b. Extract other code blocks to prevent them being mangled
+  html = html.replace(/```(\w*)\s*\n([\s\S]*?)```/g, (match, lang, code) => {
+    const key = makePlaceholder('CODE');
+    placeholders[key] = `<pre class="artifact-code"><code>${code.trim().replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>`;
+    return key;
+  });
+
+  // 1c. Extract markdown tables → convert to HTML → placeholder
+  const tableRegex = /(\|.+\|[\r\n]+\|[-:\s|]+\|[\r\n]+(?:\|.+\|[\r\n]*)+)/g;
+  html = html.replace(tableRegex, (table) => {
+    const key = makePlaceholder('TABLE');
+    placeholders[key] = convertMarkdownTable(table);
+    return key;
+  });
+
+  // --- Phase 2: Standard markdown conversions (safe now — no tables/charts in the text) ---
 
   // Convert markdown headers
   html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
@@ -154,56 +196,76 @@ export function formatArtifactHTML(artifact) {
   // Convert bold
   html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
 
-  // Convert lists
+  // Convert numbered lists (e.g., "1. item")
+  html = html.replace(/^(\d+)\.\s+(.+)$/gm, '<li>$2</li>');
+
+  // Convert unordered lists
   html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+
+  // Wrap consecutive <li> in <ul>
   html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
 
-  // Convert line breaks
+  // Convert paragraphs — double newlines become paragraph breaks
   html = html.replace(/\n\n/g, '</p><p>');
   html = '<p>' + html + '</p>';
 
-  // Convert tables (basic)
-  html = convertMarkdownTables(html);
+  // Clean up empty paragraphs and paragraphs that only wrap block elements
+  html = html.replace(/<p>\s*<\/p>/g, '');
+  html = html.replace(/<p>\s*(<h[1-3]>)/g, '$1');
+  html = html.replace(/(<\/h[1-3]>)\s*<\/p>/g, '$1');
+  html = html.replace(/<p>\s*(<ul>)/g, '$1');
+  html = html.replace(/(<\/ul>)\s*<\/p>/g, '$1');
+
+  // --- Phase 3: Re-insert placeholders ---
+
+  for (const [key, value] of Object.entries(placeholders)) {
+    // Remove any <p> wrapping around a placeholder
+    html = html.replace(new RegExp(`<p>\\s*${escapeRegex(key)}\\s*</p>`, 'g'), value);
+    html = html.replace(key, value);
+  }
 
   return html;
 }
 
 /**
- * Convert markdown tables to HTML
+ * Escape special regex characters in a string
  */
-function convertMarkdownTables(text) {
-  const tableRegex = /(\|.+\|[\r\n]+\|[-:\s|]+\|[\r\n]+(?:\|.+\|[\r\n]*)+)/g;
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
-  return text.replace(tableRegex, (table) => {
-    const rows = table.trim().split('\n').filter(row => !row.match(/^[\s|:\-]+$/));
-    if (rows.length < 2) return table;
+/**
+ * Convert a single markdown table string to HTML
+ */
+function convertMarkdownTable(table) {
+  const rows = table.trim().split('\n').filter(row => !row.match(/^[\s|:\-]+$/));
+  if (rows.length < 2) return table;
 
-    const headers = rows[0].split('|').filter(cell => cell.trim());
-    const dataRows = rows.slice(1);
+  const headers = rows[0].split('|').filter(cell => cell.trim());
+  const dataRows = rows.slice(1);
 
-    let html = '<table class="artifact-table">';
+  let html = '<table class="artifact-table">';
 
-    // Header
-    html += '<thead><tr>';
-    headers.forEach(header => {
-      html += `<th>${header.trim()}</th>`;
-    });
-    html += '</tr></thead>';
-
-    // Body
-    html += '<tbody>';
-    dataRows.forEach(row => {
-      const cells = row.split('|').filter(cell => cell.trim());
-      html += '<tr>';
-      cells.forEach(cell => {
-        html += `<td>${cell.trim()}</td>`;
-      });
-      html += '</tr>';
-    });
-    html += '</tbody></table>';
-
-    return html;
+  // Header
+  html += '<thead><tr>';
+  headers.forEach(header => {
+    html += `<th>${header.trim()}</th>`;
   });
+  html += '</tr></thead>';
+
+  // Body
+  html += '<tbody>';
+  dataRows.forEach(row => {
+    const cells = row.split('|').filter(cell => cell.trim());
+    html += '<tr>';
+    cells.forEach(cell => {
+      html += `<td>${cell.trim()}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+
+  return html;
 }
 
 /**
@@ -213,11 +275,14 @@ export function exportArtifactPDF(artifact) {
   const html = formatArtifactHTML(artifact);
   const printWindow = window.open('', '_blank');
 
+  const sanitizedHtml = DOMPurify.sanitize(html);
+  const sanitizedTitle = DOMPurify.sanitize(artifact.title);
+
   printWindow.document.write(`
     <!DOCTYPE html>
     <html>
     <head>
-      <title>${artifact.title}</title>
+      <title>${sanitizedTitle}</title>
       <style>
         body {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -245,6 +310,44 @@ export function exportArtifactPDF(artifact) {
           background-color: #f3f4f6;
           font-weight: 600;
         }
+        table.artifact-table tr:nth-child(even) {
+          background-color: #f9fafb;
+        }
+        .chart-placeholder {
+          border: 2px dashed #93c5fd;
+          border-radius: 8px;
+          padding: 24px;
+          margin: 20px 0;
+          text-align: center;
+          background-color: #eff6ff;
+        }
+        .chart-placeholder-icon {
+          font-size: 32px;
+          margin-bottom: 8px;
+        }
+        .chart-placeholder-title {
+          font-weight: 600;
+          color: #1e40af;
+          font-size: 16px;
+          margin-bottom: 4px;
+        }
+        .chart-placeholder-note {
+          color: #6b7280;
+          font-size: 13px;
+        }
+        pre.artifact-code {
+          background-color: #f3f4f6;
+          border: 1px solid #e5e7eb;
+          border-radius: 6px;
+          padding: 16px;
+          overflow-x: auto;
+          font-size: 13px;
+          line-height: 1.5;
+          margin: 16px 0;
+        }
+        pre.artifact-code code {
+          font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        }
         ul { margin-left: 20px; }
         li { margin: 8px 0; }
         .meta {
@@ -260,7 +363,7 @@ export function exportArtifactPDF(artifact) {
       </style>
     </head>
     <body>
-      ${html}
+      ${sanitizedHtml}
       <div class="meta">
         Generated: ${new Date().toLocaleString()}<br>
         Source: Financial Chat - Finn

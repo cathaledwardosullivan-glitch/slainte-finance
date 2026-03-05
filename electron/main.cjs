@@ -3,6 +3,7 @@ const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 let autoUpdater = null;
 const express = require('express');
 const cors = require('cors');
+const rateLimit = require('express-rate-limit');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const path = require('path');
@@ -10,6 +11,9 @@ const fs = require('fs');
 
 // PCRS Automation Module
 const { PCRSAutomation } = require('./pcrs/pcrsAutomation.cjs');
+
+// Centralized model configuration
+const { MODELS } = require('./modelConfig.cjs');
 
 // Security: Generate a unique internal token at startup (not hardcoded)
 const INTERNAL_TOKEN = crypto.randomBytes(32).toString('hex');
@@ -71,9 +75,63 @@ function loadOrGenerateCredentials() {
 }
 
 /**
- * Update the partner password
+ * Hash a password with PBKDF2
  */
-function setPartnerPassword(password) {
+function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto.pbkdf2Sync(password, salt, 100000, 64, 'sha512').toString('hex');
+  return { hash, salt };
+}
+
+// In-memory cache of plaintext password for auto-backup encryption.
+// Set when password is created, migrated, or verified via mobile login.
+let cachedBackupPassword = null;
+
+/**
+ * Verify a password against a stored hash
+ */
+function verifyPassword(inputPassword, storedHash, storedSalt) {
+  const inputHash = crypto.pbkdf2Sync(inputPassword, storedSalt, 100000, 64, 'sha512').toString('hex');
+  try {
+    return crypto.timingSafeEqual(Buffer.from(inputHash, 'hex'), Buffer.from(storedHash, 'hex'));
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Validate password strength
+ * @returns {{ valid: boolean, error?: string }}
+ */
+function validatePasswordStrength(password) {
+  if (!password || typeof password !== 'string') {
+    return { valid: false, error: 'Password is required.' };
+  }
+  if (password.length < 8) {
+    return { valid: false, error: 'Password must be at least 8 characters.' };
+  }
+  if (!/[a-zA-Z]/.test(password)) {
+    return { valid: false, error: 'Password must contain at least one letter.' };
+  }
+  if (!/[0-9]/.test(password)) {
+    return { valid: false, error: 'Password must contain at least one number.' };
+  }
+  return { valid: true };
+}
+
+/**
+ * Update the partner password (stores as hash)
+ * @returns {true | { error: string }} true on success, or object with error message
+ */
+function setPartnerPassword(password, { skipValidation = false } = {}) {
+  // Validate password strength for new passwords (skip during legacy migration)
+  if (!skipValidation) {
+    const validation = validatePasswordStrength(password);
+    if (!validation.valid) {
+      return { error: validation.error };
+    }
+  }
+
   const credentialsPath = getCredentialsPath();
 
   try {
@@ -82,11 +140,23 @@ function setPartnerPassword(password) {
       credentials = JSON.parse(fs.readFileSync(credentialsPath, 'utf-8'));
     }
 
-    credentials.partnerPassword = password;
+    // Store hashed password
+    const { hash, salt } = hashPassword(password);
+    credentials.partnerPassword = { hash, salt };
     credentials.passwordSetAt = new Date().toISOString();
+    // Increment token version to invalidate existing JWT tokens
+    credentials.tokenVersion = (credentials.tokenVersion || 0) + 1;
+
+    // Enable encrypted auto-backup by default when password is first set
+    if (credentials.autoBackupEnabled === undefined) {
+      credentials.autoBackupEnabled = true;
+      console.log('[Backup] Auto-backup enabled by default (security password set)');
+    }
 
     fs.writeFileSync(credentialsPath, JSON.stringify(credentials, null, 2));
-    console.log('[Security] Partner password updated');
+    // Cache plaintext for auto-backup encryption
+    cachedBackupPassword = password;
+    console.log('[Security] Partner password updated (hashed)');
     return true;
   } catch (error) {
     console.error('[Security] Error saving partner password:', error);
@@ -95,7 +165,8 @@ function setPartnerPassword(password) {
 }
 
 /**
- * Get the partner password
+ * Get the stored partner password data
+ * Returns the hash object { hash, salt } or a plaintext string (legacy)
  */
 function getPartnerPassword() {
   const credentialsPath = getCredentialsPath();
@@ -113,15 +184,78 @@ function getPartnerPassword() {
 }
 
 /**
+ * Verify a partner password against stored credentials
+ * Handles both legacy (plaintext) and new (hashed) formats
+ */
+function verifyPartnerPassword(inputPassword) {
+  const stored = getPartnerPassword();
+  if (!stored) return false;
+
+  // New format: { hash, salt }
+  if (typeof stored === 'object' && stored.hash && stored.salt) {
+    const isValid = verifyPassword(inputPassword, stored.hash, stored.salt);
+    if (isValid) {
+      // Cache plaintext for auto-backup encryption
+      cachedBackupPassword = inputPassword;
+    }
+    return isValid;
+  }
+
+  // Legacy format: plaintext string — verify and migrate
+  if (typeof stored === 'string') {
+    if (inputPassword === stored) {
+      // Migrate to hashed format on successful login (also caches password)
+      console.log('[Security] Migrating plaintext password to hashed format');
+      setPartnerPassword(inputPassword, { skipValidation: true });
+      return true;
+    }
+    return false;
+  }
+
+  return false;
+}
+
+/**
+ * Get the current token version (for JWT invalidation)
+ */
+function getTokenVersion() {
+  const credentialsPath = getCredentialsPath();
+  try {
+    if (fs.existsSync(credentialsPath)) {
+      const data = JSON.parse(fs.readFileSync(credentialsPath, 'utf-8'));
+      return data.tokenVersion || 0;
+    }
+  } catch (error) {
+    return 0;
+  }
+  return 0;
+}
+
+/**
  * Check if mobile access is configured
  */
 function isMobileAccessConfigured() {
   return getPartnerPassword() !== null;
 }
 
+/**
+ * Migrate plaintext password to hashed format on startup
+ */
+function migratePasswordIfNeeded() {
+  const stored = getPartnerPassword();
+  if (typeof stored === 'string' && stored.length > 0) {
+    console.log('[Security] Migrating plaintext password to hashed format at startup');
+    // setPartnerPassword will also cache the plaintext for auto-backup
+    setPartnerPassword(stored);
+  }
+}
+
 // Load credentials at startup (JWT_SECRET is auto-generated if needed)
 const credentials = loadOrGenerateCredentials();
 const JWT_SECRET = credentials.jwtSecret;
+
+// Migrate plaintext passwords to hashed format
+migratePasswordIfNeeded();
 
 // ============================================
 // LICENSE VALIDATION SYSTEM
@@ -191,6 +325,15 @@ function isWithinGracePeriod() {
 async function validateLicenseKey(apiKey) {
   if (!apiKey) return { valid: false, error: 'No license key provided' };
 
+  // In Local Only Mode, skip external validation and use grace period
+  if (isLocalOnlyMode()) {
+    console.log('[License] Local Only Mode: skipping external validation, using grace period');
+    if (isWithinGracePeriod()) {
+      return { valid: true, offline: true, gracePeriod: true, localOnly: true };
+    }
+    return { valid: false, error: 'License grace period expired. Please disable Local Only Mode to re-validate.', localOnly: true };
+  }
+
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -200,7 +343,7 @@ async function validateLicenseKey(apiKey) {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: MODELS.FAST,
         max_tokens: 1,
         messages: [{ role: 'user', content: 'x' }]
       })
@@ -229,6 +372,34 @@ async function validateLicenseKey(apiKey) {
     }
     return { valid: false, error: 'Unable to validate license (offline)', offline: true };
   }
+}
+
+/**
+ * Validate license key with retry on network failure.
+ * Retries up to 3 times with increasing delays (5s, 10s, 15s) before giving up.
+ * Only retries on network errors — genuine invalid/revoked keys fail immediately.
+ */
+async function validateLicenseKeyWithRetry(apiKey, maxRetries = 3) {
+  let lastResult;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    lastResult = await validateLicenseKey(apiKey);
+
+    // If valid, or if it failed for a non-network reason (invalid key, revoked, etc.), return immediately
+    if (lastResult.valid || !lastResult.offline) {
+      return lastResult;
+    }
+
+    // Network failure — retry after a delay (5s, 10s, 15s)
+    if (attempt < maxRetries) {
+      const delayMs = attempt * 5000;
+      console.log(`[License] Network error on attempt ${attempt}/${maxRetries}, retrying in ${delayMs / 1000}s...`);
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+  }
+
+  // All retries exhausted
+  console.warn(`[License] All ${maxRetries} validation attempts failed (network)`);
+  return lastResult;
 }
 
 /**
@@ -642,6 +813,55 @@ expressApp.use(cors({
 
 expressApp.use(express.json({ limit: '50mb' }));
 
+// Security headers
+expressApp.use((req, res, next) => {
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  // CSP in report-only mode — logs violations to DevTools console without blocking anything
+  res.setHeader('Content-Security-Policy-Report-Only',
+    "default-src 'self'; " +
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; " +
+    "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; " +
+    "img-src 'self' data: blob:; " +
+    "font-src 'self' data:; " +
+    "connect-src 'self' https://api.anthropic.com http://localhost:* http://127.0.0.1:*; " +
+    "worker-src 'self' blob:; " +
+    "child-src 'self' blob:;"
+  );
+  next();
+});
+
+// ============================================
+// RATE LIMITING
+// ============================================
+// Login: strict limit to prevent brute force
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5,                    // 5 attempts per window
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: 'Too many login attempts. Please try again in 15 minutes.' }
+});
+
+// General API: moderate limit for authenticated endpoints
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000,  // 1 minute
+  max: 60,              // 60 requests per minute
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests. Please slow down.' }
+});
+
+// Website analysis: tighter limit (expensive external fetch + AI call)
+const websiteAnalysisLimiter = rateLimit({
+  windowMs: 60 * 1000,  // 1 minute
+  max: 10,              // 10 per minute
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many website analysis requests. Please wait a moment.' }
+});
+
 // ============================================
 // STATIC FILE SERVING FOR MOBILE/PWA ACCESS
 // ============================================
@@ -803,6 +1023,10 @@ function authenticateToken(req, res, next) {
     if (err) {
       return res.status(403).json({ error: 'Invalid token' });
     }
+    // Check token version — reject tokens issued before a password change
+    if (user.tokenVersion !== undefined && user.tokenVersion !== getTokenVersion()) {
+      return res.status(403).json({ error: 'Token revoked. Please log in again.' });
+    }
     req.user = user;
     next();
   });
@@ -831,6 +1055,23 @@ function getLocalStorageData(key) {
   } catch (error) {
     console.error(`Error reading localStorage key ${key}:`, error);
     return null;
+  }
+}
+
+/**
+ * Check if Local Only Mode is enabled
+ * Reads from the practice profile in the localStorage mirror
+ * @returns {boolean} True if Local Only Mode is active
+ */
+function isLocalOnlyMode() {
+  try {
+    const profileData = getLocalStorageData('slainte_practice_profile');
+    if (!profileData) return false;
+    const profile = typeof profileData === 'string' ? JSON.parse(profileData) : profileData;
+    return profile?.metadata?.localOnlyMode === true;
+  } catch (error) {
+    console.error('[Main] Error checking local only mode:', error);
+    return false;
   }
 }
 
@@ -888,14 +1129,14 @@ expressApp.get('/api/health', (req, res) => {
 });
 
 // Login endpoint - Generate JWT token for partners
-expressApp.post('/api/auth/login', (req, res) => {
+expressApp.post('/api/auth/login', loginLimiter, (req, res) => {
   const { password } = req.body;
 
   // Get partner password from secure storage
-  const PARTNER_PASSWORD = getPartnerPassword();
+  const storedPassword = getPartnerPassword();
 
   // Reject if mobile access not configured
-  if (!PARTNER_PASSWORD) {
+  if (!storedPassword) {
     console.log('[Auth] Partner login attempted but mobile access not configured');
     return res.status(503).json({
       success: false,
@@ -903,11 +1144,11 @@ expressApp.post('/api/auth/login', (req, res) => {
     });
   }
 
-  if (password === PARTNER_PASSWORD) {
+  if (verifyPartnerPassword(password)) {
     const token = jwt.sign(
-      { role: 'partner', timestamp: Date.now() },
+      { role: 'partner', timestamp: Date.now(), tokenVersion: getTokenVersion() },
       JWT_SECRET,
-      { expiresIn: '30d' }
+      { expiresIn: '7d' }
     );
 
     res.json({ success: true, token });
@@ -1064,8 +1305,13 @@ expressApp.get('/api/categories', authenticateToken, (req, res) => {
 });
 
 // Website analysis endpoint - Fetches website and analyzes with Claude
-expressApp.post('/api/analyze-website', authenticateToken, async (req, res) => {
+expressApp.post('/api/analyze-website', authenticateToken, websiteAnalysisLimiter, async (req, res) => {
   try {
+    // Block in Local Only Mode
+    if (isLocalOnlyMode()) {
+      return res.status(403).json({ error: 'Local Only Mode is enabled. Website analysis is unavailable.', localOnly: true });
+    }
+
     const { url } = req.body;
 
     if (!url) {
@@ -1199,7 +1445,7 @@ Return ONLY valid JSON, no additional text before or after the JSON.`;
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-5-20250929',
+        model: MODELS.STANDARD,
         max_tokens: 3000,
         messages: [{ role: 'user', content: analysisPrompt }]
       })
@@ -1222,8 +1468,13 @@ Return ONLY valid JSON, no additional text before or after the JSON.`;
 });
 
 // Chat endpoint - Proxy to Claude API
-expressApp.post('/api/chat', authenticateToken, async (req, res) => {
+expressApp.post('/api/chat', authenticateToken, apiLimiter, async (req, res) => {
   try {
+    // Block in Local Only Mode
+    if (isLocalOnlyMode()) {
+      return res.status(403).json({ error: 'Local Only Mode is enabled. AI features are unavailable.', localOnly: true });
+    }
+
     const { message, context } = req.body;
 
     // Get Claude API key from localStorage (user-entered during onboarding)
@@ -1252,7 +1503,7 @@ expressApp.post('/api/chat', authenticateToken, async (req, res) => {
       } else {
         // Simple message format
         claudeRequest = {
-          model: 'claude-haiku-4-5-20251001',
+          model: MODELS.FAST,
           max_tokens: 1024,
           messages: [{ role: 'user', content: message }]
         };
@@ -1260,7 +1511,7 @@ expressApp.post('/api/chat', authenticateToken, async (req, res) => {
     } catch (e) {
       // Not JSON, treat as simple string message
       claudeRequest = {
-        model: 'claude-haiku-4-5-20251001',
+        model: MODELS.FAST,
         max_tokens: 1024,
         messages: [{ role: 'user', content: message }]
       };
@@ -1284,6 +1535,10 @@ expressApp.post('/api/chat', authenticateToken, async (req, res) => {
     }
 
     const data = await response.json();
+    if (data.usage) {
+      const u = data.usage;
+      console.log(`[API] Token usage — input: ${u.input_tokens}, cache_read: ${u.cache_read_input_tokens || 0}, cache_write: ${u.cache_creation_input_tokens || 0}, output: ${u.output_tokens}`);
+    }
     res.json(data);
 
   } catch (error) {
@@ -1296,8 +1551,13 @@ expressApp.post('/api/chat', authenticateToken, async (req, res) => {
 });
 
 // Streaming Chat endpoint - Proxy to Claude API with SSE streaming
-expressApp.post('/api/chat/stream', authenticateToken, async (req, res) => {
+expressApp.post('/api/chat/stream', authenticateToken, apiLimiter, async (req, res) => {
   try {
+    // Block in Local Only Mode
+    if (isLocalOnlyMode()) {
+      return res.status(403).json({ error: 'Local Only Mode is enabled. AI features are unavailable.', localOnly: true });
+    }
+
     const { message } = req.body;
 
     let apiKey = getLocalStorageData('claude_api_key');
@@ -1317,7 +1577,7 @@ expressApp.post('/api/chat/stream', authenticateToken, async (req, res) => {
         claudeRequest = { ...parsed, stream: true };
       } else {
         claudeRequest = {
-          model: 'claude-haiku-4-5-20251001',
+          model: MODELS.FAST,
           max_tokens: 1024,
           messages: [{ role: 'user', content: message }],
           stream: true
@@ -1325,7 +1585,7 @@ expressApp.post('/api/chat/stream', authenticateToken, async (req, res) => {
       }
     } catch (e) {
       claudeRequest = {
-        model: 'claude-haiku-4-5-20251001',
+        model: MODELS.FAST,
         max_tokens: 1024,
         messages: [{ role: 'user', content: message }],
         stream: true
@@ -1401,12 +1661,12 @@ ipcMain.handle('get-mobile-access-status', async () => {
 });
 
 ipcMain.handle('verify-password', async (event, password) => {
-  const storedPassword = getPartnerPassword();
-  if (!storedPassword) {
+  const stored = getPartnerPassword();
+  if (!stored) {
     // No password set - shouldn't happen but allow access
     return { success: true, reason: 'no_password_set' };
   }
-  if (password === storedPassword) {
+  if (verifyPartnerPassword(password)) {
     return { success: true };
   }
   return { success: false, reason: 'invalid_password' };
@@ -1418,7 +1678,7 @@ ipcMain.handle('verify-password', async (event, password) => {
 
 ipcMain.handle('validate-license', async () => {
   const apiKey = getLocalStorageData('claude_api_key');
-  return await validateLicenseKey(apiKey);
+  return await validateLicenseKeyWithRetry(apiKey);
 });
 
 ipcMain.handle('get-license-status', async () => {
@@ -1444,7 +1704,10 @@ ipcMain.handle('list-backups', async () => {
 
 ipcMain.handle('create-backup', async (event, password) => {
   try {
-    const result = createEncryptedBackup(password || getPartnerPassword(), false);
+    if (!password) {
+      return { success: false, error: 'Password is required for backup encryption' };
+    }
+    const result = createEncryptedBackup(password, false);
     return { success: true, ...result };
   } catch (error) {
     return { success: false, error: error.message };
@@ -1453,7 +1716,16 @@ ipcMain.handle('create-backup', async (event, password) => {
 
 ipcMain.handle('restore-backup', async (event, filepath, password) => {
   try {
-    const result = restoreFromBackup(filepath, password || getPartnerPassword());
+    if (!password) {
+      return { success: false, error: 'Password is required for backup decryption' };
+    }
+    // Validate filepath is within backups directory and has correct extension
+    const resolvedPath = path.resolve(filepath);
+    const backupsDir = path.resolve(getBackupsPath());
+    if (!resolvedPath.startsWith(backupsDir + path.sep) || !resolvedPath.endsWith('.slainte-backup')) {
+      return { success: false, error: 'Invalid backup file path' };
+    }
+    const result = restoreFromBackup(resolvedPath, password);
     return { success: true, ...result };
   } catch (error) {
     return { success: false, error: error.message };
@@ -1462,8 +1734,14 @@ ipcMain.handle('restore-backup', async (event, filepath, password) => {
 
 ipcMain.handle('delete-backup', async (event, filepath) => {
   try {
-    if (fs.existsSync(filepath)) {
-      fs.unlinkSync(filepath);
+    // Validate filepath is within backups directory and has correct extension
+    const resolvedPath = path.resolve(filepath);
+    const backupsDir = path.resolve(getBackupsPath());
+    if (!resolvedPath.startsWith(backupsDir + path.sep) || !resolvedPath.endsWith('.slainte-backup')) {
+      return { success: false, error: 'Invalid backup file path' };
+    }
+    if (fs.existsSync(resolvedPath)) {
+      fs.unlinkSync(resolvedPath);
       return { success: true };
     }
     return { success: false, error: 'File not found' };
@@ -1486,6 +1764,12 @@ ipcMain.handle('set-localStorage', async (event, key, value) => {
 
 ipcMain.handle('call-claude', async (event, message, context, options = {}) => {
   try {
+    // Block external calls in Local Only Mode
+    if (isLocalOnlyMode()) {
+      console.log('[IPC] Blocked Claude API call: Local Only Mode is enabled');
+      throw new Error('Local Only Mode is enabled. AI features are unavailable.');
+    }
+
     // Get Claude API key from localStorage (user-entered during onboarding)
     let apiKey = getLocalStorageData('claude_api_key');
 
@@ -1501,7 +1785,7 @@ ipcMain.handle('call-claude', async (event, message, context, options = {}) => {
 
     // Extract options with defaults
     const {
-      model = 'claude-haiku-4-5-20251001',
+      model = MODELS.FAST,
       maxTokens = 1024,
       temperature = 1.0
     } = options;
@@ -1536,10 +1820,68 @@ ipcMain.handle('call-claude', async (event, message, context, options = {}) => {
 
     const data = await response.json();
     console.log('[IPC] Claude API call successful');
+    if (data.usage) {
+      const u = data.usage;
+      console.log(`[IPC] Token usage — input: ${u.input_tokens}, cache_read: ${u.cache_read_input_tokens || 0}, cache_write: ${u.cache_creation_input_tokens || 0}, output: ${u.output_tokens}`);
+    }
     return data;
 
   } catch (error) {
     console.error('[IPC] Claude call error:', error);
+    reportErrorFromMain(error, 'claude-api');
+    throw error;
+  }
+});
+
+// Raw Claude API call — supports full Anthropic request (tools, system, messages array)
+ipcMain.handle('call-claude-raw', async (event, request) => {
+  try {
+    // Block external calls in Local Only Mode
+    if (isLocalOnlyMode()) {
+      console.log('[IPC] Blocked Claude API call: Local Only Mode is enabled');
+      throw new Error('Local Only Mode is enabled. AI features are unavailable.');
+    }
+
+    let apiKey = getLocalStorageData('claude_api_key');
+
+    if (!apiKey && process.env.NODE_ENV === 'development') {
+      apiKey = process.env.ANTHROPIC_API_KEY;
+      console.warn('[IPC] Using API key from .env (development only).');
+    }
+
+    if (!apiKey) {
+      throw new Error('Claude API key not configured. Please enter your API key in the app settings.');
+    }
+
+    console.log(`[IPC] Raw Claude API call with model: ${request.model}, tools: ${request.tools?.length || 0}`);
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify(request)
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      console.error('[IPC] Claude API error response:', errorBody);
+      throw new Error(`Claude API error: ${response.status} - ${errorBody}`);
+    }
+
+    const data = await response.json();
+    console.log(`[IPC] Raw Claude API call successful, stop_reason: ${data.stop_reason}`);
+    if (data.usage) {
+      const u = data.usage;
+      console.log(`[IPC] Token usage — input: ${u.input_tokens}, cache_read: ${u.cache_read_input_tokens || 0}, cache_write: ${u.cache_creation_input_tokens || 0}, output: ${u.output_tokens}`);
+    }
+    return data;
+
+  } catch (error) {
+    console.error('[IPC] Claude raw call error:', error);
+    reportErrorFromMain(error, 'claude-api');
     throw error;
   }
 });
@@ -1687,6 +2029,209 @@ ipcMain.handle('install-update', () => {
 });
 
 // ============================================
+// GOOGLE FORM WEBHOOKS — Registration, Feedback, Error Reports
+// ============================================
+
+// Each form has its own URL and field-to-entry-ID mapping.
+const FORM_CONFIGS = {
+  registration: {
+    url: 'https://docs.google.com/forms/d/e/1FAIpQLSciVCsk2_KZXfSAEj_7mfXV0vg_tpUt-j4SEx_yzu7Vtwuy2Q/formResponse',
+    entryIds: {
+      practiceId: 'entry.1515558782',
+      practiceName: 'entry.1303108107',
+      appVersion: 'entry.218296310',
+      os: 'entry.1217137423'
+    }
+  },
+  feedback: {
+    url: 'https://docs.google.com/forms/d/e/1FAIpQLSeI-Tl8kN1i9DiqX5zfz82BNf6xFtcd0xeTgPxc2kAPb0uakA/formResponse',
+    entryIds: {
+      category: 'entry.76215088',
+      description: 'entry.917619851',
+      finnSummary: 'entry.1065204382',
+      appVersion: 'entry.2062800782',
+      os: 'entry.130456524',
+      currentPage: 'entry.421985590',
+      dataStats: 'entry.802859508',
+      practiceId: 'entry.1604913752'
+    }
+  },
+  errorReport: {
+    url: 'https://docs.google.com/forms/d/e/1FAIpQLSeZJ4oxhNopknUhY4W7EYgQPrG4fTDKj5RzmQFfCxnLJfWezQ/formResponse',
+    entryIds: {
+      errorType: 'entry.1560366383',
+      errorMessage: 'entry.1095927135',
+      stackTrace: 'entry.1632638239',
+      appVersion: 'entry.837723538',
+      os: 'entry.1336884066',
+      practiceId: 'entry.1459268771'
+    }
+  }
+};
+
+/**
+ * Save form submission locally as JSON backup.
+ * @param {string} formType - 'registration', 'feedback', or 'errorReport'
+ * @param {object} data - The submission payload
+ * @returns {string|null} Local filename or null on failure
+ */
+function saveFormLocally(formType, data) {
+  try {
+    const dir = path.join(app.getPath('userData'), 'feedback');
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    const filename = `${formType}-${Date.now()}.json`;
+    fs.writeFileSync(path.join(dir, filename), JSON.stringify(data, null, 2));
+    console.log(`[Webhook] Saved locally: ${filename}`);
+    return filename;
+  } catch (err) {
+    console.error(`[Webhook] Failed to save ${formType} locally:`, err.message);
+    return null;
+  }
+}
+
+/**
+ * Submit data to a Google Form webhook.
+ * Always saves locally first as backup, then POSTs to the form.
+ * @param {string} formType - Key in FORM_CONFIGS
+ * @param {object} data - Key-value pairs matching the form's entryIds keys
+ * @returns {{ success: boolean, localFile?: string, error?: string, savedLocally?: boolean }}
+ */
+async function submitToGoogleForm(formType, data) {
+  const config = FORM_CONFIGS[formType];
+  if (!config) {
+    console.error(`[Webhook] Unknown form type: ${formType}`);
+    return { success: false, error: `Unknown form type: ${formType}` };
+  }
+
+  // Always save locally first
+  const localFile = saveFormLocally(formType, data);
+
+  // Skip POST if form URL is a placeholder
+  if (config.url.startsWith('TODO')) {
+    console.warn(`[Webhook] ${formType} form URL not configured — saved locally only`);
+    return { success: true, localFile, localOnly: true };
+  }
+
+  try {
+    const params = new URLSearchParams();
+    for (const [key, entryId] of Object.entries(config.entryIds)) {
+      params.append(entryId, data[key] || '');
+    }
+
+    const response = await fetch(config.url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params.toString(),
+      redirect: 'follow'
+    });
+
+    console.log(`[Webhook] ${formType} Google Form response: ${response.status}`);
+    return { success: true, localFile };
+  } catch (err) {
+    console.error(`[Webhook] ${formType} POST error:`, err.message);
+    return { success: false, error: err.message, savedLocally: true, localFile };
+  }
+}
+
+// --- Error Reporting Opt-Out Setting ---
+
+function getErrorReportingSetting() {
+  try {
+    const settingsPath = path.join(app.getPath('userData'), 'app-settings.json');
+    if (!fs.existsSync(settingsPath)) return true; // default: enabled
+    const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
+    return settings.errorReportingEnabled !== false; // default true
+  } catch {
+    return true;
+  }
+}
+
+function setErrorReportingSetting(enabled) {
+  try {
+    const settingsPath = path.join(app.getPath('userData'), 'app-settings.json');
+    let settings = {};
+    if (fs.existsSync(settingsPath)) {
+      settings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
+    }
+    settings.errorReportingEnabled = !!enabled;
+    fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+    return true;
+  } catch (err) {
+    console.error('[Settings] Failed to save error reporting setting:', err.message);
+    return false;
+  }
+}
+
+/**
+ * Submit an error report from the main process (no IPC needed).
+ * Respects the opt-out setting. Deduplicates by errorType+errorMessage within 5 minutes.
+ */
+const _recentErrors = new Map();
+function reportErrorFromMain(error, component) {
+  if (!getErrorReportingSetting()) return;
+
+  const errorMessage = error?.message || String(error);
+  const dedupKey = `${component}:${errorMessage}`;
+  const now = Date.now();
+  if (_recentErrors.has(dedupKey) && (now - _recentErrors.get(dedupKey)) < 300000) return;
+  _recentErrors.set(dedupKey, now);
+
+  // Clean old entries
+  for (const [k, t] of _recentErrors) {
+    if (now - t > 300000) _recentErrors.delete(k);
+  }
+
+  const practiceId = (() => {
+    try {
+      const data = JSON.parse(fs.readFileSync(path.join(app.getPath('userData'), 'localStorage.json'), 'utf-8'));
+      const profile = typeof data['slainte_practice_profile'] === 'string'
+        ? JSON.parse(data['slainte_practice_profile'])
+        : data['slainte_practice_profile'];
+      return profile?.data?.metadata?.practiceId || profile?.metadata?.practiceId || '';
+    } catch { return ''; }
+  })();
+
+  const stack = error?.stack || '';
+  submitToGoogleForm('errorReport', {
+    errorType: component,
+    errorMessage: errorMessage.substring(0, 500),
+    stackTrace: stack.substring(0, 500),
+    component,
+    appVersion: app.getVersion(),
+    os: `${process.platform} ${process.arch}`,
+    practiceId,
+    timestamp: new Date().toISOString()
+  });
+}
+
+// --- IPC Handlers ---
+
+ipcMain.handle('submit-feedback', async (event, feedbackData) => {
+  return await submitToGoogleForm('feedback', feedbackData);
+});
+
+ipcMain.handle('submit-registration', async (event, registrationData) => {
+  return await submitToGoogleForm('registration', registrationData);
+});
+
+ipcMain.handle('submit-error-report', async (event, errorData) => {
+  if (!getErrorReportingSetting()) {
+    return { success: false, error: 'Error reporting is disabled' };
+  }
+  return await submitToGoogleForm('errorReport', errorData);
+});
+
+ipcMain.handle('get-error-reporting-setting', async () => {
+  return getErrorReportingSetting();
+});
+
+ipcMain.handle('set-error-reporting-setting', async (event, enabled) => {
+  return setErrorReportingSetting(enabled);
+});
+
+// ============================================
 // ELECTRON WINDOW SETUP
 // ============================================
 
@@ -1771,8 +2316,8 @@ app.whenReady().then(() => {
   setupAutoUpdater();
 
   // Start Express API server
-  const server = expressApp.listen(API_PORT, () => {
-    console.log(`[API Server] Running on http://localhost:${API_PORT}`);
+  const server = expressApp.listen(API_PORT, '0.0.0.0', () => {
+    console.log(`[API Server] Running on http://0.0.0.0:${API_PORT} (accessible on LAN)`);
     console.log(`[API Server] JWT Secret: ${JWT_SECRET.substring(0, 10)}...`);
   });
 
@@ -1780,7 +2325,7 @@ app.whenReady().then(() => {
   createWindow();
 
   // Initialize PCRS Automation
-  pcrsAutomation = new PCRSAutomation(mainWindow);
+  pcrsAutomation = new PCRSAutomation(mainWindow, { onError: reportErrorFromMain });
   pcrsAutomation.init().then(() => {
     console.log('[PCRS] Automation module initialized');
   }).catch((err) => {
@@ -1804,7 +2349,7 @@ app.whenReady().then(() => {
     const apiKey = getLocalStorageData('claude_api_key');
     if (apiKey) {
       console.log('[License] Validating license on startup...');
-      const result = await validateLicenseKey(apiKey);
+      const result = await validateLicenseKeyWithRetry(apiKey);
       if (result.valid) {
         console.log('[License] License valid' + (result.gracePeriod ? ' (grace period)' : ''));
       } else {
@@ -1839,16 +2384,16 @@ app.on('before-quit', () => {
   console.log('[Electron] Shutting down...');
 
   // Auto-backup on close if enabled
+  // Uses cached plaintext password (set during password creation, migration, or mobile login)
   try {
     const backupSettings = getAutoBackupSettings();
-    const password = getPartnerPassword();
 
-    if (backupSettings.enabled && password) {
+    if (backupSettings.enabled && cachedBackupPassword) {
       console.log('[Backup] Creating auto-backup on app close...');
-      const result = createEncryptedBackup(password, true);
+      const result = createEncryptedBackup(cachedBackupPassword, true);
       console.log(`[Backup] Auto-backup completed: ${result.filename}`);
-    } else if (backupSettings.enabled && !password) {
-      console.log('[Backup] Auto-backup enabled but no password set - skipping');
+    } else if (backupSettings.enabled && !cachedBackupPassword) {
+      console.log('[Backup] Auto-backup enabled but no password available this session - skipping');
     }
   } catch (error) {
     console.error('[Backup] Auto-backup on close failed:', error);
@@ -1859,8 +2404,10 @@ app.on('before-quit', () => {
 // Handle errors
 process.on('uncaughtException', (error) => {
   console.error('[Electron] Uncaught exception:', error);
+  reportErrorFromMain(error, 'uncaught-exception');
 });
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('[Electron] Unhandled rejection at:', promise, 'reason:', reason);
+  reportErrorFromMain(reason instanceof Error ? reason : new Error(String(reason)), 'unhandled-rejection');
 });

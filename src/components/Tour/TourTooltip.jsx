@@ -85,8 +85,12 @@ const TourTooltip = () => {
 
   const { isCentered, ...positionStyles } = position;
 
-  // For centered steps (welcome, complete), show just the title - content is in Cara panel
+  // For centered steps (welcome, complete), show just the title - content is in Finn panel
+  // Skip rendering if hideCenterSplash is true (content is only in Finn panel)
   if (isCentered) {
+    if (currentStepData.hideCenterSplash) {
+      return null; // Don't show center splash, Finn panel has all the content
+    }
     return (
       <div
         style={{

@@ -307,8 +307,7 @@ export const CATEGORY_MAPPING = [
     "code": "10.5",
     "name": "Laboratory Supplies",
     "identifiers": [
-      "First Di",
-      "Courier"
+      "First Di"
     ],
     "type": "expense",
     "accountantLine": "Surgical supplies/drugs etc",
@@ -338,7 +337,7 @@ export const CATEGORY_MAPPING = [
     "type": "expense",
     "accountantLine": "Staff Uniforms / Surgical supplies",
     "description": "Parent category for staff medical costs",
-    "section": "MEDICAL SUPPLIES"
+    "section": "DIRECT STAFF COSTS"
   },
   {
     "code": "11.1",
@@ -347,7 +346,7 @@ export const CATEGORY_MAPPING = [
     "type": "expense",
     "accountantLine": "Staff Uniforms",
     "description": "Staff uniform purchases",
-    "section": "MEDICAL SUPPLIES"
+    "section": "DIRECT STAFF COSTS"
   },
   {
     "code": "11.2",
@@ -356,7 +355,7 @@ export const CATEGORY_MAPPING = [
     "type": "expense",
     "accountantLine": "Staff Uniforms",
     "description": "Personal protective equipment",
-    "section": "MEDICAL SUPPLIES"
+    "section": "DIRECT STAFF COSTS"
   },
   {
     "code": "20",
@@ -403,7 +402,12 @@ export const CATEGORY_MAPPING = [
     "code": "20.3",
     "name": "Building Insurance",
     "identifiers": [
-      "OBF INS"
+      "OBF INS",
+      "ALLIANZ",
+      "AXA",
+      "FBD",
+      "ZURICH",
+      "RSA"
     ],
     "type": "expense",
     "accountantLine": "Traders combined insurance",
@@ -425,7 +429,11 @@ export const CATEGORY_MAPPING = [
     "identifiers": [
       "Electric",
       "ESB",
-      "Energia"
+      "Energia",
+      "SSE AIRTRICITY",
+      "AIRTRICITY",
+      "PINERGY",
+      "ELECTRIC IRELAND"
     ],
     "type": "expense",
     "accountantLine": "Light and heat",
@@ -436,7 +444,11 @@ export const CATEGORY_MAPPING = [
     "code": "21.2",
     "name": "Gas/Heating",
     "identifiers": [
-      "BORD GAIS"
+      "BORD GAIS",
+      "FLOGAS",
+      "CALOR",
+      "CALOR GAS",
+      "BORD GAIS ENERGY"
     ],
     "type": "expense",
     "accountantLine": "Light and heat",
@@ -469,7 +481,9 @@ export const CATEGORY_MAPPING = [
       "Derrycou",
       "Derry Cour",
       "Cleaning",
-      "Webster"
+      "Webster",
+      "ISS",
+      "MITIE"
     ],
     "type": "expense",
     "accountantLine": "Cleaning",
@@ -496,7 +510,10 @@ export const CATEGORY_MAPPING = [
       "PANDA GREEN",
       "STARRUS ECO",
       "Keywaste",
-      "skip"
+      "GREYHOUND",
+      "THORNTONS",
+      "CITY BIN",
+      "STERICYCLE"
     ],
     "type": "expense",
     "accountantLine": "Sundry expenses",
@@ -510,7 +527,9 @@ export const CATEGORY_MAPPING = [
       "HOMEBASE",
       "Woodies",
       "B & Q",
-      "IKEA"
+      "IKEA",
+      "SCREWFIX",
+      "TOOLSTATION"
     ],
     "type": "expense",
     "accountantLine": "Repairs and maintenance",
@@ -524,7 +543,7 @@ export const CATEGORY_MAPPING = [
     "type": "expense",
     "accountantLine": "Multiple lines",
     "description": "Parent category for communications",
-    "section": "OFFICE & ADMIN"
+    "section": "OFFICE & IT"
   },
   {
     "code": "30.0",
@@ -533,7 +552,7 @@ export const CATEGORY_MAPPING = [
     "type": "expense",
     "accountantLine": "Sundry expenses",
     "description": "Quick categorization option for office and admin costs that need further review",
-    "section": "OFFICE & ADMIN"
+    "section": "OFFICE & IT"
   },
   {
     "code": "30.1",
@@ -544,32 +563,46 @@ export const CATEGORY_MAPPING = [
       "EIR",
       "MAGNET NE",
       "EIRCOM",
-      "GOMO"
+      "GOMO",
+      "VODAFONE",
+      "PURE TELECOM",
+      "BT IRELAND"
     ],
     "type": "expense",
     "accountantLine": "Telephone and fax",
     "description": "Telephone costs",
-    "section": "OFFICE & ADMIN"
+    "section": "OFFICE & IT"
   },
   {
     "code": "30.2",
     "name": "Internet",
-    "identifiers": [],
+    "identifiers": [
+      "VIRGIN MEDIA",
+      "DIGIWEB"
+    ],
     "type": "expense",
     "accountantLine": "Telephone and fax",
     "description": "Internet service costs",
-    "section": "OFFICE & ADMIN"
+    "section": "OFFICE & IT"
   },
   {
     "code": "30.3",
     "name": "Postage",
     "identifiers": [
-      "AN POST"
+      "AN POST",
+      "DPD",
+      "DHL",
+      "FASTWAY",
+      "FEDEX",
+      "UPS",
+      "NIGHTLINE",
+      "GLS",
+      "Courier"
     ],
     "type": "expense",
     "accountantLine": "Printing postage and stationery",
     "description": "Postal costs",
-    "section": "OFFICE & ADMIN"
+    "section": "OFFICE & IT"
   },
   {
     "code": "31",
@@ -578,7 +611,7 @@ export const CATEGORY_MAPPING = [
     "type": "expense",
     "accountantLine": "Printing postage and stationery",
     "description": "Parent category for office supplies",
-    "section": "OFFICE & ADMIN"
+    "section": "OFFICE & IT"
   },
   {
     "code": "31.1",
@@ -590,12 +623,14 @@ export const CATEGORY_MAPPING = [
       "Cassidy",
       "Office Depot",
       "Viking",
-      "AMZN"
+      "AMZN",
+      "STAPLES",
+      "CODEX"
     ],
     "type": "expense",
     "accountantLine": "Printing postage and stationery",
     "description": "Stationery purchases",
-    "section": "OFFICE & ADMIN"
+    "section": "OFFICE & IT"
   },
   {
     "code": "31.2",
@@ -609,7 +644,7 @@ export const CATEGORY_MAPPING = [
     "type": "expense",
     "accountantLine": "Printing postage and stationery",
     "description": "Printing costs",
-    "section": "OFFICE & ADMIN"
+    "section": "OFFICE & IT"
   },
   {
     "code": "32",
@@ -618,7 +653,7 @@ export const CATEGORY_MAPPING = [
     "type": "expense",
     "accountantLine": "Computer costs",
     "description": "Parent category for IT costs",
-    "section": "SOFTWARE & IT"
+    "section": "OFFICE & IT"
   },
   {
     "code": "32.1",
@@ -627,18 +662,22 @@ export const CATEGORY_MAPPING = [
       "Helix",
       "MYCLINIC365",
       "MSFT",
+      "Microsoft",
       "ADOBE",
       "J AND C HENDRICK",
       "HRLOCKER",
       "MEDVAULT",
       "US 15.00",
       "Google",
-      "KEEPITSAFE"
+      "KEEPITSAFE",
+      "DROPBOX",
+      "ZOOM",
+      "SLACK"
     ],
     "type": "expense",
     "accountantLine": "Computer costs",
     "description": "Software subscription costs including practice management software",
-    "section": "SOFTWARE & IT"
+    "section": "OFFICE & IT"
   },
   {
     "code": "32.2",
@@ -652,7 +691,7 @@ export const CATEGORY_MAPPING = [
     "type": "expense",
     "accountantLine": "Computer costs",
     "description": "IT support and maintenance",
-    "section": "SOFTWARE & IT"
+    "section": "OFFICE & IT"
   },
   {
     "code": "32.3",
@@ -661,7 +700,7 @@ export const CATEGORY_MAPPING = [
     "type": "expense",
     "accountantLine": "Computer costs",
     "description": "Computer hardware purchases",
-    "section": "SOFTWARE & IT"
+    "section": "OFFICE & IT"
   },
   {
     "code": "33",
@@ -670,7 +709,7 @@ export const CATEGORY_MAPPING = [
     "type": "expense",
     "accountantLine": "Advertising",
     "description": "Parent category for marketing",
-    "section": "OFFICE & ADMIN"
+    "section": "OFFICE & IT"
   },
   {
     "code": "33.1",
@@ -681,7 +720,7 @@ export const CATEGORY_MAPPING = [
     "type": "expense",
     "accountantLine": "Advertising",
     "description": "Advertising costs",
-    "section": "OFFICE & ADMIN"
+    "section": "OFFICE & IT"
   },
   {
     "code": "33.2",
@@ -693,7 +732,7 @@ export const CATEGORY_MAPPING = [
     "type": "expense",
     "accountantLine": "Advertising",
     "description": "Website hosting and maintenance",
-    "section": "OFFICE & ADMIN"
+    "section": "OFFICE & IT"
   },
   {
     "code": "33.3",
@@ -702,7 +741,7 @@ export const CATEGORY_MAPPING = [
     "type": "expense",
     "accountantLine": "Advertising",
     "description": "Marketing materials and collateral",
-    "section": "OFFICE & ADMIN"
+    "section": "OFFICE & IT"
   },
   {
     "code": "40",
@@ -728,7 +767,8 @@ export const CATEGORY_MAPPING = [
     "identifiers": [
       "WALSHOBRI",
       "Martin Mclaughl",
-      "HAYDEN BROWN"
+      "HAYDEN BROWN",
+      "Medaccount"
     ],
     "type": "expense",
     "accountantLine": "Accountancy",
@@ -785,10 +825,7 @@ export const CATEGORY_MAPPING = [
       "Amend",
       "Notified",
       "Duty",
-      "Fee",
-      "Unpaid",
-      "Charge",
-      "CHG"
+      "Charge"
     ],
     "type": "expense",
     "accountantLine": "Bank interest and charges",
@@ -950,7 +987,12 @@ export const CATEGORY_MAPPING = [
   {
     "code": "60.2",
     "name": "Vehicle Running Costs",
-    "identifiers": [],
+    "identifiers": [
+      "TOPAZ",
+      "MAXOL",
+      "TEXACO",
+      "ESSO"
+    ],
     "type": "expense",
     "accountantLine": "Motor running expenses",
     "description": "Direct vehicle running costs",
@@ -1035,7 +1077,7 @@ export const CATEGORY_MAPPING = [
     "type": "expense",
     "accountantLine": "Sundry expenses",
     "description": "Parent category for sundry costs",
-    "section": "OTHER EXPENSES"
+    "section": "PETTY CASH / OTHER EXPENSES"
   },
   {
     "code": "80.0",
@@ -1044,7 +1086,7 @@ export const CATEGORY_MAPPING = [
     "type": "expense",
     "accountantLine": "Sundry expenses",
     "description": "Quick categorization option for other expenses that need further review",
-    "section": "OTHER EXPENSES"
+    "section": "PETTY CASH / OTHER EXPENSES"
   },
   {
     "code": "80.1",
@@ -1068,12 +1110,20 @@ export const CATEGORY_MAPPING = [
       "Tracys",
       "McMahons",
       "GALA",
-      "SKYL"
+      "SKYL",
+      "DUNNES",
+      "Dunnes Stores",
+      "LIDL",
+      "CENTRA",
+      "SUPERVALU",
+      "COSTCUTTER",
+      "MACE",
+      "LONDIS"
     ],
     "type": "expense",
     "accountantLine": "Sundry expenses",
     "description": "General sundry expenses",
-    "section": "OTHER EXPENSES"
+    "section": "PETTY CASH / OTHER EXPENSES"
   },
   {
     "code": "80.2",
@@ -1082,7 +1132,7 @@ export const CATEGORY_MAPPING = [
     "type": "expense",
     "accountantLine": "Sundry expenses",
     "description": "Unusual or one-time expenses",
-    "section": "OTHER EXPENSES"
+    "section": "PETTY CASH / OTHER EXPENSES"
   },
   {
     "code": "90",

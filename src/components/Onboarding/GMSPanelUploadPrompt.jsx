@@ -5,32 +5,9 @@ import { usePracticeProfile } from '../../hooks/usePracticeProfile';
 import { parsePCRSPaymentPDF, validateExtractedData } from '../../utils/pdfParser';
 import COLORS from '../../utils/colors';
 
-// Typing animation hook
-const useTypingEffect = (text, speed = 30) => {
-  const [displayedText, setDisplayedText] = useState('');
-  const [isComplete, setIsComplete] = useState(false);
-
-  useEffect(() => {
-    if (!text) return;
-
-    let index = 0;
-    setDisplayedText('');
-    setIsComplete(false);
-
-    const timer = setInterval(() => {
-      if (index < text.length) {
-        setDisplayedText(text.substring(0, index + 1));
-        index++;
-      } else {
-        setIsComplete(true);
-        clearInterval(timer);
-      }
-    }, speed);
-
-    return () => clearInterval(timer);
-  }, [text, speed]);
-
-  return { displayedText, isComplete };
+// Instant text display (typing animation disabled)
+const useTypingEffect = (text) => {
+  return { displayedText: text || '', isComplete: true };
 };
 
 export default function GMSPanelUploadPrompt({ onUpload, onSkip }) {
@@ -56,10 +33,10 @@ export default function GMSPanelUploadPrompt({ onUpload, onSkip }) {
   const partnerNames = profile?.gps?.partners?.map(p => p.name) || [];
 
   // Build greeting based on partner count
-  const greetingText = "Nearly there! Let's add your GMS panel data.";
-  const messageText = partnerCount > 0
-    ? `I noticed you have ${partnerCount} partner${partnerCount > 1 ? 's' : ''} in the practice${partnerNames.length > 0 ? ` (${partnerNames.join(', ')})` : ''}. Each partner typically has their own GMS panel number, so you may have ${partnerCount} panel${partnerCount > 1 ? 's' : ''} to upload.`
-    : "Each GP partner typically has their own GMS panel. You can upload multiple panel PDFs at once - just select all of them together.";
+  const greetingText = "Nearly there! Upload your PCRS payment PDFs.";
+  const messageText = partnerCount > 1
+    ? `You have ${partnerCount} partners, so you'll likely have ${partnerCount} panels to upload. You can select multiple files at once.`
+    : "Each GP partner has their own GMS panel. Select one or more PCRS payment PDFs to upload.";
 
   const { displayedText: greeting, isComplete: greetingComplete } = useTypingEffect(showGreeting ? greetingText : '', 25);
   const { displayedText: message, isComplete: messageComplete } = useTypingEffect(showMessage ? messageText : '', 15);
@@ -215,7 +192,7 @@ export default function GMSPanelUploadPrompt({ onUpload, onSkip }) {
       margin: '0 auto',
       height: 'min(75vh, 700px)'
     }}>
-      {/* Left side - Cara Chat Box */}
+      {/* Left side - Finn Chat Box */}
       <div style={{
         flex: '1 1 45%',
         minWidth: '450px',
@@ -250,7 +227,7 @@ export default function GMSPanelUploadPrompt({ onUpload, onSkip }) {
             <User style={{ height: '1.25rem', width: '1.25rem' }} />
           </div>
           <div>
-            <div style={{ fontWeight: 600, fontSize: '1rem' }}>Cara</div>
+            <div style={{ fontWeight: 600, fontSize: '1rem' }}>Finn</div>
             <div style={{ fontSize: '0.75rem', opacity: 0.9 }}>Slainte Guide</div>
           </div>
         </div>
@@ -312,28 +289,6 @@ export default function GMSPanelUploadPrompt({ onUpload, onSkip }) {
                   lineHeight: 1.5
                 }}>
                   {message}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Upload instructions */}
-          {showUploadArea && (
-            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
-              <div style={{ width: '32px', flexShrink: 0 }} />
-              <div style={{
-                backgroundColor: `${COLORS.slainteBlue}10`,
-                padding: '0.875rem 1rem',
-                borderRadius: '12px',
-                maxWidth: '85%',
-                border: `1px solid ${COLORS.slainteBlue}30`
-              }}>
-                <div style={{
-                  fontSize: '0.875rem',
-                  color: COLORS.darkGray,
-                  lineHeight: 1.5
-                }}>
-                  Upload your PCRS payment PDFs from the portal. You can select multiple files at once, or upload them one by one.
                 </div>
               </div>
             </div>
@@ -669,61 +624,6 @@ export default function GMSPanelUploadPrompt({ onUpload, onSkip }) {
           </div>
         )}
 
-        {/* Benefits Grid - show when no files uploaded */}
-        {uploadedFiles.length === 0 && (
-          <div style={{
-            backgroundColor: COLORS.white,
-            border: `2px solid ${COLORS.lightGray}`,
-            borderRadius: '16px',
-            padding: '1.25rem'
-          }}>
-            <h4 style={{
-              fontSize: '0.9375rem',
-              fontWeight: 600,
-              color: COLORS.darkGray,
-              marginBottom: '1rem'
-            }}>
-              What you'll get from GMS analysis:
-            </h4>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '0.75rem'
-            }}>
-              {[
-                { icon: '📊', title: 'Panel Size Trends', desc: 'Track patient growth' },
-                { icon: '💰', title: 'Payment Analysis', desc: 'GMS income patterns' },
-                { icon: '📈', title: 'Income Forecasting', desc: 'Predict future revenue' }
-              ].map((benefit, idx) => (
-                <div key={idx} style={{
-                  backgroundColor: COLORS.backgroundGray,
-                  borderRadius: '10px',
-                  padding: '1rem',
-                  textAlign: 'center'
-                }}>
-                  <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>
-                    {benefit.icon}
-                  </div>
-                  <p style={{
-                    fontSize: '0.8125rem',
-                    fontWeight: 600,
-                    color: COLORS.darkGray,
-                    marginBottom: '0.25rem'
-                  }}>
-                    {benefit.title}
-                  </p>
-                  <p style={{
-                    fontSize: '0.6875rem',
-                    color: COLORS.mediumGray
-                  }}>
-                    {benefit.desc}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* CSS Animation */}

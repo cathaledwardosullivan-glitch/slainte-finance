@@ -19,8 +19,8 @@ const EXPENSE_BROAD_CATEGORIES = {
   'Premises': ['PREMISES COSTS'],
   'Professional Fees': ['PROFESSIONAL FEES', 'PROFESSIONAL DEV'],
   'Medical Supplies': ['MEDICAL SUPPLIES'],
-  'Office & Admin': ['OFFICE & ADMIN', 'SOFTWARE & IT'],
-  'Other Expenses': ['MOTOR & TRANSPORT', 'CAPITAL & DEPRECIATION', 'OTHER EXPENSES']
+  'Office & IT': ['OFFICE & IT'],
+  'Petty Cash / Other': ['MOTOR & TRANSPORT', 'CAPITAL & DEPRECIATION', 'PETTY CASH / OTHER EXPENSES']
 };
 
 /**

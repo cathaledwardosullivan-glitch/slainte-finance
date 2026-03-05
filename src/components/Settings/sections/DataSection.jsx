@@ -1,5 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useAppContext } from '../../../context/AppContext';
+import { useFinnSafe } from '../../../context/FinnContext';
+import { useProcessingFlow } from '../../ProcessingFlow/ProcessingFlowContext';
+import ProcessingFlowPanel from '../../ProcessingFlow';
 import {
   Upload,
   Download,
@@ -9,7 +12,8 @@ import {
   CheckCircle,
   AlertCircle,
   Shield,
-  Clock
+  Clock,
+  Calendar
 } from 'lucide-react';
 import COLORS from '../../../utils/colors';
 import Papa from 'papaparse';
@@ -17,6 +21,9 @@ import { categorizeTransactionSimple, processTransactionData } from '../../../ut
 import { parsePCRSPaymentPDF, validateExtractedData } from '../../../utils/pdfParser';
 import { parseBankStatementPDF } from '../../../utils/bankStatementParser';
 import PCRSDownloader from '../../PCRSDownloader';
+import BulkUploadFlow, { PENDING_UPLOAD_KEY } from '../../ProcessingFlow/BulkUploadFlow';
+
+const BULK_UPLOAD_THRESHOLD = 200;
 
 // Helper function to create a unique key for a transaction (for duplicate detection)
 const getTransactionKey = (t) => {
@@ -42,9 +49,177 @@ const DataSection = () => {
     unidentifiedTransactions,
     setUnidentifiedTransactions,
     categoryMapping,
+    setCategoryMapping,
     paymentAnalysisData,
-    setPaymentAnalysisData
+    setPaymentAnalysisData,
+    aiCorrections,
+    recordAICorrection
   } = useAppContext();
+
+  // Get Finn context for background task status (may be null if outside FinnProvider)
+  const finnContext = useFinnSafe();
+  const backgroundTask = finnContext?.backgroundTask;
+  const TASK_TYPES = finnContext?.TASK_TYPES;
+  const TASK_STATUS = finnContext?.TASK_STATUS;
+
+  // Get processing flow context for the new Finn-guided upload flow
+  const processingFlow = useProcessingFlow();
+  const { isFlowOpen, startProcessing, completeFlow, cancelFlow } = processingFlow;
+
+  // State for pending transactions during processing flow
+  const [pendingUploadData, setPendingUploadData] = useState(null);
+
+  // State for bulk upload flow (200+ transactions)
+  const [pendingBulkUpload, setPendingBulkUpload] = useState(null);
+
+  // State for resumable bulk upload (saved progress)
+  const [bulkResumeData, setBulkResumeData] = useState(() => {
+    try {
+      const stash = localStorage.getItem(PENDING_UPLOAD_KEY);
+      return stash ? JSON.parse(stash) : null;
+    } catch { return null; }
+  });
+
+  // Handler for when processing flow completes
+  const handleProcessingComplete = useCallback((result) => {
+    const { transactions: processedTransactions, stats } = result;
+
+    // Separate into categorized and unidentified based on category assignment
+    const newCategorized = [];
+    const newUnidentified = [];
+
+    processedTransactions.forEach(t => {
+      if (t.category && t.categoryCode) {
+        newCategorized.push(t);
+      } else {
+        newUnidentified.push(t);
+      }
+    });
+
+    // Add to app state
+    if (newCategorized.length > 0) {
+      setTransactions(prev => [...prev, ...newCategorized]);
+    }
+    if (newUnidentified.length > 0) {
+      setUnidentifiedTransactions(prev => [...prev, ...newUnidentified]);
+    }
+
+    // Show result
+    setUploadResult({
+      type: pendingUploadData?.type || 'csv',
+      categorized: newCategorized.length,
+      unidentified: newUnidentified.length,
+      skippedDuplicates: pendingUploadData?.skippedDuplicates || 0,
+      stats // Include cohort stats for display
+    });
+
+    setPendingUploadData(null);
+    console.log('[DataSection] Processing complete:', stats);
+  }, [setTransactions, setUnidentifiedTransactions, pendingUploadData]);
+
+  // Handler for when processing flow is cancelled
+  const handleProcessingCancel = useCallback(() => {
+    setPendingUploadData(null);
+    setUploadResult(null);
+    console.log('[DataSection] Processing cancelled');
+  }, []);
+
+  // Handler for bulk upload flow completion (all waves done)
+  // Note: individual waves are already committed via onWaveComplete,
+  // so this just closes the flow and shows the summary.
+  const handleBulkProcessingComplete = useCallback((result) => {
+    const { transactions: processedTransactions, stats } = result;
+
+    // Count categorized vs unidentified for display
+    const categorizedCount = processedTransactions.filter(t => t.category && t.categoryCode).length;
+    const unidentifiedCount = processedTransactions.length - categorizedCount;
+
+    setUploadResult({
+      type: pendingBulkUpload?.type || 'csv',
+      categorized: categorizedCount,
+      unidentified: unidentifiedCount,
+      skippedDuplicates: pendingBulkUpload?.skippedDuplicates || 0,
+      stats
+    });
+
+    setPendingBulkUpload(null);
+    localStorage.removeItem(PENDING_UPLOAD_KEY);
+    setBulkResumeData(null);
+    console.log('[DataSection] Bulk processing complete:', stats);
+  }, [pendingBulkUpload]);
+
+  // Handler for per-wave commit (saves each wave's transactions to app state immediately)
+  const handleBulkWaveComplete = useCallback((result) => {
+    const { transactions: waveTransactions } = result;
+
+    const newCategorized = [];
+    const newUnidentified = [];
+
+    waveTransactions.forEach(t => {
+      if (t.category && t.categoryCode) {
+        newCategorized.push(t);
+      } else {
+        newUnidentified.push(t);
+      }
+    });
+
+    if (newCategorized.length > 0) {
+      setTransactions(prev => [...prev, ...newCategorized]);
+    }
+    if (newUnidentified.length > 0) {
+      setUnidentifiedTransactions(prev => [...prev, ...newUnidentified]);
+    }
+
+    console.log(`[DataSection] Wave committed: ${newCategorized.length} categorized, ${newUnidentified.length} unidentified`);
+  }, [setTransactions, setUnidentifiedTransactions]);
+
+  // Handler for Save & Exit from bulk flow
+  const handleBulkSaveAndExit = useCallback((remainingTransactions) => {
+    // Waves already committed per-wave, just close the flow
+    setPendingBulkUpload(null);
+    cancelFlow();
+    // Update resume data from fresh localStorage read
+    try {
+      const stash = localStorage.getItem(PENDING_UPLOAD_KEY);
+      setBulkResumeData(stash ? JSON.parse(stash) : null);
+    } catch { setBulkResumeData(null); }
+    console.log(`[DataSection] Bulk upload saved: ${remainingTransactions.length} transactions remaining`);
+  }, [cancelFlow]);
+
+  // Handler for resuming a saved bulk upload
+  const handleBulkResume = useCallback(() => {
+    if (!bulkResumeData?.remainingTransactions?.length) return;
+    setPendingBulkUpload({
+      transactions: bulkResumeData.remainingTransactions,
+      type: 'csv',
+      skippedDuplicates: 0,
+      isResume: true
+    });
+    // Clear the stash — it will be re-created if user saves again
+    localStorage.removeItem(PENDING_UPLOAD_KEY);
+    setBulkResumeData(null);
+  }, [bulkResumeData]);
+
+  // Handler for discarding a saved bulk upload
+  const handleBulkResumeDiscard = useCallback(() => {
+    localStorage.removeItem(PENDING_UPLOAD_KEY);
+    setBulkResumeData(null);
+  }, []);
+
+  // Handler for removing an identifier from a category (used in conflict resolution)
+  const handleRemoveIdentifier = useCallback((categoryCode, identifier) => {
+    console.log('[DataSection] Removing identifier:', { categoryCode, identifier });
+    setCategoryMapping(prev => prev.map(cat => {
+      if (cat.code === categoryCode && cat.identifiers?.includes(identifier)) {
+        return {
+          ...cat,
+          identifiers: cat.identifiers.filter(id => id !== identifier)
+        };
+      }
+      return cat;
+    }));
+    console.log('[DataSection] Identifier removed successfully');
+  }, [setCategoryMapping]);
 
   // Upload Data state
   const [isProcessing, setIsProcessing] = useState(false);
@@ -52,6 +227,7 @@ const DataSection = () => {
   const [uploadResult, setUploadResult] = useState(null);
   const [pcrsProcessing, setPcrsProcessing] = useState(false);
   const [pcrsUploadResult, setPcrsUploadResult] = useState(null);
+  const [pcrsProgress, setPcrsProgress] = useState(null); // { current, total, startTime }
   const pcrsFileInputRef = useRef(null);
   const bankFileInputRef = useRef(null);
 
@@ -62,6 +238,7 @@ const DataSection = () => {
 
   // PCRS Downloader state
   const [showPCRSDownloader, setShowPCRSDownloader] = useState(false);
+  const [pcrsDownloaderQuickSelect, setPcrsDownloaderQuickSelect] = useState('latest'); // 'latest', '6', '12', '24', 'all'
   const [pcrsSessionStatus, setPcrsSessionStatus] = useState(null);
 
   // Load PCRS session status
@@ -78,6 +255,118 @@ const DataSection = () => {
     };
     checkPCRSSession();
   }, [showPCRSDownloader]);
+
+  // Auto-import function for PCRS downloads (used by both modal and background)
+  const autoImportPCRSDownloads = useCallback(async (downloads) => {
+    console.log('Auto-importing PCRS statements:', downloads);
+
+    if (!window.electronAPI?.pcrs?.readFile) {
+      console.warn('readFile API not available');
+      return;
+    }
+
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const download of downloads) {
+      try {
+        // Read the file content from main process
+        const arrayBuffer = await window.electronAPI.pcrs.readFile(download.filename);
+
+        if (!arrayBuffer) {
+          console.error('Failed to read file:', download.filename);
+          errorCount++;
+          continue;
+        }
+
+        // Create a File-like object for the parser
+        const fileBlob = new Blob([arrayBuffer], { type: 'application/pdf' });
+        const file = new File([fileBlob], download.filename, { type: 'application/pdf' });
+
+        // Parse the PDF
+        const result = await parsePCRSPaymentPDF(file);
+
+        if (result && validateExtractedData(result)) {
+          // Add panel info to the result
+          result.panelId = download.panelId;
+          result.panelName = download.panelName;
+
+          setPaymentAnalysisData(prev => {
+            // Check for duplicates using paymentDate, totalGrossPayment, and doctorNumber/panelId
+            const exists = prev.some(p =>
+              p.paymentDate === result.paymentDate &&
+              p.totalGrossPayment === result.totalGrossPayment &&
+              (p.panelId === result.panelId || p.doctorNumber === result.doctorNumber)
+            );
+            if (exists) {
+              console.log('Skipping duplicate:', download.filename);
+              return prev;
+            }
+            console.log('Added payment data:', download.filename);
+            return [...prev, result];
+          });
+          successCount++;
+        } else {
+          console.error('Failed to parse/validate:', download.filename);
+          errorCount++;
+        }
+      } catch (error) {
+        console.error('Error processing downloaded PDF:', download.filename, error);
+        errorCount++;
+      }
+    }
+
+    console.log(`Auto-import complete: ${successCount} succeeded, ${errorCount} failed`);
+
+    // Show result to user via the existing PCRS upload result UI
+    if (successCount > 0 || errorCount > 0) {
+      setPcrsUploadResult({ success: successCount, error: errorCount });
+    }
+  }, [setPaymentAnalysisData]);
+
+  // Track previous background task status to detect completion
+  const prevBackgroundTaskRef = useRef(null);
+
+  // Listen for background PCRS download completion
+  useEffect(() => {
+    const prevTask = prevBackgroundTaskRef.current;
+    const currentTask = backgroundTask;
+
+    // Check if PCRS download just completed
+    if (
+      currentTask?.type === TASK_TYPES?.PCRS_DOWNLOAD &&
+      currentTask?.status === TASK_STATUS?.COMPLETED &&
+      currentTask?.downloadedFiles?.length > 0 &&
+      prevTask?.status === TASK_STATUS?.RUNNING
+    ) {
+      console.log('[DataSection] Background PCRS download completed, auto-importing...');
+      autoImportPCRSDownloads(currentTask.downloadedFiles);
+    }
+
+    prevBackgroundTaskRef.current = currentTask;
+  }, [backgroundTask, TASK_TYPES, TASK_STATUS, autoImportPCRSDownloads]);
+
+  // Listen for custom events from Finn chat panel
+  useEffect(() => {
+    const handleNavigateToData = () => {
+      // This component is already the data section, so just scroll to top or highlight
+      console.log('[DataSection] Navigate to data section requested');
+      // Could potentially trigger a visual highlight or scroll
+    };
+
+    const handleOpenPCRSDownloader = () => {
+      console.log('[DataSection] Open PCRS downloader requested');
+      setShowPCRSDownloader(true);
+    };
+
+    window.addEventListener('navigate-to-data-section', handleNavigateToData);
+    window.addEventListener('open-pcrs-downloader', handleOpenPCRSDownloader);
+
+    return () => {
+      window.removeEventListener('navigate-to-data-section', handleNavigateToData);
+      window.removeEventListener('open-pcrs-downloader', handleOpenPCRSDownloader);
+    };
+  }, []);
 
   // File upload handler
   const handleFileUpload = (event) => {
@@ -131,43 +420,116 @@ const DataSection = () => {
           header: true,
           skipEmptyLines: true,
           complete: (results) => {
-            const processed = processTransactionData(results.data, categoryMapping);
+            // Build basic transaction objects from CSV rows
+            const rawTransactions = results.data
+              .filter(row => row && Object.keys(row).length > 0 && (row.Details || row.details))
+              .map((row, index) => {
+                const details = row.Details || row.details || row.Description || row.description ||
+                               row.Particulars || row.particulars || row.Transaction || row.transaction ||
+                               row.Narrative || row.narrative || row.Reference || row.reference || '';
 
+                const debitValue = row.Debit || row.debit || row['Debit Amount'] || row['Debit_Amount'] ||
+                                 row.DR || row.dr || row.Out || row.out || row.Withdrawal || row.withdrawal || 0;
+
+                const creditValue = row.Credit || row.credit || row['Credit Amount'] || row['Credit_Amount'] ||
+                                  row.CR || row.cr || row.In || row.in || row.Deposit || row.deposit || 0;
+
+                const amountValue = row.Amount || row.amount || row.Value || row.value || 0;
+
+                const debit = parseFloat(debitValue) || 0;
+                const credit = parseFloat(creditValue) || 0;
+                const amount = parseFloat(amountValue) || 0;
+
+                // Parse date
+                let parsedDate = null;
+                let monthYear = null;
+                const dateValue = row.Date || row.date || row['Transaction Date'] || row['Value Date'] ||
+                                row['Date'] || row.TransactionDate || row['Processing Date'] || '';
+
+                if (dateValue) {
+                  try {
+                    const dateStr = dateValue.toString().trim();
+                    if (dateStr.match(/^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}$/)) {
+                      const parts = dateStr.split(/[\/\-]/);
+                      const day = parseInt(parts[0], 10);
+                      const month = parseInt(parts[1], 10);
+                      const year = parseInt(parts[2], 10);
+                      if (day >= 1 && day <= 31 && month >= 1 && month <= 12 && year >= 1900) {
+                        parsedDate = new Date(year, month - 1, day);
+                      }
+                    } else {
+                      parsedDate = new Date(dateStr);
+                    }
+                    if (parsedDate && !isNaN(parsedDate.getTime())) {
+                      monthYear = parsedDate.toISOString().substring(0, 7);
+                    }
+                  } catch (e) {
+                    console.warn('Date parsing error:', dateValue);
+                  }
+                }
+
+                return {
+                  id: `${file.name}-${index}`,
+                  date: parsedDate,
+                  details,
+                  debit,
+                  credit,
+                  amount: Math.max(Math.abs(debit), Math.abs(credit), Math.abs(amount)),
+                  balance: parseFloat(row.Balance || row.balance || 0) || 0,
+                  monthYear,
+                  fileName: file.name
+                };
+              });
+
+            // Filter duplicates
             const existingKeys = new Set();
             transactions.forEach(t => existingKeys.add(getTransactionKey(t)));
             unidentifiedTransactions.forEach(t => existingKeys.add(getTransactionKey(t)));
 
-            let categorizedCount = 0;
-            let unidentifiedCount = 0;
             let skippedDuplicates = 0;
-            const newCategorized = [];
-            const newUnidentified = [];
-
-            processed.forEach(t => {
+            const nonDuplicates = rawTransactions.filter(t => {
               const key = getTransactionKey(t);
               if (existingKeys.has(key)) {
                 skippedDuplicates++;
-                return;
+                return false;
               }
               existingKeys.add(key);
-
-              if (t.category && t.category !== 'Unidentified') {
-                categorizedCount++;
-                newCategorized.push(t);
-              } else {
-                unidentifiedCount++;
-                newUnidentified.push(t);
-              }
+              return true;
             });
 
-            setTransactions(prev => [...prev, ...newCategorized]);
-            setUnidentifiedTransactions(prev => [...prev, ...newUnidentified]);
-            setUploadResult({
-              type: 'csv',
-              categorized: categorizedCount,
-              unidentified: unidentifiedCount,
-              skippedDuplicates
-            });
+            if (nonDuplicates.length === 0) {
+              setUploadResult({
+                type: 'csv',
+                categorized: 0,
+                unidentified: 0,
+                skippedDuplicates
+              });
+              setIsProcessing(false);
+              return;
+            }
+
+            if (nonDuplicates.length > BULK_UPLOAD_THRESHOLD) {
+              // Bulk upload: use BulkUploadFlow with Finn education panel + waves
+              setPendingBulkUpload({
+                transactions: nonDuplicates,
+                type: 'csv',
+                skippedDuplicates,
+                fileName: file.name
+              });
+            } else {
+              // Standard upload: use ProcessingFlowPanel
+              setPendingUploadData({
+                type: 'csv',
+                skippedDuplicates,
+                fileName: file.name
+              });
+
+              startProcessing(nonDuplicates, categoryMapping, {
+                existingTransactions: [...transactions, ...unidentifiedTransactions],
+                corrections: aiCorrections?.expense_categorization || [],
+                recordCorrection: recordAICorrection
+              });
+            }
             setIsProcessing(false);
           },
           error: (error) => {
@@ -188,22 +550,36 @@ const DataSection = () => {
 
     setPcrsProcessing(true);
     setPcrsUploadResult(null);
+    const isBulk = files.length >= 15;
+    if (isBulk) {
+      setPcrsProgress({ current: 0, total: files.length, startTime: Date.now() });
+    }
 
     let successCount = 0;
     let errorCount = 0;
 
-    for (const file of files) {
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (isBulk) {
+        setPcrsProgress(prev => ({ ...prev, current: i + 1 }));
+      }
       try {
-        const arrayBuffer = await file.arrayBuffer();
-        const result = await parsePCRSPaymentPDF(arrayBuffer);
+        const result = await parsePCRSPaymentPDF(file);
 
         if (result && validateExtractedData(result)) {
           setPaymentAnalysisData(prev => {
+            // Check for duplicates using paymentDate, totalGrossPayment, AND doctorNumber
+            // doctorNumber uniquely identifies each panel
             const exists = prev.some(p =>
               p.paymentDate === result.paymentDate &&
-              p.totalAmount === result.totalAmount
+              p.totalGrossPayment === result.totalGrossPayment &&
+              p.doctorNumber === result.doctorNumber
             );
-            if (exists) return prev;
+            if (exists) {
+              console.log('Skipping duplicate PCRS statement:', result.doctorNumber, result.paymentDate);
+              return prev;
+            }
+            console.log('Added PCRS payment data:', result.doctorNumber, result.paymentDate);
             return [...prev, result];
           });
           successCount++;
@@ -218,10 +594,11 @@ const DataSection = () => {
 
     setPcrsUploadResult({ success: successCount, error: errorCount });
     setPcrsProcessing(false);
+    setPcrsProgress(null);
     event.target.value = '';
   };
 
-  // Bank PDF upload handler
+  // Bank PDF upload handler - now uses ProcessingFlow like CSV uploads
   const handleBankPdfUpload = async (event) => {
     const files = Array.from(event.target.files);
     if (files.length === 0) return;
@@ -229,12 +606,11 @@ const DataSection = () => {
     setBankPdfProcessing(true);
     setBankPdfResult(null);
 
-    let totalTransactions = 0;
-    let totalCategorized = 0;
-    let totalUnidentified = 0;
+    // Collect all transactions from all PDFs
+    let allTransactions = [];
     let totalDuplicates = 0;
-    let successCount = 0;
     let detectedBank = '';
+    let lastError = null;
 
     const existingKeys = new Set();
     transactions.forEach(t => existingKeys.add(getTransactionKey(t)));
@@ -242,15 +618,14 @@ const DataSection = () => {
 
     for (const file of files) {
       try {
+        console.log('[BankPDF] Processing file:', file.name);
         const result = await parseBankStatementPDF(file);
+        console.log('[BankPDF] Parse result:', result);
 
         if (result && result.transactions && result.transactions.length > 0) {
           detectedBank = result.bank;
-          totalTransactions += result.transactions.length;
 
-          const newCategorized = [];
-          const newUnidentified = [];
-
+          // Filter duplicates and add unique transactions
           result.transactions.forEach(t => {
             const key = getTransactionKey(t);
             if (existingKeys.has(key)) {
@@ -259,42 +634,65 @@ const DataSection = () => {
             }
             existingKeys.add(key);
 
-            const categorized = categorizeTransactionSimple(t, categoryMapping);
-
-            if (categorized.category && categorized.category !== 'Unidentified') {
-              totalCategorized++;
-              newCategorized.push(categorized);
-            } else {
-              totalUnidentified++;
-              newUnidentified.push({ ...t, category: 'Unidentified' });
-            }
+            // Add file source info and unique ID
+            allTransactions.push({
+              ...t,
+              id: t.id || `${file.name}-${allTransactions.length}`,
+              fileName: file.name
+            });
           });
-
-          if (newCategorized.length > 0) {
-            setTransactions(prev => [...prev, ...newCategorized]);
-          }
-          if (newUnidentified.length > 0) {
-            setUnidentifiedTransactions(prev => [...prev, ...newUnidentified]);
-          }
-
-          successCount++;
+        } else {
+          console.warn('[BankPDF] No transactions found in result:', result);
+          lastError = 'No transactions found in PDF';
         }
       } catch (error) {
-        console.error('Error processing bank PDF:', error);
+        console.error('[BankPDF] Error processing:', file.name, error);
+        lastError = error.message || 'Unknown error processing PDF';
       }
     }
 
-    setBankPdfResult({
-      success: successCount,
-      transactionCount: totalTransactions,
-      categorized: totalCategorized,
-      unidentified: totalUnidentified,
-      duplicates: totalDuplicates,
-      bank: detectedBank,
-      errorMessage: successCount === 0 ? 'Could not extract transactions from PDF' : null
-    });
     setBankPdfProcessing(false);
     event.target.value = '';
+
+    // If we have transactions, start the ProcessingFlow
+    if (allTransactions.length > 0) {
+      if (allTransactions.length > BULK_UPLOAD_THRESHOLD) {
+        // Bulk upload: use BulkUploadFlow
+        setPendingBulkUpload({
+          transactions: allTransactions,
+          type: 'bank_pdf',
+          skippedDuplicates: totalDuplicates,
+          bank: detectedBank,
+          fileCount: files.length
+        });
+      } else {
+        // Standard upload: use ProcessingFlowPanel
+        setPendingUploadData({
+          type: 'bank_pdf',
+          skippedDuplicates: totalDuplicates,
+          bank: detectedBank,
+          fileCount: files.length
+        });
+
+        console.log('[BankPDF] Starting ProcessingFlow with', allTransactions.length, 'transactions');
+        startProcessing(allTransactions, categoryMapping, {
+          existingTransactions: [...transactions, ...unidentifiedTransactions],
+          corrections: aiCorrections?.expense_categorization || [],
+          recordCorrection: recordAICorrection
+        });
+      }
+    } else {
+      // No transactions found - show error
+      setBankPdfResult({
+        success: 0,
+        transactionCount: 0,
+        categorized: 0,
+        unidentified: 0,
+        duplicates: totalDuplicates,
+        bank: detectedBank,
+        errorMessage: lastError || 'Could not extract transactions from PDF'
+      });
+    }
   };
 
   return (
@@ -308,6 +706,61 @@ const DataSection = () => {
         <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray, marginBottom: '1rem' }}>
           Import financial data and upload PCRS PDFs
         </p>
+
+        {/* Resume banner for saved bulk upload */}
+        {bulkResumeData && bulkResumeData.remainingTransactions?.length > 0 && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            padding: '0.75rem 1rem',
+            marginBottom: '1rem',
+            borderRadius: '0.5rem',
+            backgroundColor: `${COLORS.slainteBlue}08`,
+            border: `1px solid ${COLORS.slainteBlue}30`
+          }}>
+            <Clock style={{ width: '1.25rem', height: '1.25rem', color: COLORS.slainteBlue, flexShrink: 0 }} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '0.875rem', fontWeight: 600, color: COLORS.darkGray }}>
+                Saved upload in progress
+              </div>
+              <div style={{ fontSize: '0.8125rem', color: COLORS.mediumGray }}>
+                {bulkResumeData.remainingTransactions.length} transactions remaining
+                ({bulkResumeData.completedWaveCount} of {bulkResumeData.totalWaveCount} waves completed)
+                — saved {new Date(bulkResumeData.savedAt).toLocaleDateString()}
+              </div>
+            </div>
+            <button
+              onClick={handleBulkResume}
+              style={{
+                padding: '0.375rem 0.875rem',
+                borderRadius: '6px',
+                border: 'none',
+                backgroundColor: COLORS.slainteBlue,
+                color: COLORS.white,
+                fontSize: '0.8125rem',
+                fontWeight: 500,
+                cursor: 'pointer'
+              }}
+            >
+              Resume
+            </button>
+            <button
+              onClick={handleBulkResumeDiscard}
+              style={{
+                padding: '0.375rem 0.625rem',
+                borderRadius: '6px',
+                border: `1px solid ${COLORS.lightGray}`,
+                backgroundColor: 'transparent',
+                color: COLORS.mediumGray,
+                fontSize: '0.75rem',
+                cursor: 'pointer'
+              }}
+            >
+              Discard
+            </button>
+          </div>
+        )}
 
         {/* Compact 4-Column Layout */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.75rem' }}>
@@ -488,9 +941,42 @@ const DataSection = () => {
               borderTopColor: 'transparent',
               margin: '0 auto'
             }}></div>
-            <p style={{ fontSize: '0.8125rem', color: COLORS.darkGray, marginTop: '0.5rem' }}>
-              Processing PCRS PDFs...
-            </p>
+            {pcrsProgress ? (
+              <>
+                <p style={{ fontSize: '0.8125rem', fontWeight: 600, color: COLORS.darkGray, marginTop: '0.5rem' }}>
+                  Processing PDF {pcrsProgress.current} of {pcrsProgress.total}
+                </p>
+                {/* Progress bar */}
+                <div style={{ margin: '0.5rem auto', maxWidth: '200px', height: '4px', backgroundColor: `${COLORS.expenseColor}30`, borderRadius: '2px' }}>
+                  <div style={{
+                    height: '100%',
+                    width: `${(pcrsProgress.current / pcrsProgress.total) * 100}%`,
+                    backgroundColor: COLORS.expenseColor,
+                    borderRadius: '2px',
+                    transition: 'width 0.3s ease'
+                  }} />
+                </div>
+                {/* Estimated time remaining */}
+                {pcrsProgress.current > 1 && (() => {
+                  const elapsed = (Date.now() - pcrsProgress.startTime) / 1000;
+                  const perFile = elapsed / pcrsProgress.current;
+                  const remaining = Math.ceil(perFile * (pcrsProgress.total - pcrsProgress.current));
+                  return (
+                    <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginTop: '0.25rem' }}>
+                      ~{remaining}s remaining
+                    </p>
+                  );
+                })()}
+                <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginTop: '0.5rem', lineHeight: 1.4 }}>
+                  Each PDF contains panel sizes, demographics, and payment breakdowns.
+                  <br />Duplicates are automatically detected and skipped.
+                </p>
+              </>
+            ) : (
+              <p style={{ fontSize: '0.8125rem', color: COLORS.darkGray, marginTop: '0.5rem' }}>
+                Processing PCRS PDFs...
+              </p>
+            )}
           </div>
         )}
 
@@ -582,9 +1068,12 @@ const DataSection = () => {
             Your login credentials are never stored - you authenticate via the secure PCRS website.
           </p>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
             <button
-              onClick={() => setShowPCRSDownloader(true)}
+              onClick={() => {
+                setPcrsDownloaderQuickSelect('latest');
+                setShowPCRSDownloader(true);
+              }}
               style={{
                 padding: '0.5rem 1rem',
                 borderRadius: '0.5rem',
@@ -600,7 +1089,30 @@ const DataSection = () => {
               }}
             >
               <Download style={{ height: '1rem', width: '1rem' }} />
-              Download Statements
+              Latest Statement
+            </button>
+
+            <button
+              onClick={() => {
+                setPcrsDownloaderQuickSelect('24');
+                setShowPCRSDownloader(true);
+              }}
+              style={{
+                padding: '0.5rem 1rem',
+                borderRadius: '0.5rem',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                color: COLORS.slainteBlue,
+                backgroundColor: 'transparent',
+                border: `1px solid ${COLORS.slainteBlue}`,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}
+            >
+              <Calendar style={{ height: '1rem', width: '1rem' }} />
+              Bulk Download (24 months)
             </button>
 
             {pcrsSessionStatus?.valid && (
@@ -635,10 +1147,35 @@ const DataSection = () => {
       <PCRSDownloader
         isOpen={showPCRSDownloader}
         onClose={() => setShowPCRSDownloader(false)}
-        onStatementsDownloaded={(downloads) => {
-          console.log('PCRS statements downloaded:', downloads);
-        }}
+        onStatementsDownloaded={autoImportPCRSDownloads}
+        defaultQuickSelect={pcrsDownloaderQuickSelect}
       />
+
+      {/* Finn-Guided Processing Flow Modal (standard uploads <200 txns) */}
+      {isFlowOpen && !pendingBulkUpload && (
+        <ProcessingFlowPanel
+          categoryMapping={categoryMapping}
+          onComplete={handleProcessingComplete}
+          onCancel={handleProcessingCancel}
+          onRemoveIdentifier={handleRemoveIdentifier}
+        />
+      )}
+
+      {/* Bulk Upload Flow (200+ transactions with Finn education panel) */}
+      {pendingBulkUpload && (
+        <BulkUploadFlow
+          transactions={pendingBulkUpload.transactions}
+          categoryMapping={categoryMapping}
+          existingTransactions={[...transactions, ...unidentifiedTransactions]}
+          corrections={aiCorrections?.expense_categorization || []}
+          recordCorrection={recordAICorrection}
+          onComplete={handleBulkProcessingComplete}
+          onWaveComplete={handleBulkWaveComplete}
+          onSaveAndExit={handleBulkSaveAndExit}
+          onCancel={() => { setPendingBulkUpload(null); cancelFlow(); }}
+          onRemoveIdentifier={handleRemoveIdentifier}
+        />
+      )}
 
       {/* CSS Animation for spinner */}
       <style>{`

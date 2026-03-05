@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTasks } from '../../context/TasksContext';
 import TasksPanel from './TasksPanel';
 import FinancialTasksModal from './FinancialTasksModal';
@@ -35,6 +35,26 @@ const TasksWidget = () => {
   const handleTasksChanged = () => {
     refreshTasks();
   };
+
+  // Listen for tour events
+  useEffect(() => {
+    const handleOpenWidget = () => openWidget();
+    const handleCloseWidget = () => closeWidget();
+    const handleOpenManageTasks = () => setShowFinancialTasksModal(true);
+    const handleCloseManageTasks = () => setShowFinancialTasksModal(false);
+
+    window.addEventListener('tour:openTasksWidget', handleOpenWidget);
+    window.addEventListener('tour:closeTasksWidget', handleCloseWidget);
+    window.addEventListener('tour:openManageTasksModal', handleOpenManageTasks);
+    window.addEventListener('tour:closeManageTasksModal', handleCloseManageTasks);
+
+    return () => {
+      window.removeEventListener('tour:openTasksWidget', handleOpenWidget);
+      window.removeEventListener('tour:closeTasksWidget', handleCloseWidget);
+      window.removeEventListener('tour:openManageTasksModal', handleOpenManageTasks);
+      window.removeEventListener('tour:closeManageTasksModal', handleCloseManageTasks);
+    };
+  }, [openWidget, closeWidget]);
 
   // Handle editing a task from the widget - opens the appropriate modal
   const handleEditTask = (task) => {

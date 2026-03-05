@@ -11,6 +11,8 @@
  * - For scaling beyond 5 users, migrate to backend with auth
  */
 
+import { generatePracticeId } from '../data/practiceProfileSchemaV2';
+
 const STORAGE_KEY = 'slainte_practice_profile';
 
 /**
@@ -54,6 +56,7 @@ export function save(profile) {
             ...profile,
             metadata: {
                 ...profile.metadata,
+                practiceId: profile.metadata?.practiceId || generatePracticeId(),
                 lastUpdated: now,
                 createdAt: profile.metadata?.createdAt || now
             }
@@ -89,16 +92,70 @@ export function update(updates) {
 }
 
 /**
- * Mark the setup as complete
+ * Mark the setup as complete and trigger one-time Practice ID registration
  * @returns {boolean} True if update was successful
  */
 export function completeSetup() {
-    return update({
+    const result = update({
         metadata: {
             setupComplete: true,
             setupCompletedAt: new Date()
         }
     });
+
+    // Fire one-time Practice ID registration
+    const profile = get();
+    if (profile && !profile.metadata?.practiceIdRegistered) {
+        registerPracticeId(profile);
+    }
+
+    return result;
+}
+
+/**
+ * One-time registration: sends {practiceId, practiceName} to CRM
+ * so the mapping between anonymous ID and practice is established.
+ * Skips registration for demo profiles and profiles without a practice name.
+ * @param {Object} profile - The practice profile
+ */
+function registerPracticeId(profile) {
+    const practiceId = profile.metadata?.practiceId;
+    const practiceName = profile.practiceDetails?.practiceName || '';
+
+    if (!practiceId) return;
+
+    // Skip demo profiles — demo mode should not trigger registration
+    if (profile.metadata?.isDemoMode) {
+        console.log('[PracticeID] Skipping registration for demo profile');
+        return;
+    }
+
+    // Require a practice name — avoids registering before profile is fully populated
+    if (!practiceName.trim()) {
+        console.log('[PracticeID] Skipping registration — practice name is blank');
+        return;
+    }
+
+    const submitFn = window.electronAPI?.submitRegistration || window.electronAPI?.submitFeedback;
+    if (submitFn) {
+        submitFn({
+            practiceId,
+            practiceName,
+            appVersion: window.electronAPI?.getAppVersion ? 'fetching' : 'unknown',
+            os: navigator.userAgent,
+            timestamp: new Date().toISOString()
+        }).then(() => {
+            const p = get();
+            if (p) {
+                p.metadata.practiceIdRegistered = true;
+                save(p);
+            }
+        }).catch(err => {
+            console.error('[PracticeID] Registration failed:', err);
+        });
+    } else {
+        console.log('[PracticeID] Dev mode — would register:', { practiceId, practiceName });
+    }
 }
 
 /**
@@ -108,6 +165,74 @@ export function completeSetup() {
 export function isSetupComplete() {
     const profile = get();
     return profile?.metadata?.setupComplete === true;
+}
+
+/**
+ * Check if terms of service have been accepted for the required version
+ * @param {string} requiredVersion - The minimum ToS version required
+ * @returns {boolean} True if terms have been accepted for this version
+ */
+export function hasAcceptedTerms(requiredVersion) {
+    const profile = get();
+    const termsAccepted = profile?.metadata?.termsAccepted;
+
+    if (!termsAccepted || !termsAccepted.version || !termsAccepted.acceptedAt) {
+        return false;
+    }
+
+    // Simple version comparison (assumes semver-like format)
+    // For now, we just check if versions match exactly
+    // In future, could implement proper semver comparison
+    return termsAccepted.version === requiredVersion;
+}
+
+/**
+ * Record acceptance of terms of service
+ * @param {Object} termsData - Terms acceptance data { version, acceptedAt, scrolledToEnd }
+ * @returns {boolean} True if save was successful
+ */
+export function acceptTerms(termsData) {
+    return update({
+        metadata: {
+            termsAccepted: {
+                version: termsData.version,
+                acceptedAt: termsData.acceptedAt || new Date().toISOString(),
+                scrolledToEnd: termsData.scrolledToEnd || false
+            }
+        }
+    });
+}
+
+/**
+ * Get terms acceptance info
+ * @returns {Object|null} Terms acceptance data or null if not accepted
+ */
+export function getTermsAcceptance() {
+    const profile = get();
+    return profile?.metadata?.termsAccepted || null;
+}
+
+/**
+ * Check if Local Only Mode is enabled
+ * @returns {boolean} True if Local Only Mode is active
+ */
+export function isLocalOnlyMode() {
+    const profile = get();
+    return profile?.metadata?.localOnlyMode === true;
+}
+
+/**
+ * Set Local Only Mode
+ * @param {boolean} enabled - Whether to enable or disable Local Only Mode
+ * @returns {boolean} True if update was successful
+ */
+export function setLocalOnlyMode(enabled) {
+    return update({
+        metadata: {
+            localOnlyMode: enabled,
+            localOnlyModeSetAt: new Date().toISOString()
+        }
+    });
 }
 
 /**

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useFinn } from '../../context/FinnContext';
 import { useTour } from '../Tour';
 import { callClaude } from '../../utils/claudeAPI';
+import { MODELS } from '../../data/modelConfig';
 import {
   MessageCircle,
   ChevronDown,
@@ -11,9 +12,17 @@ import {
   X,
   Check,
   HelpCircle,
-  Send
+  Send,
+  Receipt,
+  Stethoscope
 } from 'lucide-react';
 import COLORS from '../../utils/colors';
+
+// Choice icons mapping
+const CHOICE_ICONS = {
+  'bank-transactions': Receipt,
+  'gms-payments': Stethoscope,
+};
 
 /**
  * FinnTourMode - Finn's appearance during app tour
@@ -28,6 +37,7 @@ const FinnTourMode = () => {
     nextStep,
     prevStep,
     skipTour,
+    endTourWithChoice,
     isFirstStep,
     isLastStep,
     isTransitioning
@@ -68,7 +78,7 @@ The user has a follow-up question: "${question}"
 Provide a helpful, concise answer (2-3 sentences max) that addresses their question in the context of this feature. Be friendly and encouraging. If the question is unrelated to the current feature, briefly acknowledge it and suggest they explore after the tour.`;
 
       const response = await callClaude(prompt, {
-        model: 'claude-haiku-4-5-20251001',
+        model: MODELS.FAST,
         maxTokens: 300,
         apiKey: apiKey,
       });
@@ -88,12 +98,17 @@ Provide a helpful, concise answer (2-3 sentences max) that addresses their quest
 
   if (!currentStepData) return null;
 
+  // Determine Finn's position based on step configuration
+  const finnPosition = currentStepData?.finnPosition || 'top-left';
+  const positionStyles = finnPosition === 'bottom-left'
+    ? { bottom: '1.5rem', left: '1.5rem', top: 'auto' }
+    : { top: '4.25rem', left: '1.5rem' };
+
   return (
     <div
       style={{
         position: 'fixed',
-        top: '4.25rem',
-        left: '1.5rem',
+        ...positionStyles,
         width: '320px',
         backgroundColor: COLORS.white,
         borderRadius: '0.75rem',
@@ -148,22 +163,89 @@ Provide a helpful, concise answer (2-3 sentences max) that addresses their quest
       {/* Collapsible Content */}
       {isExpanded && (
         <>
-          {/* Finn's narration message */}
+          {/* Finn's narration message - consistent height */}
           <div
             style={{
               padding: '1rem',
               fontSize: '0.875rem',
               lineHeight: '1.6',
               color: COLORS.darkGray,
+              minHeight: '120px',
               maxHeight: '180px',
               overflowY: 'auto',
             }}
           >
-            {currentStepData.caraText}
+            {currentStepData.finnText || currentStepData.caraText}
           </div>
 
-          {/* Q&A Section */}
-          {currentStepData.allowQuestions && (
+          {/* Choice cards (final step) or Q&A Section */}
+          {currentStepData.choices ? (
+            <div
+              style={{
+                padding: '0 1rem 0.75rem',
+                borderTop: `1px solid ${COLORS.lightGray}`,
+                paddingTop: '0.75rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.5rem',
+              }}
+            >
+              {currentStepData.choices.map((choice) => {
+                const ChoiceIcon = CHOICE_ICONS[choice.id] || ChevronRight;
+                return (
+                  <button
+                    key={choice.id}
+                    onClick={() => endTourWithChoice(choice.id)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.75rem',
+                      padding: '0.75rem',
+                      backgroundColor: COLORS.white,
+                      border: `2px solid ${COLORS.slainteBlue}30`,
+                      borderRadius: '0.5rem',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      transition: 'all 0.2s',
+                      width: '100%',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = COLORS.slainteBlue;
+                      e.currentTarget.style.backgroundColor = `${COLORS.slainteBlue}08`;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = `${COLORS.slainteBlue}30`;
+                      e.currentTarget.style.backgroundColor = COLORS.white;
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '2.25rem',
+                        height: '2.25rem',
+                        borderRadius: '0.5rem',
+                        backgroundColor: `${COLORS.slainteBlue}15`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <ChoiceIcon size={18} color={COLORS.slainteBlue} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 600, fontSize: '0.8125rem', color: COLORS.darkGray }}>
+                        {choice.label}
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginTop: '0.125rem' }}>
+                        {choice.description}
+                      </div>
+                    </div>
+                    <ChevronRight size={16} color={COLORS.mediumGray} style={{ flexShrink: 0 }} />
+                  </button>
+                );
+              })}
+            </div>
+          ) : currentStepData.allowQuestions ? (
             <div
               style={{
                 padding: '0 1rem 0.75rem',
@@ -298,93 +380,124 @@ Provide a helpful, concise answer (2-3 sentences max) that addresses their quest
                 </div>
               )}
             </div>
-          )}
+          ) : null}
 
-          {/* Navigation Controls */}
+          {/* Navigation Controls - hide Next/Finish when choices are shown */}
           <div
             style={{
               padding: '0.75rem 1rem',
               borderTop: `1px solid ${COLORS.lightGray}`,
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'space-between',
+              justifyContent: currentStepData.choices ? 'center' : 'space-between',
               backgroundColor: COLORS.backgroundGray,
             }}
           >
-            {/* Skip button */}
-            <button
-              onClick={skipTour}
-              disabled={isTransitioning}
-              style={{
-                padding: '0.375rem 0.75rem',
-                backgroundColor: 'transparent',
-                border: 'none',
-                color: COLORS.mediumGray,
-                fontSize: '0.8125rem',
-                cursor: isTransitioning ? 'not-allowed' : 'pointer',
-                opacity: isTransitioning ? 0.5 : 1,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.25rem'
-              }}
-            >
-              <X size={14} />
-              Skip
-            </button>
+            {currentStepData.choices ? (
+              /* On choice step, show back + "I'll explore on my own" */
+              <>
+                <button
+                  onClick={prevStep}
+                  disabled={isFirstStep || isTransitioning}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.25rem',
+                    padding: '0.375rem 0.75rem',
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    color: isFirstStep ? COLORS.lightGray : COLORS.mediumGray,
+                    fontSize: '0.8125rem',
+                    cursor: isFirstStep || isTransitioning ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  <ChevronLeft size={14} />
+                  Back
+                </button>
+                <button
+                  onClick={() => endTourWithChoice(null)}
+                  style={{
+                    padding: '0.375rem 0.75rem',
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    color: COLORS.mediumGray,
+                    fontSize: '0.8125rem',
+                    cursor: 'pointer',
+                  }}
+                >
+                  I'll explore on my own
+                </button>
+              </>
+            ) : (
+              /* Normal navigation */
+              <>
+                {/* Skip button */}
+                <button
+                  onClick={skipTour}
+                  disabled={isTransitioning}
+                  style={{
+                    padding: '0.375rem 0.75rem',
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    color: COLORS.mediumGray,
+                    fontSize: '0.8125rem',
+                    cursor: isTransitioning ? 'not-allowed' : 'pointer',
+                    opacity: isTransitioning ? 0.5 : 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.25rem'
+                  }}
+                >
+                  <X size={14} />
+                  Skip
+                </button>
 
-            {/* Prev/Next buttons */}
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <button
-                onClick={prevStep}
-                disabled={isFirstStep || isTransitioning}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '2rem',
-                  height: '2rem',
-                  backgroundColor: isFirstStep ? COLORS.backgroundGray : COLORS.white,
-                  border: `1px solid ${isFirstStep ? COLORS.lightGray : COLORS.slainteBlue}`,
-                  borderRadius: '50%',
-                  color: isFirstStep ? COLORS.lightGray : COLORS.slainteBlue,
-                  cursor: isFirstStep || isTransitioning ? 'not-allowed' : 'pointer',
-                  opacity: isTransitioning ? 0.5 : 1,
-                }}
-              >
-                <ChevronLeft size={18} />
-              </button>
+                {/* Prev/Next buttons */}
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button
+                    onClick={prevStep}
+                    disabled={isFirstStep || isTransitioning}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '2rem',
+                      height: '2rem',
+                      backgroundColor: isFirstStep ? COLORS.backgroundGray : COLORS.white,
+                      border: `1px solid ${isFirstStep ? COLORS.lightGray : COLORS.slainteBlue}`,
+                      borderRadius: '50%',
+                      color: isFirstStep ? COLORS.lightGray : COLORS.slainteBlue,
+                      cursor: isFirstStep || isTransitioning ? 'not-allowed' : 'pointer',
+                      opacity: isTransitioning ? 0.5 : 1,
+                    }}
+                  >
+                    <ChevronLeft size={18} />
+                  </button>
 
-              <button
-                onClick={nextStep}
-                disabled={isTransitioning}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.25rem',
-                  padding: isLastStep ? '0.5rem 1rem' : '0.5rem 0.75rem',
-                  backgroundColor: isLastStep ? COLORS.incomeColor : COLORS.slainteBlue,
-                  border: 'none',
-                  borderRadius: '1rem',
-                  color: COLORS.white,
-                  fontSize: '0.8125rem',
-                  fontWeight: '600',
-                  cursor: isTransitioning ? 'not-allowed' : 'pointer',
-                  opacity: isTransitioning ? 0.5 : 1,
-                }}
-              >
-                {isLastStep ? (
-                  <>
-                    <Check size={16} />
-                    Finish
-                  </>
-                ) : (
-                  <>
+                  <button
+                    onClick={nextStep}
+                    disabled={isTransitioning}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.25rem',
+                      padding: '0.5rem 0.75rem',
+                      backgroundColor: COLORS.slainteBlue,
+                      border: 'none',
+                      borderRadius: '1rem',
+                      color: COLORS.white,
+                      fontSize: '0.8125rem',
+                      fontWeight: '600',
+                      cursor: isTransitioning ? 'not-allowed' : 'pointer',
+                      opacity: isTransitioning ? 0.5 : 1,
+                    }}
+                  >
                     Next
                     <ChevronRight size={16} />
-                  </>
-                )}
-              </button>
-            </div>
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </>
       )}

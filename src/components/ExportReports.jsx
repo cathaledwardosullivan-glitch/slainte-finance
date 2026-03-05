@@ -42,6 +42,7 @@ const ExportReports = () => {
     };
     // P&L Converter State
     const [plData, setPLData] = useState(null);
+    const [showReportModal, setShowReportModal] = useState(false);
     const [showMotorCalculator, setShowMotorCalculator] = useState(false);
     const [showDepreciationCalculator, setShowDepreciationCalculator] = useState(false);
     const [motorExpenses, setMotorExpenses] = useState({
@@ -76,6 +77,150 @@ const ExportReports = () => {
             setWithholdingTaxData(wtData);
         }
     }, [transactions, selectedYear, paymentAnalysisData]);
+
+    /**
+     * Calculate GROSS income for P&L Report
+     *
+     * This function calculates income at GROSS values (before deductions) for proper P&L reporting:
+     * - GMS Income: Uses GROSS from PCRS PDFs (not NET from bank)
+     * - State Contracts: Grosses up bank amounts (NET ÷ 0.80) since 20% withholding is deducted
+     * - Other Income: Uses bank amounts directly (no deductions at source)
+     *
+     * Also extracts withholding tax and superannuation for footnotes.
+     * These go to Partner's Capital Accounts, not P&L expenses.
+     */
+    const calculateGrossPLIncome = (year, periodInfo = null) => {
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+        // === GMS INCOME (from PCRS PDFs - already GROSS) ===
+        const gmsPaymentsForYear = (paymentAnalysisData || []).filter(p => {
+            if (!p.paymentDate) return false;
+            const paymentYear = new Date(p.paymentDate).getFullYear();
+            return paymentYear === year;
+        });
+
+        // Sum gross GMS payments
+        const gmsGross = gmsPaymentsForYear.reduce((sum, p) => sum + (p.totalGrossPayment || 0), 0);
+
+        // Extract superannuation from deductions (all types)
+        const gmsSuperannuation = gmsPaymentsForYear.reduce((sum, p) => {
+            if (!p.deductions) return sum;
+            return sum + Object.entries(p.deductions)
+                .filter(([key]) => key.toLowerCase().includes('superannuation'))
+                .reduce((s, [_, val]) => s + (val || 0), 0);
+        }, 0);
+
+        // Extract withholding tax from practice summary (deduplicate by month)
+        const processedMonths = new Set();
+        const gmsWithholding = gmsPaymentsForYear.reduce((sum, p) => {
+            if (!p.practiceSummary?.withholdingTax) return sum;
+            const monthKey = p.paymentDate ? new Date(p.paymentDate).toISOString().slice(0, 7) : null;
+            if (monthKey && !processedMonths.has(monthKey)) {
+                processedMonths.add(monthKey);
+                return sum + p.practiceSummary.withholdingTax;
+            }
+            return sum;
+        }, 0);
+
+        // Check GMS data completeness
+        const monthsWithPayments = new Set(gmsPaymentsForYear.map(p =>
+            p.paymentDate ? new Date(p.paymentDate).getMonth() : -1
+        ).filter(m => m >= 0));
+        const gmsMonthsFound = monthsWithPayments.size;
+        const gmsMissingMonths = [];
+        for (let m = 0; m < 12; m++) {
+            if (!monthsWithPayments.has(m)) {
+                gmsMissingMonths.push(monthNames[m]);
+            }
+        }
+
+        // === TRANSACTION-BASED INCOME ===
+        // Filter transactions for the year (respecting partial year cutoff if applicable)
+        const yearTransactions = transactions.filter(t => {
+            if (!t.date) return false;
+            const txDate = new Date(t.date);
+            const txYear = txDate.getFullYear();
+            if (txYear !== year) return false;
+
+            // For partial year reports, respect the cutoff date
+            if (periodInfo?.isPartialYear && periodInfo?.cutoffDate) {
+                const yearCutoff = new Date(year, periodInfo.cutoffDate.getMonth(), periodInfo.cutoffDate.getDate());
+                if (txDate > yearCutoff) return false;
+            }
+            return true;
+        });
+
+        // Identify category names that should be excluded from "other income"
+        // because we're using PCRS gross instead of bank NET
+        const pcrsCategories = ['PCRS Payments', 'PCRS', 'GMS Income'];
+        const stateContractCategories = ['State Contracts'];
+
+        // STATE CONTRACTS: Gross up from bank (NET ÷ 0.80)
+        const stateContractsNet = yearTransactions
+            .filter(t => t.category?.type === 'income' &&
+                stateContractCategories.some(cat =>
+                    t.category?.name?.toLowerCase().includes(cat.toLowerCase())
+                ))
+            .reduce((sum, t) => sum + (t.credit || t.amount || 0), 0);
+
+        const stateContractsGross = stateContractsNet / 0.80;
+        const stateContractsWithholding = stateContractsGross - stateContractsNet;
+
+        // OTHER INCOME: All income EXCEPT PCRS and State Contracts
+        const otherIncome = yearTransactions
+            .filter(t => {
+                if (t.category?.type !== 'income') return false;
+                const catName = t.category?.name || '';
+                // Exclude PCRS (using PCRS gross instead)
+                if (pcrsCategories.some(cat => catName.toLowerCase().includes(cat.toLowerCase()))) return false;
+                // Exclude State Contracts (using grossed up amount instead)
+                if (stateContractCategories.some(cat => catName.toLowerCase().includes(cat.toLowerCase()))) return false;
+                return true;
+            })
+            .reduce((sum, t) => sum + (t.credit || t.amount || 0), 0);
+
+        // NET PCRS from bank (for comparison/validation - not used in P&L)
+        const pcrsNetFromBank = yearTransactions
+            .filter(t => t.category?.type === 'income' &&
+                pcrsCategories.some(cat =>
+                    t.category?.name?.toLowerCase().includes(cat.toLowerCase())
+                ))
+            .reduce((sum, t) => sum + (t.credit || t.amount || 0), 0);
+
+        // === TOTALS ===
+        const totalGrossIncome = gmsGross + stateContractsGross + otherIncome;
+        const totalWithholding = gmsWithholding + stateContractsWithholding;
+        const totalSuperannuation = gmsSuperannuation;
+
+        return {
+            // GMS (from PCRS)
+            gmsGross,
+            gmsSuperannuation,
+            gmsWithholding,
+            gmsMonthsFound,
+            gmsMissingMonths,
+            gmsComplete: gmsMonthsFound >= 12,
+
+            // State Contracts (grossed up)
+            stateContractsNet,
+            stateContractsGross,
+            stateContractsWithholding,
+
+            // Other income (no adjustment)
+            otherIncome,
+
+            // For reference/validation
+            pcrsNetFromBank,
+
+            // Totals
+            totalGrossIncome,
+            totalWithholding,
+            totalSuperannuation,
+
+            // Has PCRS data?
+            hasPCRSData: gmsPaymentsForYear.length > 0
+        };
+    };
 
     // Get available years from transaction data
     const getAvailableYears = () => {
@@ -183,7 +328,9 @@ const ExportReports = () => {
             const plResult = {
                 income: { [currentYear]: {}, [previousYear]: {} },
                 expenses: { [currentYear]: {}, [previousYear]: {} },
-                reportPeriod: period
+                reportPeriod: period,
+                // Store gross income data for footnotes
+                grossIncomeData: { [currentYear]: null, [previousYear]: null }
             };
 
             // Initialize all categories with 0
@@ -194,8 +341,37 @@ const ExportReports = () => {
                 plResult.expenses[previousYear][category] = 0;
             });
 
+            // === GROSS INCOME CALCULATION ===
+            // Calculate GROSS income for P&L (not NET from bank)
+            // This uses PCRS gross for GMS and grosses up State Contracts
+            const grossIncomeCurrentYear = calculateGrossPLIncome(currentYear, period);
+            const grossIncomePreviousYear = calculateGrossPLIncome(previousYear, period);
+
+            // Store for footnotes and reference
+            plResult.grossIncomeData[currentYear] = grossIncomeCurrentYear;
+            plResult.grossIncomeData[previousYear] = grossIncomePreviousYear;
+
+            // Set gross income as "Fee income" (the accountant's category for all practice income)
+            plResult.income[currentYear]['Fee income'] = grossIncomeCurrentYear.totalGrossIncome;
+            plResult.income[previousYear]['Fee income'] = grossIncomePreviousYear.totalGrossIncome;
+
+            console.log('Gross P&L Income calculated:', {
+                currentYear: {
+                    gmsGross: grossIncomeCurrentYear.gmsGross,
+                    stateContractsGross: grossIncomeCurrentYear.stateContractsGross,
+                    otherIncome: grossIncomeCurrentYear.otherIncome,
+                    totalGrossIncome: grossIncomeCurrentYear.totalGrossIncome,
+                    gmsComplete: grossIncomeCurrentYear.gmsComplete,
+                    withholdingTotal: grossIncomeCurrentYear.totalWithholding,
+                    superannuationTotal: grossIncomeCurrentYear.totalSuperannuation
+                },
+                previousYear: {
+                    totalGrossIncome: grossIncomePreviousYear.totalGrossIncome
+                }
+            });
+
             // Debug: Log first few transactions to understand structure (remove in production)
-            console.log('Processing transactions for P&L...');
+            console.log('Processing transactions for P&L (expenses only - income uses gross calculations)...');
             console.log('Total transactions:', transactions.length);
             console.log('Report period:', period);
 
@@ -247,21 +423,14 @@ const ExportReports = () => {
                 let accountantCategory = transaction.category?.accountantLine || 'Sundry expenses';
 
                 // Add to appropriate section
-                if (type === 'income') {
-                    if (accountantCategory === 'Fee income') {
-                        plResult.income[year]['Fee income'] = (plResult.income[year]['Fee income'] || 0) + amount;
-                        processedCount++;
-                    } else {
-                        // Income categories might not all map to 'Fee income' - let's handle this
-                        plResult.income[year]['Fee income'] = (plResult.income[year]['Fee income'] || 0) + amount;
-                        processedCount++;
-                    }
-                } else if (type === 'expense') {
+                // NOTE: Income is now calculated separately using GROSS values (calculateGrossPLIncome)
+                // So we only process EXPENSES from transactions here
+                if (type === 'expense') {
                     // Initialize to 0 if doesn't exist (for accountantLine values not in old mapping)
                     plResult.expenses[year][accountantCategory] = (plResult.expenses[year][accountantCategory] || 0) + amount;
                     processedCount++;
                 }
-                // Skip drawings as they don't go on P&L
+                // Skip income (handled by gross income calculation) and drawings (don't go on P&L)
             });
 
             // Add manual expenses (don't prorate these as they're manually calculated)
@@ -300,6 +469,7 @@ Check console for detailed debugging information.`);
 
             // After setPLData(plResult) in processTransactionsForPL:
             setPLData(plResult);
+            setShowReportModal(true);
             setProcessing(false);
 
             // Auto-save all reports to library (no confirmation needed)
@@ -333,6 +503,24 @@ Check console for detailed debugging information.`);
                 }
             } catch (error) {
                 console.log('Could not load practice name, using default');
+            }
+
+            // Calculate GMS payment status for this report
+            const gmsPaymentsForYear = paymentAnalysisData?.filter(p => {
+                const paymentYear = new Date(p.paymentDate).getFullYear();
+                return paymentYear === currentYear;
+            }) || [];
+            const gmsMonthsFound = new Set(gmsPaymentsForYear.map(p => new Date(p.paymentDate).getMonth())).size;
+            const gmsComplete = gmsMonthsFound === 12;
+            const gmsMissingMonths = [];
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            if (!gmsComplete) {
+                const monthsWithPayments = new Set(gmsPaymentsForYear.map(p => new Date(p.paymentDate).getMonth()));
+                for (let m = 0; m < 12; m++) {
+                    if (!monthsWithPayments.has(m)) {
+                        gmsMissingMonths.push(monthNames[m]);
+                    }
+                }
             }
 
             // Generate HTML content
@@ -437,10 +625,11 @@ Check console for detailed debugging information.`);
         <h4>⚠️ DRAFT REPORT - Important Notes:</h4>
         <p class="important">This report is a DRAFT and should not be used for official submissions without review by a qualified accountant.</p>
         <ul>
+            <li><strong>GMS Statements:</strong> ${gmsComplete ? `✓ All 12 months of GMS statements uploaded for ${currentYear}` : gmsMonthsFound > 0 ? `⚠ ${gmsMonthsFound}/12 months of GMS statements uploaded. Missing: ${gmsMissingMonths.join(', ')}` : `✗ No GMS statements uploaded for ${currentYear} - withholding tax cannot be calculated`}</li>
             <li><strong>Income Figure:</strong> This represents NET INCOME as recorded in bank transactions (after withholding tax deduction). ${withholdingTaxData.total > 0 ? `Withholding tax has been calculated: €${withholdingTaxData.total.toLocaleString()} (GMS: €${withholdingTaxData.gmsWithholdingTax.toLocaleString()}, State Contracts: €${withholdingTaxData.stateContractTax.toLocaleString()}). Add this to Net Income to calculate GROSS income for tax purposes.` : 'To calculate GROSS income for tax purposes, withholding tax amounts must be gathered from 12 months of PCRS statements and added back to this figure.'}</li>
             <li><strong>Withholding Tax:</strong> ${withholdingTaxData.total > 0 ? `✓ Calculated from PCRS statements: €${withholdingTaxData.total.toLocaleString()} total for ${currentYear}` : '✗ NOT calculated - Upload PCRS GMS panel statements to calculate withholding tax automatically'}</li>
-            <li><strong>Motor Expenses:</strong> ${motorExpenses[currentYear] > 0 || motorExpenses[currentYear - 1] > 0 ? `✓ Calculated and included (${currentYear}: €${motorExpenses[currentYear].toFixed(2)}, ${currentYear - 1}: €${motorExpenses[currentYear - 1].toFixed(2)})` : '✗ NOT calculated - Manual calculation required for private use adjustment'}</li>
-            <li><strong>Depreciation:</strong> ${depreciationExpenses[currentYear] > 0 || depreciationExpenses[currentYear - 1] > 0 ? `✓ Calculated and included (${currentYear}: €${depreciationExpenses[currentYear].toFixed(2)}, ${currentYear - 1}: €${depreciationExpenses[currentYear - 1].toFixed(2)})` : '✗ NOT calculated - Capital allowances need to be calculated separately'}</li>
+            <li><strong>Motor Expenses:</strong> ${motorExpenses[currentYear] > 0 || motorExpenses[currentYear - 1] > 0 ? `✓ Calculated and included (${currentYear}: €${motorExpenses[currentYear].toFixed(2)}, ${currentYear - 1}: €${motorExpenses[currentYear - 1].toFixed(2)})` : '○ NOT calculated - Use the Motor Expenses Calculator for mileage claims'}</li>
+            <li><strong>Depreciation:</strong> ${depreciationExpenses[currentYear] > 0 || depreciationExpenses[currentYear - 1] > 0 ? `✓ Calculated and included (${currentYear}: €${depreciationExpenses[currentYear].toFixed(2)}, ${currentYear - 1}: €${depreciationExpenses[currentYear - 1].toFixed(2)})` : '○ NOT calculated - Use the Depreciation Calculator for capital allowances'}</li>
             <li><strong>Classification:</strong> Some transactions may be partially classified or unclassified. Review the transaction list for accuracy.</li>
             <li><strong>Period:</strong> ${period.isPartialYear ? `This is a YEAR-TO-DATE report covering transactions up to ${period.cutoffDateString}. Full year figures will differ.` : 'This report covers full calendar years.'}</li>
         </ul>
@@ -496,6 +685,24 @@ Check console for detailed debugging information.`);
             [selectedYear]: totalIncome[selectedYear] - totalExpenses[selectedYear],
             [selectedYear - 1]: totalIncome[selectedYear - 1] - totalExpenses[selectedYear - 1]
         };
+
+        // Calculate GMS payment status for print report
+        const gmsPaymentsForYear = paymentAnalysisData?.filter(p => {
+            const paymentYear = new Date(p.paymentDate).getFullYear();
+            return paymentYear === selectedYear;
+        }) || [];
+        const gmsMonthsFound = new Set(gmsPaymentsForYear.map(p => new Date(p.paymentDate).getMonth())).size;
+        const gmsComplete = gmsMonthsFound === 12;
+        const gmsMissingMonths = [];
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        if (!gmsComplete) {
+            const monthsWithPayments = new Set(gmsPaymentsForYear.map(p => new Date(p.paymentDate).getMonth()));
+            for (let m = 0; m < 12; m++) {
+                if (!monthsWithPayments.has(m)) {
+                    gmsMissingMonths.push(monthNames[m]);
+                }
+            }
+        }
 
         const reportTitle = plData.reportPeriod?.isPartialYear ? 'Year to Date Profit & Loss Statement' : 'Profit and Loss Account';
         const periodDescription = plData.reportPeriod?.isPartialYear
@@ -602,14 +809,95 @@ Check console for detailed debugging information.`);
               </tbody>
           </table>
 
+          ${(plData.grossIncomeData?.[selectedYear]?.totalWithholding > 0 || plData.grossIncomeData?.[selectedYear]?.totalSuperannuation > 0) ? `
+          <!-- Footnotes for deductions at source -->
+          <div style="margin-top: 20px; padding: 12px 16px; background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; font-size: 10px; color: #666;">
+              <div style="font-weight: 600; color: #333; margin-bottom: 6px;">Notes - Deductions at Source (not P&L expenses):</div>
+              ${plData.grossIncomeData[selectedYear]?.totalWithholding > 0 ? `<div style="margin-bottom: 3px;">¹ Withholding tax deducted at source: €${plData.grossIncomeData[selectedYear].totalWithholding.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}${plData.grossIncomeData[selectedYear - 1]?.totalWithholding > 0 ? ` (prior year: €${plData.grossIncomeData[selectedYear - 1].totalWithholding.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })})` : ''}</div>` : ''}
+              ${plData.grossIncomeData[selectedYear]?.totalSuperannuation > 0 ? `<div style="margin-bottom: 3px;">² Superannuation deducted at source: €${plData.grossIncomeData[selectedYear].totalSuperannuation.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}${plData.grossIncomeData[selectedYear - 1]?.totalSuperannuation > 0 ? ` (prior year: €${plData.grossIncomeData[selectedYear - 1].totalSuperannuation.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })})` : ''}</div>` : ''}
+              <div style="margin-top: 6px; font-style: italic;">These items are allocated to Partner's Capital Accounts, not treated as P&L expenses.</div>
+          </div>
+          ` : ''}
+
+          ${(!plData.grossIncomeData?.[selectedYear]?.gmsComplete && plData.grossIncomeData?.[selectedYear]?.hasPCRSData) ? `
+          <!-- GMS Incomplete Warning -->
+          <div style="margin-top: 15px; padding: 10px 14px; background-color: #fff3e0; border-left: 4px solid #ff9800; border-radius: 4px; font-size: 10px;">
+              <div style="font-weight: 600; color: #e65100;">⚠️ Incomplete GMS Data for ${selectedYear}</div>
+              <div style="color: #795548;">Only ${plData.grossIncomeData[selectedYear].gmsMonthsFound}/12 months of PCRS statements uploaded. Missing: ${plData.grossIncomeData[selectedYear].gmsMissingMonths?.join(', ')}. GMS income may be understated.</div>
+          </div>
+          ` : ''}
+
+          ${(!plData.grossIncomeData?.[selectedYear]?.hasPCRSData) ? `
+          <!-- No PCRS Data Warning -->
+          <div style="margin-top: 15px; padding: 10px 14px; background-color: #ffebee; border-left: 4px solid #f44336; border-radius: 4px; font-size: 10px;">
+              <div style="font-weight: 600; color: #c62828;">❌ No PCRS Data for ${selectedYear}</div>
+              <div style="color: #795548;">GMS income is based on bank deposits (NET) rather than PCRS statements (GROSS). Upload PCRS GMS statements for accurate gross income calculation.</div>
+          </div>
+          ` : ''}
+
+          <!-- Year-on-Year Comparison Chart -->
+          <div style="margin-top: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+              <h4 style="margin: 0 0 15px 0; font-size: 14px;">Year-on-Year Comparison</h4>
+              <div style="display: flex; gap: 40px;">
+                  <!-- Income Chart -->
+                  <div style="flex: 1; text-align: center;">
+                      <div style="font-size: 11px; color: #666; margin-bottom: 8px; font-weight: 600;">Income</div>
+                      <div style="display: flex; align-items: flex-end; justify-content: center; gap: 10px; height: 80px; border-left: 1px solid #ddd; border-bottom: 1px solid #ddd; padding: 0 15px;">
+                          <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
+                              <div style="width: 40px; height: ${Math.round((totalIncome[selectedYear - 1] / Math.max(totalIncome[selectedYear], totalIncome[selectedYear - 1], 1)) * 60)}px; background-color: #A5D6A7; border-radius: 3px 3px 0 0; min-height: 4px;"></div>
+                              <span style="font-size: 9px; color: #666; margin-top: 3px;">${selectedYear - 1}</span>
+                          </div>
+                          <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
+                              <div style="width: 40px; height: ${Math.round((totalIncome[selectedYear] / Math.max(totalIncome[selectedYear], totalIncome[selectedYear - 1], 1)) * 60)}px; background-color: #4ECDC4; border-radius: 3px 3px 0 0; min-height: 4px;"></div>
+                              <span style="font-size: 9px; color: #333; font-weight: 600; margin-top: 3px;">${selectedYear}</span>
+                          </div>
+                      </div>
+                      <div style="font-size: 12px; font-weight: 600; color: #4ECDC4; margin-top: 8px;">${formatCurrency(totalIncome[selectedYear])}</div>
+                      <div style="font-size: 10px; color: #666;">${totalIncome[selectedYear] >= totalIncome[selectedYear - 1] ? '+' : ''}${((totalIncome[selectedYear] - totalIncome[selectedYear - 1]) / (totalIncome[selectedYear - 1] || 1) * 100).toFixed(1)}%</div>
+                  </div>
+                  <!-- Expenditure Chart -->
+                  <div style="flex: 1; text-align: center;">
+                      <div style="font-size: 11px; color: #666; margin-bottom: 8px; font-weight: 600;">Expenditure</div>
+                      <div style="display: flex; align-items: flex-end; justify-content: center; gap: 10px; height: 80px; border-left: 1px solid #ddd; border-bottom: 1px solid #ddd; padding: 0 15px;">
+                          <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
+                              <div style="width: 40px; height: ${Math.round((totalExpenses[selectedYear - 1] / Math.max(totalExpenses[selectedYear], totalExpenses[selectedYear - 1], 1)) * 60)}px; background-color: #FFCDD2; border-radius: 3px 3px 0 0; min-height: 4px;"></div>
+                              <span style="font-size: 9px; color: #666; margin-top: 3px;">${selectedYear - 1}</span>
+                          </div>
+                          <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
+                              <div style="width: 40px; height: ${Math.round((totalExpenses[selectedYear] / Math.max(totalExpenses[selectedYear], totalExpenses[selectedYear - 1], 1)) * 60)}px; background-color: #FF6B6B; border-radius: 3px 3px 0 0; min-height: 4px;"></div>
+                              <span style="font-size: 9px; color: #333; font-weight: 600; margin-top: 3px;">${selectedYear}</span>
+                          </div>
+                      </div>
+                      <div style="font-size: 12px; font-weight: 600; color: #FF6B6B; margin-top: 8px;">${formatCurrency(totalExpenses[selectedYear])}</div>
+                      <div style="font-size: 10px; color: #666;">${totalExpenses[selectedYear] >= totalExpenses[selectedYear - 1] ? '+' : ''}${((totalExpenses[selectedYear] - totalExpenses[selectedYear - 1]) / (totalExpenses[selectedYear - 1] || 1) * 100).toFixed(1)}%</div>
+                  </div>
+                  <!-- Profit Chart -->
+                  <div style="flex: 1; text-align: center;">
+                      <div style="font-size: 11px; color: #666; margin-bottom: 8px; font-weight: 600;">Net Profit</div>
+                      <div style="display: flex; align-items: flex-end; justify-content: center; gap: 10px; height: 80px; border-left: 1px solid #ddd; border-bottom: 1px solid #ddd; padding: 0 15px;">
+                          <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
+                              <div style="width: 40px; height: ${Math.round((Math.abs(netProfit[selectedYear - 1]) / Math.max(Math.abs(netProfit[selectedYear]), Math.abs(netProfit[selectedYear - 1]), 1)) * 60)}px; background-color: #BBDEFB; border-radius: 3px 3px 0 0; min-height: 4px;"></div>
+                              <span style="font-size: 9px; color: #666; margin-top: 3px;">${selectedYear - 1}</span>
+                          </div>
+                          <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
+                              <div style="width: 40px; height: ${Math.round((Math.abs(netProfit[selectedYear]) / Math.max(Math.abs(netProfit[selectedYear]), Math.abs(netProfit[selectedYear - 1]), 1)) * 60)}px; background-color: #4A90E2; border-radius: 3px 3px 0 0; min-height: 4px;"></div>
+                              <span style="font-size: 9px; color: #333; font-weight: 600; margin-top: 3px;">${selectedYear}</span>
+                          </div>
+                      </div>
+                      <div style="font-size: 12px; font-weight: 600; color: #4A90E2; margin-top: 8px;">${formatCurrency(netProfit[selectedYear])}</div>
+                      <div style="font-size: 10px; color: #666;">${netProfit[selectedYear] >= netProfit[selectedYear - 1] ? '+' : ''}${((netProfit[selectedYear] - netProfit[selectedYear - 1]) / (Math.abs(netProfit[selectedYear - 1]) || 1) * 100).toFixed(1)}%</div>
+                  </div>
+              </div>
+          </div>
+
           <div class="notes">
               <h4>⚠️ DRAFT REPORT - Important Notes:</h4>
               <p class="important">This report is a DRAFT and should not be used for official submissions without review by a qualified accountant.</p>
               <ul>
-                  <li><strong>Income Figure:</strong> This represents NET INCOME as recorded in bank transactions (after withholding tax deduction). ${withholdingTaxData.total > 0 ? `Withholding tax has been calculated: €${withholdingTaxData.total.toLocaleString()} (GMS: €${withholdingTaxData.gmsWithholdingTax.toLocaleString()}, State Contracts: €${withholdingTaxData.stateContractTax.toLocaleString()}). Add this to Net Income to calculate GROSS income for tax purposes.` : 'To calculate GROSS income for tax purposes, withholding tax amounts must be gathered from 12 months of PCRS statements and added back to this figure.'}</li>
-                  <li><strong>Withholding Tax:</strong> ${withholdingTaxData.total > 0 ? `✓ Calculated from PCRS statements: €${withholdingTaxData.total.toLocaleString()} total for ${selectedYear}` : '✗ NOT calculated - Upload PCRS GMS panel statements to calculate withholding tax automatically'}</li>
-                  <li><strong>Motor Expenses:</strong> ${motorExpenses[selectedYear] > 0 || motorExpenses[selectedYear - 1] > 0 ? `✓ Calculated and included (${selectedYear}: €${motorExpenses[selectedYear].toFixed(2)}, ${selectedYear - 1}: €${motorExpenses[selectedYear - 1].toFixed(2)})` : '✗ NOT calculated - Manual calculation required for private use adjustment'}</li>
-                  <li><strong>Depreciation:</strong> ${depreciationExpenses[selectedYear] > 0 || depreciationExpenses[selectedYear - 1] > 0 ? `✓ Calculated and included (${selectedYear}: €${depreciationExpenses[selectedYear].toFixed(2)}, ${selectedYear - 1}: €${depreciationExpenses[selectedYear - 1].toFixed(2)})` : '✗ NOT calculated - Capital allowances need to be calculated separately'}</li>
+                  <li><strong>GMS Statements:</strong> ${plData.grossIncomeData?.[selectedYear]?.gmsComplete ? `✓ All 12 months of GMS statements uploaded for ${selectedYear}` : plData.grossIncomeData?.[selectedYear]?.hasPCRSData ? `⚠ ${plData.grossIncomeData[selectedYear].gmsMonthsFound}/12 months of GMS statements uploaded. Missing: ${plData.grossIncomeData[selectedYear].gmsMissingMonths?.join(', ')}` : `✗ No GMS statements uploaded for ${selectedYear} - using bank NET instead of PCRS GROSS`}</li>
+                  <li><strong>Income Calculation:</strong> ${plData.grossIncomeData?.[selectedYear]?.hasPCRSData ? `✓ Using GROSS income (GMS: €${plData.grossIncomeData[selectedYear].gmsGross?.toLocaleString() || 0} from PCRS, State Contracts grossed up, Other: bank deposits)` : '⚠ Using bank deposits (NET) - upload PCRS statements for accurate GROSS income'}</li>
+                  <li><strong>Motor Expenses:</strong> ${motorExpenses[selectedYear] > 0 || motorExpenses[selectedYear - 1] > 0 ? `✓ Calculated and included (${selectedYear}: €${motorExpenses[selectedYear].toFixed(2)}, ${selectedYear - 1}: €${motorExpenses[selectedYear - 1].toFixed(2)})` : '○ NOT calculated - Use the Motor Expenses Calculator for mileage claims'}</li>
+                  <li><strong>Depreciation:</strong> ${depreciationExpenses[selectedYear] > 0 || depreciationExpenses[selectedYear - 1] > 0 ? `✓ Calculated and included (${selectedYear}: €${depreciationExpenses[selectedYear].toFixed(2)}, ${selectedYear - 1}: €${depreciationExpenses[selectedYear - 1].toFixed(2)})` : '○ NOT calculated - Use the Depreciation Calculator for capital allowances'}</li>
                   <li><strong>Classification:</strong> Some transactions may be partially classified or unclassified. Review the transaction list for accuracy.</li>
                   <li><strong>Period:</strong> ${plData.reportPeriod?.isPartialYear ? `This is a YEAR-TO-DATE report covering transactions up to ${plData.reportPeriod.cutoffDateString}. Full year figures will differ.` : 'This report covers full calendar years.'}</li>
               </ul>
@@ -655,11 +943,34 @@ Check console for detailed debugging information.`);
             ? `YTD_PL_${selectedYear}_${selectedYear - 1}.csv`
             : `Accountant_PL_Format_${selectedYear}_${selectedYear - 1}.csv`;
 
+        // Build footnotes for CSV
+        const footnoteRows = [];
+        if (plData.grossIncomeData?.[selectedYear]?.totalWithholding > 0 || plData.grossIncomeData?.[selectedYear]?.totalSuperannuation > 0) {
+            footnoteRows.push(['', '', '']);
+            footnoteRows.push(['NOTES - Deductions at Source (not P&L expenses)', '', '']);
+            if (plData.grossIncomeData[selectedYear]?.totalWithholding > 0) {
+                footnoteRows.push([
+                    'Withholding tax deducted at source',
+                    plData.grossIncomeData[selectedYear].totalWithholding.toFixed(2),
+                    (plData.grossIncomeData[selectedYear - 1]?.totalWithholding || 0).toFixed(2)
+                ]);
+            }
+            if (plData.grossIncomeData[selectedYear]?.totalSuperannuation > 0) {
+                footnoteRows.push([
+                    'Superannuation deducted at source',
+                    plData.grossIncomeData[selectedYear].totalSuperannuation.toFixed(2),
+                    (plData.grossIncomeData[selectedYear - 1]?.totalSuperannuation || 0).toFixed(2)
+                ]);
+            }
+            footnoteRows.push(['(These items are allocated to Partner\'s Capital Accounts)', '', '']);
+        }
+
         const csvRows = [
             [reportTitle, '', ''],
             [periodDescription, '', ''],
             ['', '', ''],
             ...(plData.reportPeriod?.isPartialYear ? [['Note: Year to Date report comparing same periods for accurate comparison', '', ''], ['', '', '']] : []),
+            ...(plData.grossIncomeData?.[selectedYear]?.hasPCRSData ? [['Note: Income calculated using GROSS values (GMS from PCRS, State Contracts grossed up)', '', ''], ['', '', '']] : [['Note: GMS income based on bank deposits (NET) - upload PCRS statements for GROSS income', '', ''], ['', '', '']]),
             ['Description', `${selectedYear} €`, `${selectedYear - 1} €`],
             ['INCOME', '', ''],
             ['Fee income', plData.income[selectedYear]['Fee income'].toFixed(2), plData.income[selectedYear - 1]['Fee income'].toFixed(2)],
@@ -676,7 +987,8 @@ Check console for detailed debugging information.`);
                 ]),
             ['Total Expenditure', totalExpenses[selectedYear].toFixed(2), totalExpenses[selectedYear - 1].toFixed(2)],
             ['', '', ''],
-            ['Net Divisible Profit', netProfit[selectedYear].toFixed(2), netProfit[selectedYear - 1].toFixed(2)]
+            ['Net Divisible Profit', netProfit[selectedYear].toFixed(2), netProfit[selectedYear - 1].toFixed(2)],
+            ...footnoteRows
         ];
 
         const csvContent = csvRows.map(row =>
@@ -703,508 +1015,935 @@ Check console for detailed debugging information.`);
     const netProfit = totalIncome - totalExpenses;
     const netProfitPrev = totalIncomePrev - totalExpensesPrev;
 
+    // Check GMS payment completeness for the selected year
+    const getGMSPaymentStatus = () => {
+        if (!paymentAnalysisData || paymentAnalysisData.length === 0) {
+            return { complete: false, monthsFound: 0, missingMonths: [], hasAnyData: false };
+        }
+
+        const yearPayments = paymentAnalysisData.filter(p => {
+            const paymentYear = new Date(p.paymentDate).getFullYear();
+            return paymentYear === selectedYear;
+        });
+
+        const monthsWithPayments = new Set();
+        yearPayments.forEach(p => {
+            const month = new Date(p.paymentDate).getMonth();
+            monthsWithPayments.add(month);
+        });
+
+        const allMonths = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const missingMonths = allMonths
+            .filter(m => !monthsWithPayments.has(m))
+            .map(m => monthNames[m]);
+
+        return {
+            complete: missingMonths.length === 0,
+            monthsFound: monthsWithPayments.size,
+            missingMonths,
+            hasAnyData: yearPayments.length > 0
+        };
+    };
+
+    const gmsStatus = getGMSPaymentStatus();
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
-            {/* PRIMARY FEATURE: Professional Accountant P&L */}
+            {/* HEADER: Year Selector */}
             <div style={{
                 backgroundColor: COLORS.white,
                 padding: '24px',
                 borderRadius: '8px',
-                border: `2px solid ${COLORS.slainteBlue}`
+                border: `1px solid ${COLORS.lightGray}`
             }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div>
                         <h2 style={{
                             fontSize: '24px',
                             fontWeight: 'bold',
                             color: COLORS.darkGray,
                             display: 'flex',
-                            alignItems: 'center'
+                            alignItems: 'center',
+                            margin: 0
                         }}>
                             <FileText style={{ height: '24px', width: '24px', marginRight: '12px', color: COLORS.slainteBlue }} />
-                            Professional Accountant P&L Report
+                            Profit & Loss Report
                         </h2>
-                        <p style={{ color: COLORS.mediumGray, marginTop: '8px' }}>
-                            Converts your detailed transactions into professional accountant format
-                            ({Object.keys(accountantMapping).length} standardized expense lines)
+                        <p style={{ color: COLORS.mediumGray, marginTop: '8px', marginBottom: 0 }}>
+                            Generate a professional P&L report for your accountant
                         </p>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
-                        <div style={{
-                            backgroundColor: COLORS.highlightYellow,
-                            color: COLORS.darkGray,
-                            padding: '4px 12px',
-                            borderRadius: '9999px',
-                            fontSize: '14px',
-                            fontWeight: '500',
-                            marginBottom: '8px'
-                        }}>
-                            ⭐ Recommended
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <label style={{ fontSize: '14px', fontWeight: '500', color: COLORS.darkGray }}>Report Year:</label>
+                        <select
+                            value={selectedYear}
+                            onChange={(e) => {
+                                const newYear = parseInt(e.target.value);
+                                if (setSelectedYear && newYear !== selectedYear) {
+                                    setSelectedYear(newYear);
+                                    setPLData(null);
+                                }
+                            }}
+                            style={{
+                                border: `2px solid ${COLORS.slainteBlue}`,
+                                borderRadius: '8px',
+                                padding: '10px 16px',
+                                backgroundColor: COLORS.white,
+                                fontSize: '16px',
+                                fontWeight: '600',
+                                color: COLORS.slainteBlue,
+                                cursor: 'pointer',
+                                minWidth: '100px'
+                            }}
+                            disabled={availableYears.length === 0}
+                        >
+                            {availableYears.length > 0 ? (
+                                availableYears.map(year => (
+                                    <option key={year} value={year}>{year}</option>
+                                ))
+                            ) : (
+                                <option value={selectedYear}>{selectedYear}</option>
+                            )}
+                        </select>
+                    </div>
+                </div>
+                {transactions.length > 0 && (
+                    <div style={{
+                        marginTop: '16px',
+                        padding: '12px 16px',
+                        backgroundColor: COLORS.backgroundGray,
+                        borderRadius: '6px',
+                        display: 'flex',
+                        gap: '24px',
+                        fontSize: '14px'
+                    }}>
+                        <span><strong>{transactions.filter(t => new Date(t.date).getFullYear() === selectedYear).length}</strong> transactions in {selectedYear}</span>
+                        <span><strong>{transactions.filter(t => new Date(t.date).getFullYear() === selectedYear - 1).length}</strong> transactions in {selectedYear - 1}</span>
+                        <span style={{ color: COLORS.mediumGray }}>|</span>
+                        <span style={{ color: reportPeriod.isPartialYear ? COLORS.slainteBlue : COLORS.incomeColor, fontWeight: '500' }}>
+                            {reportPeriod.isPartialYear ? `Year to Date (1 Jan - ${reportPeriod.cutoffDateString})` : 'Full Year Report'}
+                        </span>
+                    </div>
+                )}
+            </div>
+
+            {/* PRE-REQUISITES: GMS & Withholding Tax Status */}
+            <div style={{
+                backgroundColor: COLORS.white,
+                padding: '24px',
+                borderRadius: '8px',
+                border: `1px solid ${COLORS.lightGray}`
+            }}>
+                <h3 style={{ fontSize: '16px', fontWeight: '600', color: COLORS.darkGray, marginTop: 0, marginBottom: '16px' }}>
+                    Data Status for {selectedYear}
+                </h3>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    {/* GMS Payment Status */}
+                    <div style={{
+                        padding: '16px',
+                        borderRadius: '8px',
+                        backgroundColor: gmsStatus.complete ? '#E8F5E9' : gmsStatus.hasAnyData ? '#FFF3E0' : '#FFEBEE',
+                        border: `1px solid ${gmsStatus.complete ? COLORS.incomeColor : gmsStatus.hasAnyData ? '#FFB74D' : COLORS.expenseColor}`
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                            {gmsStatus.complete ? (
+                                <CheckCircle style={{ height: '20px', width: '20px', color: COLORS.incomeColor }} />
+                            ) : (
+                                <AlertCircle style={{ height: '20px', width: '20px', color: gmsStatus.hasAnyData ? '#F57C00' : COLORS.expenseColor }} />
+                            )}
+                            <span style={{ fontWeight: '600', color: COLORS.darkGray }}>GMS Payment Statements</span>
                         </div>
-                        {transactions.length > 0 && (
-                            <div style={{ fontSize: '14px', color: COLORS.mediumGray }}>
-                                <div>{transactions.length} transactions loaded</div>
-                                <div>{transactions.filter(t => new Date(t.date).getFullYear() === selectedYear).length} from {selectedYear} • {transactions.filter(t => new Date(t.date).getFullYear() === selectedYear - 1).length} from {selectedYear - 1}</div>
-                            </div>
+                        <p style={{ fontSize: '14px', color: COLORS.darkGray, margin: 0 }}>
+                            {gmsStatus.complete ? (
+                                <>All 12 months of GMS statements uploaded for {selectedYear}</>
+                            ) : gmsStatus.hasAnyData ? (
+                                <>{gmsStatus.monthsFound}/12 months uploaded. Missing: {gmsStatus.missingMonths.join(', ')}</>
+                            ) : (
+                                <>No GMS statements uploaded for {selectedYear}</>
+                            )}
+                        </p>
+                        {!gmsStatus.complete && (
+                            <p style={{ fontSize: '13px', color: COLORS.mediumGray, margin: '8px 0 0 0' }}>
+                                Upload PCRS GMS panel PDFs in Settings → Data to calculate withholding tax accurately.
+                            </p>
                         )}
                     </div>
-                </div>
 
-                {/* P&L Generation Controls */}
-                <div style={{
-                    backgroundColor: COLORS.backgroundGray,
-                    padding: '24px',
-                    borderRadius: '8px',
-                    marginBottom: '24px'
-                }}>
+                    {/* Withholding Tax Status */}
                     <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                        gap: '24px'
+                        padding: '16px',
+                        borderRadius: '8px',
+                        backgroundColor: withholdingTaxData.total > 0 ? '#E8F5E9' : '#FFF9E6',
+                        border: `1px solid ${withholdingTaxData.total > 0 ? COLORS.incomeColor : '#FFC107'}`
                     }}>
-                        {/* Left side: Generate P&L */}
-                        <div>
-                            <h4 style={{ fontWeight: '500', color: COLORS.slainteBlue, marginBottom: '12px' }}>Generate P&L Report</h4>
-                            <p style={{ fontSize: '14px', color: COLORS.mediumGray, marginBottom: '16px' }}>
-                                {reportPeriod.isPartialYear ? (
-                                    <>
-                                        Generate <strong>Year to Date</strong> P&L comparing {selectedYear} vs {selectedYear - 1}<br />
-                                        <span style={{ color: COLORS.slainteBlue, fontWeight: '500' }}>
-                                            Period: 1 Jan - {reportPeriod.cutoffDateString} (both years)
-                                        </span>
-                                    </>
-                                ) : (
-                                    <>
-                                        Generate <strong>Full Year</strong> P&L comparing {selectedYear} vs {selectedYear - 1}
-                                    </>
-                                )}
-                            </p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                            {withholdingTaxData.total > 0 ? (
+                                <CheckCircle style={{ height: '20px', width: '20px', color: COLORS.incomeColor }} />
+                            ) : (
+                                <AlertCircle style={{ height: '20px', width: '20px', color: '#F57C00' }} />
+                            )}
+                            <span style={{ fontWeight: '600', color: COLORS.darkGray }}>Withholding Tax</span>
+                        </div>
+                        <p style={{ fontSize: '14px', color: COLORS.darkGray, margin: 0 }}>
+                            {withholdingTaxData.total > 0 ? (
+                                <>Calculated: €{withholdingTaxData.total.toLocaleString()} (GMS: €{withholdingTaxData.gmsWithholdingTax.toLocaleString()}, State: €{withholdingTaxData.stateContractTax.toLocaleString()})</>
+                            ) : (
+                                <>Not yet calculated - upload GMS statements to calculate</>
+                            )}
+                        </p>
+                        <p style={{ fontSize: '13px', color: COLORS.mediumGray, margin: '8px 0 0 0' }}>
+                            Bank income shows <strong>net</strong> amounts (after tax deducted). Withholding tax must be added back to calculate <strong>gross</strong> income for tax returns.
+                        </p>
+                    </div>
+                </div>
+            </div>
 
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                <div>
-                                    <label style={{
-                                        display: 'block',
-                                        fontSize: '14px',
-                                        fontWeight: '500',
-                                        color: COLORS.slainteBlue,
-                                        marginBottom: '4px'
-                                    }}>Report Year</label>
-                                    <select
-                                        value={selectedYear}
-                                        onChange={(e) => {
-                                            const newYear = parseInt(e.target.value);
-                                            if (setSelectedYear && newYear !== selectedYear) {
-                                                setSelectedYear(newYear);
-                                                // Clear P&L data when year changes - user needs to regenerate
-                                                setPLData(null);
-                                            }
-                                        }}
-                                        style={{
-                                            width: '100%',
-                                            border: `1px solid ${COLORS.lightGray}`,
-                                            borderRadius: '6px',
-                                            padding: '8px 12px',
-                                            backgroundColor: COLORS.white
-                                        }}
-                                        disabled={availableYears.length === 0}
-                                    >
-                                        {availableYears.length > 0 ? (
-                                            availableYears.map(year => (
-                                                <option key={year} value={year}>{year}</option>
-                                            ))
-                                        ) : (
-                                            <option value={selectedYear}>{selectedYear} (No data)</option>
-                                        )}
-                                    </select>
-                                    <p style={{ fontSize: '12px', color: COLORS.slainteBlue, marginTop: '4px' }}>
-                                        {reportPeriod.isPartialYear ? (
-                                            <>
-                                                Year to Date report: 1 Jan - {reportPeriod.cutoffDateString} • {transactions.filter(t => {
-                                                    const date = new Date(t.date);
-                                                    return date.getFullYear() === selectedYear && date <= reportPeriod.cutoffDate;
-                                                }).length} transactions in period
-                                            </>
-                                        ) : (
-                                            <>
-                                                Will compare {selectedYear} vs {selectedYear - 1} • {transactions.filter(t => new Date(t.date).getFullYear() === selectedYear).length} transactions in {selectedYear}
-                                            </>
-                                        )}
-                                        {plData && <span style={{ color: COLORS.expenseColor, fontWeight: '500', marginLeft: '8px' }}>→ Click "Generate P&L Report" to update</span>}
-                                    </p>
+            {/* OPTIONAL CALCULATIONS: Motor & Depreciation */}
+            <div style={{
+                backgroundColor: COLORS.white,
+                padding: '24px',
+                borderRadius: '8px',
+                border: `1px solid ${COLORS.lightGray}`
+            }}>
+                <h3 style={{ fontSize: '16px', fontWeight: '600', color: COLORS.darkGray, marginTop: 0, marginBottom: '8px' }}>
+                    Optional Calculations
+                </h3>
+                <p style={{ fontSize: '14px', color: COLORS.mediumGray, marginBottom: '16px' }}>
+                    For a complete P&L report, these calculations should be completed. You can generate a draft report without them,
+                    but the draft will indicate that these figures are missing.
+                </p>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    {/* Motor Expenses Calculator Card */}
+                    <div style={{
+                        padding: '20px',
+                        borderRadius: '8px',
+                        border: `1px solid ${motorExpenses[selectedYear] > 0 ? COLORS.incomeColor : COLORS.lightGray}`,
+                        backgroundColor: motorExpenses[selectedYear] > 0 ? '#E8F5E9' : COLORS.backgroundGray
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <div style={{
+                                    width: '40px',
+                                    height: '40px',
+                                    borderRadius: '8px',
+                                    backgroundColor: COLORS.slainteBlue,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}>
+                                    <Car style={{ height: '20px', width: '20px', color: COLORS.white }} />
                                 </div>
-
-                                <button
-                                    onClick={processTransactionsForPL}
-                                    disabled={transactions.length === 0 || processing}
-                                    style={{
-                                        width: '100%',
-                                        backgroundColor: transactions.length === 0 || processing ? COLORS.mediumGray : COLORS.slainteBlue,
-                                        color: COLORS.white,
-                                        padding: '12px 16px',
-                                        borderRadius: '8px',
-                                        border: 'none',
-                                        cursor: transactions.length === 0 || processing ? 'not-allowed' : 'pointer',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        fontWeight: '500',
-                                        transition: 'background-color 0.2s'
-                                    }}
-                                    onMouseEnter={(e) => {
-                                        if (transactions.length > 0 && !processing) {
-                                            e.currentTarget.style.backgroundColor = COLORS.slainteBlueDark;
-                                        }
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        if (transactions.length > 0 && !processing) {
-                                            e.currentTarget.style.backgroundColor = COLORS.slainteBlue;
-                                        }
-                                    }}
-                                >
-                                    {processing ? (
-                                        <>
-                                            <div style={{
-                                                animation: 'spin 1s linear infinite',
-                                                borderRadius: '50%',
-                                                height: '16px',
-                                                width: '16px',
-                                                border: `2px solid ${COLORS.white}`,
-                                                borderTopColor: 'transparent',
-                                                marginRight: '8px'
-                                            }}></div>
-                                            Processing...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Calculator style={{ height: '20px', width: '20px', marginRight: '8px' }} />
-                                            Generate P&L Report
-                                        </>
-                                    )}
-                                </button>
-
-                                {transactions.length === 0 && (
-                                    <p style={{ fontSize: '12px', color: COLORS.expenseColor }}>Upload transaction data first to generate P&L report</p>
-                                )}
+                                <div>
+                                    <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '600', color: COLORS.darkGray }}>Motor Expenses</h4>
+                                    <p style={{ margin: 0, fontSize: '13px', color: COLORS.mediumGray }}>Business mileage calculator</p>
+                                </div>
                             </div>
+                            {motorExpenses[selectedYear] > 0 && (
+                                <CheckCircle style={{ height: '20px', width: '20px', color: COLORS.incomeColor }} />
+                            )}
                         </div>
 
-                        {/* Right side: Manual Calculations */}
-                        <div>
-                            <h4 style={{ fontWeight: '500', color: COLORS.slainteBlue, marginBottom: '12px' }}>Optional Manual Calculations</h4>
-                            <p style={{ fontSize: '14px', color: COLORS.mediumGray, marginBottom: '16px' }}>
-                                Add expenses not captured in transaction data:
+                        {motorExpenses[selectedYear] > 0 || motorExpenses[selectedYear - 1] > 0 ? (
+                            <div style={{ marginBottom: '12px', padding: '10px', backgroundColor: COLORS.white, borderRadius: '6px' }}>
+                                <div style={{ fontSize: '14px', color: COLORS.darkGray }}>
+                                    <strong>{selectedYear}:</strong> €{motorExpenses[selectedYear].toFixed(2)}
+                                </div>
+                                <div style={{ fontSize: '14px', color: COLORS.mediumGray }}>
+                                    <strong>{selectedYear - 1}:</strong> €{motorExpenses[selectedYear - 1].toFixed(2)}
+                                </div>
+                            </div>
+                        ) : (
+                            <p style={{ fontSize: '13px', color: COLORS.mediumGray, marginBottom: '12px' }}>
+                                Calculate business mileage using Irish Civil Service rates. Required for claiming motor expenses.
                             </p>
+                        )}
 
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                <button
-                                    onClick={() => setShowMotorCalculator(true)}
-                                    style={{
-                                        width: '100%',
-                                        backgroundColor: COLORS.slainteBlue,
-                                        color: COLORS.white,
-                                        padding: '8px 16px',
-                                        borderRadius: '8px',
-                                        border: `1px solid ${COLORS.slainteBlueDark}`,
-                                        cursor: 'pointer',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'space-between',
-                                        fontSize: '14px',
-                                        transition: 'background-color 0.2s'
-                                    }}
-                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.slainteBlueDark}
-                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.slainteBlue}
-                                >
-                                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                                        <Car style={{ height: '16px', width: '16px', marginRight: '8px' }} />
-                                        Motor Expenses Calculator
-                                    </div>
-                                    {motorExpenses[selectedYear] > 0 && (
-                                        <span style={{
-                                            backgroundColor: COLORS.white,
-                                            color: COLORS.slainteBlue,
-                                            padding: '2px 8px',
-                                            borderRadius: '4px',
-                                            fontSize: '12px',
-                                            fontWeight: '500'
-                                        }}>
-                                            {formatCurrency(motorExpenses[selectedYear])}
-                                        </span>
-                                    )}
-                                </button>
+                        <button
+                            onClick={() => setShowMotorCalculator(true)}
+                            style={{
+                                width: '100%',
+                                backgroundColor: motorExpenses[selectedYear] > 0 ? COLORS.white : COLORS.slainteBlue,
+                                color: motorExpenses[selectedYear] > 0 ? COLORS.slainteBlue : COLORS.white,
+                                padding: '10px 16px',
+                                borderRadius: '6px',
+                                border: motorExpenses[selectedYear] > 0 ? `1px solid ${COLORS.slainteBlue}` : 'none',
+                                cursor: 'pointer',
+                                fontWeight: '500',
+                                fontSize: '14px'
+                            }}
+                        >
+                            {motorExpenses[selectedYear] > 0 ? 'Edit Calculation' : 'Open Calculator'}
+                        </button>
+                    </div>
 
-                                <button
-                                    onClick={() => setShowDepreciationCalculator(true)}
-                                    style={{
-                                        width: '100%',
-                                        backgroundColor: COLORS.slainteBlue,
-                                        color: COLORS.white,
-                                        padding: '8px 16px',
-                                        borderRadius: '8px',
-                                        border: `1px solid ${COLORS.slainteBlueDark}`,
-                                        cursor: 'pointer',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'space-between',
-                                        fontSize: '14px',
-                                        transition: 'background-color 0.2s'
-                                    }}
-                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.slainteBlueDark}
-                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.slainteBlue}
-                                >
-                                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                                        <Building style={{ height: '16px', width: '16px', marginRight: '8px' }} />
-                                        Depreciation Calculator
-                                    </div>
-                                    {depreciationExpenses[selectedYear] > 0 && (
-                                        <span style={{
-                                            backgroundColor: COLORS.white,
-                                            color: COLORS.slainteBlue,
-                                            padding: '2px 8px',
-                                            borderRadius: '4px',
-                                            fontSize: '12px',
-                                            fontWeight: '500'
-                                        }}>
-                                            {formatCurrency(depreciationExpenses[selectedYear])}
-                                        </span>
-                                    )}
-                                </button>
-
-                                <p style={{ fontSize: '12px', color: COLORS.slainteBlue, marginTop: '8px' }}>
-                                    💡 Add manual calculations first, then generate P&L report
-                                </p>
+                    {/* Depreciation Calculator Card */}
+                    <div style={{
+                        padding: '20px',
+                        borderRadius: '8px',
+                        border: `1px solid ${depreciationExpenses[selectedYear] > 0 ? COLORS.incomeColor : COLORS.lightGray}`,
+                        backgroundColor: depreciationExpenses[selectedYear] > 0 ? '#E8F5E9' : COLORS.backgroundGray
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <div style={{
+                                    width: '40px',
+                                    height: '40px',
+                                    borderRadius: '8px',
+                                    backgroundColor: '#9C27B0',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}>
+                                    <Building style={{ height: '20px', width: '20px', color: COLORS.white }} />
+                                </div>
+                                <div>
+                                    <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '600', color: COLORS.darkGray }}>Depreciation</h4>
+                                    <p style={{ margin: 0, fontSize: '13px', color: COLORS.mediumGray }}>Capital allowances calculator</p>
+                                </div>
                             </div>
+                            {depreciationExpenses[selectedYear] > 0 && (
+                                <CheckCircle style={{ height: '20px', width: '20px', color: COLORS.incomeColor }} />
+                            )}
                         </div>
+
+                        {depreciationExpenses[selectedYear] > 0 || depreciationExpenses[selectedYear - 1] > 0 ? (
+                            <div style={{ marginBottom: '12px', padding: '10px', backgroundColor: COLORS.white, borderRadius: '6px' }}>
+                                <div style={{ fontSize: '14px', color: COLORS.darkGray }}>
+                                    <strong>{selectedYear}:</strong> €{depreciationExpenses[selectedYear].toFixed(2)}
+                                </div>
+                                <div style={{ fontSize: '14px', color: COLORS.mediumGray }}>
+                                    <strong>{selectedYear - 1}:</strong> €{depreciationExpenses[selectedYear - 1].toFixed(2)}
+                                </div>
+                            </div>
+                        ) : (
+                            <p style={{ fontSize: '13px', color: COLORS.mediumGray, marginBottom: '12px' }}>
+                                Calculate capital allowances on equipment, furniture, and other assets using straight-line depreciation.
+                            </p>
+                        )}
+
+                        <button
+                            onClick={() => setShowDepreciationCalculator(true)}
+                            style={{
+                                width: '100%',
+                                backgroundColor: depreciationExpenses[selectedYear] > 0 ? COLORS.white : '#9C27B0',
+                                color: depreciationExpenses[selectedYear] > 0 ? '#9C27B0' : COLORS.white,
+                                padding: '10px 16px',
+                                borderRadius: '6px',
+                                border: depreciationExpenses[selectedYear] > 0 ? '1px solid #9C27B0' : 'none',
+                                cursor: 'pointer',
+                                fontWeight: '500',
+                                fontSize: '14px'
+                            }}
+                        >
+                            {depreciationExpenses[selectedYear] > 0 ? 'Edit Calculation' : 'Open Calculator'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* GENERATE BUTTON */}
+            <div style={{
+                backgroundColor: COLORS.white,
+                padding: '24px',
+                borderRadius: '8px',
+                border: `2px solid ${COLORS.slainteBlue}`
+            }}>
+                {/* Summary of what will be included/missing */}
+                <div style={{ marginBottom: '20px' }}>
+                    <h3 style={{ fontSize: '16px', fontWeight: '600', color: COLORS.darkGray, marginTop: 0, marginBottom: '12px' }}>
+                        Report Summary
+                    </h3>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                        <span style={{
+                            padding: '6px 12px',
+                            borderRadius: '20px',
+                            fontSize: '13px',
+                            fontWeight: '500',
+                            backgroundColor: transactions.length > 0 ? '#E8F5E9' : '#FFEBEE',
+                            color: transactions.length > 0 ? COLORS.incomeColor : COLORS.expenseColor
+                        }}>
+                            {transactions.length > 0 ? '✓' : '✗'} Bank Transactions
+                        </span>
+                        <span style={{
+                            padding: '6px 12px',
+                            borderRadius: '20px',
+                            fontSize: '13px',
+                            fontWeight: '500',
+                            backgroundColor: gmsStatus.complete ? '#E8F5E9' : gmsStatus.hasAnyData ? '#FFF3E0' : '#FFEBEE',
+                            color: gmsStatus.complete ? COLORS.incomeColor : gmsStatus.hasAnyData ? '#E65100' : COLORS.expenseColor
+                        }}>
+                            {gmsStatus.complete ? '✓' : gmsStatus.hasAnyData ? '~' : '✗'} GMS Statements ({gmsStatus.monthsFound}/12)
+                        </span>
+                        <span style={{
+                            padding: '6px 12px',
+                            borderRadius: '20px',
+                            fontSize: '13px',
+                            fontWeight: '500',
+                            backgroundColor: withholdingTaxData.total > 0 ? '#E8F5E9' : '#FFF3E0',
+                            color: withholdingTaxData.total > 0 ? COLORS.incomeColor : '#E65100'
+                        }}>
+                            {withholdingTaxData.total > 0 ? '✓' : '~'} Withholding Tax
+                        </span>
+                        <span style={{
+                            padding: '6px 12px',
+                            borderRadius: '20px',
+                            fontSize: '13px',
+                            fontWeight: '500',
+                            backgroundColor: motorExpenses[selectedYear] > 0 ? '#E8F5E9' : COLORS.backgroundGray,
+                            color: motorExpenses[selectedYear] > 0 ? COLORS.incomeColor : COLORS.mediumGray
+                        }}>
+                            {motorExpenses[selectedYear] > 0 ? '✓' : '○'} Motor Expenses
+                        </span>
+                        <span style={{
+                            padding: '6px 12px',
+                            borderRadius: '20px',
+                            fontSize: '13px',
+                            fontWeight: '500',
+                            backgroundColor: depreciationExpenses[selectedYear] > 0 ? '#E8F5E9' : COLORS.backgroundGray,
+                            color: depreciationExpenses[selectedYear] > 0 ? COLORS.incomeColor : COLORS.mediumGray
+                        }}>
+                            {depreciationExpenses[selectedYear] > 0 ? '✓' : '○'} Depreciation
+                        </span>
                     </div>
                 </div>
 
-                {/* P&L Results Display */}
-                {plData && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                        {/* Success Message */}
-                        <div style={{
-                            backgroundColor: '#E8F5E9',
-                            padding: '16px',
-                            borderRadius: '8px',
-                            border: `1px solid ${COLORS.incomeColor}`
-                        }}>
-                            <div style={{ display: 'flex', alignItems: 'center' }}>
-                                <CheckCircle style={{ height: '20px', width: '20px', color: COLORS.incomeColor, marginRight: '8px' }} />
-                                <span style={{ fontSize: '14px', fontWeight: '500', color: COLORS.darkGray }}>
-                                    {plData.reportPeriod?.isPartialYear ? (
-                                        <>
-                                            <strong>Year to Date</strong> P&L Report Generated Successfully!
-                                            <span style={{ fontWeight: 'normal', marginLeft: '4px' }}>
-                                                Comparing 1 Jan - {plData.reportPeriod.cutoffDateString} for {selectedYear} vs {selectedYear - 1}. Saved to your report library.
-                                            </span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <strong>Full Year</strong> P&L Report Generated Successfully!
-                                            <span style={{ fontWeight: 'normal', marginLeft: '4px' }}>
-                                                Report saved to your library. Ready to export.
-                                            </span>
-                                        </>
-                                    )}
-                                </span>
-                            </div>
-                        </div>
-                        {/* P&L Table */}
-                        <div style={{
-                            backgroundColor: COLORS.white,
-                            border: `1px solid ${COLORS.lightGray}`,
-                            borderRadius: '8px',
-                            overflow: 'hidden'
-                        }}>
+                <button
+                    onClick={processTransactionsForPL}
+                    disabled={transactions.length === 0 || processing}
+                    style={{
+                        width: '100%',
+                        backgroundColor: transactions.length === 0 || processing ? COLORS.mediumGray : COLORS.slainteBlue,
+                        color: COLORS.white,
+                        padding: '16px 24px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        cursor: transactions.length === 0 || processing ? 'not-allowed' : 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: '600',
+                        fontSize: '16px',
+                        transition: 'background-color 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                        if (transactions.length > 0 && !processing) {
+                            e.currentTarget.style.backgroundColor = COLORS.slainteBlueDark;
+                        }
+                    }}
+                    onMouseLeave={(e) => {
+                        if (transactions.length > 0 && !processing) {
+                            e.currentTarget.style.backgroundColor = COLORS.slainteBlue;
+                        }
+                    }}
+                >
+                    {processing ? (
+                        <>
                             <div style={{
-                                backgroundColor: COLORS.backgroundGray,
-                                padding: '12px 24px',
-                                borderBottom: `1px solid ${COLORS.lightGray}`
-                            }}>
-                                <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '8px', color: COLORS.darkGray }}>
+                                animation: 'spin 1s linear infinite',
+                                borderRadius: '50%',
+                                height: '20px',
+                                width: '20px',
+                                border: `2px solid ${COLORS.white}`,
+                                borderTopColor: 'transparent',
+                                marginRight: '10px'
+                            }}></div>
+                            Generating Report...
+                        </>
+                    ) : (
+                        <>
+                            <Calculator style={{ height: '20px', width: '20px', marginRight: '10px' }} />
+                            Generate P&L Report for {selectedYear}
+                        </>
+                    )}
+                </button>
+
+                {transactions.length === 0 && (
+                    <p style={{ fontSize: '14px', color: COLORS.expenseColor, textAlign: 'center', marginTop: '12px', marginBottom: 0 }}>
+                        Upload bank transaction data first to generate a P&L report
+                    </p>
+                )}
+
+                {transactions.length > 0 && (motorExpenses[selectedYear] === 0 || depreciationExpenses[selectedYear] === 0 || !gmsStatus.complete) && (
+                    <p style={{ fontSize: '13px', color: COLORS.mediumGray, textAlign: 'center', marginTop: '12px', marginBottom: 0 }}>
+                        Report will be marked as <strong>DRAFT</strong> with notes about missing calculations
+                    </p>
+                )}
+            </div>
+
+            {/* P&L Report Modal */}
+            {showReportModal && plData && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        inset: 0,
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 9999,
+                        padding: '2rem'
+                    }}
+                    onClick={() => setShowReportModal(false)}
+                >
+                    <div
+                        style={{
+                            backgroundColor: COLORS.white,
+                            borderRadius: '16px',
+                            maxWidth: '900px',
+                            width: '100%',
+                            maxHeight: '90vh',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+                            overflow: 'hidden'
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Modal Header */}
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: '1rem 1.5rem',
+                            borderBottom: `1px solid ${COLORS.lightGray}`,
+                            backgroundColor: COLORS.backgroundGray,
+                            flexShrink: 0
+                        }}>
+                            <div>
+                                <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600, color: COLORS.darkGray }}>
                                     {practiceName}
                                 </h2>
-                                <h3 style={{ fontSize: '18px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    {plData.reportPeriod?.isPartialYear ? 'Year to Date' : 'Full Year'} Profit & Loss Statement
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                                    <span style={{ fontSize: '1rem', color: COLORS.mediumGray }}>
+                                        {plData.reportPeriod?.isPartialYear ? 'Year to Date' : 'Full Year'} P&L Statement
+                                    </span>
                                     <span style={{
                                         backgroundColor: '#ff6b6b',
                                         color: 'white',
-                                        padding: '4px 12px',
+                                        padding: '2px 8px',
                                         borderRadius: '4px',
-                                        fontSize: '11px',
+                                        fontSize: '10px',
                                         fontWeight: 'bold'
                                     }}>DRAFT</span>
-                                </h3>
-                                <p style={{ fontSize: '14px', color: COLORS.mediumGray }}>
-                                    {plData.reportPeriod?.isPartialYear ? (
-                                        <>Period: 1 January - {plData.reportPeriod.cutoffDateString} for years {selectedYear} and {selectedYear - 1}</>
-                                    ) : (
-                                        <>Years ended 31st December {selectedYear} and {selectedYear - 1}</>
-                                    )}
-                                </p>
+                                </div>
                             </div>
+                            <button
+                                onClick={() => setShowReportModal(false)}
+                                style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    padding: '0.5rem',
+                                    cursor: 'pointer',
+                                    borderRadius: '0.375rem',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.lightGray}
+                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                            >
+                                <X style={{ width: '1.25rem', height: '1.25rem', color: COLORS.mediumGray }} />
+                            </button>
+                        </div>
 
-                            <div style={{ padding: '24px' }}>
-                                <div style={{ fontFamily: 'monospace', fontSize: '14px' }}>
-                                    {/* Header */}
-                                    <div style={{
-                                        display: 'flex',
-                                        borderBottom: `1px solid ${COLORS.lightGray}`,
-                                        paddingBottom: '8px',
-                                        marginBottom: '16px',
-                                        fontWeight: '600'
-                                    }}>
-                                        <span style={{ flex: 1 }}>Description</span>
-                                        <span style={{ textAlign: 'right', width: '128px' }}>{selectedYear} €</span>
-                                        <span style={{ textAlign: 'right', width: '128px' }}>{selectedYear - 1} €</span>
-                                    </div>
+                        {/* Modal Content - Scrollable */}
+                        <div style={{ flex: 1, overflow: 'auto', padding: '1.5rem' }}>
+                            {/* P&L Table */}
+                            <div style={{
+                                backgroundColor: COLORS.white,
+                                border: `1px solid ${COLORS.lightGray}`,
+                                borderRadius: '8px',
+                                overflow: 'hidden',
+                                marginBottom: '1.5rem'
+                            }}>
+                                <div style={{
+                                    backgroundColor: COLORS.backgroundGray,
+                                    padding: '12px 24px',
+                                    borderBottom: `1px solid ${COLORS.lightGray}`
+                                }}>
+                                    <p style={{ fontSize: '14px', color: COLORS.mediumGray, margin: 0 }}>
+                                        {plData.reportPeriod?.isPartialYear ? (
+                                            <>Period: 1 January - {plData.reportPeriod.cutoffDateString} for years {selectedYear} and {selectedYear - 1}</>
+                                        ) : (
+                                            <>Years ended 31st December {selectedYear} and {selectedYear - 1}</>
+                                        )}
+                                    </p>
+                                </div>
 
-                                    {/* Income Section */}
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px' }}>
+                                <div style={{ padding: '24px' }}>
+                                    <div style={{ fontFamily: 'monospace', fontSize: '14px' }}>
+                                        {/* Header */}
                                         <div style={{
                                             display: 'flex',
-                                            fontWeight: '600',
-                                            backgroundColor: '#E3F2FD',
-                                            padding: '8px',
-                                            borderRadius: '4px'
+                                            borderBottom: `1px solid ${COLORS.lightGray}`,
+                                            paddingBottom: '8px',
+                                            marginBottom: '16px',
+                                            fontWeight: '600'
                                         }}>
-                                            <span style={{ flex: 1 }}>INCOME</span>
-                                            <span style={{ textAlign: 'right', width: '128px' }}></span>
-                                            <span style={{ textAlign: 'right', width: '128px' }}></span>
+                                            <span style={{ flex: 1 }}>Description</span>
+                                            <span style={{ textAlign: 'right', width: '128px' }}>{selectedYear} €</span>
+                                            <span style={{ textAlign: 'right', width: '128px' }}>{selectedYear - 1} €</span>
                                         </div>
-                                        <div style={{ display: 'flex' }}>
-                                            <span style={{ flex: 1 }}>Fee income</span>
-                                            <span style={{ textAlign: 'right', width: '128px' }}>{formatCurrency(plData.income[selectedYear]['Fee income'])}</span>
-                                            <span style={{ textAlign: 'right', width: '128px' }}>{formatCurrency(plData.income[selectedYear - 1]['Fee income'])}</span>
+
+                                        {/* Income Section */}
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px' }}>
+                                            <div style={{
+                                                display: 'flex',
+                                                fontWeight: '600',
+                                                backgroundColor: '#E3F2FD',
+                                                padding: '8px',
+                                                borderRadius: '4px'
+                                            }}>
+                                                <span style={{ flex: 1 }}>INCOME</span>
+                                                <span style={{ textAlign: 'right', width: '128px' }}></span>
+                                                <span style={{ textAlign: 'right', width: '128px' }}></span>
+                                            </div>
+                                            <div style={{ display: 'flex' }}>
+                                                <span style={{ flex: 1 }}>Fee income</span>
+                                                <span style={{ textAlign: 'right', width: '128px' }}>{formatCurrency(plData.income[selectedYear]['Fee income'])}</span>
+                                                <span style={{ textAlign: 'right', width: '128px' }}>{formatCurrency(plData.income[selectedYear - 1]['Fee income'])}</span>
+                                            </div>
+                                            <div style={{
+                                                display: 'flex',
+                                                fontWeight: '600',
+                                                borderTop: `1px solid ${COLORS.lightGray}`,
+                                                paddingTop: '8px'
+                                            }}>
+                                                <span style={{ flex: 1 }}>Total Income</span>
+                                                <span style={{ textAlign: 'right', width: '128px' }}>{formatCurrency(totalIncome)}</span>
+                                                <span style={{ textAlign: 'right', width: '128px' }}>{formatCurrency(totalIncomePrev)}</span>
+                                            </div>
                                         </div>
+
+                                        {/* Expenses Section */}
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px' }}>
+                                            <div style={{
+                                                display: 'flex',
+                                                fontWeight: '600',
+                                                backgroundColor: '#FFEBEE',
+                                                padding: '8px',
+                                                borderRadius: '4px'
+                                            }}>
+                                                <span style={{ flex: 1 }}>EXPENDITURE</span>
+                                                <span style={{ textAlign: 'right', width: '128px' }}></span>
+                                                <span style={{ textAlign: 'right', width: '128px' }}></span>
+                                            </div>
+                                            {Object.entries(plData.expenses[selectedYear])
+                                                .filter(([_, amount]) => amount > 0)
+                                                .sort(([a], [b]) => a.localeCompare(b))
+                                                .map(([category, amount]) => (
+                                                    <div key={category} style={{ display: 'flex' }}>
+                                                        <span style={{ flex: 1 }}>{category}</span>
+                                                        <span style={{ textAlign: 'right', width: '128px' }}>{formatCurrency(amount)}</span>
+                                                        <span style={{ textAlign: 'right', width: '128px' }}>{formatCurrency(plData.expenses[selectedYear - 1][category] || 0)}</span>
+                                                    </div>
+                                                ))}
+                                            <div style={{
+                                                display: 'flex',
+                                                fontWeight: '600',
+                                                borderTop: `1px solid ${COLORS.lightGray}`,
+                                                paddingTop: '8px'
+                                            }}>
+                                                <span style={{ flex: 1 }}>Total Expenditure</span>
+                                                <span style={{ textAlign: 'right', width: '128px' }}>({formatCurrency(totalExpenses)})</span>
+                                                <span style={{ textAlign: 'right', width: '128px' }}>({formatCurrency(totalExpensesPrev)})</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Profit Section */}
                                         <div style={{
-                                            display: 'flex',
-                                            fontWeight: '600',
                                             borderTop: `1px solid ${COLORS.lightGray}`,
-                                            paddingTop: '8px'
-                                        }}>
-                                            <span style={{ flex: 1 }}>Total Income</span>
-                                            <span style={{ textAlign: 'right', width: '128px' }}>{formatCurrency(totalIncome)}</span>
-                                            <span style={{ textAlign: 'right', width: '128px' }}>{formatCurrency(totalIncomePrev)}</span>
-                                        </div>
-                                    </div>
-
-                                    {/* Expenses Section */}
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px' }}>
-                                        <div style={{
+                                            paddingTop: '16px',
                                             display: 'flex',
-                                            fontWeight: '600',
-                                            backgroundColor: '#FFEBEE',
-                                            padding: '8px',
-                                            borderRadius: '4px'
+                                            flexDirection: 'column',
+                                            gap: '8px'
                                         }}>
-                                            <span style={{ flex: 1 }}>EXPENDITURE</span>
-                                            <span style={{ textAlign: 'right', width: '128px' }}></span>
-                                            <span style={{ textAlign: 'right', width: '128px' }}></span>
+                                            <div style={{ display: 'flex', fontWeight: '600' }}>
+                                                <span style={{ flex: 1 }}>Profit before appropriation</span>
+                                                <span style={{ textAlign: 'right', width: '128px' }}>{formatCurrency(netProfit)}</span>
+                                                <span style={{ textAlign: 'right', width: '128px' }}>{formatCurrency(netProfitPrev)}</span>
+                                            </div>
+                                            <div style={{ display: 'flex', fontWeight: 'bold', fontSize: '18px' }}>
+                                                <span style={{ flex: 1 }}>Net Divisible Profit</span>
+                                                <span style={{ textAlign: 'right', width: '128px' }}>{formatCurrency(netProfit)}</span>
+                                                <span style={{ textAlign: 'right', width: '128px' }}>{formatCurrency(netProfitPrev)}</span>
+                                            </div>
                                         </div>
-                                        {Object.entries(plData.expenses[selectedYear])
-                                            .filter(([_, amount]) => amount > 0)
-                                            .sort(([a], [b]) => a.localeCompare(b))
-                                            .map(([category, amount]) => (
-                                                <div key={category} style={{ display: 'flex' }}>
-                                                    <span style={{ flex: 1 }}>{category}</span>
-                                                    <span style={{ textAlign: 'right', width: '128px' }}>{formatCurrency(amount)}</span>
-                                                    <span style={{ textAlign: 'right', width: '128px' }}>{formatCurrency(plData.expenses[selectedYear - 1][category] || 0)}</span>
+
+                                        {/* Footnotes for deductions at source */}
+                                        {plData.grossIncomeData && (plData.grossIncomeData[selectedYear]?.totalWithholding > 0 || plData.grossIncomeData[selectedYear]?.totalSuperannuation > 0) && (
+                                            <div style={{
+                                                marginTop: '24px',
+                                                paddingTop: '16px',
+                                                borderTop: `1px solid ${COLORS.lightGray}`,
+                                                fontSize: '12px',
+                                                color: COLORS.mediumGray
+                                            }}>
+                                                <div style={{ fontWeight: '600', marginBottom: '8px', color: COLORS.darkGray }}>
+                                                    Notes - Deductions at Source (not P&L expenses):
                                                 </div>
-                                            ))}
-                                        <div style={{
-                                            display: 'flex',
-                                            fontWeight: '600',
-                                            borderTop: `1px solid ${COLORS.lightGray}`,
-                                            paddingTop: '8px'
-                                        }}>
-                                            <span style={{ flex: 1 }}>Total Expenditure</span>
-                                            <span style={{ textAlign: 'right', width: '128px' }}>({formatCurrency(totalExpenses)})</span>
-                                            <span style={{ textAlign: 'right', width: '128px' }}>({formatCurrency(totalExpensesPrev)})</span>
-                                        </div>
-                                    </div>
-
-                                    {/* Profit Section */}
-                                    <div style={{
-                                        borderTop: `1px solid ${COLORS.lightGray}`,
-                                        paddingTop: '16px',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        gap: '8px'
-                                    }}>
-                                        <div style={{ display: 'flex', fontWeight: '600' }}>
-                                            <span style={{ flex: 1 }}>Profit before appropriation</span>
-                                            <span style={{ textAlign: 'right', width: '128px' }}>{formatCurrency(netProfit)}</span>
-                                            <span style={{ textAlign: 'right', width: '128px' }}>{formatCurrency(netProfitPrev)}</span>
-                                        </div>
-                                        <div style={{ display: 'flex', fontWeight: 'bold', fontSize: '18px' }}>
-                                            <span style={{ flex: 1 }}>Net Divisible Profit</span>
-                                            <span style={{ textAlign: 'right', width: '128px' }}>{formatCurrency(netProfit)}</span>
-                                            <span style={{ textAlign: 'right', width: '128px' }}>{formatCurrency(netProfitPrev)}</span>
-                                        </div>
+                                                {plData.grossIncomeData[selectedYear]?.totalWithholding > 0 && (
+                                                    <div style={{ marginBottom: '4px' }}>
+                                                        ¹ Withholding tax deducted at source: €{plData.grossIncomeData[selectedYear].totalWithholding.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                                                        {plData.grossIncomeData[selectedYear - 1]?.totalWithholding > 0 && (
+                                                            <span> (prior year: €{plData.grossIncomeData[selectedYear - 1].totalWithholding.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })})</span>
+                                                        )}
+                                                    </div>
+                                                )}
+                                                {plData.grossIncomeData[selectedYear]?.totalSuperannuation > 0 && (
+                                                    <div style={{ marginBottom: '4px' }}>
+                                                        ² Superannuation deducted at source: €{plData.grossIncomeData[selectedYear].totalSuperannuation.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                                                        {plData.grossIncomeData[selectedYear - 1]?.totalSuperannuation > 0 && (
+                                                            <span> (prior year: €{plData.grossIncomeData[selectedYear - 1].totalSuperannuation.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })})</span>
+                                                        )}
+                                                    </div>
+                                                )}
+                                                <div style={{ marginTop: '8px', fontStyle: 'italic' }}>
+                                                    These items are allocated to Partner's Capital Accounts, not treated as P&L expenses.
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
+
+                            {/* GMS Data Completeness Warning */}
+                            {plData.grossIncomeData && !plData.grossIncomeData[selectedYear]?.gmsComplete && plData.grossIncomeData[selectedYear]?.hasPCRSData && (
+                                <div style={{
+                                    padding: '12px 16px',
+                                    backgroundColor: '#fff3e0',
+                                    borderLeft: `4px solid #ff9800`,
+                                    borderRadius: '4px',
+                                    marginBottom: '1rem',
+                                    display: 'flex',
+                                    alignItems: 'flex-start',
+                                    gap: '12px'
+                                }}>
+                                    <span style={{ fontSize: '16px' }}>⚠️</span>
+                                    <div>
+                                        <div style={{ fontWeight: '600', color: '#e65100', marginBottom: '4px' }}>
+                                            Incomplete GMS Data for {selectedYear}
+                                        </div>
+                                        <div style={{ fontSize: '13px', color: '#795548' }}>
+                                            Only {plData.grossIncomeData[selectedYear].gmsMonthsFound}/12 months of PCRS statements uploaded.
+                                            Missing: {plData.grossIncomeData[selectedYear].gmsMissingMonths?.join(', ')}.
+                                            GMS income may be understated.
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* No PCRS Data Warning */}
+                            {plData.grossIncomeData && !plData.grossIncomeData[selectedYear]?.hasPCRSData && (
+                                <div style={{
+                                    padding: '12px 16px',
+                                    backgroundColor: '#ffebee',
+                                    borderLeft: `4px solid #f44336`,
+                                    borderRadius: '4px',
+                                    marginBottom: '1rem',
+                                    display: 'flex',
+                                    alignItems: 'flex-start',
+                                    gap: '12px'
+                                }}>
+                                    <span style={{ fontSize: '16px' }}>❌</span>
+                                    <div>
+                                        <div style={{ fontWeight: '600', color: '#c62828', marginBottom: '4px' }}>
+                                            No PCRS Data for {selectedYear}
+                                        </div>
+                                        <div style={{ fontSize: '13px', color: '#795548' }}>
+                                            GMS income is based on bank deposits (NET) rather than PCRS statements (GROSS).
+                                            Upload PCRS GMS statements in the GMS Overview tab for accurate gross income calculation.
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Bar Chart Comparison */}
+                            <div style={{
+                                backgroundColor: COLORS.white,
+                                border: `1px solid ${COLORS.lightGray}`,
+                                borderRadius: '8px',
+                                padding: '20px',
+                                marginBottom: '1.5rem'
+                            }}>
+                                <h4 style={{ margin: '0 0 16px 0', fontSize: '14px', fontWeight: '600', color: COLORS.darkGray }}>
+                                    Year-on-Year Comparison
+                                </h4>
+                                <div style={{ display: 'flex', gap: '32px' }}>
+                                    {/* Income Chart */}
+                                    {(() => {
+                                        const maxVal = Math.max(totalIncome, totalIncomePrev, 1);
+                                        const chartHeight = 100;
+                                        const formatYAxis = (val) => val >= 1000000 ? `€${(val/1000000).toFixed(1)}M` : val >= 1000 ? `€${(val/1000).toFixed(0)}K` : `€${val.toFixed(0)}`;
+                                        return (
+                                            <div style={{ flex: 1 }}>
+                                                <div style={{ fontSize: '12px', color: COLORS.mediumGray, marginBottom: '8px', fontWeight: '600' }}>Income</div>
+                                                <div style={{ display: 'flex' }}>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: `${chartHeight}px`, marginRight: '6px', paddingBottom: '18px' }}>
+                                                        <span style={{ fontSize: '9px', color: COLORS.mediumGray, textAlign: 'right' }}>{formatYAxis(maxVal)}</span>
+                                                        <span style={{ fontSize: '9px', color: COLORS.mediumGray, textAlign: 'right' }}>{formatYAxis(maxVal * 0.5)}</span>
+                                                        <span style={{ fontSize: '9px', color: COLORS.mediumGray, textAlign: 'right' }}>€0</span>
+                                                    </div>
+                                                    <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', gap: '6px', height: `${chartHeight}px`, borderLeft: `1px solid ${COLORS.lightGray}`, borderBottom: `1px solid ${COLORS.lightGray}`, paddingLeft: '6px' }}>
+                                                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                                            <div style={{ width: '100%', height: `${(totalIncomePrev / maxVal) * (chartHeight - 18)}px`, backgroundColor: '#A5D6A7', borderRadius: '3px 3px 0 0', minHeight: '4px' }} />
+                                                            <span style={{ fontSize: '10px', color: COLORS.mediumGray, marginTop: '3px' }}>{selectedYear - 1}</span>
+                                                        </div>
+                                                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                                            <div style={{ width: '100%', height: `${(totalIncome / maxVal) * (chartHeight - 18)}px`, backgroundColor: COLORS.incomeColor, borderRadius: '3px 3px 0 0', minHeight: '4px' }} />
+                                                            <span style={{ fontSize: '10px', color: COLORS.darkGray, fontWeight: '600', marginTop: '3px' }}>{selectedYear}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div style={{ textAlign: 'center', marginTop: '8px' }}>
+                                                    <div style={{ fontSize: '13px', fontWeight: '600', color: COLORS.incomeColor }}>{formatCurrency(totalIncome)}</div>
+                                                    <div style={{ fontSize: '11px', color: COLORS.mediumGray }}>
+                                                        {totalIncome >= totalIncomePrev ? '+' : ''}{((totalIncome - totalIncomePrev) / (totalIncomePrev || 1) * 100).toFixed(1)}%
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
+
+                                    {/* Expenditure Chart */}
+                                    {(() => {
+                                        const maxVal = Math.max(totalExpenses, totalExpensesPrev, 1);
+                                        const chartHeight = 100;
+                                        const formatYAxis = (val) => val >= 1000000 ? `€${(val/1000000).toFixed(1)}M` : val >= 1000 ? `€${(val/1000).toFixed(0)}K` : `€${val.toFixed(0)}`;
+                                        return (
+                                            <div style={{ flex: 1 }}>
+                                                <div style={{ fontSize: '12px', color: COLORS.mediumGray, marginBottom: '8px', fontWeight: '600' }}>Expenditure</div>
+                                                <div style={{ display: 'flex' }}>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: `${chartHeight}px`, marginRight: '6px', paddingBottom: '18px' }}>
+                                                        <span style={{ fontSize: '9px', color: COLORS.mediumGray, textAlign: 'right' }}>{formatYAxis(maxVal)}</span>
+                                                        <span style={{ fontSize: '9px', color: COLORS.mediumGray, textAlign: 'right' }}>{formatYAxis(maxVal * 0.5)}</span>
+                                                        <span style={{ fontSize: '9px', color: COLORS.mediumGray, textAlign: 'right' }}>€0</span>
+                                                    </div>
+                                                    <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', gap: '6px', height: `${chartHeight}px`, borderLeft: `1px solid ${COLORS.lightGray}`, borderBottom: `1px solid ${COLORS.lightGray}`, paddingLeft: '6px' }}>
+                                                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                                            <div style={{ width: '100%', height: `${(totalExpensesPrev / maxVal) * (chartHeight - 18)}px`, backgroundColor: '#FFCDD2', borderRadius: '3px 3px 0 0', minHeight: '4px' }} />
+                                                            <span style={{ fontSize: '10px', color: COLORS.mediumGray, marginTop: '3px' }}>{selectedYear - 1}</span>
+                                                        </div>
+                                                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                                            <div style={{ width: '100%', height: `${(totalExpenses / maxVal) * (chartHeight - 18)}px`, backgroundColor: COLORS.expenseColor, borderRadius: '3px 3px 0 0', minHeight: '4px' }} />
+                                                            <span style={{ fontSize: '10px', color: COLORS.darkGray, fontWeight: '600', marginTop: '3px' }}>{selectedYear}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div style={{ textAlign: 'center', marginTop: '8px' }}>
+                                                    <div style={{ fontSize: '13px', fontWeight: '600', color: COLORS.expenseColor }}>{formatCurrency(totalExpenses)}</div>
+                                                    <div style={{ fontSize: '11px', color: COLORS.mediumGray }}>
+                                                        {totalExpenses >= totalExpensesPrev ? '+' : ''}{((totalExpenses - totalExpensesPrev) / (totalExpensesPrev || 1) * 100).toFixed(1)}%
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
+
+                                    {/* Profit Chart */}
+                                    {(() => {
+                                        const maxVal = Math.max(Math.abs(netProfit), Math.abs(netProfitPrev), 1);
+                                        const chartHeight = 100;
+                                        const formatYAxis = (val) => val >= 1000000 ? `€${(val/1000000).toFixed(1)}M` : val >= 1000 ? `€${(val/1000).toFixed(0)}K` : `€${val.toFixed(0)}`;
+                                        return (
+                                            <div style={{ flex: 1 }}>
+                                                <div style={{ fontSize: '12px', color: COLORS.mediumGray, marginBottom: '8px', fontWeight: '600' }}>Net Profit</div>
+                                                <div style={{ display: 'flex' }}>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: `${chartHeight}px`, marginRight: '6px', paddingBottom: '18px' }}>
+                                                        <span style={{ fontSize: '9px', color: COLORS.mediumGray, textAlign: 'right' }}>{formatYAxis(maxVal)}</span>
+                                                        <span style={{ fontSize: '9px', color: COLORS.mediumGray, textAlign: 'right' }}>{formatYAxis(maxVal * 0.5)}</span>
+                                                        <span style={{ fontSize: '9px', color: COLORS.mediumGray, textAlign: 'right' }}>€0</span>
+                                                    </div>
+                                                    <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', gap: '6px', height: `${chartHeight}px`, borderLeft: `1px solid ${COLORS.lightGray}`, borderBottom: `1px solid ${COLORS.lightGray}`, paddingLeft: '6px' }}>
+                                                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                                            <div style={{ width: '100%', height: `${(Math.abs(netProfitPrev) / maxVal) * (chartHeight - 18)}px`, backgroundColor: '#BBDEFB', borderRadius: '3px 3px 0 0', minHeight: '4px' }} />
+                                                            <span style={{ fontSize: '10px', color: COLORS.mediumGray, marginTop: '3px' }}>{selectedYear - 1}</span>
+                                                        </div>
+                                                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                                            <div style={{ width: '100%', height: `${(Math.abs(netProfit) / maxVal) * (chartHeight - 18)}px`, backgroundColor: '#4A90E2', borderRadius: '3px 3px 0 0', minHeight: '4px' }} />
+                                                            <span style={{ fontSize: '10px', color: COLORS.darkGray, fontWeight: '600', marginTop: '3px' }}>{selectedYear}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div style={{ textAlign: 'center', marginTop: '8px' }}>
+                                                    <div style={{ fontSize: '13px', fontWeight: '600', color: COLORS.slainteBlue }}>{formatCurrency(netProfit)}</div>
+                                                    <div style={{ fontSize: '11px', color: COLORS.mediumGray }}>
+                                                        {netProfit >= netProfitPrev ? '+' : ''}{((netProfit - netProfitPrev) / (Math.abs(netProfitPrev) || 1) * 100).toFixed(1)}%
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
+                                </div>
+                            </div>
+
+                            {/* Draft Notes Section */}
+                            <div style={{
+                                padding: '20px',
+                                backgroundColor: '#fff9e6',
+                                borderLeft: `4px solid #ffc107`,
+                                borderRadius: '4px'
+                            }}>
+                                <h4 style={{ margin: '0 0 12px 0', color: '#856404', fontSize: '16px', fontWeight: '600' }}>
+                                    ⚠️ DRAFT REPORT - Important Notes:
+                                </h4>
+                                <p style={{ fontWeight: 'bold', color: '#d32f2f', marginBottom: '12px' }}>
+                                    This report is a DRAFT and should not be used for official submissions without review by a qualified accountant.
+                                </p>
+                                <ul style={{ margin: '8px 0', paddingLeft: '20px', color: '#856404' }}>
+                                    <li style={{ marginBottom: '8px' }}>
+                                        <strong>GMS Statements:</strong> {plData.grossIncomeData?.[selectedYear]?.gmsComplete
+                                            ? `✓ All 12 months of GMS statements uploaded for ${selectedYear}`
+                                            : plData.grossIncomeData?.[selectedYear]?.hasPCRSData
+                                            ? `⚠ ${plData.grossIncomeData[selectedYear].gmsMonthsFound}/12 months of GMS statements uploaded. Missing: ${plData.grossIncomeData[selectedYear].gmsMissingMonths?.join(', ')}`
+                                            : `✗ No GMS statements uploaded for ${selectedYear} - using bank NET instead of PCRS GROSS`}
+                                    </li>
+                                    <li style={{ marginBottom: '8px' }}>
+                                        <strong>Income Calculation:</strong> {plData.grossIncomeData?.[selectedYear]?.hasPCRSData
+                                            ? `✓ Using GROSS income (GMS: €${plData.grossIncomeData[selectedYear].gmsGross?.toLocaleString() || 0}, State Contracts grossed up, Other: bank)`
+                                            : '⚠ Using bank deposits (NET) - upload PCRS statements for accurate GROSS income'}
+                                    </li>
+                                    <li style={{ marginBottom: '8px' }}>
+                                        <strong>Motor Expenses:</strong> {motorExpenses[selectedYear] > 0
+                                            ? `✓ Included: €${motorExpenses[selectedYear].toFixed(2)}`
+                                            : '○ NOT calculated'}
+                                    </li>
+                                    <li style={{ marginBottom: '8px' }}>
+                                        <strong>Depreciation:</strong> {depreciationExpenses[selectedYear] > 0
+                                            ? `✓ Included: €${depreciationExpenses[selectedYear].toFixed(2)}`
+                                            : '○ NOT calculated'}
+                                    </li>
+                                    <li style={{ marginBottom: '8px' }}>
+                                        <strong>Period:</strong> {plData.reportPeriod?.isPartialYear
+                                            ? `Year-to-date through ${plData.reportPeriod.cutoffDateString}`
+                                            : 'Full calendar years'}
+                                    </li>
+                                </ul>
+                                <p style={{ marginTop: '12px', fontStyle: 'italic', color: '#856404', fontSize: '13px' }}>
+                                    Please review all figures with your accountant before using for tax returns or official purposes.
+                                </p>
+                            </div>
                         </div>
 
-                        {/* Draft Notes Section */}
+                        {/* Modal Footer - Export Buttons */}
                         <div style={{
-                            marginTop: '24px',
-                            padding: '20px',
-                            backgroundColor: '#fff9e6',
-                            borderLeft: `4px solid #ffc107`,
-                            borderRadius: '4px'
+                            display: 'flex',
+                            gap: '12px',
+                            padding: '1rem 1.5rem',
+                            borderTop: `1px solid ${COLORS.lightGray}`,
+                            backgroundColor: COLORS.backgroundGray,
+                            flexShrink: 0
                         }}>
-                            <h4 style={{ margin: '0 0 12px 0', color: '#856404', fontSize: '16px', fontWeight: '600' }}>
-                                ⚠️ DRAFT REPORT - Important Notes:
-                            </h4>
-                            <p style={{ fontWeight: 'bold', color: '#d32f2f', marginBottom: '12px' }}>
-                                This report is a DRAFT and should not be used for official submissions without review by a qualified accountant.
-                            </p>
-                            <ul style={{ margin: '8px 0', paddingLeft: '20px', color: '#856404' }}>
-                                <li style={{ marginBottom: '8px' }}>
-                                    <strong>Income Figure:</strong> This represents NET INCOME as recorded in bank transactions (after withholding tax deduction). {withholdingTaxData.total > 0
-                                        ? `Withholding tax has been calculated: €${withholdingTaxData.total.toLocaleString()} (GMS: €${withholdingTaxData.gmsWithholdingTax.toLocaleString()}, State Contracts: €${withholdingTaxData.stateContractTax.toLocaleString()}). Add this to Net Income to calculate GROSS income for tax purposes.`
-                                        : 'To calculate GROSS income for tax purposes, withholding tax amounts must be gathered from 12 months of PCRS statements and added back to this figure.'}
-                                </li>
-                                <li style={{ marginBottom: '8px' }}>
-                                    <strong>Withholding Tax:</strong> {withholdingTaxData.total > 0
-                                        ? `✓ Calculated from PCRS statements: €${withholdingTaxData.total.toLocaleString()} total for ${selectedYear}`
-                                        : '✗ NOT calculated - Upload PCRS GMS panel statements to calculate withholding tax automatically'}
-                                </li>
-                                <li style={{ marginBottom: '8px' }}>
-                                    <strong>Motor Expenses:</strong> {motorExpenses[selectedYear] > 0 || motorExpenses[selectedYear - 1] > 0
-                                        ? `✓ Calculated and included (${selectedYear}: €${motorExpenses[selectedYear].toFixed(2)}, ${selectedYear - 1}: €${motorExpenses[selectedYear - 1].toFixed(2)})`
-                                        : '✗ NOT calculated - Manual calculation required for private use adjustment'}
-                                </li>
-                                <li style={{ marginBottom: '8px' }}>
-                                    <strong>Depreciation:</strong> {depreciationExpenses[selectedYear] > 0 || depreciationExpenses[selectedYear - 1] > 0
-                                        ? `✓ Calculated and included (${selectedYear}: €${depreciationExpenses[selectedYear].toFixed(2)}, ${selectedYear - 1}: €${depreciationExpenses[selectedYear - 1].toFixed(2)})`
-                                        : '✗ NOT calculated - Capital allowances need to be calculated separately'}
-                                </li>
-                                <li style={{ marginBottom: '8px' }}>
-                                    <strong>Classification:</strong> Some transactions may be partially classified or unclassified. Review the transaction list for accuracy.
-                                </li>
-                                <li style={{ marginBottom: '8px' }}>
-                                    <strong>Period:</strong> {plData.reportPeriod?.isPartialYear
-                                        ? `This is a YEAR-TO-DATE report covering transactions up to ${plData.reportPeriod.cutoffDateString}. Full year figures will differ.`
-                                        : 'This report covers full calendar years.'}
-                                </li>
-                            </ul>
-                            <p style={{ marginTop: '12px', fontStyle: 'italic', color: '#856404' }}>
-                                Please review all figures with your accountant before using for tax returns or official purposes.
-                            </p>
-                        </div>
-
-                        {/* Export Buttons */}
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
                             <button
                                 onClick={exportAccountantPDF}
                                 style={{
                                     backgroundColor: COLORS.slainteBlue,
                                     color: COLORS.white,
-                                    padding: '12px 24px',
+                                    padding: '10px 20px',
                                     borderRadius: '8px',
                                     border: 'none',
                                     fontWeight: '500',
@@ -1216,7 +1955,7 @@ Check console for detailed debugging information.`);
                                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.slainteBlueDark}
                                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.slainteBlue}
                             >
-                                <FileText style={{ height: '20px', width: '20px', marginRight: '8px' }} />
+                                <FileText style={{ height: '18px', width: '18px', marginRight: '8px' }} />
                                 Print/Save as PDF
                             </button>
                             <button
@@ -1224,7 +1963,7 @@ Check console for detailed debugging information.`);
                                 style={{
                                     backgroundColor: COLORS.incomeColor,
                                     color: COLORS.white,
-                                    padding: '12px 24px',
+                                    padding: '10px 20px',
                                     borderRadius: '8px',
                                     border: 'none',
                                     fontWeight: '500',
@@ -1236,169 +1975,69 @@ Check console for detailed debugging information.`);
                                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3DB0A8'}
                                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.incomeColor}
                             >
-                                <Download style={{ height: '20px', width: '20px', marginRight: '8px' }} />
-                                Export CSV (Data)
+                                <Download style={{ height: '18px', width: '18px', marginRight: '8px' }} />
+                                Export CSV
                             </button>
+                            <div style={{ flex: 1 }} />
                             <button
-                                onClick={processTransactionsForPL}
-                                disabled={processing}
+                                onClick={() => setShowReportModal(false)}
                                 style={{
-                                    backgroundColor: processing ? COLORS.mediumGray : COLORS.mediumGray,
-                                    color: COLORS.white,
-                                    padding: '12px 24px',
+                                    backgroundColor: COLORS.white,
+                                    color: COLORS.darkGray,
+                                    padding: '10px 20px',
                                     borderRadius: '8px',
-                                    border: 'none',
+                                    border: `1px solid ${COLORS.lightGray}`,
                                     fontWeight: '500',
-                                    cursor: processing ? 'not-allowed' : 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
+                                    cursor: 'pointer',
                                     transition: 'background-color 0.2s'
                                 }}
-                                onMouseEnter={(e) => {
-                                    if (!processing) e.currentTarget.style.backgroundColor = COLORS.darkGray;
-                                }}
-                                onMouseLeave={(e) => {
-                                    if (!processing) e.currentTarget.style.backgroundColor = COLORS.mediumGray;
-                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.backgroundGray}
+                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.white}
                             >
-                                {processing ? (
-                                    <>
-                                        <div style={{
-                                            animation: 'spin 1s linear infinite',
-                                            borderRadius: '50%',
-                                            height: '16px',
-                                            width: '16px',
-                                            border: `2px solid ${COLORS.white}`,
-                                            borderTopColor: 'transparent',
-                                            marginRight: '8px'
-                                        }}></div>
-                                        Regenerating...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Calculator style={{ height: '20px', width: '20px', marginRight: '8px' }} />
-                                        Regenerate P&L
-                                    </>
-                                )}
+                                Close
                             </button>
                         </div>
-
-                        {/* Summary Stats */}
-                        <div className="grid grid-cols-2 gap-6">
-                            <div>
-                                <h4 className="text-lg font-semibold mb-3">{selectedYear}</h4>
-                                <div className="grid grid-cols-1 gap-4">
-                                    <div className="bg-green-50 p-4 rounded-lg">
-                                        <div className="text-sm text-gray-600 mb-1">Income</div>
-                                        <div className="text-lg font-bold text-green-700">{formatCurrency(totalIncome)}</div>
-                                    </div>
-                                    <div className="bg-red-50 p-4 rounded-lg">
-                                        <div className="text-sm text-gray-600 mb-1">Expenses</div>
-                                        <div className="text-lg font-bold text-red-700">{formatCurrency(totalExpenses)}</div>
-                                    </div>
-                                    <div className="bg-blue-50 p-4 rounded-lg">
-                                        <div className="text-sm text-gray-600 mb-1">Net Profit</div>
-                                        <div className="text-lg font-bold text-blue-700">{formatCurrency(netProfit)}</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div>
-                                <h4 className="text-lg font-semibold mb-3">{selectedYear - 1}</h4>
-                                <div className="grid grid-cols-1 gap-4">
-                                    <div className="bg-green-50 p-4 rounded-lg">
-                                        <div className="text-sm text-gray-600 mb-1">Income</div>
-                                        <div className="text-lg font-bold text-green-700">{formatCurrency(totalIncomePrev)}</div>
-                                    </div>
-                                    <div className="bg-red-50 p-4 rounded-lg">
-                                        <div className="text-sm text-gray-600 mb-1">Expenses</div>
-                                        <div className="text-lg font-bold text-red-700">{formatCurrency(totalExpensesPrev)}</div>
-                                    </div>
-                                    <div className="bg-blue-50 p-4 rounded-lg">
-                                        <div className="text-sm text-gray-600 mb-1">Net Profit</div>
-                                        <div className="text-lg font-bold text-blue-700">{formatCurrency(netProfitPrev)}</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Processing Summary */}
-                        <div className="bg-gray-50 p-4 rounded-lg">
-                            <div className="flex items-center mb-2">
-                                <Calculator className="h-5 w-5 mr-2 text-gray-600" />
-                                <span className="font-medium">Processing Summary</span>
-                            </div>
-                            <p className="text-sm text-gray-600">
-                                Processed {transactions.length} transactions from your detailed system into {Object.keys(plData.expenses[selectedYear]).filter(key => plData.expenses[selectedYear][key] > 0).length} expense categories matching your accountant's format.
-                            </p>
-                        </div>
                     </div>
-                )}
+                </div>
+            )}
 
-                {/* Year Changed Warning */}
-                {!plData && availableYears.includes(selectedYear) && transactions.filter(t => new Date(t.date).getFullYear() === selectedYear).length > 0 && (
-                    <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
-                        <div className="flex items-start">
-                            <AlertCircle className="h-5 w-5 text-orange-600 mr-3 mt-0.5" />
-                            <div>
-                                <h4 className="font-medium text-orange-900 mb-1">Report Year Changed</h4>
-                                <p className="text-sm text-orange-800">
-                                    You've selected {selectedYear} for reporting. Click "Generate P&L Report" below to create the {selectedYear} vs {selectedYear - 1} comparison.
-                                </p>
-                            </div>
-                        </div>
+            {/* Success banner when report was generated (show briefly after modal is closed) */}
+            {plData && !showReportModal && (
+                <div style={{
+                    backgroundColor: '#E8F5E9',
+                    padding: '16px',
+                    borderRadius: '8px',
+                    border: `1px solid ${COLORS.incomeColor}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <CheckCircle style={{ height: '20px', width: '20px', color: COLORS.incomeColor, marginRight: '12px' }} />
+                        <span style={{ fontSize: '14px', color: COLORS.darkGray }}>
+                            <strong>{plData.reportPeriod?.isPartialYear ? 'Year to Date' : 'Full Year'} P&L Report</strong> generated and saved to your report library.
+                        </span>
                     </div>
-                )}
+                    <button
+                        onClick={() => setShowReportModal(true)}
+                        style={{
+                            backgroundColor: COLORS.slainteBlue,
+                            color: COLORS.white,
+                            padding: '8px 16px',
+                            borderRadius: '6px',
+                            border: 'none',
+                            fontWeight: '500',
+                            cursor: 'pointer',
+                            fontSize: '14px'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.slainteBlueDark}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.slainteBlue}
+                    >
+                        View Report
+                    </button>
+                </div>
+            )}
 
-                {/* Instructions when no P&L generated yet */}
-                {!plData && transactions.length > 0 && (
-                    <div className="bg-green-50 p-6 rounded-lg border border-green-200">
-                        <div className="flex items-start">
-                            <CheckCircle className="h-5 w-5 text-green-600 mr-3 mt-0.5" />
-                            <div>
-                                <h3 className="font-medium text-green-900 mb-2">Ready to Generate P&L Report</h3>
-                                <p className="text-sm text-green-800 mb-3">
-                                    Found {transactions.length} transactions in your system. Ready to convert to professional accountant format.
-                                </p>
-                                <ul className="text-sm text-green-700 space-y-1">
-                                    {reportPeriod.isPartialYear ? (
-                                        <>
-                                            <li>• <strong>Year to Date Report:</strong> Will compare 1 Jan - {reportPeriod.cutoffDateString} for both years</li>
-                                            <li>• <strong>Smart Analysis:</strong> Latest transaction is {reportPeriod.cutoffDateString} (before 25 Dec), so using partial year comparison</li>
-                                            <li>• Converts {Object.keys(accountantMapping).length} detailed categories to accountant's format</li>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <li>• <strong>Full Year Report:</strong> Will analyze complete {selectedYear} vs {selectedYear - 1} transactions</li>
-                                            <li>• Converts {Object.keys(accountantMapping).length} detailed categories to accountant's 23-line format</li>
-                                            <li>• Add manual calculations first (optional), then click "Generate P&L Report"</li>
-                                        </>
-                                    )}
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Instructions when no transaction data */}
-                {transactions.length === 0 && (
-                    <div className="bg-yellow-50 p-6 rounded-lg border border-yellow-200">
-                        <div className="flex items-start">
-                            <AlertCircle className="h-5 w-5 text-yellow-600 mr-3 mt-0.5" />
-                            <div>
-                                <h3 className="font-medium text-yellow-900 mb-2">No Transaction Data Found</h3>
-                                <p className="text-sm text-yellow-800 mb-3">
-                                    To generate your Professional P&L Report:
-                                </p>
-                                <ol className="text-sm text-yellow-700 space-y-1 list-decimal list-inside">
-                                    <li>Go to the "Upload Data" section to import your transaction data</li>
-                                    <li>Return here and click "Generate P&L Report"</li>
-                                    <li>Export the result as PDF or CSV to share with your accountant</li>
-                                </ol>
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </div>
 
 
             {/* Calculator Modals */}

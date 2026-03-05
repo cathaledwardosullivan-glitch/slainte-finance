@@ -23,6 +23,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Claude API calls (direct from desktop, no proxy needed)
   callClaude: (message, context, options) => ipcRenderer.invoke('call-claude', message, context, options),
+  // Raw Claude API call — full Anthropic request with tools/system/messages
+  callClaudeRaw: (request) => ipcRenderer.invoke('call-claude-raw', request),
 
   // Auto-updater functions
   checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
@@ -77,6 +79,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     setBounds: (bounds) => ipcRenderer.invoke('pcrs:setBounds', bounds),
     getDownloadPath: () => ipcRenderer.invoke('pcrs:getDownloadPath'),
     getDownloadedFiles: () => ipcRenderer.invoke('pcrs:getDownloadedFiles'),
+    readFile: (filename) => ipcRenderer.invoke('pcrs:readFile', filename),
     // Event listeners
     onStatus: (callback) => {
       ipcRenderer.on('pcrs:status', (event, data) => callback(data));
@@ -84,13 +87,26 @@ contextBridge.exposeInMainWorld('electronAPI', {
     onAuthStateChanged: (callback) => {
       ipcRenderer.on('pcrs:authStateChanged', (event, data) => callback(data));
     },
+    onLog: (callback) => {
+      ipcRenderer.on('pcrs:log', (event, data) => callback(data));
+    },
     removeStatusListener: () => {
       ipcRenderer.removeAllListeners('pcrs:status');
     },
     removeAuthListener: () => {
       ipcRenderer.removeAllListeners('pcrs:authStateChanged');
+    },
+    removeLogListener: () => {
+      ipcRenderer.removeAllListeners('pcrs:log');
     }
   },
+
+  // Webhooks — Feedback, Registration, Error Reports
+  submitFeedback: (data) => ipcRenderer.invoke('submit-feedback', data),
+  submitRegistration: (data) => ipcRenderer.invoke('submit-registration', data),
+  submitErrorReport: (data) => ipcRenderer.invoke('submit-error-report', data),
+  getErrorReportingSetting: () => ipcRenderer.invoke('get-error-reporting-setting'),
+  setErrorReportingSetting: (enabled) => ipcRenderer.invoke('set-error-reporting-setting', enabled),
 
   // Platform info
   platform: process.platform,

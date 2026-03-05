@@ -8,6 +8,7 @@ import { ArtifactViewer, InlineArtifact } from './FinancialChat/ArtifactViewer';
 import { chatStorage } from '../storage/chatStorage';
 import { shouldCreateArtifact, createArtifact, parseArtifactResponse } from '../utils/artifactBuilder';
 import { callClaude, formatClaudeResponse } from '../utils/claudeAPI';
+import { MODELS } from '../data/modelConfig';
 import { analyzeGMSIncome, generateRecommendations } from '../utils/healthCheckCalculations';
 
 export default function FinancialChat() {
@@ -424,7 +425,7 @@ Keep your response to 1-3 sentences maximum. Be warm but concise.`;
           },
           body: JSON.stringify({
             message: JSON.stringify({
-              model: "claude-haiku-4-5-20251001", // Fast model for quick responses
+              model: MODELS.FAST, // Fast model for quick responses
               max_tokens: 256,
               messages: quickMessages
             })
@@ -849,7 +850,7 @@ The key finding is that staff costs increase of €27k - your total staff spend 
           },
           body: JSON.stringify({
             message: JSON.stringify({
-              model: "claude-sonnet-4-5-20250929",
+              model: MODELS.STANDARD,
               max_tokens: 4096,
               messages: conversationMessages,
               tools: tools

@@ -9,8 +9,7 @@ const exportDataForMobile = () => {
         categoryMapping: categoryMapping,
         paymentAnalysisData: paymentAnalysisData,
         settings: {
-            selectedYear: selectedYear,
-            showSensitiveData: showSensitiveData
+            selectedYear: selectedYear
         },
         savedReports: JSON.parse(localStorage.getItem('gp_finance_saved_reports') || '[]')
     };

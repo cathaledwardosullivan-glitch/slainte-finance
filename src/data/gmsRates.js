@@ -142,8 +142,13 @@ const gmsRates = {
   },
 
   // Cervical Check Payments
+  // Rate changed from €49.10 to €65.00 when HPV primary screening was introduced (30 March 2020)
   cervicalCheck: {
-    perSmear: 49.10
+    perSmear: 65.00,
+    rateHistory: [
+      { rate: 49.10, from: '2008-09-01', to: '2020-03-29', label: 'Cytology screening' },
+      { rate: 65.00, from: '2020-03-30', to: null, label: 'HPV primary screening' }
+    ]
   },
 
   // Special Type Consultations (STCs) - Complete Code List
@@ -446,34 +451,109 @@ const gmsRates = {
       admin: { name: 'Administrative', color: '#6B7280' }
     },
 
-    // Benchmarks: Expected claims per 1000 GMS patients per year
-    // These are estimates based on typical practice patterns
+    // National benchmark data from PCRS annual reports
+    // Per-code data: PCRS 2018 Special Items of Service (most recent per-code breakdown available)
+    // Aggregate data: PCRS 2023 Statistical Analysis of Claims and Payments
+    nationalData: {
+      source: 'PCRS Statistical Analysis of Claims and Payments',
+      perCodeYear: 2018,
+      aggregateYear: 2023,
+      // 2018 denominators (MC + GPVC)
+      gmsEligiblePersons2018: 2068378,
+      gpContracts2018: 2921,
+      // 2023 denominators
+      gmsEligiblePersons2023: 2241662,
+      gpContracts2023: 3110,
+      // 2023 aggregate totals
+      totalSpecialServiceClaims2023: 3358063,
+      totalSpecialServicePayments2023: 154319857,
+      // 2018 per-code claims and cost (€)
+      claims2018: {
+        A:  { claims: 154129, cost: 3821363 },
+        AB: { claims: 18376,  cost: 1286320 },
+        AC: { claims: 10003,  cost: 500150 },
+        AD: { claims: 126404, cost: 7584240 },
+        AE: { claims: 109665, cost: 5483250 },
+        B:  { claims: 53984,  cost: 2697980 },
+        C:  { claims: 1535,   cost: 38059 },
+        D:  { claims: 2690,   cost: 66712 },
+        F:  { claims: 179536, cost: 4452140 },
+        H:  { claims: 12018,  cost: 298051 },
+        J:  { claims: 64091,  cost: 1589459 },
+        K:  { claims: 94983,  cost: 3534157 },
+        L:  { claims: 9752,   cost: 584941 },
+        M:  { claims: 481,    cost: 29832 },
+        R:  { claims: 24266,  cost: 691581 },
+        S:  { claims: 449032, cost: 6735495 },
+        T:  { claims: 12576,  cost: 537624 },
+        U:  { claims: 3977,   cost: 188991 },
+        X:  { claims: 719,    cost: 17831 },
+        Y:  { claims: 402,    cost: 14958 },
+        Z:  { claims: 61,     cost: 1513 }
+      },
+      totalClaims2018: 1328715,
+      totalCost2018: 40156079
+    },
+
+    // Benchmarks: Expected claims per 1000 GMS eligible persons per year
+    // Source: PCRS 2018 national data (2,068,378 eligible persons, 2,921 GP contracts)
+    // Post-2018 codes use estimates pending per-code national data
     benchmarks: {
-      // Traditional procedures - based on incidence rates
-      A: { ratePerThousand: 15, basis: 'Skin lesion incidence ~1.5% per year' },
-      B: { ratePerThousand: 12, basis: 'Minor trauma requiring suturing' },
-      F: { ratePerThousand: 40, basis: 'CVD screening esp. in over 70s' },
-      K: { ratePerThousand: 8, basis: 'Acute asthma ~2% of asthma patients' },
-      L: { ratePerThousand: 5, basis: 'Urinary retention, mainly elderly' },
+      // === Traditional procedures (PCRS 2018 national data) ===
+      A:  { ratePerThousand: 74.5,  basis: 'PCRS 2018: 154,129 national claims' },
+      B:  { ratePerThousand: 26.1,  basis: 'PCRS 2018: 53,984 national claims' },
+      D:  { ratePerThousand: 1.3,   basis: 'PCRS 2018: 2,690 national claims' },
+      H:  { ratePerThousand: 5.8,   basis: 'PCRS 2018: 12,018 national claims' },
+      J:  { ratePerThousand: 31.0,  basis: 'PCRS 2018: 64,091 national claims' },
+      L:  { ratePerThousand: 4.7,   basis: 'PCRS 2018: 9,752 national claims' },
 
-      // Contraception - based on eligible population
-      // Assume ~25% of panel are women 17-44
-      CF: { ratePerThousand: 30, basis: '~12% of eligible women per year' },
-      CG: { ratePerThousand: 8, basis: '~3% of eligible women choosing implant' },
-      CH: { ratePerThousand: 12, basis: '~5% of eligible women choosing coil' },
+      // === Diagnostics (PCRS 2018 national data) ===
+      F:  { ratePerThousand: 86.8,  basis: 'PCRS 2018: 179,536 national claims' },
+      AD: { ratePerThousand: 61.1,  basis: 'PCRS 2018: 126,404 national claims' },
 
-      // ABPM - cardiovascular assessment
-      AD: { ratePerThousand: 25, basis: 'White coat HTN assessment, CVD workup' },
+      // === Respiratory (PCRS 2018 national data) ===
+      K:  { ratePerThousand: 45.9,  basis: 'PCRS 2018: 94,983 national claims' },
 
-      // Paediatric - based on under 8 population (~8% of panel)
-      X: { ratePerThousand: 3, basis: 'Foreign body ingestion/insertion in children' },
-      Y: { ratePerThousand: 5, basis: 'Childhood lacerations' },
-      Z: { ratePerThousand: 2, basis: 'Abscess drainage in children' }
+      // === LARC GMS (PCRS 2018 national data) ===
+      AB: { ratePerThousand: 8.9,   basis: 'PCRS 2018: 18,376 national claims' },
+      AC: { ratePerThousand: 4.8,   basis: 'PCRS 2018: 10,003 national claims' },
+
+      // === Vaccinations (PCRS 2018 national data) ===
+      S:  { ratePerThousand: 217.1, basis: 'PCRS 2018: 449,032 national claims' },
+      R:  { ratePerThousand: 11.7,  basis: 'PCRS 2018: 24,266 national claims' },
+
+      // === Paediatric under 8 (PCRS 2018 national data — under 6 only at time) ===
+      X:  { ratePerThousand: 0.35,  basis: 'PCRS 2018: 719 national claims (under 6 only pre-2023)' },
+      Y:  { ratePerThousand: 0.19,  basis: 'PCRS 2018: 402 national claims (under 6 only pre-2023)' },
+      Z:  { ratePerThousand: 0.03,  basis: 'PCRS 2018: 61 national claims (under 6 only pre-2023)' },
+
+      // === Free Contraception Scheme (estimated — no per-code national data, scheme from 2022) ===
+      CF: { ratePerThousand: 30,    basis: 'Estimated — ~245K women accessing scheme nationally (2024)' },
+      CG: { ratePerThousand: 8,     basis: 'Estimated — ~3% of eligible women choosing implant' },
+      CH: { ratePerThousand: 12,    basis: 'Estimated — ~5% of eligible women choosing coil' }
     }
   }
 };
 
 // Helper functions for calculations
+
+/**
+ * Get the CervicalCheck rate applicable for a given date
+ * @param {string|Date} date - Date string or Date object (defaults to current rate if null)
+ * @returns {number} The rate per smear applicable at that time
+ */
+export function getCervicalCheckRate(date = null) {
+  if (!date) return gmsRates.cervicalCheck.perSmear;
+  const d = typeof date === 'string' ? new Date(date) : date;
+  const history = gmsRates.cervicalCheck.rateHistory;
+  // Find the rate active at the given date (search in reverse for most recent first)
+  for (let i = history.length - 1; i >= 0; i--) {
+    const entry = history[i];
+    const from = new Date(entry.from);
+    if (d >= from) return entry.rate;
+  }
+  return history[0].rate; // Fallback to earliest rate
+}
 
 /**
  * Calculate weighted panel for capacity grant eligibility

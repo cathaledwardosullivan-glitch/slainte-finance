@@ -1,3 +1,5 @@
+import { reportError } from './errorReporter';
+
 // Storage utility functions for persistent data
 const STORAGE_KEYS = {
   TRANSACTIONS: 'gp_finance_transactions',
@@ -39,6 +41,7 @@ const saveToStorage = (key, data) => {
 
     // Handle quota exceeded error
     if (error.name === 'QuotaExceededError') {
+      reportError(error, 'storage-quota');
       alert(`⚠️ Storage Limit Reached!\n\nYour browser's storage is full. You have two options:\n\n1. Export your data (Admin Settings → Export & Backup)\n2. Delete older transactions\n3. Clear some unidentified transactions\n\nWould you like to go to Admin Settings to backup your data?`);
 
       // Calculate storage usage
@@ -134,8 +137,7 @@ export const saveSettings = (settings) => {
 
 export const loadSettings = () => {
   return loadFromStorage(STORAGE_KEYS.SETTINGS, {
-    selectedYear: new Date().getFullYear(),
-    showSensitiveData: true
+    selectedYear: new Date().getFullYear()
   });
 };
 

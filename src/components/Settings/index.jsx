@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { X, Database, HardDrive, Layers, Building2, BookOpen, Wrench, Download } from 'lucide-react';
+import { X, Database, HardDrive, Layers, Building2, BookOpen, Download, Briefcase, Shield, Wifi } from 'lucide-react';
 import COLORS from '../../utils/colors';
 import DataSection from './sections/DataSection';
 import BackupRestoreSection from './sections/BackupRestoreSection';
 import CategoriesSection from './sections/CategoriesSection';
 import PracticeProfileSection from './sections/PracticeProfileSection';
 import TourOnboardingSection from './sections/TourOnboardingSection';
-import LegacyToolsSection from './sections/LegacyToolsSection';
 import AppUpdateSection from './sections/AppUpdateSection';
+import AccountantDataSection from './sections/AccountantDataSection';
+import PrivacySection from './sections/PrivacySection';
+import ConnectedPracticeSection from './sections/ConnectedPracticeSection';
 
 /**
  * SettingsModal - Main settings modal with left sidebar navigation
@@ -36,15 +38,29 @@ const SettingsModal = ({ isOpen, onClose }) => {
     };
   }, [isOpen, onClose]);
 
+  // Listen for tour section switching events
+  useEffect(() => {
+    const handleSwitchSection = (e) => {
+      if (isOpen && e.detail) {
+        setActiveSection(e.detail);
+      }
+    };
+
+    window.addEventListener('tour:switchSettingsSection', handleSwitchSection);
+    return () => window.removeEventListener('tour:switchSettingsSection', handleSwitchSection);
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const sections = [
-    { id: 'data', label: 'Data', icon: Database },
+    { id: 'data', label: 'Data Upload', icon: Database, tourId: 'settings-data-tab' },
+    { id: 'privacy', label: 'Privacy & AI', icon: Shield },
     { id: 'tour', label: 'Tour/Onboarding', icon: BookOpen },
     { id: 'profile', label: 'Practice Profile', icon: Building2 },
-    { id: 'categories', label: 'Categorisation', icon: Layers },
+    { id: 'categories', label: 'Categorisation', icon: Layers, tourId: 'settings-categories-tab' },
+    { id: 'accountant', label: 'Data for Accountant', icon: Briefcase, tourId: 'settings-accountant-tab' },
     { id: 'backup', label: 'Backup & Restore', icon: HardDrive },
-    { id: 'legacy', label: 'Legacy Tools', icon: Wrench },
+    { id: 'connected', label: 'Connected Practice', icon: Wifi },
     { id: 'update', label: 'App Update', icon: Download }
   ];
 
@@ -128,6 +144,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
               return (
                 <button
                   key={section.id}
+                  data-tour-id={section.tourId}
                   onClick={() => setActiveSection(section.id)}
                   style={{
                     width: '100%',
@@ -172,11 +189,13 @@ const SettingsModal = ({ isOpen, onClose }) => {
             }}
           >
             {activeSection === 'data' && <DataSection />}
+            {activeSection === 'privacy' && <PrivacySection />}
             {activeSection === 'backup' && <BackupRestoreSection />}
             {activeSection === 'categories' && <CategoriesSection />}
+            {activeSection === 'accountant' && <AccountantDataSection />}
             {activeSection === 'profile' && <PracticeProfileSection />}
             {activeSection === 'tour' && <TourOnboardingSection />}
-            {activeSection === 'legacy' && <LegacyToolsSection />}
+            {activeSection === 'connected' && <ConnectedPracticeSection />}
             {activeSection === 'update' && <AppUpdateSection />}
           </main>
         </div>

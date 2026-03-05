@@ -8,6 +8,14 @@
  */
 
 /**
+ * Generate a unique Practice ID for feedback tracking
+ * Format: SLP-XXXXXX (prefix + 6 uppercase alphanumeric chars)
+ */
+export function generatePracticeId() {
+    return 'SLP-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+}
+
+/**
  * Create empty unified practice profile
  */
 export function createUnifiedProfile() {
@@ -19,7 +27,8 @@ export function createUnifiedProfile() {
             website: '',
             accountant: '',
             yearEndDate: '', // Format: "MM-DD" e.g., "12-31"
-            superannuationAllocation: '' // Free-text description
+            superannuationAllocation: '', // Free-text description
+            ehrSystem: '' // 'socrates' | 'healthone' | 'practicemanager' | 'completegp' | 'other' | ''
         },
 
         // GP Structure - NEW!
@@ -70,9 +79,16 @@ export function createUnifiedProfile() {
             createdAt: new Date(),
             lastUpdated: new Date(),
             setupCompletedAt: null,
+            practiceId: generatePracticeId(),
+            practiceIdRegistered: false,
             onboardingVersion: '2.0',
             websiteAnalyzed: false,
-            websiteAnalyzedAt: null
+            websiteAnalyzedAt: null,
+            // Terms of Service acceptance tracking
+            termsAccepted: null, // { version: '1.0.0', acceptedAt: ISO date, scrolledToEnd: boolean }
+            // Local Only Mode - when true, no external connections are made
+            localOnlyMode: false,
+            localOnlyModeSetAt: null
         }
     };
 }

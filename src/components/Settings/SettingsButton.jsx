@@ -9,6 +9,7 @@ import COLORS from '../../utils/colors';
 const SettingsButton = ({ onClick }) => {
   return (
     <button
+      data-tour-id="settings-button"
       onClick={onClick}
       title="Settings"
       style={{

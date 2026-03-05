@@ -66,7 +66,7 @@ const CATEGORY_REFINEMENT_CONFIG = {
       },
       {
         parentCode: '30.0',
-        parentName: 'Office & Admin',
+        parentName: 'Office & IT',
         icon: '💻',
         color: COLORS.slainteBlue,
         reason: 'Most office costs appear on sundry or similar lines',
@@ -74,7 +74,7 @@ const CATEGORY_REFINEMENT_CONFIG = {
       },
       {
         parentCode: '80.0',
-        parentName: 'Other Expenses',
+        parentName: 'Petty Cash / Other',
         icon: '📊',
         color: COLORS.mediumGray,
         reason: 'Sundry and miscellaneous expenses share P&L lines',

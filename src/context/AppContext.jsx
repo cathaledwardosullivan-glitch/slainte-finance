@@ -5,6 +5,7 @@ import Papa from 'papaparse';
 // Correct - go up one level from /context/ to /src/, then into subfolders
 import { DEFAULT_CATEGORY_MAPPING } from "../data/categoryMappings";
 import { extractLearningPatterns, processTransactionData, categorizeTransaction, categorizeTransactionSimple } from "../utils/transactionProcessor";
+import { SECTION_TO_GROUP } from "../utils/categorizationEngine";
 import {
     saveTransactions,
     loadTransactions,
@@ -16,6 +17,7 @@ import {
     loadSettings,
     clearAllStorage
 } from "../utils/storageUtils";
+import * as profileStorage from "../storage/practiceProfileStorage";
 
 // 1. Create the context
 const AppContext = createContext(null);
@@ -29,8 +31,8 @@ export const AppProvider = ({ children }) => {
     const [categoryMapping, setCategoryMapping] = useState(DEFAULT_CATEGORY_MAPPING);
     const [paymentAnalysisData, setPaymentAnalysisData] = useState([]);
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-    const [showSensitiveData, setShowSensitiveData] = useState(true);
-    const [useRollingYear, setUseRollingYear] = useState(false); // New: toggle for rolling 12 months
+    const [useRollingYear, setUseRollingYear] = useState(true); // Default to rolling 12 months view
+    const [localOnlyMode, setLocalOnlyModeState] = useState(false); // Local Only Mode - no external connections
     const [isLoading, setIsLoading] = useState(true);
 
     // AI Learning System - Track user corrections to improve AI suggestions
@@ -39,6 +41,13 @@ export const AppProvider = ({ children }) => {
         repeating_transactions: [],
         chat_preferences: []
     });
+
+    // Local Only Mode setter - persists to practice profile
+    const setLocalOnlyMode = (enabled) => {
+        setLocalOnlyModeState(enabled);
+        profileStorage.setLocalOnlyMode(enabled);
+        console.log(`[AppContext] Local Only Mode ${enabled ? 'enabled' : 'disabled'}`);
+    };
 
     // Ref to track the previous categoryMapping to detect actual changes
     const prevCategoryMappingRef = useRef(null);
@@ -121,7 +130,98 @@ export const AppProvider = ({ children }) => {
                     }
                 }
 
-                setTransactions(savedTransactions);
+                // ONE-TIME MIGRATION: Add 'group' field to legacy transactions
+                // This enables similar transaction matching in the layered processing flow
+                console.log('[Migration] Checking transactions for group field migration...');
+                console.log('[Migration] Total transactions:', savedTransactions.length);
+
+                // Debug: Check a sample of transactions
+                const sampleForDebug = savedTransactions.slice(0, 5);
+                console.log('[Migration] Sample transactions:', sampleForDebug.map(t => ({
+                    id: t.id,
+                    hasGroup: !!t.group,
+                    group: t.group,
+                    hasCategory: !!t.category,
+                    categoryType: typeof t.category,
+                    categorySection: t.category?.section
+                })));
+
+                const transactionsNeedingGroupMigration = savedTransactions.filter(t => !t.group && t.category);
+                console.log('[Migration] Transactions needing migration:', transactionsNeedingGroupMigration.length);
+
+                let migratedTransactions = savedTransactions;
+
+                if (transactionsNeedingGroupMigration.length > 0) {
+                    console.log(`✓ Migration: Adding 'group' field to ${transactionsNeedingGroupMigration.length} legacy transactions...`);
+
+                    migratedTransactions = savedTransactions.map(t => {
+                        // Skip if already has group or no category
+                        if (t.group || !t.category) return t;
+
+                        // Derive group from category section
+                        const section = t.category?.section || '';
+                        const group = SECTION_TO_GROUP[section] || 'OTHER';
+
+                        return { ...t, group };
+                    });
+
+                    // Save the migrated transactions
+                    saveTransactions(migratedTransactions);
+
+                    // Log sample of migrated transactions for verification
+                    const sampleMigrated = migratedTransactions
+                        .filter(t => transactionsNeedingGroupMigration.some(orig => orig.id === t.id))
+                        .slice(0, 5);
+                    console.log('  Sample migrated transactions:', sampleMigrated.map(t => ({
+                        details: t.details?.substring(0, 30),
+                        section: t.category?.section,
+                        group: t.group
+                    })));
+
+                    console.log(`✓ Migration complete: All transactions now have 'group' field`);
+                }
+
+                // DATA INTEGRITY CHECK: Correct mismatched group/category combinations
+                // This fixes cases where a transaction has group='OTHER' but category='PPE & Safety Equipment'
+                // (which should be in MEDICAL group based on its section='MEDICAL SUPPLIES')
+                console.log('[Integrity] Checking for group/category mismatches...');
+
+                const transactionsWithMismatch = migratedTransactions.filter(t => {
+                    if (!t.category?.section || !t.group) return false;
+                    const expectedGroup = SECTION_TO_GROUP[t.category.section] || 'OTHER';
+                    return t.group !== expectedGroup;
+                });
+
+                if (transactionsWithMismatch.length > 0) {
+                    console.log(`⚠ Integrity: Found ${transactionsWithMismatch.length} transactions with mismatched group/category`);
+
+                    // Log samples of mismatches for debugging
+                    console.log('  Sample mismatches:', transactionsWithMismatch.slice(0, 5).map(t => ({
+                        details: t.details?.substring(0, 30),
+                        currentGroup: t.group,
+                        categorySection: t.category?.section,
+                        expectedGroup: SECTION_TO_GROUP[t.category?.section] || 'OTHER',
+                        categoryName: t.category?.name
+                    })));
+
+                    // Fix the mismatches
+                    migratedTransactions = migratedTransactions.map(t => {
+                        if (!t.category?.section) return t;
+                        const expectedGroup = SECTION_TO_GROUP[t.category.section] || 'OTHER';
+                        if (t.group !== expectedGroup) {
+                            return { ...t, group: expectedGroup };
+                        }
+                        return t;
+                    });
+
+                    // Save corrected transactions
+                    saveTransactions(migratedTransactions);
+                    console.log(`✓ Integrity: Corrected ${transactionsWithMismatch.length} group/category mismatches`);
+                } else {
+                    console.log('✓ Integrity: No group/category mismatches found');
+                }
+
+                setTransactions(migratedTransactions);
                 setUnidentifiedTransactions(savedUnidentified);
                 setPaymentAnalysisData(savedPaymentAnalysis);
                 setCategoryMapping(finalCategories);
@@ -149,8 +249,8 @@ export const AppProvider = ({ children }) => {
                 }
 
                 setSelectedYear(yearToSelect);
-                setShowSensitiveData(savedSettings.showSensitiveData !== false);
-                setUseRollingYear(savedSettings.useRollingYear || false);
+                setUseRollingYear(savedSettings.useRollingYear !== false);
+                setLocalOnlyModeState(profileStorage.isLocalOnlyMode());
                 setAiCorrections(savedAICorrections);
 
                 console.log(`Context loaded ${savedTransactions.length} transactions, ${finalCategories.reduce((sum, cat) => sum + (cat.identifiers?.length || 0), 0)} identifiers. Selected year: ${yearToSelect}`);
@@ -190,7 +290,7 @@ export const AppProvider = ({ children }) => {
             }
         }
     }, [paymentAnalysisData, isLoading]);
-    useEffect(() => { if (!isLoading) saveSettings({ selectedYear, showSensitiveData, useRollingYear }); }, [selectedYear, showSensitiveData, useRollingYear, isLoading]);
+    useEffect(() => { if (!isLoading) saveSettings({ selectedYear, useRollingYear }); }, [selectedYear, useRollingYear, isLoading]);
     useEffect(() => { if (!isLoading) localStorage.setItem('slainte_ai_corrections', JSON.stringify(aiCorrections)); }, [aiCorrections, isLoading]);
 
 
@@ -253,6 +353,14 @@ export const AppProvider = ({ children }) => {
                 console.log(`✓ Learned ${newPatterns.length} new patterns for ${category.name}:`, newPatterns);
             }
         }
+    };
+
+    // Update a transaction's comment
+    const updateTransactionComment = (transactionId, comment) => {
+        setTransactions(prev =>
+            prev.map(t => t.id === transactionId ? { ...t, comment } : t)
+        );
+        console.log(`✓ Updated comment for transaction ${transactionId}`);
     };
 
     const recategorizeTransaction = (transactionId, categoryCode, shouldLearn = true) => {
@@ -625,11 +733,12 @@ export const AppProvider = ({ children }) => {
         categoryMapping, setCategoryMapping,
         paymentAnalysisData, setPaymentAnalysisData,
         selectedYear, setSelectedYear,
-        showSensitiveData, setShowSensitiveData,
         useRollingYear, setUseRollingYear,
+        localOnlyMode, setLocalOnlyMode,
         getAvailableYears,
         manualCategorize,
         recategorizeTransaction,
+        updateTransactionComment,
         reapplyCategories,
         uploadTransactions,
         clearAllData,

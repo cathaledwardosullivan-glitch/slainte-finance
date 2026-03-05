@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { ChevronRight, ChevronLeft, Check, Users, Stethoscope, Activity, Plus, Trash2, AlertCircle, ChevronDown, HelpCircle } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Check, Users, Stethoscope, Activity, Plus, Trash2, AlertCircle, ChevronDown, HelpCircle, Upload, FileText, CheckCircle2 } from 'lucide-react';
 import COLORS from '../utils/colors';
 import gmsRates from '../data/gmsRates';
+import { parsePracticeDistributionCSV } from '../utils/socratesReportParser';
 
 /**
  * Reusable Disease Field Component - defined outside to prevent re-creation on each render
@@ -159,6 +160,394 @@ const OCFField = ({ id, label, placeholder, ehrGuide, description, value, onChan
 export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisData, onComplete, onCancel }) {
   const [currentStep, setCurrentStep] = useState(1);
   const [expandedEHRGuide, setExpandedEHRGuide] = useState(null); // Which condition's EHR guide is expanded
+  const [csvProcessing, setCsvProcessing] = useState(false);
+  const [csvResult, setCsvResult] = useState(null);
+  const [autoFilledFields, setAutoFilledFields] = useState(new Set());
+  const [showSocratesGuide, setShowSocratesGuide] = useState(false);
+
+  // Detect EHR system from practice profile
+  const ehrSystem = practiceProfile?.practiceDetails?.ehrSystem || '';
+  const isSocrates = ehrSystem === 'socrates';
+  const isHealthOne = ehrSystem === 'healthone';
+  const isHPM = ehrSystem === 'practicemanager';
+  const isCompleteGP = ehrSystem === 'completegp';
+
+  // EHR-specific CDM guides
+  const getCDMGuide = useCallback((conditionId) => {
+    const socratesGuides = {
+      type2Diabetes: [
+        "In Socrates: My Control Panel → Patient Finder → New List → CDM Registrations",
+        "The patient count appears at the top of the results list",
+        "Alternative: Reports → Patients → Patients with Multiple Conditions → Add ICPC-2 code T90",
+        "ICPC-2 code: T90 (Type 2 Diabetes)"
+      ],
+      asthma: [
+        "In Socrates: My Control Panel → Patient Finder → New List → CDM Registrations",
+        "Filter for Asthma registrations — count shown at top",
+        "Alternative: Patients with Multiple Conditions → ICPC-2 code R96",
+        "ICPC-2 code: R96 (Asthma)"
+      ],
+      copd: [
+        "In Socrates: My Control Panel → Patient Finder → New List → CDM Registrations",
+        "Filter for COPD registrations — count shown at top",
+        "Alternative: Patients with Multiple Conditions → ICPC-2 code R95",
+        "ICPC-2 code: R95 (COPD)"
+      ],
+      heartFailure: [
+        "In Socrates: My Control Panel → Patient Finder → New List → CDM Registrations",
+        "Filter for Heart Failure registrations — count shown at top",
+        "Alternative: Patients with Multiple Conditions → ICPC-2 code K77",
+        "ICPC-2 code: K77 (Heart Failure)"
+      ],
+      atrialFibrillation: [
+        "In Socrates: My Control Panel → Patient Finder → New List → CDM Registrations",
+        "Filter for AF registrations — count shown at top",
+        "Alternative: Patients with Multiple Conditions → ICPC-2 code K78",
+        "ICPC-2 code: K78 (Atrial Fibrillation)"
+      ],
+      ihd: [
+        "In Socrates: My Control Panel → Patient Finder → New List → CDM Registrations",
+        "Filter for IHD/Coronary registrations — count shown at top",
+        "Alternative: Patients with Multiple Conditions → ICPC-2 codes K74 (Angina) or K76 (IHD)",
+        "ICPC-2 codes: K74 (Angina), K76 (IHD)"
+      ],
+      stroke: [
+        "In Socrates: My Control Panel → Patient Finder → New List → CDM Registrations",
+        "Filter for Stroke/TIA registrations — count shown at top",
+        "Alternative: Patients with Multiple Conditions → ICPC-2 code K90",
+        "ICPC-2 code: K90 (Stroke/TIA)"
+      ],
+      hypertension: [
+        "In Socrates: Search for patients with ICPC-2 code K86 or K87 (Hypertension)",
+        "Use Patient Finder or Patients with Multiple Conditions report",
+        "Note: Hypertension-only patients go on Prevention Programme, not CDM Treatment"
+      ],
+      preDiabetes: [
+        "In Socrates: Search for HbA1c results 42-47 mmol/mol in patients 45+",
+        "Also search for ICPC-2 code T90 with qualifier 'pre-diabetes' or 'impaired glucose tolerance'",
+        "These patients are eligible for Prevention Programme, not CDM Treatment"
+      ],
+      highCVDRisk: [
+        "In Socrates: Search clinical notes for QRISK scores ≥20% in patients 45+",
+        "Often identified through OCF assessments — check OCF results",
+        "These patients are eligible for Prevention Programme"
+      ],
+      gestationalDMHistory: [
+        "In Socrates: Search past medical history for 'Gestational diabetes' or 'GDM'",
+        "Check obstetric history in patient records for women 18+",
+        "ICD-10 code O24.4"
+      ],
+      preEclampsiaHistory: [
+        "In Socrates: Search past medical history for 'Pre-eclampsia' or 'PET'",
+        "Check obstetric history in patient records for women 18+",
+        "ICD-10 code O14.x"
+      ],
+      ocfEligible: [
+        "In Socrates: Use Patient Finder to search for patients 45+ with risk factors",
+        "Risk factors: BMI ≥30, Current Smoker, High Cholesterol, Family history of DM/CVD",
+        "Exclude patients already on CDM Treatment or Prevention Programme registers",
+        "The CDM Finder Tool can help identify eligible-but-uncalled patients"
+      ]
+    };
+
+    const healthOneGuides = {
+      type2Diabetes: [
+        "In HealthOne: Analysis → CDM Dashboard → filter by disease to count CDM-registered diabetes patients",
+        "Alternative: Analysis → Database Analysis → New → search for 'Diabetes Type 2' in Medical History/Problem",
+        "Patients must be coded in their Problem list for the search to find them"
+      ],
+      asthma: [
+        "In HealthOne: Analysis → CDM Dashboard → filter for Asthma reviews",
+        "Alternative: Analysis → Database Analysis → New → search for 'Asthma' in Medical History/Problem",
+        "Patients must be coded in their Problem list for the search to find them"
+      ],
+      copd: [
+        "In HealthOne: Analysis → CDM Dashboard → filter for COPD reviews",
+        "Alternative: Analysis → Database Analysis → New → search for 'COPD' in Medical History/Problem",
+        "Patients must be coded in their Problem list for the search to find them"
+      ],
+      heartFailure: [
+        "In HealthOne: Analysis → CDM Dashboard → filter for Heart Failure reviews",
+        "Alternative: Analysis → Database Analysis → New → search for 'Heart Failure' in Medical History/Problem",
+        "Patients must be coded in their Problem list for the search to find them"
+      ],
+      atrialFibrillation: [
+        "In HealthOne: Analysis → CDM Dashboard → filter for AF reviews",
+        "Alternative: Analysis → Database Analysis → New → search for 'Atrial Fibrillation' in Medical History/Problem",
+        "Patients must be coded in their Problem list for the search to find them"
+      ],
+      ihd: [
+        "In HealthOne: Analysis → CDM Dashboard → filter for IHD reviews",
+        "Alternative: Analysis → Database Analysis → New → search for 'Ischaemic Heart Disease' or 'Angina' in Medical History/Problem",
+        "Also check for 'Coronary Artery', 'CABG', 'MI' in Problem list"
+      ],
+      stroke: [
+        "In HealthOne: Analysis → CDM Dashboard → filter for Stroke/TIA reviews",
+        "Alternative: Analysis → Database Analysis → New → search for 'Stroke' or 'TIA' in Medical History/Problem",
+        "Also check for 'Cerebrovascular Disease' or 'CVA' in Problem list"
+      ],
+      hypertension: [
+        "In HealthOne: Analysis → Database Analysis → New → search for 'Hypertension' in Medical History/Problem",
+        "You can add age criteria (18+) to narrow results",
+        "Note: Hypertension-only patients go on Prevention Programme, not CDM Treatment"
+      ],
+      preDiabetes: [
+        "In HealthOne: Search lab results for HbA1c 42-47 mmol/mol in patients 45+",
+        "Also check Problem list for 'Pre-diabetes' or 'Impaired glucose tolerance'",
+        "These patients are eligible for Prevention Programme, not CDM Treatment"
+      ],
+      highCVDRisk: [
+        "In HealthOne: Check OCF review outcomes — patients moved to PP had QRISK ≥20%",
+        "Analysis → CDM Dashboard → filter for PP reviews with 'High CVD Risk' indication",
+        "These patients are eligible for Prevention Programme"
+      ],
+      gestationalDMHistory: [
+        "In HealthOne: Analysis → Database Analysis → New → search for 'Gestational diabetes' or 'GDM' in Problem list",
+        "CDM Phase 3: PP is open to patients with GDM diagnosed since Jan 2023",
+        "ICD-10 code O24.4"
+      ],
+      preEclampsiaHistory: [
+        "In HealthOne: Analysis → Database Analysis → New → search for 'Pre-eclampsia' in Problem list",
+        "CDM Phase 3: PP is open to patients with pre-eclampsia diagnosed since Jan 2023",
+        "ICD-10 code O14.x"
+      ],
+      ocfEligible: [
+        "In HealthOne: Analysis → CDM Dashboard → 'Last Visits' tab → filter for patients not yet assessed",
+        "OCF is available for GMS/DVC patients 45+ with risk factors",
+        "Risk factors: BMI ≥30, Smoker, High Cholesterol, Family history of DM/CVD",
+        "Outcome: Low risk (stay OCF), High risk (move to PP), or Diagnosis (move to CDM)"
+      ]
+    };
+
+    const hpmGuides = {
+      type2Diabetes: [
+        "In HPM: Reports → Diagnosis Report → search for 'Diabetes Type 2' → Run",
+        "Patient count shown at top of results list",
+        "Alternative: Tasks → Claim Tracker → Chronic Disease Tracker → filter by Diabetes",
+        "Patients must be coded under Medical History for the search to find them"
+      ],
+      asthma: [
+        "In HPM: Reports → Diagnosis Report → search for 'Asthma' → Run",
+        "Patient count shown at top of results list",
+        "Alternative: Tasks → Claim Tracker → Chronic Disease Tracker → filter by Asthma",
+        "Patients must be coded under Medical History for the search to find them"
+      ],
+      copd: [
+        "In HPM: Reports → Diagnosis Report → search for 'COPD' → Run",
+        "Patient count shown at top of results list",
+        "Alternative: Tasks → Claim Tracker → Chronic Disease Tracker → filter by COPD",
+        "Patients must be coded under Medical History for the search to find them"
+      ],
+      heartFailure: [
+        "In HPM: Reports → Diagnosis Report → search for 'Heart Failure' → Run",
+        "Patient count shown at top of results list",
+        "Alternative: Tasks → Claim Tracker → Chronic Disease Tracker → filter by Heart Failure",
+        "Patients must be coded under Medical History for the search to find them"
+      ],
+      atrialFibrillation: [
+        "In HPM: Reports → Diagnosis Report → search for 'Atrial Fibrillation' → Run",
+        "Patient count shown at top of results list",
+        "Alternative: Tasks → Claim Tracker → Chronic Disease Tracker → filter by AF",
+        "Patients must be coded under Medical History for the search to find them"
+      ],
+      ihd: [
+        "In HPM: Reports → Diagnosis Report → search for 'Ischaemic Heart Disease' → Run",
+        "Also search for 'Angina', 'Coronary Artery Disease' — use 'Show Any' to combine",
+        "Alternative: Tasks → Claim Tracker → Chronic Disease Tracker → filter by IHD",
+        "Patients must be coded under Medical History for the search to find them"
+      ],
+      stroke: [
+        "In HPM: Reports → Diagnosis Report → search for 'Stroke' → Run",
+        "Also search for 'TIA', 'Cerebrovascular Disease' — use 'Show Any' to combine",
+        "Alternative: Tasks → Claim Tracker → Chronic Disease Tracker → filter by Stroke/TIA",
+        "Patients must be coded under Medical History for the search to find them"
+      ],
+      hypertension: [
+        "In HPM: Reports → Diagnosis Report → search for 'Hypertension' → Run",
+        "Filter by age 18+ if needed",
+        "Note: Hypertension-only patients go on Prevention Programme, not CDM Treatment"
+      ],
+      preDiabetes: [
+        "In HPM: Search lab results for HbA1c 42-47 mmol/mol in patients 45+",
+        "Also: Reports → Diagnosis Report → search for 'Pre-diabetes' or 'Impaired glucose tolerance'",
+        "These patients are eligible for Prevention Programme, not CDM Treatment"
+      ],
+      highCVDRisk: [
+        "In HPM: Check OCF review outcomes in Claim Tracker — patients moved to PP had QRISK ≥20%",
+        "Tasks → Claim Tracker → Chronic Disease Tracker → filter by Prevention Programme",
+        "These patients are eligible for Prevention Programme"
+      ],
+      gestationalDMHistory: [
+        "In HPM: Reports → Diagnosis Report → search for 'Gestational diabetes' → Run",
+        "Also check Protocols → Maternity for obstetric history in women 18+",
+        "ICD-10 code O24.4"
+      ],
+      preEclampsiaHistory: [
+        "In HPM: Reports → Diagnosis Report → search for 'Pre-eclampsia' → Run",
+        "Also check Protocols → Maternity for obstetric history in women 18+",
+        "ICD-10 code O14.x"
+      ],
+      ocfEligible: [
+        "In HPM: Reports → Patient Reports → filter Age 45+, Patient Type GMS/DVC",
+        "Cross-reference with Claim Tracker to exclude patients already on CDM/PP",
+        "Risk factors: BMI ≥30, Smoker, High Cholesterol, Family history of DM/CVD",
+        "OCF outcome: Low risk (stay OCF), High risk (move to PP), or Diagnosis (move to CDM)"
+      ]
+    };
+
+    const completeGPGuides = {
+      type2Diabetes: [
+        "In CompleteGP: Use the Search Tool to find patients coded with 'Type 2 Diabetes'",
+        "Search by ICD-10 code E11.x, ICPC-2 code T90, or SNOMED term",
+        "The patient count is shown at the top of the results",
+        "Save the search for future use — searches can be exported and shared"
+      ],
+      asthma: [
+        "In CompleteGP: Use the Search Tool to find patients coded with 'Asthma'",
+        "Search by ICD-10 code J45.x, ICPC-2 code R96, or SNOMED term",
+        "The patient count is shown at the top of the results"
+      ],
+      copd: [
+        "In CompleteGP: Use the Search Tool to find patients coded with 'COPD'",
+        "Search by ICD-10 code J44.x, ICPC-2 code R95, or SNOMED term",
+        "The patient count is shown at the top of the results"
+      ],
+      heartFailure: [
+        "In CompleteGP: Use the Search Tool to find patients coded with 'Heart Failure'",
+        "Search by ICD-10 code I50.x, ICPC-2 code K77, or SNOMED term",
+        "The patient count is shown at the top of the results"
+      ],
+      atrialFibrillation: [
+        "In CompleteGP: Use the Search Tool to find patients coded with 'Atrial Fibrillation'",
+        "Search by ICD-10 code I48.x, ICPC-2 code K78, or SNOMED term",
+        "The patient count is shown at the top of the results"
+      ],
+      ihd: [
+        "In CompleteGP: Use the Search Tool to find patients coded with 'Ischaemic Heart Disease'",
+        "Also search for 'Angina', 'MI' — combine searches as needed",
+        "Search by ICD-10 codes I20-I25, ICPC-2 codes K74/K76, or SNOMED terms"
+      ],
+      stroke: [
+        "In CompleteGP: Use the Search Tool to find patients coded with 'Stroke' or 'TIA'",
+        "Also search for 'Cerebrovascular Disease'",
+        "Search by ICD-10 codes I60-I69/G45, ICPC-2 code K90, or SNOMED terms"
+      ],
+      hypertension: [
+        "In CompleteGP: Use the Search Tool to find patients coded with 'Hypertension'",
+        "Search by ICD-10 code I10, ICPC-2 code K86/K87, or SNOMED term",
+        "Note: Hypertension-only patients go on Prevention Programme, not CDM Treatment"
+      ],
+      preDiabetes: [
+        "In CompleteGP: Search for patients with HbA1c results 42-47 mmol/mol (ages 45+)",
+        "Also search coded records for 'Pre-diabetes' or 'Impaired glucose tolerance'",
+        "These patients are eligible for Prevention Programme, not CDM Treatment"
+      ],
+      highCVDRisk: [
+        "In CompleteGP: Search clinical records for QRISK scores ≥20% in patients 45+",
+        "Check OCF review outcomes — patients moved to PP had high CVD risk",
+        "These patients are eligible for Prevention Programme"
+      ],
+      gestationalDMHistory: [
+        "In CompleteGP: Search coded records for 'Gestational diabetes' or 'GDM'",
+        "ICD-10 code O24.4 — search in obstetric/medical history for women 18+"
+      ],
+      preEclampsiaHistory: [
+        "In CompleteGP: Search coded records for 'Pre-eclampsia'",
+        "ICD-10 code O14.x — search in obstetric/medical history for women 18+"
+      ],
+      ocfEligible: [
+        "In CompleteGP: Use the Search Tool to find GMS/DVC patients aged 45+ with risk factors",
+        "Cross-reference to exclude patients already on CDM or Prevention Programme",
+        "Risk factors: BMI ≥30, Smoker, High Cholesterol, Family history of DM/CVD"
+      ]
+    };
+
+    const genericGuides = {
+      type2Diabetes: [
+        "Socrates: Patient Finder → CDM Registrations (ICPC-2: T90)",
+        "HealthOne: Analysis → CDM Dashboard or Database Analysis → 'Diabetes Type 2'",
+        "HPM: Reports → Diagnosis Report → search 'Diabetes Type 2'",
+        "Search: ICD-10 code E11.x or problem 'Type 2 Diabetes'"
+      ],
+      asthma: [
+        "Socrates: Patient Finder → CDM Registrations (ICPC-2: R96)",
+        "HealthOne: Analysis → CDM Dashboard or Database Analysis → 'Asthma'",
+        "HPM: Reports → Diagnosis Report → search 'Asthma'",
+        "Search: ICD-10 code J45.x or problem 'Asthma'"
+      ],
+      copd: [
+        "Socrates: Patient Finder → CDM Registrations (ICPC-2: R95)",
+        "HealthOne: Analysis → CDM Dashboard or Database Analysis → 'COPD'",
+        "HPM: Reports → Diagnosis Report → search 'COPD'",
+        "Search: ICD-10 code J44.x or problem 'COPD'"
+      ],
+      heartFailure: [
+        "Socrates: Patient Finder → CDM Registrations (ICPC-2: K77)",
+        "HealthOne: Analysis → CDM Dashboard or Database Analysis → 'Heart Failure'",
+        "HPM: Reports → Diagnosis Report → search 'Heart Failure'",
+        "Search: ICD-10 code I50.x or problem 'Heart Failure'"
+      ],
+      atrialFibrillation: [
+        "Socrates: Patient Finder → CDM Registrations (ICPC-2: K78)",
+        "HealthOne: Analysis → CDM Dashboard or Database Analysis → 'Atrial Fibrillation'",
+        "HPM: Reports → Diagnosis Report → search 'Atrial Fibrillation'",
+        "Search: ICD-10 code I48.x or problem 'AF'"
+      ],
+      ihd: [
+        "Socrates: Patient Finder → CDM Registrations (ICPC-2: K74/K76)",
+        "HealthOne: Analysis → CDM Dashboard or Database Analysis → 'IHD'",
+        "HPM: Reports → Diagnosis Report → search 'Ischaemic Heart Disease'",
+        "Search: ICD-10 codes I20-I25 or problems 'Angina', 'MI', 'CABG'"
+      ],
+      stroke: [
+        "Socrates: Patient Finder → CDM Registrations (ICPC-2: K90)",
+        "HealthOne: Analysis → CDM Dashboard or Database Analysis → 'Stroke'",
+        "HPM: Reports → Diagnosis Report → search 'Stroke' or 'TIA'",
+        "Search: ICD-10 codes I60-I69, G45 or problems 'Stroke', 'TIA', 'CVA'"
+      ],
+      hypertension: [
+        "Socrates: Search for ICPC-2 code K86/K87 (Hypertension)",
+        "HealthOne: Analysis → Database Analysis → search 'Hypertension'",
+        "HPM: Reports → Diagnosis Report → search 'Hypertension'",
+        "Note: Hypertension-only patients go on PP, not CDM Treatment"
+      ],
+      preDiabetes: [
+        "Search for HbA1c results 42-47 mmol/mol in patients 45+",
+        "Also search for problem 'Pre-diabetes' or 'Impaired glucose tolerance'"
+      ],
+      highCVDRisk: [
+        "Search clinical notes for QRISK scores ≥20% in patients 45+",
+        "Often identified through OCF assessments"
+      ],
+      gestationalDMHistory: [
+        "Search past medical history for 'Gestational diabetes' or 'GDM'",
+        "ICD-10 code O24.4 in obstetric history"
+      ],
+      preEclampsiaHistory: [
+        "Search past medical history for 'Pre-eclampsia' or 'PET'",
+        "ICD-10 code O14.x in obstetric history"
+      ],
+      ocfEligible: [
+        "Search for patients 45+ with risk factors who are NOT on CDM/PP registers",
+        "Risk factors: BMI ≥30, Smoker, High Cholesterol, Family history",
+        "Exclude patients already on CDM Treatment or Prevention Programme"
+      ]
+    };
+
+    if (isSocrates && socratesGuides[conditionId]) {
+      return socratesGuides[conditionId];
+    }
+    if (isHealthOne && healthOneGuides[conditionId]) {
+      return healthOneGuides[conditionId];
+    }
+    if (isHPM && hpmGuides[conditionId]) {
+      return hpmGuides[conditionId];
+    }
+    if (isCompleteGP && completeGPGuides[conditionId]) {
+      return completeGPGuides[conditionId];
+    }
+    return genericGuides[conditionId] || [];
+  }, [isSocrates, isHealthOne, isHPM, isCompleteGP]);
 
   // Calculate smears performed from PCRS cervical screening payments
   const calculatedSmearsPerformed = useMemo(() => {
@@ -187,8 +576,8 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
     });
 
     if (totalCervicalPayments > 0) {
-      // Rate is €49.10 per smear
-      const perSmearRate = gmsRates.cervicalCheck?.perSmear || 49.10;
+      // Current rate per smear (€65 since HPV primary screening, March 2020)
+      const perSmearRate = gmsRates.cervicalCheck?.perSmear || 65.00;
       return Math.round(totalCervicalPayments / perSmearRate);
     }
     return null;
@@ -309,7 +698,7 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
       // OCF - Opportunistic Case Finding (45+ with risk factors, not on CDM/PP)
       ocfEligible: '',            // 45+ with risk factors (smoker, BMI≥30, dyslipidaemia, family history, etc.)
     },
-    // Step 4: Cervical Screening (smears performed comes from PCRS data)
+    // Cervical Screening (in Step 1, smears performed comes from PCRS data)
     cervicalCheckActivity: practiceProfile?.healthCheckData?.cervicalCheckActivity || {
       eligibleWomen25to44: '',
       eligibleWomen45to65: '',
@@ -329,14 +718,13 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
     }
   }, [paymentAnalysisData, practiceProfile?.staff]);
 
-  const totalSteps = 4;
+  const totalSteps = 3;
 
   // Step labels for progress indicator
   const stepLabels = [
-    { num: 1, title: 'Capitation', icon: Users },
+    { num: 1, title: 'Patient Demographics', icon: Users },
     { num: 2, title: 'Practice Support', icon: Users },
-    { num: 3, title: 'CDM', icon: Stethoscope },
-    { num: 4, title: 'Cervical Screening', icon: Activity }
+    { num: 3, title: 'Disease Registers', icon: Stethoscope }
   ];
 
   const handleNext = () => {
@@ -489,6 +877,78 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
     }));
   };
 
+  // Handle CSV file upload for Socrates Practice Distribution Breakdown
+  const handleCSVUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setCsvProcessing(true);
+    setCsvResult(null);
+
+    try {
+      const csvText = await file.text();
+      const result = parsePracticeDistributionCSV(csvText);
+
+      setCsvResult(result);
+
+      if (result.success) {
+        const filled = new Set();
+
+        // Auto-fill demographics
+        if (result.data.demographics.under6 > 0) {
+          setFormData(prev => ({
+            ...prev,
+            demographics: {
+              ...prev.demographics,
+              under6: String(result.data.demographics.under6),
+              over70: String(result.data.demographics.over70),
+            },
+            cervicalCheckActivity: {
+              ...prev.cervicalCheckActivity,
+              eligibleWomen25to44: String(result.data.cervicalScreening.eligibleWomen25to44),
+              eligibleWomen45to65: String(result.data.cervicalScreening.eligibleWomen45to65),
+            },
+            stcDemographics: {
+              ...prev.stcDemographics,
+              gmsFemale17to35: result.data.contraceptionDemographics?.gmsFemale17to35 || 0,
+              gmsFemale36to44: result.data.contraceptionDemographics?.gmsFemale36to44 || 0,
+            }
+          }));
+          filled.add('under6');
+          filled.add('over70');
+          filled.add('eligibleWomen25to44');
+          filled.add('eligibleWomen45to65');
+          if (result.data.contraceptionDemographics?.gmsFemale17to35 > 0) {
+            filled.add('gmsFemale17to35');
+            filled.add('gmsFemale36to44');
+          }
+        }
+
+        setAutoFilledFields(filled);
+      }
+    } catch (err) {
+      setCsvResult({
+        success: false,
+        error: `Failed to read file: ${err.message}`,
+        warnings: []
+      });
+    } finally {
+      setCsvProcessing(false);
+    }
+  };
+
+  // Helper to render auto-filled badge
+  const AutoFilledBadge = ({ field }) => {
+    if (!autoFilledFields.has(field)) return null;
+    return (
+      <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ml-2"
+        style={{ backgroundColor: '#DCFCE7', color: '#166534' }}>
+        <CheckCircle2 className="h-3 w-3" />
+        Auto-filled
+      </span>
+    );
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 overflow-y-auto py-4 px-4">
       <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full my-auto flex flex-col" style={{ maxHeight: 'calc(100vh - 2rem)' }}>
@@ -514,33 +974,165 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
 
         {/* Form Content - Scrollable */}
         <div className="p-6 overflow-y-auto flex-1">
-          {/* STEP 1: Capitation - Demographics */}
+          {/* STEP 1: Patient Demographics (merged demographics + cervical screening) */}
           {currentStep === 1 && (
             <div className="space-y-6">
               <div className="flex items-center gap-3 mb-2">
                 <Users className="h-6 w-6" style={{ color: COLORS.slainteBlue }} />
                 <h3 className="text-xl font-semibold" style={{ color: COLORS.darkGray }}>
-                  1. Capitation Income
+                  1. Patient Demographics
                 </h3>
               </div>
               <p className="text-sm mb-4" style={{ color: COLORS.mediumGray }}>
-                Enter your GMS patient counts by age band from your EHR. This is compared against PCRS registered patients to identify registration gaps.
+                Patient counts from your EHR are used to calculate capitation income and cervical screening potential.
+                {isSocrates && ' You can import these automatically from a Socrates report.'}
               </p>
 
-              {/* Demographics */}
+              {/* CSV Upload Section - prominent for Socrates users */}
+              {isSocrates && (
+                <div className="border-2 rounded-lg p-4" style={{ borderColor: csvResult?.success ? '#22C55E' : COLORS.slainteBlue, backgroundColor: csvResult?.success ? '#F0FDF4' : '#EFF6FF' }}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <FileText className="h-5 w-5" style={{ color: csvResult?.success ? '#166534' : '#1E40AF' }} />
+                    <h4 className="font-semibold" style={{ color: csvResult?.success ? '#166534' : '#1E40AF' }}>
+                      {csvResult?.success ? 'Report Imported Successfully' : 'Import from Socrates Report'}
+                    </h4>
+                    {!csvResult?.success && (
+                      <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: '#DBEAFE', color: '#1E40AF' }}>
+                        Recommended
+                      </span>
+                    )}
+                  </div>
+
+                  {csvResult?.success ? (
+                    // Success state
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-4 gap-2 text-sm">
+                        <div className="p-2 rounded" style={{ backgroundColor: 'white' }}>
+                          <span style={{ color: COLORS.mediumGray }}>GMS</span>
+                          <p className="font-semibold">{csvResult.data.panelSummary.totalGMS.toLocaleString()}</p>
+                        </div>
+                        <div className="p-2 rounded" style={{ backgroundColor: 'white' }}>
+                          <span style={{ color: COLORS.mediumGray }}>DVC</span>
+                          <p className="font-semibold">{csvResult.data.panelSummary.totalDVC.toLocaleString()}</p>
+                        </div>
+                        <div className="p-2 rounded" style={{ backgroundColor: 'white' }}>
+                          <span style={{ color: COLORS.mediumGray }}>Private</span>
+                          <p className="font-semibold">{csvResult.data.panelSummary.totalPrivate.toLocaleString()}</p>
+                        </div>
+                        <div className="p-2 rounded" style={{ backgroundColor: 'white' }}>
+                          <span style={{ color: COLORS.mediumGray }}>Total</span>
+                          <p className="font-semibold">{csvResult.data.panelSummary.grandTotal.toLocaleString()}</p>
+                        </div>
+                      </div>
+                      {csvResult.warnings?.length > 0 && (
+                        <div className="space-y-1 mt-2">
+                          {csvResult.warnings.map((w, i) => (
+                            <p key={i} className="flex items-start gap-1 text-xs" style={{ color: '#92400E' }}>
+                              <AlertCircle className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                              {w}
+                            </p>
+                          ))}
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => { setCsvResult(null); setAutoFilledFields(new Set()); }}
+                        className="text-xs mt-1 underline"
+                        style={{ color: COLORS.mediumGray }}
+                      >
+                        Upload a different file
+                      </button>
+                    </div>
+                  ) : (
+                    // Upload state
+                    <div>
+                      <p className="text-sm mb-3" style={{ color: '#3B82F6' }}>
+                        Export the "Practice Distribution Breakdown" report from Socrates as CSV and upload it here.
+                        This contains aggregate patient counts only — no patient identifiers.
+                      </p>
+
+                      {/* Step-by-step guide (expandable) */}
+                      <button
+                        type="button"
+                        onClick={() => setShowSocratesGuide(!showSocratesGuide)}
+                        className="flex items-center gap-1 text-xs mb-3 font-medium"
+                        style={{ color: '#1E40AF' }}
+                      >
+                        <ChevronDown className={`h-3 w-3 transition-transform ${showSocratesGuide ? 'rotate-180' : ''}`} />
+                        Step-by-step guide
+                      </button>
+                      {showSocratesGuide && (
+                        <div className="p-3 rounded text-sm mb-3 space-y-1" style={{ backgroundColor: 'white', color: '#1E40AF' }}>
+                          <p>1. Open Socrates and go to <strong>Reports</strong></p>
+                          <p>2. Select the <strong>Patients</strong> category</p>
+                          <p>3. Double-click <strong>Practice Distribution Breakdown</strong></p>
+                          <p>4. Click <strong>Run Report</strong> (no filters needed — defaults are fine)</p>
+                          <p>5. Click <strong>Save</strong> → <strong>CSV File...</strong></p>
+                          <p>6. Save the file and upload it here</p>
+                        </div>
+                      )}
+
+                      {/* Upload zone */}
+                      <label className="block border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:bg-blue-50 transition-colors"
+                        style={{ borderColor: COLORS.slainteBlue }}>
+                        <input
+                          type="file"
+                          accept=".csv"
+                          onChange={handleCSVUpload}
+                          className="hidden"
+                        />
+                        {csvProcessing ? (
+                          <div className="flex flex-col items-center gap-2">
+                            <div className="animate-spin h-6 w-6 border-2 rounded-full" style={{ borderColor: COLORS.lightGray, borderTopColor: COLORS.slainteBlue }} />
+                            <span className="text-sm" style={{ color: COLORS.mediumGray }}>Processing...</span>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center gap-2">
+                            <Upload className="h-6 w-6" style={{ color: COLORS.slainteBlue }} />
+                            <span className="text-sm font-medium" style={{ color: COLORS.slainteBlue }}>Upload CSV</span>
+                            <span className="text-xs" style={{ color: COLORS.mediumGray }}>Drop file or click to browse</span>
+                          </div>
+                        )}
+                      </label>
+
+                      {/* Error display */}
+                      {csvResult && !csvResult.success && (
+                        <div className="mt-3 p-3 rounded-lg flex items-start gap-2" style={{ backgroundColor: '#FEF2F2' }}>
+                          <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" style={{ color: '#DC2626' }} />
+                          <p className="text-sm" style={{ color: '#991B1B' }}>{csvResult.error}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Divider between CSV upload and manual entry */}
+              {isSocrates && (
+                <div className="flex items-center gap-4">
+                  <div className="flex-1 h-px" style={{ backgroundColor: COLORS.lightGray }} />
+                  <span className="text-sm font-medium" style={{ color: COLORS.mediumGray }}>
+                    {csvResult?.success ? 'Review & adjust' : 'or enter manually'}
+                  </span>
+                  <div className="flex-1 h-px" style={{ backgroundColor: COLORS.lightGray }} />
+                </div>
+              )}
+
+              {/* Demographics fields */}
               <div className="space-y-4">
                 <div className="p-3 rounded-lg" style={{ backgroundColor: '#EFF6FF', borderLeft: '4px solid #3B82F6' }}>
                   <h4 className="font-semibold" style={{ color: '#1E40AF' }}>
-                    Patient Demographics (from your EHR)
+                    Capitation Demographics
                   </h4>
                   <p className="text-sm mt-1" style={{ color: '#3B82F6' }}>
-                    Capitation rates vary by age: Under 6 (€156/qtr), 6-7 (€66.70), 8-12 (€44.43), 13-69 (€44.43), 70+ (€273.38)
+                    Capitation rates vary by age: Under 6 (€156/qtr), 6-7 (€66.70), 8-69 (€44.43), 70+ (€273.38)
                   </p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
-                      Under 6 years
+                      Under 6 years (GMS + DVC)
+                      <AutoFilledBadge field="under6" />
                     </label>
                     <input
                       type="number"
@@ -548,8 +1140,8 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                       value={formData.demographics.under6}
                       onChange={(e) => updateField('demographics', 'under6', e.target.value)}
                       className="w-full p-2 border rounded"
-                      style={{ borderColor: COLORS.lightGray }}
-                      placeholder="e.g., 410"
+                      style={{ borderColor: autoFilledFields.has('under6') ? '#22C55E' : COLORS.lightGray }}
+                      placeholder="e.g., 274"
                     />
                   </div>
                   <div>
@@ -565,10 +1157,17 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                       style={{ borderColor: COLORS.lightGray }}
                       placeholder="e.g., 205"
                     />
+                    {csvResult?.success && csvResult.data.demographics.age6to9 > 0 && (
+                      <p className="text-xs mt-1 flex items-start gap-1" style={{ color: '#92400E' }}>
+                        <AlertCircle className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                        Socrates groups ages 6-9 together ({csvResult.data.demographics.age6to9} patients). Enter the 6-7 count manually if known.
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
-                      Over 70 years
+                      Over 70 years (GMS + DVC)
+                      <AutoFilledBadge field="over70" />
                     </label>
                     <input
                       type="number"
@@ -576,8 +1175,8 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                       value={formData.demographics.over70}
                       onChange={(e) => updateField('demographics', 'over70', e.target.value)}
                       className="w-full p-2 border rounded"
-                      style={{ borderColor: COLORS.lightGray }}
-                      placeholder="e.g., 1015"
+                      style={{ borderColor: autoFilledFields.has('over70') ? '#22C55E' : COLORS.lightGray }}
+                      placeholder="e.g., 950"
                     />
                   </div>
                   <div>
@@ -593,7 +1192,63 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                       style={{ borderColor: COLORS.lightGray }}
                       placeholder="e.g., 12"
                     />
+                    {csvResult?.success && (
+                      <p className="text-xs mt-1" style={{ color: COLORS.mediumGray }}>
+                        Not available from the report — enter manually.
+                      </p>
+                    )}
                   </div>
+                </div>
+              </div>
+
+              {/* Cervical Screening Section (merged from old Step 4) */}
+              <div className="space-y-4">
+                <div className="p-3 rounded-lg" style={{ backgroundColor: '#FDF2F8', borderLeft: '4px solid #EC4899' }}>
+                  <h4 className="font-semibold" style={{ color: '#9D174D' }}>
+                    Cervical Screening Eligibility
+                  </h4>
+                  <p className="text-sm mt-1" style={{ color: '#BE185D' }}>
+                    All women aged 25-65 are eligible. Screening interval: 3 years (25-44), 5 years (45-65). Rate: €65.00 per smear.
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                      Eligible Women (aged 25-44)
+                      <AutoFilledBadge field="eligibleWomen25to44" />
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={formData.cervicalCheckActivity.eligibleWomen25to44}
+                      onChange={(e) => updateField('cervicalCheckActivity', 'eligibleWomen25to44', e.target.value)}
+                      className="w-full p-2 border rounded"
+                      style={{ borderColor: autoFilledFields.has('eligibleWomen25to44') ? '#22C55E' : COLORS.lightGray }}
+                      placeholder="e.g., 1450"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                      Eligible Women (aged 45-65)
+                      <AutoFilledBadge field="eligibleWomen45to65" />
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={formData.cervicalCheckActivity.eligibleWomen45to65}
+                      onChange={(e) => updateField('cervicalCheckActivity', 'eligibleWomen45to65', e.target.value)}
+                      className="w-full p-2 border rounded"
+                      style={{ borderColor: autoFilledFields.has('eligibleWomen45to65') ? '#22C55E' : COLORS.lightGray }}
+                      placeholder="e.g., 1237"
+                    />
+                  </div>
+                </div>
+
+                {/* Note about auto-calculated smears */}
+                <div className="p-3 rounded-lg" style={{ backgroundColor: COLORS.backgroundGray }}>
+                  <p className="text-sm" style={{ color: COLORS.mediumGray }}>
+                    <strong>Auto-calculated from PCRS:</strong> Smears performed count is automatically extracted from your uploaded PCRS PDFs.
+                  </p>
                 </div>
               </div>
             </div>
@@ -893,11 +1548,7 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                     onChange={(e) => updateField('diseaseRegisters', 'type2Diabetes', e.target.value)}
                     expandedEHRGuide={expandedEHRGuide}
                     setExpandedEHRGuide={setExpandedEHRGuide}
-                    ehrGuide={[
-                      "Socrates: Reports → Clinical → Disease Register → Diabetes Type 2",
-                      "HealthOne: Recall → Disease Registers → Type 2 Diabetes",
-                      "ICGP Search: ICD-10 code E11.x or problem 'Type 2 Diabetes'"
-                    ]}
+                    ehrGuide={getCDMGuide('type2Diabetes')}
                   />
                   <DiseaseField
                     id="asthma"
@@ -907,11 +1558,7 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                     onChange={(e) => updateField('diseaseRegisters', 'asthma', e.target.value)}
                     expandedEHRGuide={expandedEHRGuide}
                     setExpandedEHRGuide={setExpandedEHRGuide}
-                    ehrGuide={[
-                      "Socrates: Reports → Clinical → Disease Register → Asthma",
-                      "HealthOne: Recall → Disease Registers → Asthma",
-                      "ICGP Search: ICD-10 code J45.x or problem 'Asthma'"
-                    ]}
+                    ehrGuide={getCDMGuide('asthma')}
                   />
                   <DiseaseField
                     id="copd"
@@ -921,11 +1568,7 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                     onChange={(e) => updateField('diseaseRegisters', 'copd', e.target.value)}
                     expandedEHRGuide={expandedEHRGuide}
                     setExpandedEHRGuide={setExpandedEHRGuide}
-                    ehrGuide={[
-                      "Socrates: Reports → Clinical → Disease Register → COPD",
-                      "HealthOne: Recall → Disease Registers → COPD",
-                      "ICGP Search: ICD-10 code J44.x or problem 'COPD'"
-                    ]}
+                    ehrGuide={getCDMGuide('copd')}
                   />
                   <DiseaseField
                     id="heartFailure"
@@ -935,11 +1578,7 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                     onChange={(e) => updateField('diseaseRegisters', 'heartFailure', e.target.value)}
                     expandedEHRGuide={expandedEHRGuide}
                     setExpandedEHRGuide={setExpandedEHRGuide}
-                    ehrGuide={[
-                      "Socrates: Reports → Clinical → Disease Register → Heart Failure",
-                      "HealthOne: Recall → Disease Registers → Heart Failure",
-                      "ICGP Search: ICD-10 code I50.x or problem 'Heart Failure'"
-                    ]}
+                    ehrGuide={getCDMGuide('heartFailure')}
                   />
                   <DiseaseField
                     id="atrialFibrillation"
@@ -949,11 +1588,7 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                     onChange={(e) => updateField('diseaseRegisters', 'atrialFibrillation', e.target.value)}
                     expandedEHRGuide={expandedEHRGuide}
                     setExpandedEHRGuide={setExpandedEHRGuide}
-                    ehrGuide={[
-                      "Socrates: Reports → Clinical → Disease Register → AF",
-                      "HealthOne: Recall → Disease Registers → Atrial Fibrillation",
-                      "ICGP Search: ICD-10 code I48.x or problem 'AF' or 'Atrial Fibrillation'"
-                    ]}
+                    ehrGuide={getCDMGuide('atrialFibrillation')}
                   />
                   <DiseaseField
                     id="ihd"
@@ -963,11 +1598,7 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                     onChange={(e) => updateField('diseaseRegisters', 'ihd', e.target.value)}
                     expandedEHRGuide={expandedEHRGuide}
                     setExpandedEHRGuide={setExpandedEHRGuide}
-                    ehrGuide={[
-                      "Socrates: Reports → Clinical → Disease Register → IHD/Coronary Heart Disease",
-                      "HealthOne: Recall → Disease Registers → IHD",
-                      "ICGP Search: ICD-10 codes I20-I25 or problems like 'Angina', 'MI', 'CABG'"
-                    ]}
+                    ehrGuide={getCDMGuide('ihd')}
                   />
                   <DiseaseField
                     id="stroke"
@@ -977,11 +1608,7 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                     onChange={(e) => updateField('diseaseRegisters', 'stroke', e.target.value)}
                     expandedEHRGuide={expandedEHRGuide}
                     setExpandedEHRGuide={setExpandedEHRGuide}
-                    ehrGuide={[
-                      "Socrates: Reports → Clinical → Disease Register → Stroke/TIA",
-                      "HealthOne: Recall → Disease Registers → Stroke",
-                      "ICGP Search: ICD-10 codes I60-I69, G45 or problems 'Stroke', 'TIA', 'CVA'"
-                    ]}
+                    ehrGuide={getCDMGuide('stroke')}
                   />
                 </div>
 
@@ -1005,11 +1632,7 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                     onChange={(e) => updateField('diseaseRegisters', 'hypertension', e.target.value)}
                     expandedEHRGuide={expandedEHRGuide}
                     setExpandedEHRGuide={setExpandedEHRGuide}
-                    ehrGuide={[
-                      "Socrates: Reports → Clinical → Disease Register → Hypertension",
-                      "HealthOne: Recall → Disease Registers → Hypertension",
-                      "Note: Hypertension-only patients go on PP, not CDM Treatment"
-                    ]}
+                    ehrGuide={getCDMGuide('hypertension')}
                   />
                   <PPField
                     id="preDiabetes"
@@ -1020,11 +1643,7 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                     onChange={(e) => updateField('diseaseRegisters', 'preDiabetes', e.target.value)}
                     expandedEHRGuide={expandedEHRGuide}
                     setExpandedEHRGuide={setExpandedEHRGuide}
-                    ehrGuide={[
-                      "Socrates: Search for HbA1c results 42-47 mmol/mol in patients 45+",
-                      "HealthOne: Lab results filter + Age 45+",
-                      "Also search for problem 'Pre-diabetes' or 'Impaired glucose tolerance'"
-                    ]}
+                    ehrGuide={getCDMGuide('preDiabetes')}
                   />
                   <PPField
                     id="highCVDRisk"
@@ -1035,11 +1654,7 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                     onChange={(e) => updateField('diseaseRegisters', 'highCVDRisk', e.target.value)}
                     expandedEHRGuide={expandedEHRGuide}
                     setExpandedEHRGuide={setExpandedEHRGuide}
-                    ehrGuide={[
-                      "Socrates: Search for QRISK scores ≥20%",
-                      "HealthOne: Clinical notes search for 'QRISK' or 'High CVD Risk'",
-                      "Often identified through OCF assessments"
-                    ]}
+                    ehrGuide={getCDMGuide('highCVDRisk')}
                   />
                   <PPField
                     id="gestationalDMHistory"
@@ -1050,11 +1665,7 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                     onChange={(e) => updateField('diseaseRegisters', 'gestationalDMHistory', e.target.value)}
                     expandedEHRGuide={expandedEHRGuide}
                     setExpandedEHRGuide={setExpandedEHRGuide}
-                    ehrGuide={[
-                      "Socrates: Search for 'Gestational diabetes' in past medical history",
-                      "HealthOne: Problem list search 'GDM' or 'Gestational diabetes'",
-                      "ICD-10 code O24.4 or problem in obstetric history"
-                    ]}
+                    ehrGuide={getCDMGuide('gestationalDMHistory')}
                   />
                   <PPField
                     id="preEclampsiaHistory"
@@ -1065,11 +1676,7 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                     onChange={(e) => updateField('diseaseRegisters', 'preEclampsiaHistory', e.target.value)}
                     expandedEHRGuide={expandedEHRGuide}
                     setExpandedEHRGuide={setExpandedEHRGuide}
-                    ehrGuide={[
-                      "Socrates: Search for 'Pre-eclampsia' in past medical history",
-                      "HealthOne: Problem list search 'Pre-eclampsia' or 'PET'",
-                      "ICD-10 code O14.x in obstetric history"
-                    ]}
+                    ehrGuide={getCDMGuide('preEclampsiaHistory')}
                   />
                 </div>
 
@@ -1093,12 +1700,7 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                     onChange={(e) => updateField('diseaseRegisters', 'ocfEligible', e.target.value)}
                     expandedEHRGuide={expandedEHRGuide}
                     setExpandedEHRGuide={setExpandedEHRGuide}
-                    ehrGuide={[
-                      "Search for patients 45+ who are NOT on any CDM/PP register AND have risk factors:",
-                      "Socrates: Age filter 45+, BMI ≥30 OR Smoker OR High Cholesterol",
-                      "HealthOne: Query builder with age + risk factor criteria",
-                      "Exclude patients already registered on CDM or Prevention Programme"
-                    ]}
+                    ehrGuide={getCDMGuide('ocfEligible')}
                   />
                 </div>
               </div>
@@ -1106,70 +1708,6 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
             </div>
           )}
 
-          {/* STEP 4: Cervical Screening */}
-          {currentStep === 4 && (
-            <div className="space-y-6">
-              <div className="flex items-center gap-3 mb-2">
-                <Activity className="h-6 w-6" style={{ color: COLORS.slainteBlue }} />
-                <h3 className="text-xl font-semibold" style={{ color: COLORS.darkGray }}>
-                  4. Cervical Screening
-                </h3>
-              </div>
-              <p className="text-sm mb-4" style={{ color: COLORS.mediumGray }}>
-                Enter the number of eligible women from your EHR. This is used to calculate potential cervical screening income (€49.10 per smear).
-              </p>
-
-              <div className="space-y-4">
-                <div className="p-3 rounded-lg" style={{ backgroundColor: '#FDF2F8', borderLeft: '4px solid #EC4899' }}>
-                  <h4 className="font-semibold" style={{ color: '#9D174D' }}>
-                    Cervical Screening Activity
-                  </h4>
-                  <p className="text-sm mt-1" style={{ color: '#BE185D' }}>
-                    Women aged 25-65 are eligible for cervical screening. Screening interval: 3 years (25-44), 5 years (45-65).
-                  </p>
-                </div>
-                <div className="grid grid-cols-1 gap-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
-                        Eligible Women (aged 25-44)
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={formData.cervicalCheckActivity.eligibleWomen25to44}
-                        onChange={(e) => updateField('cervicalCheckActivity', 'eligibleWomen25to44', e.target.value)}
-                        className="w-full p-2 border rounded"
-                        style={{ borderColor: COLORS.lightGray }}
-                        placeholder="e.g., 1400"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
-                        Eligible Women (aged 45-65)
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={formData.cervicalCheckActivity.eligibleWomen45to65}
-                        onChange={(e) => updateField('cervicalCheckActivity', 'eligibleWomen45to65', e.target.value)}
-                        className="w-full p-2 border rounded"
-                        style={{ borderColor: COLORS.lightGray }}
-                        placeholder="e.g., 1450"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Notes about auto-calculated data */}
-                <div className="mt-4 p-3 rounded-lg" style={{ backgroundColor: COLORS.backgroundGray }}>
-                  <p className="text-sm" style={{ color: COLORS.mediumGray }}>
-                    <strong>Auto-calculated from PCRS:</strong> Smears performed, Study Leave, Annual Leave, and STC data are automatically extracted from your uploaded PCRS PDFs.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Footer with navigation - Fixed */}

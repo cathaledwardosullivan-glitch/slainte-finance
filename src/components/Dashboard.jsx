@@ -9,8 +9,6 @@ import {
     Download,
     AlertCircle,
     Calendar,
-    Eye,
-    EyeOff,
     X,
     ChevronRight,
     Info,
@@ -56,8 +54,6 @@ export default function Dashboard({ setCurrentView }) {
         paymentAnalysisData, // 👈 Get the payment data
         selectedYear,
         setSelectedYear,
-        showSensitiveData,
-        setShowSensitiveData,
         useRollingYear,
         setUseRollingYear,
         getAvailableYears
@@ -185,7 +181,7 @@ export default function Dashboard({ setCurrentView }) {
             .filter(c => c.type === 'expense')
             .forEach(category => {
                 // Use section if available, otherwise create a default group
-                const section = category.section || 'Other Expenses';
+                const section = category.section || 'Petty Cash / Other';
 
                 if (!expenseGroups[section]) {
                     expenseGroups[section] = { value: 0, categories: [] };
@@ -240,7 +236,7 @@ export default function Dashboard({ setCurrentView }) {
                     <h3 className="text-xl font-bold mb-4" style={{ color: COLORS.incomeColor }}>Income Breakdown - {selectedYear}</h3>
                     <div className="mb-4 p-4 rounded-lg" style={{ backgroundColor: `${COLORS.incomeColor}15` }}>
                         <div className="text-2xl font-bold" style={{ color: COLORS.incomeColor }}>
-                            {showSensitiveData ? `€${Math.round(summaries.income).toLocaleString()}` : '€***,***'}
+                            {`€${Math.round(summaries.income).toLocaleString()}`}
                         </div>
                         <div className="text-sm" style={{ color: COLORS.incomeColor }}>Total Income</div>
                         {summaries.yearComparison && (
@@ -264,7 +260,7 @@ export default function Dashboard({ setCurrentView }) {
                                 </div>
                                 <div className="text-right">
                                     <div className="font-bold" style={{ color: COLORS.incomeColor }}>
-                                        {showSensitiveData ? `€${category.value.toLocaleString()}` : '€***'}
+                                        {`€${category.value.toLocaleString()}`}
                                     </div>
                                 </div>
                             </div>
@@ -313,7 +309,7 @@ export default function Dashboard({ setCurrentView }) {
                                         )}
                                     </div>
                                     <div className="font-bold text-right" style={{ color: COLORS.expenseColor }}>
-                                        {showSensitiveData ? `€${category.value.toLocaleString()}` : '€***'}
+                                        {`€${category.value.toLocaleString()}`}
                                     </div>
                                 </div>
                             ))}
@@ -328,7 +324,7 @@ export default function Dashboard({ setCurrentView }) {
                     <h3 className="text-xl font-bold mb-4" style={{ color: COLORS.expenseColor }}>Expense Breakdown - {selectedYear}</h3>
                     <div className="mb-4 p-4 rounded-lg" style={{ backgroundColor: `${COLORS.expenseColor}15` }}>
                         <div className="text-2xl font-bold" style={{ color: COLORS.expenseColor }}>
-                            {showSensitiveData ? `€${Math.round(summaries.expenses).toLocaleString()}` : '€***,***'}
+                            {`€${Math.round(summaries.expenses).toLocaleString()}`}
                         </div>
                         <div className="text-sm" style={{ color: COLORS.expenseColor }}>Total Expenses</div>
                     </div>
@@ -348,7 +344,7 @@ export default function Dashboard({ setCurrentView }) {
                                 </div>
                                 <div className="text-right flex items-center">
                                     <div className="font-bold" style={{ color: COLORS.expenseColor }}>
-                                        {showSensitiveData ? `€${group.value.toLocaleString()}` : '€***'}
+                                        {`€${group.value.toLocaleString()}`}
                                     </div>
                                     <ChevronRight className="h-4 w-4 ml-2" style={{ color: COLORS.mediumGray }} />
                                 </div>
@@ -371,7 +367,7 @@ export default function Dashboard({ setCurrentView }) {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                         <div className="p-4 rounded-lg" style={{ backgroundColor: `${COLORS.slainteBlue}15` }}>
                             <div className="text-xl font-bold" style={{ color: profit >= 0 ? COLORS.incomeColor : COLORS.expenseColor }}>
-                                {showSensitiveData ? `€${profit.toLocaleString()}` : '€***,***'}
+                                {`€${profit.toLocaleString()}`}
                             </div>
                             <div className="text-sm" style={{ color: COLORS.slainteBlue }}>Total Profit</div>
                             <div className="text-xs mt-1" style={{ color: COLORS.mediumGray }}>Income - Expenses</div>
@@ -385,7 +381,7 @@ export default function Dashboard({ setCurrentView }) {
                         </div>
                         <div className="p-4 rounded-lg" style={{ backgroundColor: `${COLORS.slainteBlue}20` }}>
                             <div className="text-xl font-bold" style={{ color: profitData.averageMonthlyProfit >= 0 ? COLORS.slainteBlue : COLORS.expenseColor }}>
-                                {showSensitiveData ? `€${Math.round(profitData.averageMonthlyProfit).toLocaleString()}` : '€***'}
+                                {`€${Math.round(profitData.averageMonthlyProfit).toLocaleString()}`}
                             </div>
                             <div className="text-sm" style={{ color: COLORS.slainteBlue }}>Avg Monthly Profit</div>
                             <div className="text-xs mt-1" style={{ color: COLORS.mediumGray }}>Per month average</div>
@@ -401,7 +397,7 @@ export default function Dashboard({ setCurrentView }) {
                                     {profitData.bestMonth.month}
                                 </div>
                                 <div className="text-sm" style={{ color: COLORS.incomeColor }}>
-                                    {showSensitiveData ? `€${profitData.bestMonth.profit.toLocaleString()}` : '€***'} profit
+                                    {`€${profitData.bestMonth.profit.toLocaleString()}`} profit
                                 </div>
                                 <div className="text-xs" style={{ color: COLORS.mediumGray }}>
                                     {profitData.bestMonth.margin}% margin
@@ -413,7 +409,7 @@ export default function Dashboard({ setCurrentView }) {
                                     {profitData.worstMonth.month}
                                 </div>
                                 <div className="text-sm" style={{ color: COLORS.expenseColor }}>
-                                    {showSensitiveData ? `€${profitData.worstMonth.profit.toLocaleString()}` : '€***'} profit
+                                    {`€${profitData.worstMonth.profit.toLocaleString()}`} profit
                                 </div>
                                 <div className="text-xs" style={{ color: COLORS.mediumGray }}>
                                     {profitData.worstMonth.margin}% margin
@@ -429,13 +425,13 @@ export default function Dashboard({ setCurrentView }) {
                                 <div className="font-medium" style={{ color: COLORS.darkGray }}>{month.month}</div>
                                 <div className="text-right">
                                     <div className="font-bold" style={{ color: month.profit >= 0 ? COLORS.incomeColor : COLORS.expenseColor }}>
-                                        {showSensitiveData ? `€${month.profit.toLocaleString()}` : '€***'}
+                                        {`€${month.profit.toLocaleString()}`}
                                     </div>
                                     <div className="text-xs" style={{ color: COLORS.mediumGray }}>
                                         {month.margin}% margin
                                     </div>
                                     <div className="text-xs" style={{ color: COLORS.mediumGray }}>
-                                        {showSensitiveData ? `€${month.income.toLocaleString()} - €${month.expenses.toLocaleString()}` : '€*** - €***'}
+                                        {`€${month.income.toLocaleString()} - €${month.expenses.toLocaleString()}`}
                                     </div>
                                 </div>
                             </div>
@@ -464,7 +460,7 @@ export default function Dashboard({ setCurrentView }) {
                                 GMS Withholding Tax
                             </div>
                             <div className="text-2xl font-bold" style={{ color: COLORS.expenseColor }}>
-                                {showSensitiveData ? `€${withholdingTaxData.gmsWithholdingTax.toLocaleString()}` : '€***,***'}
+                                {`€${withholdingTaxData.gmsWithholdingTax.toLocaleString()}`}
                             </div>
                             <div className="text-xs mt-1" style={{ color: COLORS.mediumGray }}>
                                 From PCRS payments
@@ -476,10 +472,10 @@ export default function Dashboard({ setCurrentView }) {
                                 State Contract Tax
                             </div>
                             <div className="text-2xl font-bold" style={{ color: COLORS.expenseColor }}>
-                                {showSensitiveData ? `€${withholdingTaxData.stateContractTax.toLocaleString()}` : '€***,***'}
+                                {`€${withholdingTaxData.stateContractTax.toLocaleString()}`}
                             </div>
                             <div className="text-xs mt-1" style={{ color: COLORS.mediumGray }}>
-                                {withholdingTaxData.stateContractRate}% of €{showSensitiveData ? withholdingTaxData.stateContractIncome.toLocaleString() : '***,***'}
+                                {withholdingTaxData.stateContractRate}% of €{withholdingTaxData.stateContractIncome.toLocaleString()}
                             </div>
                         </div>
                     </div>
@@ -491,7 +487,7 @@ export default function Dashboard({ setCurrentView }) {
                                 Total Withholding Tax:
                             </span>
                             <span className="text-2xl font-bold" style={{ color: COLORS.expenseColor }}>
-                                {showSensitiveData ? `€${withholdingTaxData.total.toLocaleString()}` : '€***,***'}
+                                {`€${withholdingTaxData.total.toLocaleString()}`}
                             </span>
                         </div>
                     </div>
@@ -518,7 +514,7 @@ export default function Dashboard({ setCurrentView }) {
                                             </div>
                                         </div>
                                         <div className="font-bold" style={{ color: COLORS.expenseColor }}>
-                                            {showSensitiveData ? `€${item.amount.toLocaleString()}` : '€***'}
+                                            {`€${item.amount.toLocaleString()}`}
                                         </div>
                                     </div>
                                 ))}
@@ -549,10 +545,10 @@ export default function Dashboard({ setCurrentView }) {
                                         </div>
                                         <div className="text-right">
                                             <div className="font-bold" style={{ color: COLORS.incomeColor }}>
-                                                {showSensitiveData ? `€${item.amount.toLocaleString()}` : '€***'}
+                                                {`€${item.amount.toLocaleString()}`}
                                             </div>
                                             <div className="text-xs" style={{ color: COLORS.expenseColor }}>
-                                                Tax: {showSensitiveData ? `€${(item.amount * (withholdingTaxData.stateContractRate / 100)).toLocaleString()}` : '€***'}
+                                                Tax: {`€${(item.amount * (withholdingTaxData.stateContractRate / 100)).toLocaleString()}`}
                                             </div>
                                         </div>
                                     </div>
@@ -668,7 +664,7 @@ export default function Dashboard({ setCurrentView }) {
                         <div>
                             <p className="text-sm font-medium text-white opacity-90">Total Income</p>
                             <p className="text-2xl font-bold text-white mt-1">
-                                {showSensitiveData ? `€${Math.round(summaries.income).toLocaleString()}` : '€***,***'}
+                                {`€${Math.round(summaries.income).toLocaleString()}`}
                             </p>
                             {summaries.yearComparison && (
                                 <p className="text-xs text-white opacity-90 mt-1">
@@ -692,7 +688,7 @@ export default function Dashboard({ setCurrentView }) {
                         <div>
                             <p className="text-sm font-medium text-white opacity-90">Total Expenses</p>
                             <p className="text-2xl font-bold text-white mt-1">
-                                {showSensitiveData ? `€${Math.round(summaries.expenses).toLocaleString()}` : '€***,***'}
+                                {`€${Math.round(summaries.expenses).toLocaleString()}`}
                             </p>
                             {summaries.yearComparison && (
                                 <p className="text-xs text-white opacity-90 mt-1">
@@ -716,7 +712,7 @@ export default function Dashboard({ setCurrentView }) {
                         <div>
                             <p className="text-sm font-medium text-white opacity-90">Net Profit</p>
                             <p className="text-2xl font-bold text-white mt-1">
-                                {showSensitiveData ? `€${profit.toLocaleString()}` : '€***,***'}
+                                {`€${profit.toLocaleString()}`}
                             </p>
                             <p className="text-xs text-white opacity-90 mt-1">
                                 {profitMargin}% profit margin
@@ -738,7 +734,7 @@ export default function Dashboard({ setCurrentView }) {
                         <div>
                             <p className="text-sm font-medium text-white opacity-90">Withholding Tax</p>
                             <p className="text-2xl font-bold text-white mt-1">
-                                {showSensitiveData ? `€${withholdingTaxData.total.toLocaleString()}` : '€***,***'}
+                                {`€${withholdingTaxData.total.toLocaleString()}`}
                             </p>
                             <p className="text-xs text-white opacity-90 mt-1">
                                 Tax credit available
@@ -859,11 +855,11 @@ export default function Dashboard({ setCurrentView }) {
                                 <YAxis
                                     tick={{ fill: COLORS.mediumGray, fontSize: 12 }}
                                     axisLine={{ stroke: COLORS.lightGray }}
-                                    tickFormatter={(value) => showSensitiveData ? `€${(value / 1000).toFixed(0)}k` : '€***'}
+                                    tickFormatter={(value) => `€${(value / 1000).toFixed(0)}k`}
                                 />
                                 <Tooltip
                                     formatter={(value, name) => [
-                                        showSensitiveData ? `€${value.toLocaleString()}` : '€***',
+                                        `€${value.toLocaleString()}`,
                                         name
                                     ]}
                                     contentStyle={{
@@ -908,20 +904,20 @@ export default function Dashboard({ setCurrentView }) {
                                         <div>
                                             <p className="text-xs" style={{ color: COLORS.mediumGray }}>{selectedYear} Total</p>
                                             <p className="text-lg font-semibold" style={{ color: config.currentColor }}>
-                                                {showSensitiveData ? `€${Math.round(currentTotal).toLocaleString()}` : '€***,***'}
+                                                {`€${Math.round(currentTotal).toLocaleString()}`}
                                             </p>
                                         </div>
                                         <div>
                                             <p className="text-xs" style={{ color: COLORS.mediumGray }}>{selectedYear - 1} Total</p>
                                             <p className="text-lg font-semibold" style={{ color: config.previousColor }}>
-                                                {showSensitiveData ? `€${Math.round(previousTotal).toLocaleString()}` : '€***,***'}
+                                                {`€${Math.round(previousTotal).toLocaleString()}`}
                                             </p>
                                         </div>
                                     </div>
                                     <div className="text-right">
                                         <p className="text-xs" style={{ color: COLORS.mediumGray }}>Year-over-Year</p>
                                         <p className={`text-lg font-semibold flex items-center justify-end gap-1`} style={{ color: isPositive ? COLORS.incomeColor : COLORS.expenseColor }}>
-                                            {isPositive ? '↗' : '↘'} {showSensitiveData ? `${Math.abs(change).toFixed(1)}%` : '**%'}
+                                            {isPositive ? '↗' : '↘'} {`${Math.abs(change).toFixed(1)}%`}
                                         </p>
                                     </div>
                                 </div>
