@@ -367,7 +367,7 @@ Respond as Cara:`;
           backgroundColor: COLORS.white,
           borderRadius: '0.5rem',
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-          border: `1px solid ${COLORS.lightGray}`,
+          border: `1px solid ${COLORS.borderLight}`,
           zIndex: 10003, // Above tour overlay
           overflow: 'hidden',
           transition: 'all 0.3s ease',
@@ -390,7 +390,7 @@ Respond as Cara:`;
             style={{
               width: '2rem',
               height: '2rem',
-              backgroundColor: COLORS.slainteBlueDark || '#3D7BC7',
+              backgroundColor: COLORS.slainteBlueDark,
               borderRadius: '9999px',
               display: 'flex',
               alignItems: 'center',
@@ -423,7 +423,7 @@ Respond as Cara:`;
                 padding: '16px',
                 fontSize: '14px',
                 lineHeight: '1.6',
-                color: COLORS.darkGray,
+                color: COLORS.textPrimary,
                 maxHeight: '180px',
                 overflowY: 'auto',
               }}
@@ -436,7 +436,7 @@ Respond as Cara:`;
               <div
                 style={{
                   padding: '0 16px 12px',
-                  borderTop: `1px solid ${COLORS.lightGray}`,
+                  borderTop: `1px solid ${COLORS.borderLight}`,
                   paddingTop: '12px',
                 }}
               >
@@ -480,11 +480,11 @@ Respond as Cara:`;
                           style={{
                             flex: 1,
                             padding: '10px 12px',
-                            border: `1px solid ${COLORS.lightGray}`,
+                            border: `1px solid ${COLORS.borderLight}`,
                             borderRadius: '8px',
                             fontSize: '13px',
                             outline: 'none',
-                            backgroundColor: isTourQALoading ? COLORS.backgroundGray : COLORS.white,
+                            backgroundColor: isTourQALoading ? COLORS.bgPage : COLORS.white,
                           }}
                         />
                         <button
@@ -492,7 +492,7 @@ Respond as Cara:`;
                           disabled={isTourQALoading || !tourQuestion.trim()}
                           style={{
                             padding: '10px 14px',
-                            backgroundColor: isTourQALoading || !tourQuestion.trim() ? COLORS.lightGray : COLORS.slainteBlue,
+                            backgroundColor: isTourQALoading || !tourQuestion.trim() ? COLORS.borderLight : COLORS.slainteBlue,
                             border: 'none',
                             borderRadius: '8px',
                             color: COLORS.white,
@@ -513,10 +513,10 @@ Respond as Cara:`;
                         style={{
                           marginTop: '12px',
                           padding: '12px',
-                          backgroundColor: COLORS.backgroundGray,
+                          backgroundColor: COLORS.bgPage,
                           borderRadius: '8px',
                           fontSize: '13px',
-                          color: COLORS.mediumGray,
+                          color: COLORS.textSecondary,
                           textAlign: 'center',
                         }}
                       >
@@ -534,7 +534,7 @@ Respond as Cara:`;
                           borderRadius: '8px',
                           fontSize: '13px',
                           lineHeight: '1.5',
-                          color: COLORS.darkGray,
+                          color: COLORS.textPrimary,
                           borderLeft: `3px solid ${COLORS.incomeColor}`,
                         }}
                       >
@@ -573,11 +573,11 @@ Respond as Cara:`;
             <div
               style={{
                 padding: '12px 16px',
-                borderTop: `1px solid ${COLORS.lightGray}`,
+                borderTop: `1px solid ${COLORS.borderLight}`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
               }}
             >
               {/* Skip button */}
@@ -588,7 +588,7 @@ Respond as Cara:`;
                   padding: '6px 12px',
                   backgroundColor: 'transparent',
                   border: 'none',
-                  color: COLORS.mediumGray,
+                  color: COLORS.textSecondary,
                   fontSize: '13px',
                   cursor: isTransitioning ? 'not-allowed' : 'pointer',
                   opacity: isTransitioning ? 0.5 : 1,
@@ -609,10 +609,10 @@ Respond as Cara:`;
                     justifyContent: 'center',
                     width: '32px',
                     height: '32px',
-                    backgroundColor: isFirstStep ? COLORS.backgroundGray : COLORS.white,
-                    border: `1px solid ${isFirstStep ? COLORS.lightGray : COLORS.slainteBlue}`,
+                    backgroundColor: isFirstStep ? COLORS.bgPage : COLORS.white,
+                    border: `1px solid ${isFirstStep ? COLORS.borderLight : COLORS.slainteBlue}`,
                     borderRadius: '50%',
-                    color: isFirstStep ? COLORS.lightGray : COLORS.slainteBlue,
+                    color: isFirstStep ? COLORS.borderLight : COLORS.slainteBlue,
                     cursor: isFirstStep || isTransitioning ? 'not-allowed' : 'pointer',
                     opacity: isTransitioning ? 0.5 : 1,
                   }}
@@ -705,7 +705,7 @@ Respond as Cara:`;
       backgroundColor: COLORS.white,
       borderRadius: '0.5rem',
       boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-      border: `1px solid ${COLORS.lightGray}`,
+      border: `1px solid ${COLORS.borderLight}`,
       transition: 'all 0.3s',
       width: isMinimized ? '20rem' : '24rem',
       height: isMinimized ? '4rem' : '36rem'
@@ -738,7 +738,7 @@ Respond as Cara:`;
             <div style={{ fontSize: '0.75rem', opacity: 0.9 }}>{advisorTitle}</div>
           </div>
           {!apiKey && (
-            <div style={{ fontSize: '0.75rem', backgroundColor: COLORS.highlightYellow, color: COLORS.darkGray, padding: '0.25rem 0.5rem', borderRadius: '0.25rem' }}>Setup needed</div>
+            <div style={{ fontSize: '0.75rem', backgroundColor: COLORS.highlightYellow, color: COLORS.textPrimary, padding: '0.25rem 0.5rem', borderRadius: '0.25rem' }}>Setup needed</div>
           )}
         </div>
 
@@ -747,7 +747,7 @@ Respond as Cara:`;
             onClick={() => setIsMinimized(!isMinimized)}
             style={{ color: COLORS.white, padding: '0.25rem', background: 'none', border: 'none', cursor: 'pointer' }}
             title={isMinimized ? "Expand" : "Minimize"}
-            onMouseEnter={(e) => e.currentTarget.style.color = COLORS.lightGray}
+            onMouseEnter={(e) => e.currentTarget.style.color = COLORS.borderLight}
             onMouseLeave={(e) => e.currentTarget.style.color = COLORS.white}
           >
             <Minimize2 style={{ height: '1rem', width: '1rem' }} />
@@ -756,7 +756,7 @@ Respond as Cara:`;
             onClick={() => setIsOpen(false)}
             style={{ color: COLORS.white, padding: '0.25rem', background: 'none', border: 'none', cursor: 'pointer' }}
             title="Close"
-            onMouseEnter={(e) => e.currentTarget.style.color = COLORS.lightGray}
+            onMouseEnter={(e) => e.currentTarget.style.color = COLORS.borderLight}
             onMouseLeave={(e) => e.currentTarget.style.color = COLORS.white}
           >
             <X style={{ height: '1rem', width: '1rem' }} />
@@ -770,13 +770,13 @@ Respond as Cara:`;
           <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', height: '27rem' }}>
             {chatMessages.length === 0 && getWelcomeMessage() && (
               <div style={{ backgroundColor: `${COLORS.slainteBlue}15`, padding: '0.75rem', borderRadius: '0.5rem', fontSize: '0.875rem', border: `1px solid ${COLORS.slainteBlue}` }}>
-                <div style={{ color: COLORS.darkGray }}>{getWelcomeMessage()}</div>
+                <div style={{ color: COLORS.textPrimary }}>{getWelcomeMessage()}</div>
               </div>
             )}
 
             {transactions.length === 0 && (
-              <div style={{ textAlign: 'center', color: COLORS.mediumGray, padding: '1rem' }}>
-                <MessageCircle style={{ margin: '0 auto 0.5rem', height: '2rem', width: '2rem', color: COLORS.lightGray }} />
+              <div style={{ textAlign: 'center', color: COLORS.textSecondary, padding: '1rem' }}>
+                <MessageCircle style={{ margin: '0 auto 0.5rem', height: '2rem', width: '2rem', color: COLORS.borderLight }} />
                 <div style={{ fontSize: '0.875rem' }}>Upload transaction data to start chatting with {advisorName}</div>
               </div>
             )}
@@ -792,10 +792,10 @@ Respond as Cara:`;
                     ? COLORS.slainteBlue
                     : message.isError
                     ? `${COLORS.expenseColor}20`
-                    : COLORS.backgroundGray,
+                    : COLORS.bgPage,
                   color: message.type === 'user'
                     ? COLORS.white
-                    : COLORS.darkGray,
+                    : COLORS.textPrimary,
                   border: message.isError ? `1px solid ${COLORS.expenseColor}` : 'none'
                 }}>
                   {message.content}
@@ -827,7 +827,7 @@ Respond as Cara:`;
                     </button>
                   )}
                   {message.type === 'assistant' && message.timestamp && (
-                    <div style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginTop: '0.25rem' }}>
+                    <div style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginTop: '0.25rem' }}>
                       {advisorName} • {message.timestamp.toLocaleTimeString()}
                     </div>
                   )}
@@ -837,13 +837,13 @@ Respond as Cara:`;
 
             {isLoading && (
               <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-                <div style={{ backgroundColor: COLORS.backgroundGray, padding: '0.75rem', borderRadius: '0.5rem', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div style={{ backgroundColor: COLORS.bgPage, padding: '0.75rem', borderRadius: '0.5rem', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <div style={{ display: 'flex', gap: '0.25rem' }}>
-                    <div style={{ width: '0.5rem', height: '0.5rem', backgroundColor: COLORS.mediumGray, borderRadius: '9999px', animation: 'pulse 1.5s infinite' }}></div>
-                    <div style={{ width: '0.5rem', height: '0.5rem', backgroundColor: COLORS.mediumGray, borderRadius: '9999px', animation: 'pulse 1.5s infinite 0.2s' }}></div>
-                    <div style={{ width: '0.5rem', height: '0.5rem', backgroundColor: COLORS.mediumGray, borderRadius: '9999px', animation: 'pulse 1.5s infinite 0.4s' }}></div>
+                    <div style={{ width: '0.5rem', height: '0.5rem', backgroundColor: COLORS.textSecondary, borderRadius: '9999px', animation: 'pulse 1.5s infinite' }}></div>
+                    <div style={{ width: '0.5rem', height: '0.5rem', backgroundColor: COLORS.textSecondary, borderRadius: '9999px', animation: 'pulse 1.5s infinite 0.2s' }}></div>
+                    <div style={{ width: '0.5rem', height: '0.5rem', backgroundColor: COLORS.textSecondary, borderRadius: '9999px', animation: 'pulse 1.5s infinite 0.4s' }}></div>
                   </div>
-                  <span style={{ color: COLORS.darkGray }}>{advisorName} is typing...</span>
+                  <span style={{ color: COLORS.textPrimary }}>{advisorName} is typing...</span>
                 </div>
               </div>
             )}
@@ -852,7 +852,7 @@ Respond as Cara:`;
           </div>
 
           {/* Input Area */}
-          <div style={{ borderTop: `1px solid ${COLORS.lightGray}`, padding: '0.75rem' }}>
+          <div style={{ borderTop: `1px solid ${COLORS.borderLight}`, padding: '0.75rem' }}>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <input
                 ref={inputRef}
@@ -863,12 +863,12 @@ Respond as Cara:`;
                 placeholder={transactions.length === 0 ? "Upload data first..." : "Ask about your finances..."}
                 style={{
                   flex: 1,
-                  border: `1px solid ${COLORS.lightGray}`,
+                  border: `1px solid ${COLORS.borderLight}`,
                   borderRadius: '0.5rem',
                   padding: '0.5rem 0.75rem',
                   fontSize: '0.875rem',
                   outline: 'none',
-                  backgroundColor: transactions.length === 0 || isLoading ? COLORS.backgroundGray : COLORS.white
+                  backgroundColor: transactions.length === 0 || isLoading ? COLORS.bgPage : COLORS.white
                 }}
                 disabled={transactions.length === 0 || isLoading}
                 onFocus={(e) => e.target.style.boxShadow = `0 0 0 2px ${COLORS.slainteBlue}`}
@@ -901,7 +901,7 @@ Respond as Cara:`;
               </button>
             </div>
             {transactions.length > 0 && apiKey && (
-              <div style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginTop: '0.25rem' }}>
+              <div style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginTop: '0.25rem' }}>
                 Ready to analyze {transactions.length} transactions • Press Enter to send
               </div>
             )}

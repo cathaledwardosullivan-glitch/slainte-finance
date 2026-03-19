@@ -84,7 +84,7 @@ export default function TransactionUploadTypeSelection({ onSelectRaw, onSelectLa
         backgroundColor: COLORS.white,
         borderRadius: '0.75rem',
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-        border: `1px solid ${COLORS.lightGray}`,
+        border: `1px solid ${COLORS.borderLight}`,
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column'
@@ -131,7 +131,7 @@ export default function TransactionUploadTypeSelection({ onSelectRaw, onSelectLa
                 width: '32px',
                 height: '32px',
                 borderRadius: '50%',
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -140,7 +140,7 @@ export default function TransactionUploadTypeSelection({ onSelectRaw, onSelectLa
                 <MessageCircle style={{ width: '16px', height: '16px', color: COLORS.slainteBlue }} />
               </div>
               <div style={{
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 padding: '0.875rem 1rem',
                 borderRadius: '12px',
                 maxWidth: '85%'
@@ -148,7 +148,7 @@ export default function TransactionUploadTypeSelection({ onSelectRaw, onSelectLa
                 <div style={{
                   fontSize: '1.125rem',
                   fontWeight: 600,
-                  color: COLORS.darkGray
+                  color: COLORS.textPrimary
                 }}>
                   {greeting}
                 </div>
@@ -161,14 +161,14 @@ export default function TransactionUploadTypeSelection({ onSelectRaw, onSelectLa
             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
               <div style={{ width: '32px', flexShrink: 0 }} />
               <div style={{
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 padding: '0.875rem 1rem',
                 borderRadius: '12px',
                 maxWidth: '85%'
               }}>
                 <div style={{
                   fontSize: '0.9375rem',
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   lineHeight: 1.5
                 }}>
                   {message}
@@ -190,7 +190,7 @@ export default function TransactionUploadTypeSelection({ onSelectRaw, onSelectLa
               }}>
                 <div style={{
                   fontSize: '0.875rem',
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   lineHeight: 1.5
                 }}>
                   <strong>Tip:</strong> If you've been using a spreadsheet or accounting software to track expenses, upload that data! I can learn from your existing categories and save you time.
@@ -203,7 +203,7 @@ export default function TransactionUploadTypeSelection({ onSelectRaw, onSelectLa
         {/* Skip option */}
         <div style={{
           padding: '1rem',
-          borderTop: `1px solid ${COLORS.lightGray}`,
+          borderTop: `1px solid ${COLORS.borderLight}`,
           textAlign: 'center'
         }}>
           <button
@@ -217,8 +217,8 @@ export default function TransactionUploadTypeSelection({ onSelectRaw, onSelectLa
               fontSize: '0.875rem',
               fontWeight: 500,
               cursor: 'pointer',
-              border: `1px solid ${COLORS.lightGray}`,
-              color: COLORS.mediumGray,
+              border: `1px solid ${COLORS.borderLight}`,
+              color: COLORS.textSecondary,
               backgroundColor: 'transparent'
             }}
           >
@@ -250,14 +250,14 @@ export default function TransactionUploadTypeSelection({ onSelectRaw, onSelectLa
           <h3 style={{
             fontSize: '1.5rem',
             fontWeight: 700,
-            color: COLORS.darkGray,
+            color: COLORS.textPrimary,
             marginBottom: '0.5rem'
           }}>
             Choose Upload Type
           </h3>
           <p style={{
             fontSize: '1rem',
-            color: COLORS.mediumGray,
+            color: COLORS.textSecondary,
             marginBottom: '1.5rem'
           }}>
             Select the type of transaction data you have
@@ -278,7 +278,7 @@ export default function TransactionUploadTypeSelection({ onSelectRaw, onSelectLa
                     padding: '1.25rem',
                     border: option.highlight
                       ? `3px solid ${COLORS.highlightYellow}`
-                      : `2px solid ${COLORS.lightGray}`,
+                      : `2px solid ${COLORS.borderLight}`,
                     borderRadius: '12px',
                     backgroundColor: option.highlight ? `${COLORS.highlightYellow}08` : COLORS.white,
                     cursor: 'pointer',
@@ -291,7 +291,7 @@ export default function TransactionUploadTypeSelection({ onSelectRaw, onSelectLa
                     e.currentTarget.style.backgroundColor = option.highlight ? `${COLORS.highlightYellow}15` : `${COLORS.slainteBlue}05`;
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = option.highlight ? COLORS.highlightYellow : COLORS.lightGray;
+                    e.currentTarget.style.borderColor = option.highlight ? COLORS.highlightYellow : COLORS.borderLight;
                     e.currentTarget.style.backgroundColor = option.highlight ? `${COLORS.highlightYellow}08` : COLORS.white;
                   }}
                 >
@@ -302,7 +302,7 @@ export default function TransactionUploadTypeSelection({ onSelectRaw, onSelectLa
                       top: '-10px',
                       right: '16px',
                       backgroundColor: COLORS.highlightYellow,
-                      color: COLORS.darkGray,
+                      color: COLORS.textPrimary,
                       fontSize: '0.6875rem',
                       fontWeight: 700,
                       padding: '0.25rem 0.625rem',
@@ -327,7 +327,7 @@ export default function TransactionUploadTypeSelection({ onSelectRaw, onSelectLa
                     <Icon style={{
                       width: '24px',
                       height: '24px',
-                      color: option.highlight ? COLORS.darkGray : COLORS.slainteBlue
+                      color: option.highlight ? COLORS.textPrimary : COLORS.slainteBlue
                     }} />
                   </div>
 
@@ -335,14 +335,14 @@ export default function TransactionUploadTypeSelection({ onSelectRaw, onSelectLa
                     <h4 style={{
                       fontSize: '1.125rem',
                       fontWeight: 600,
-                      color: COLORS.darkGray,
+                      color: COLORS.textPrimary,
                       marginBottom: '0.25rem'
                     }}>
                       {option.title}
                     </h4>
                     <p style={{
                       fontSize: '0.875rem',
-                      color: COLORS.mediumGray,
+                      color: COLORS.textSecondary,
                       lineHeight: 1.5
                     }}>
                       {option.description}
@@ -352,7 +352,7 @@ export default function TransactionUploadTypeSelection({ onSelectRaw, onSelectLa
                   <ArrowRight style={{
                     width: '20px',
                     height: '20px',
-                    color: COLORS.lightGray,
+                    color: COLORS.borderLight,
                     alignSelf: 'center'
                   }} />
                 </button>

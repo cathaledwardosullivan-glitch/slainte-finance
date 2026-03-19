@@ -114,6 +114,8 @@ export async function analyzeWebsite(url, apiKey) {
                     vaccinations: result.data.services?.vaccinations || false
                 },
                 practiceManagerName: result.data.practiceManagerName || null,
+                consultationFee: result.data.consultationFee || null,
+                openingHours: result.data.openingHours || null,
                 notes: result.data.notes || ''
             },
             confidence: result.confidence || 'unknown',

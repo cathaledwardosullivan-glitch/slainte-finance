@@ -95,7 +95,7 @@ export default function TermsAndConditions({ onAccept, onDecline }) {
     return (
       <div style={{ textAlign: 'center', padding: '3rem' }}>
         <Shield style={{ width: '32px', height: '32px', color: COLORS.slainteBlue, margin: '0 auto 1rem' }} />
-        <p style={{ color: COLORS.mediumGray }}>Loading Terms of Service...</p>
+        <p style={{ color: COLORS.textSecondary }}>Loading Terms of Service...</p>
       </div>
     );
   }
@@ -118,7 +118,7 @@ export default function TermsAndConditions({ onAccept, onDecline }) {
         backgroundColor: COLORS.white,
         borderRadius: '0.75rem',
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-        border: `1px solid ${COLORS.lightGray}`,
+        border: `1px solid ${COLORS.borderLight}`,
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column'
@@ -165,7 +165,7 @@ export default function TermsAndConditions({ onAccept, onDecline }) {
                 width: '32px',
                 height: '32px',
                 borderRadius: '50%',
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -174,7 +174,7 @@ export default function TermsAndConditions({ onAccept, onDecline }) {
                 <MessageCircle style={{ width: '16px', height: '16px', color: COLORS.slainteBlue }} />
               </div>
               <div style={{
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 padding: '0.875rem 1rem',
                 borderRadius: '12px',
                 maxWidth: '85%'
@@ -182,7 +182,7 @@ export default function TermsAndConditions({ onAccept, onDecline }) {
                 <div style={{
                   fontSize: '1.125rem',
                   fontWeight: 600,
-                  color: COLORS.darkGray
+                  color: COLORS.textPrimary
                 }}>
                   {greeting}
                 </div>
@@ -195,7 +195,7 @@ export default function TermsAndConditions({ onAccept, onDecline }) {
             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
               <div style={{ width: '32px', flexShrink: 0 }} />
               <div style={{
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 padding: '1rem',
                 borderRadius: '12px',
                 maxWidth: '90%'
@@ -203,7 +203,7 @@ export default function TermsAndConditions({ onAccept, onDecline }) {
                 <div style={{
                   fontSize: '0.875rem',
                   fontWeight: 600,
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   marginBottom: '0.75rem'
                 }}>
                   Here's a summary of the key points:
@@ -226,13 +226,13 @@ export default function TermsAndConditions({ onAccept, onDecline }) {
                         <div style={{
                           fontSize: '0.8125rem',
                           fontWeight: 600,
-                          color: COLORS.darkGray
+                          color: COLORS.textPrimary
                         }}>
                           {item.title}
                         </div>
                         <div style={{
                           fontSize: '0.75rem',
-                          color: COLORS.mediumGray,
+                          color: COLORS.textSecondary,
                           lineHeight: 1.4
                         }}>
                           {item.description}
@@ -258,7 +258,7 @@ export default function TermsAndConditions({ onAccept, onDecline }) {
               }}>
                 <div style={{
                   fontSize: '0.8125rem',
-                  color: COLORS.darkGray
+                  color: COLORS.textPrimary
                 }}>
                   Please scroll through the full terms on the right to continue.
                 </div>
@@ -279,7 +279,7 @@ export default function TermsAndConditions({ onAccept, onDecline }) {
               }}>
                 <div style={{
                   fontSize: '0.8125rem',
-                  color: COLORS.darkGray
+                  color: COLORS.textPrimary
                 }}>
                   {hasAgreed
                     ? "You're all set. Click 'Accept & Continue' to proceed with setup."
@@ -293,7 +293,7 @@ export default function TermsAndConditions({ onAccept, onDecline }) {
         {/* Action Area at bottom of chat */}
         <div style={{
           padding: '1rem',
-          borderTop: `1px solid ${COLORS.lightGray}`,
+          borderTop: `1px solid ${COLORS.borderLight}`,
           backgroundColor: COLORS.white,
           display: 'flex',
           flexDirection: 'column',
@@ -327,7 +327,7 @@ export default function TermsAndConditions({ onAccept, onDecline }) {
             />
             <span style={{
               fontSize: '0.875rem',
-              color: COLORS.darkGray,
+              color: COLORS.textPrimary,
               lineHeight: 1.4
             }}>
               I have read and agree to the Terms of Service and Privacy Policy
@@ -344,7 +344,7 @@ export default function TermsAndConditions({ onAccept, onDecline }) {
               fontSize: '1rem',
               fontWeight: 600,
               color: COLORS.white,
-              backgroundColor: canAccept ? COLORS.incomeColor : COLORS.lightGray,
+              backgroundColor: canAccept ? COLORS.incomeColor : COLORS.borderLight,
               border: 'none',
               borderRadius: '8px',
               cursor: canAccept ? 'pointer' : 'not-allowed',
@@ -365,7 +365,7 @@ export default function TermsAndConditions({ onAccept, onDecline }) {
             style={{
               background: 'none',
               border: 'none',
-              color: COLORS.mediumGray,
+              color: COLORS.textSecondary,
               fontSize: '0.75rem',
               cursor: 'pointer',
               textDecoration: 'underline',
@@ -390,7 +390,7 @@ export default function TermsAndConditions({ onAccept, onDecline }) {
         {/* Terms Card */}
         <div style={{
           backgroundColor: COLORS.white,
-          border: `2px solid ${COLORS.lightGray}`,
+          border: `2px solid ${COLORS.borderLight}`,
           borderRadius: '16px',
           overflow: 'hidden',
           display: 'flex',
@@ -400,25 +400,25 @@ export default function TermsAndConditions({ onAccept, onDecline }) {
           {/* Header */}
           <div style={{
             padding: '1rem 1.5rem',
-            borderBottom: `1px solid ${COLORS.lightGray}`,
+            borderBottom: `1px solid ${COLORS.borderLight}`,
             display: 'flex',
             alignItems: 'center',
             gap: '0.75rem',
-            backgroundColor: COLORS.backgroundGray
+            backgroundColor: COLORS.bgPage
           }}>
             <FileText style={{ width: '24px', height: '24px', color: COLORS.slainteBlue }} />
             <div>
               <h3 style={{
                 fontSize: '1.125rem',
                 fontWeight: 700,
-                color: COLORS.darkGray,
+                color: COLORS.textPrimary,
                 margin: 0
               }}>
                 Terms of Service
               </h3>
               <p style={{
                 fontSize: '0.75rem',
-                color: COLORS.mediumGray,
+                color: COLORS.textSecondary,
                 margin: 0
               }}>
                 Version {CURRENT_VERSION}
@@ -436,7 +436,7 @@ export default function TermsAndConditions({ onAccept, onDecline }) {
               padding: '1.5rem',
               fontSize: '0.8125rem',
               lineHeight: 1.7,
-              color: COLORS.darkGray,
+              color: COLORS.textPrimary,
               whiteSpace: 'pre-wrap',
               fontFamily: 'system-ui, -apple-system, sans-serif'
             }}
@@ -447,8 +447,8 @@ export default function TermsAndConditions({ onAccept, onDecline }) {
           {/* Scroll indicator */}
           <div style={{
             padding: '0.75rem 1.5rem',
-            borderTop: `1px solid ${COLORS.lightGray}`,
-            backgroundColor: hasScrolledToEnd ? `${COLORS.incomeColor}10` : COLORS.backgroundGray,
+            borderTop: `1px solid ${COLORS.borderLight}`,
+            backgroundColor: hasScrolledToEnd ? `${COLORS.incomeColor}10` : COLORS.bgPage,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -463,7 +463,7 @@ export default function TermsAndConditions({ onAccept, onDecline }) {
                 </span>
               </>
             ) : (
-              <span style={{ fontSize: '0.75rem', color: COLORS.mediumGray }}>
+              <span style={{ fontSize: '0.75rem', color: COLORS.textSecondary }}>
                 Scroll down to read all terms
               </span>
             )}
@@ -479,7 +479,7 @@ export default function TermsAndConditions({ onAccept, onDecline }) {
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          backgroundColor: COLORS.overlayDark,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -512,7 +512,7 @@ export default function TermsAndConditions({ onAccept, onDecline }) {
               <h3 style={{
                 fontSize: '1.125rem',
                 fontWeight: 600,
-                color: COLORS.darkGray,
+                color: COLORS.textPrimary,
                 margin: 0
               }}>
                 Cannot Continue Without Agreement
@@ -521,7 +521,7 @@ export default function TermsAndConditions({ onAccept, onDecline }) {
 
             <p style={{
               fontSize: '0.875rem',
-              color: COLORS.mediumGray,
+              color: COLORS.textSecondary,
               lineHeight: 1.6,
               marginBottom: '1.5rem'
             }}>
@@ -537,9 +537,9 @@ export default function TermsAndConditions({ onAccept, onDecline }) {
                   padding: '0.75rem 1rem',
                   fontSize: '0.875rem',
                   fontWeight: 600,
-                  color: COLORS.darkGray,
-                  backgroundColor: COLORS.backgroundGray,
-                  border: `1px solid ${COLORS.lightGray}`,
+                  color: COLORS.textPrimary,
+                  backgroundColor: COLORS.bgPage,
+                  border: `1px solid ${COLORS.borderLight}`,
                   borderRadius: '8px',
                   cursor: 'pointer'
                 }}

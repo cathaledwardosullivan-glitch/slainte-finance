@@ -9,7 +9,7 @@ import AreaTaskPanel from './AreaTaskPanel';
 const STATUS_COLORS = {
   ready: COLORS.incomeColor,     // #4ECDC4 turquoise
   partial: COLORS.highlightYellow, // #FFD23C yellow
-  'no-data': COLORS.lightGray     // #E0E0E0 grey
+  'no-data': COLORS.borderLight     // #E0E0E0 grey
 };
 
 const STATUS_LABELS = {
@@ -389,14 +389,14 @@ const AreaDetailView = ({
             gap: '0.5rem',
             padding: '0.5rem 1rem',
             backgroundColor: 'transparent',
-            border: `1px solid ${COLORS.lightGray}`,
+            border: `1px solid ${COLORS.borderLight}`,
             borderRadius: '0.5rem',
             cursor: 'pointer',
             fontSize: '0.875rem',
-            color: COLORS.darkGray,
+            color: COLORS.textPrimary,
             transition: 'background-color 0.15s'
           }}
-          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.backgroundGray}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.bgPage}
           onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
         >
           <ArrowLeft size={16} />
@@ -443,7 +443,7 @@ const AreaDetailView = ({
         margin: '0 0 0.5rem',
         fontSize: '1.5rem',
         fontWeight: 700,
-        color: COLORS.darkGray
+        color: COLORS.textPrimary
       }}>
         {explanation?.title || area.description}
       </h2>
@@ -457,22 +457,22 @@ const AreaDetailView = ({
           padding: '0.75rem 1rem',
           marginBottom: '1rem',
           borderRadius: '0.5rem',
-          backgroundColor: leaveFreshness.monthsSince >= 3 ? '#FEF2F2' : '#FFFBEB',
-          border: `1px solid ${leaveFreshness.monthsSince >= 3 ? '#FECACA' : '#FDE68A'}`
+          backgroundColor: leaveFreshness.monthsSince >= 3 ? COLORS.errorLighter : COLORS.warningLighter,
+          border: `1px solid ${leaveFreshness.monthsSince >= 3 ? COLORS.errorLight : COLORS.warningLight}`
         }}>
           <AlertCircle style={{
             width: '1.25rem',
             height: '1.25rem',
             flexShrink: 0,
             marginTop: '0.1rem',
-            color: leaveFreshness.monthsSince >= 3 ? '#DC2626' : '#D97706'
+            color: leaveFreshness.monthsSince >= 3 ? COLORS.error : COLORS.warningDark
           }} />
           <div>
             <p style={{
               margin: 0,
               fontSize: '0.875rem',
               fontWeight: 600,
-              color: leaveFreshness.monthsSince >= 3 ? '#991B1B' : '#92400E'
+              color: leaveFreshness.monthsSince >= 3 ? COLORS.errorText : COLORS.warningText
             }}>
               {leaveFreshness.monthsSince >= 3
                 ? `Leave data is ${leaveFreshness.monthsSince} months old \u2014 likely inaccurate`
@@ -482,7 +482,7 @@ const AreaDetailView = ({
             <p style={{
               margin: '0.25rem 0 0',
               fontSize: '0.8rem',
-              color: leaveFreshness.monthsSince >= 3 ? '#B91C1C' : '#78350F'
+              color: leaveFreshness.monthsSince >= 3 ? COLORS.errorDark : COLORS.warningText
             }}>
               Latest PDF is from {leaveFreshness.latestMonth} {leaveFreshness.latestYear}.
               {leaveFreshness.monthsSince >= 3
@@ -503,15 +503,15 @@ const AreaDetailView = ({
             padding: '1.25rem',
             backgroundColor: COLORS.white,
             borderRadius: '0.5rem',
-            border: `1px solid ${COLORS.lightGray}`
+            border: `1px solid ${COLORS.borderLight}`
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
               <FileText size={18} color={COLORS.slainteBlue} />
-              <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600, color: COLORS.darkGray }}>
+              <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600, color: COLORS.textPrimary }}>
                 What is this?
               </h3>
             </div>
-            <p style={{ margin: '0 0 0.75rem', fontSize: '0.9rem', color: COLORS.darkGray, lineHeight: 1.6 }}>
+            <p style={{ margin: '0 0 0.75rem', fontSize: '0.9rem', color: COLORS.textPrimary, lineHeight: 1.6 }}>
               {explanation.what}
             </p>
 
@@ -525,8 +525,8 @@ const AreaDetailView = ({
                     alignItems: 'center',
                     gap: '0.375rem',
                     padding: '0.5rem 0.75rem',
-                    backgroundColor: COLORS.backgroundGray,
-                    border: `1px solid ${COLORS.lightGray}`,
+                    backgroundColor: COLORS.bgPage,
+                    border: `1px solid ${COLORS.borderLight}`,
                     borderRadius: '0.375rem',
                     fontSize: '0.85rem',
                     fontWeight: 500,
@@ -547,35 +547,35 @@ const AreaDetailView = ({
                       {explanation.details.map((item, i) => (
                         <div key={i} style={{
                           padding: '0.6rem 0.75rem',
-                          backgroundColor: COLORS.backgroundGray,
+                          backgroundColor: COLORS.bgPage,
                           borderRadius: '0.375rem',
                           borderLeft: `3px solid ${COLORS.slainteBlue}`
                         }}>
-                          <span style={{ fontWeight: 600, fontSize: '0.85rem', color: COLORS.darkGray }}>
+                          <span style={{ fontWeight: 600, fontSize: '0.85rem', color: COLORS.textPrimary }}>
                             {item.label}:
                           </span>{' '}
-                          <span style={{ fontSize: '0.85rem', color: COLORS.darkGray, lineHeight: 1.5 }}>
+                          <span style={{ fontSize: '0.85rem', color: COLORS.textPrimary, lineHeight: 1.5 }}>
                             {item.text}
                           </span>
                         </div>
                       ))}
                     </div>
                     {explanation.rates && (
-                      <p style={{ margin: '0 0 0.5rem', fontSize: '0.85rem', color: COLORS.darkGray, lineHeight: 1.5 }}>
+                      <p style={{ margin: '0 0 0.5rem', fontSize: '0.85rem', color: COLORS.textPrimary, lineHeight: 1.5 }}>
                         <strong>Rates:</strong> {explanation.rates}
                       </p>
                     )}
-                    <p style={{ margin: '0 0 0.5rem', fontSize: '0.85rem', color: COLORS.darkGray, lineHeight: 1.5 }}>
+                    <p style={{ margin: '0 0 0.5rem', fontSize: '0.85rem', color: COLORS.textPrimary, lineHeight: 1.5 }}>
                       <strong>How it's paid:</strong> {explanation.howPaid}
                     </p>
                     {explanation.tip && (
                       <div style={{
                         padding: '0.75rem',
-                        backgroundColor: '#FFF7ED',
+                        backgroundColor: COLORS.warningLighter,
                         borderRadius: '0.375rem',
-                        border: '1px solid #FDBA74',
+                        border: `1px solid ${COLORS.warningLight}`,
                         fontSize: '0.85rem',
-                        color: '#9A3412',
+                        color: COLORS.warningText,
                         lineHeight: 1.5
                       }}>
                         <strong>Tip:</strong> {explanation.tip}
@@ -591,14 +591,14 @@ const AreaDetailView = ({
                   {explanation.details.map((item, i) => (
                     <div key={i} style={{
                       padding: '0.6rem 0.75rem',
-                      backgroundColor: COLORS.backgroundGray,
+                      backgroundColor: COLORS.bgPage,
                       borderRadius: '0.375rem',
                       borderLeft: `3px solid ${COLORS.slainteBlue}`
                     }}>
-                      <span style={{ fontWeight: 600, fontSize: '0.85rem', color: COLORS.darkGray }}>
+                      <span style={{ fontWeight: 600, fontSize: '0.85rem', color: COLORS.textPrimary }}>
                         {item.label}:
                       </span>{' '}
-                      <span style={{ fontSize: '0.85rem', color: COLORS.darkGray, lineHeight: 1.5 }}>
+                      <span style={{ fontSize: '0.85rem', color: COLORS.textPrimary, lineHeight: 1.5 }}>
                         {item.text}
                       </span>
                     </div>
@@ -606,10 +606,10 @@ const AreaDetailView = ({
                 </div>
 
                 {/* Rates & payment info */}
-                <p style={{ margin: '0 0 0.5rem', fontSize: '0.85rem', color: COLORS.darkGray, lineHeight: 1.5 }}>
+                <p style={{ margin: '0 0 0.5rem', fontSize: '0.85rem', color: COLORS.textPrimary, lineHeight: 1.5 }}>
                   <strong>Rates:</strong> {explanation.rates}
                 </p>
-                <p style={{ margin: '0 0 0.5rem', fontSize: '0.85rem', color: COLORS.darkGray, lineHeight: 1.5 }}>
+                <p style={{ margin: '0 0 0.5rem', fontSize: '0.85rem', color: COLORS.textPrimary, lineHeight: 1.5 }}>
                   <strong>How it's paid:</strong> {explanation.howPaid}
                 </p>
               </>
@@ -620,11 +620,11 @@ const AreaDetailView = ({
               <div style={{
                 marginTop: '0.25rem',
                 padding: '0.75rem',
-                backgroundColor: '#EFF6FF',
+                backgroundColor: COLORS.slainteBlueLight,
                 borderRadius: '0.375rem',
-                border: '1px solid #BFDBFE',
+                border: `1px solid ${COLORS.infoLighter}`,
                 fontSize: '0.85rem',
-                color: '#1E40AF',
+                color: COLORS.infoText,
                 lineHeight: 1.5
               }}>
                 <strong>Leave year:</strong> {explanation.leaveYear}
@@ -636,11 +636,11 @@ const AreaDetailView = ({
               <div style={{
                 marginTop: '0.5rem',
                 padding: '0.75rem',
-                backgroundColor: '#FFF7ED',
+                backgroundColor: COLORS.warningLighter,
                 borderRadius: '0.375rem',
-                border: '1px solid #FDBA74',
+                border: `1px solid ${COLORS.warningLight}`,
                 fontSize: '0.85rem',
-                color: '#9A3412',
+                color: COLORS.warningText,
                 lineHeight: 1.5
               }}>
                 <strong>Tip:</strong> {explanation.tip}
@@ -653,11 +653,11 @@ const AreaDetailView = ({
             padding: '1.25rem',
             backgroundColor: COLORS.white,
             borderRadius: '0.5rem',
-            border: `1px solid ${COLORS.lightGray}`
+            border: `1px solid ${COLORS.borderLight}`
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
               <Database size={18} color={COLORS.slainteBlue} />
-              <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600, color: COLORS.darkGray }}>
+              <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600, color: COLORS.textPrimary }}>
                 Data Requirements
               </h3>
             </div>
@@ -672,16 +672,16 @@ const AreaDetailView = ({
                       alignItems: 'flex-start',
                       gap: '0.75rem',
                       padding: '0.75rem',
-                      backgroundColor: item.done ? '#F0FDF4' : COLORS.backgroundGray,
+                      backgroundColor: item.done ? COLORS.successLight : COLORS.bgPage,
                       borderRadius: '0.375rem',
-                      border: `1px solid ${item.done ? '#BBF7D0' : COLORS.lightGray}`
+                      border: `1px solid ${item.done ? COLORS.successLighter : COLORS.borderLight}`
                     }}
                   >
                     <div style={{ flexShrink: 0, marginTop: '0.1rem' }}>
                       {item.done ? (
-                        <CheckCircle2 size={18} color="#22C55E" />
+                        <CheckCircle2 size={18} color={COLORS.success} />
                       ) : (
-                        <Circle size={18} color={COLORS.mediumGray} />
+                        <Circle size={18} color={COLORS.textSecondary} />
                       )}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -689,13 +689,13 @@ const AreaDetailView = ({
                         margin: 0,
                         fontSize: '0.875rem',
                         fontWeight: 600,
-                        color: item.done ? '#166534' : COLORS.darkGray
+                        color: item.done ? COLORS.successText : COLORS.textPrimary
                       }}>
                         {item.label}
                       </p>
                       {/* Multi-line detail for enhanced leave balances */}
                       {item.multiLine ? (
-                        <div style={{ margin: '0.25rem 0 0', fontSize: '0.8rem', color: item.done ? '#15803D' : COLORS.mediumGray }}>
+                        <div style={{ margin: '0.25rem 0 0', fontSize: '0.8rem', color: item.done ? COLORS.successText : COLORS.textSecondary }}>
                           {item.detail.split('\n').map((line, j) => (
                             <p key={j} style={{
                               margin: j === 0 ? 0 : '0.2rem 0 0',
@@ -710,7 +710,7 @@ const AreaDetailView = ({
                         <p style={{
                           margin: '0.15rem 0 0',
                           fontSize: '0.8rem',
-                          color: item.done ? '#15803D' : COLORS.mediumGray
+                          color: item.done ? COLORS.successText : COLORS.textSecondary
                         }}>
                           {item.detail}
                         </p>
@@ -720,7 +720,7 @@ const AreaDetailView = ({
                 ))}
               </div>
             ) : (
-              <p style={{ margin: 0, fontSize: '0.85rem', color: COLORS.mediumGray }}>
+              <p style={{ margin: 0, fontSize: '0.85rem', color: COLORS.textSecondary }}>
                 Data requirements information not available for this area.
               </p>
             )}
@@ -734,13 +734,13 @@ const AreaDetailView = ({
                 <div style={{ marginTop: '0.75rem' }}>
                   <div style={{
                     padding: '0.5rem 0.75rem',
-                    backgroundColor: allDone ? '#F0FDF4' : '#FFFBEB',
+                    backgroundColor: allDone ? COLORS.successLight : COLORS.warningLighter,
                     borderRadius: showAnalysisButton ? '0.375rem 0.375rem 0 0' : '0.375rem',
-                    border: `1px solid ${allDone ? '#BBF7D0' : '#FDE68A'}`,
+                    border: `1px solid ${allDone ? COLORS.successLighter : COLORS.warningLight}`,
                     borderBottom: showAnalysisButton ? 'none' : undefined,
                     fontSize: '0.85rem',
                     fontWeight: 500,
-                    color: allDone ? '#166534' : '#92400E',
+                    color: allDone ? COLORS.successText : COLORS.warningText,
                     textAlign: 'center'
                   }}>
                     {allDone
@@ -787,29 +787,29 @@ const AreaDetailView = ({
               gap: '0.75rem',
               padding: '0.75rem 1rem',
               borderRadius: '0.5rem',
-              backgroundColor: '#FFFBEB',
-              border: '1px solid #FDE68A'
+              backgroundColor: COLORS.warningLighter,
+              border: `1px solid ${COLORS.warningLight}`
             }}>
               <Clock style={{
                 width: '1.25rem',
                 height: '1.25rem',
                 flexShrink: 0,
                 marginTop: '0.1rem',
-                color: '#D97706'
+                color: COLORS.warningDark
               }} />
               <div>
                 <p style={{
                   margin: 0,
                   fontSize: '0.875rem',
                   fontWeight: 600,
-                  color: '#92400E'
+                  color: COLORS.warningText
                 }}>
                   This data was last updated {formatDaysAgo(areaReadiness.dataAge.daysOld)}
                 </p>
                 <p style={{
                   margin: '0.25rem 0 0',
                   fontSize: '0.8rem',
-                  color: '#78350F'
+                  color: COLORS.warningText
                 }}>
                   Consider refreshing these figures from your EHR to ensure analysis accuracy.
                 </p>
@@ -823,11 +823,11 @@ const AreaDetailView = ({
               padding: '1.25rem',
               backgroundColor: COLORS.white,
               borderRadius: '0.5rem',
-              border: `1px solid ${COLORS.lightGray}`
+              border: `1px solid ${COLORS.borderLight}`
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
                 <Upload size={18} color={COLORS.slainteBlue} />
-                <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600, color: COLORS.darkGray }}>
+                <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600, color: COLORS.textPrimary }}>
                   {getFormTitle(areaId)}
                 </h3>
               </div>
@@ -850,7 +850,7 @@ const AreaDetailView = ({
           <section>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
               <BarChart3 size={18} color={COLORS.slainteBlue} />
-              <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600, color: COLORS.darkGray }}>
+              <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600, color: COLORS.textPrimary }}>
                 Analysis
               </h3>
             </div>
@@ -867,7 +867,7 @@ const AreaDetailView = ({
           <section>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
               <ListTodo size={18} color={COLORS.slainteBlue} />
-              <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600, color: COLORS.darkGray }}>
+              <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600, color: COLORS.textPrimary }}>
                 Recommended Actions
               </h3>
             </div>

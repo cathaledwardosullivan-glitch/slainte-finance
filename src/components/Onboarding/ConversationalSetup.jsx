@@ -397,7 +397,7 @@ Return ONLY valid JSON, nothing else.`;
         backgroundColor: COLORS.white,
         borderRadius: '0.75rem',
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-        border: `1px solid ${COLORS.lightGray}`,
+        border: `1px solid ${COLORS.borderLight}`,
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column'
@@ -472,7 +472,7 @@ Return ONLY valid JSON, nothing else.`;
                 width: '32px',
                 height: '32px',
                 borderRadius: '50%',
-                backgroundColor: msg.type === 'user' ? COLORS.slainteBlue : COLORS.backgroundGray,
+                backgroundColor: msg.type === 'user' ? COLORS.slainteBlue : COLORS.bgPage,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -489,8 +489,8 @@ Return ONLY valid JSON, nothing else.`;
                 maxWidth: '80%',
                 padding: '0.875rem 1rem',
                 borderRadius: '12px',
-                backgroundColor: msg.type === 'user' ? COLORS.slainteBlue : COLORS.backgroundGray,
-                color: msg.type === 'user' ? COLORS.white : COLORS.darkGray,
+                backgroundColor: msg.type === 'user' ? COLORS.slainteBlue : COLORS.bgPage,
+                color: msg.type === 'user' ? COLORS.white : COLORS.textPrimary,
                 fontSize: '0.9375rem',
                 lineHeight: 1.5,
                 whiteSpace: 'pre-wrap'
@@ -506,7 +506,7 @@ Return ONLY valid JSON, nothing else.`;
                 width: '32px',
                 height: '32px',
                 borderRadius: '50%',
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
@@ -516,13 +516,13 @@ Return ONLY valid JSON, nothing else.`;
               <div style={{
                 padding: '0.875rem 1rem',
                 borderRadius: '12px',
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.5rem'
               }}>
                 <Loader style={{ width: '16px', height: '16px', color: COLORS.slainteBlue, animation: 'spin 1s linear infinite' }} />
-                <span style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>Thinking...</span>
+                <span style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>Thinking...</span>
               </div>
             </div>
           )}
@@ -533,7 +533,7 @@ Return ONLY valid JSON, nothing else.`;
         {/* Input Area */}
         <div style={{
           padding: '1rem',
-          borderTop: `1px solid ${COLORS.lightGray}`,
+          borderTop: `1px solid ${COLORS.borderLight}`,
           backgroundColor: COLORS.white
         }}>
           {isConversationComplete ? (
@@ -549,9 +549,9 @@ Return ONLY valid JSON, nothing else.`;
                   padding: '0.875rem',
                   fontSize: '0.9375rem',
                   fontWeight: 500,
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   backgroundColor: COLORS.white,
-                  border: `2px solid ${COLORS.lightGray}`,
+                  border: `2px solid ${COLORS.borderLight}`,
                   borderRadius: '8px',
                   cursor: 'pointer',
                   display: 'flex',
@@ -604,10 +604,10 @@ Return ONLY valid JSON, nothing else.`;
                   flex: 1,
                   padding: '0.75rem 1rem',
                   fontSize: '1rem',
-                  border: `2px solid ${COLORS.lightGray}`,
+                  border: `2px solid ${COLORS.borderLight}`,
                   borderRadius: '8px',
                   outline: 'none',
-                  backgroundColor: isThinking ? COLORS.backgroundGray : COLORS.white
+                  backgroundColor: isThinking ? COLORS.bgPage : COLORS.white
                 }}
               />
               <button
@@ -647,7 +647,7 @@ Return ONLY valid JSON, nothing else.`;
         {/* Profile Card */}
         <div style={{
           backgroundColor: COLORS.white,
-          border: `2px solid ${COLORS.lightGray}`,
+          border: `2px solid ${COLORS.borderLight}`,
           borderRadius: '16px',
           padding: '1.5rem',
           flex: 1,
@@ -660,7 +660,7 @@ Return ONLY valid JSON, nothing else.`;
             gap: '0.75rem',
             marginBottom: '1.5rem',
             paddingBottom: '1rem',
-            borderBottom: `1px solid ${COLORS.lightGray}`
+            borderBottom: `1px solid ${COLORS.borderLight}`
           }}>
             <div style={{
               width: '40px',
@@ -674,10 +674,10 @@ Return ONLY valid JSON, nothing else.`;
               <Building2 style={{ width: '20px', height: '20px', color: COLORS.slainteBlue }} />
             </div>
             <div>
-              <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.darkGray }}>
+              <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.textPrimary }}>
                 Practice Profile
               </h3>
-              <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray }}>
+              <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary }}>
                 Building as we chat...
               </p>
             </div>
@@ -687,9 +687,9 @@ Return ONLY valid JSON, nothing else.`;
             <div style={{
               textAlign: 'center',
               padding: '2rem 1rem',
-              color: COLORS.mediumGray
+              color: COLORS.textSecondary
             }}>
-              <Building2 style={{ width: '48px', height: '48px', color: COLORS.lightGray, margin: '0 auto 1rem' }} />
+              <Building2 style={{ width: '48px', height: '48px', color: COLORS.borderLight, margin: '0 auto 1rem' }} />
               <p style={{ fontSize: '0.9375rem' }}>
                 Your practice profile will appear here as we chat
               </p>
@@ -706,11 +706,11 @@ Return ONLY valid JSON, nothing else.`;
                     marginBottom: '0.375rem'
                   }}>
                     <Building2 style={{ width: '14px', height: '14px', color: COLORS.slainteBlue }} />
-                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: COLORS.mediumGray, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: COLORS.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                       Practice Name
                     </span>
                   </div>
-                  <p style={{ fontSize: '1rem', color: COLORS.darkGray, fontWeight: 500, paddingLeft: '1.375rem' }}>
+                  <p style={{ fontSize: '1rem', color: COLORS.textPrimary, fontWeight: 500, paddingLeft: '1.375rem' }}>
                     {profile.practiceDetails.practiceName}
                   </p>
                 </div>
@@ -726,11 +726,11 @@ Return ONLY valid JSON, nothing else.`;
                     marginBottom: '0.375rem'
                   }}>
                     <MapPin style={{ width: '14px', height: '14px', color: COLORS.slainteBlue }} />
-                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: COLORS.mediumGray, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: COLORS.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                       Location
                     </span>
                   </div>
-                  <p style={{ fontSize: '1rem', color: COLORS.darkGray, paddingLeft: '1.375rem' }}>
+                  <p style={{ fontSize: '1rem', color: COLORS.textPrimary, paddingLeft: '1.375rem' }}>
                     {profile.practiceDetails.locations.join(', ')}
                   </p>
                 </div>
@@ -746,13 +746,13 @@ Return ONLY valid JSON, nothing else.`;
                     marginBottom: '0.375rem'
                   }}>
                     <Stethoscope style={{ width: '14px', height: '14px', color: COLORS.slainteBlue }} />
-                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: COLORS.mediumGray, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: COLORS.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                       GP Partners ({profile.gps.partners.length})
                     </span>
                   </div>
                   <div style={{ paddingLeft: '1.375rem' }}>
                     {profile.gps.partners.map((partner, idx) => (
-                      <p key={idx} style={{ fontSize: '0.9375rem', color: COLORS.darkGray, marginBottom: '0.25rem' }}>
+                      <p key={idx} style={{ fontSize: '0.9375rem', color: COLORS.textPrimary, marginBottom: '0.25rem' }}>
                         {partner.name}
                       </p>
                     ))}
@@ -770,13 +770,13 @@ Return ONLY valid JSON, nothing else.`;
                     marginBottom: '0.375rem'
                   }}>
                     <UserCheck style={{ width: '14px', height: '14px', color: COLORS.slainteBlue }} />
-                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: COLORS.mediumGray, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: COLORS.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                       Salaried GPs ({profile.gps.salaried.length})
                     </span>
                   </div>
                   <div style={{ paddingLeft: '1.375rem' }}>
                     {profile.gps.salaried.map((gp, idx) => (
-                      <p key={idx} style={{ fontSize: '0.9375rem', color: COLORS.darkGray, marginBottom: '0.25rem' }}>
+                      <p key={idx} style={{ fontSize: '0.9375rem', color: COLORS.textPrimary, marginBottom: '0.25rem' }}>
                         {gp.name}
                       </p>
                     ))}
@@ -794,7 +794,7 @@ Return ONLY valid JSON, nothing else.`;
                     marginBottom: '0.375rem'
                   }}>
                     <Users style={{ width: '14px', height: '14px', color: COLORS.slainteBlue }} />
-                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: COLORS.mediumGray, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: COLORS.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                       Staff ({profile.staff.length})
                     </span>
                   </div>
@@ -808,10 +808,10 @@ Return ONLY valid JSON, nothing else.`;
                       });
                       return Object.entries(byRole).map(([role, names], idx) => (
                         <div key={idx} style={{ marginBottom: '0.5rem' }}>
-                          <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, textTransform: 'capitalize', marginBottom: '0.125rem' }}>
+                          <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, textTransform: 'capitalize', marginBottom: '0.125rem' }}>
                             {role}
                           </p>
-                          <p style={{ fontSize: '0.9375rem', color: COLORS.darkGray }}>
+                          <p style={{ fontSize: '0.9375rem', color: COLORS.textPrimary }}>
                             {names.join(', ')}
                           </p>
                         </div>

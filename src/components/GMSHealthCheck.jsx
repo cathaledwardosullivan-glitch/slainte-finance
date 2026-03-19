@@ -1445,8 +1445,8 @@ export default function GMSHealthCheck({ setCurrentView }) {
             onClick={handleUpdateData}
             className="px-4 py-2 rounded border font-medium transition-colors hover:bg-gray-50"
             style={{
-              borderColor: COLORS.lightGray,
-              color: COLORS.mediumGray
+              borderColor: COLORS.borderLight,
+              color: COLORS.textSecondary
             }}
           >
             Update Health Check Data
@@ -1459,7 +1459,7 @@ export default function GMSHealthCheck({ setCurrentView }) {
   // Initial state - prompt to start health check
   return (
     <div className="max-w-4xl mx-auto p-6" data-tour-id="gms-health-check-section">
-      <div className="bg-white rounded-lg shadow-sm border p-8 text-center" style={{ borderColor: COLORS.lightGray }}>
+      <div className="bg-white rounded-lg shadow-sm border p-8 text-center" style={{ borderColor: COLORS.borderLight }}>
         <div
           className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
           style={{ backgroundColor: `${COLORS.slainteBlue}20` }}
@@ -1467,11 +1467,11 @@ export default function GMSHealthCheck({ setCurrentView }) {
           <FileText className="h-8 w-8" style={{ color: COLORS.slainteBlue }} />
         </div>
 
-        <h2 className="text-2xl font-bold mb-3" style={{ color: COLORS.darkGray }}>
+        <h2 className="text-2xl font-bold mb-3" style={{ color: COLORS.textPrimary }}>
           GMS Health Check
         </h2>
 
-        <p className="text-lg mb-6" style={{ color: COLORS.mediumGray }}>
+        <p className="text-lg mb-6" style={{ color: COLORS.textSecondary }}>
           Identify unclaimed income opportunities in your GMS contract
         </p>
 
@@ -1482,10 +1482,10 @@ export default function GMSHealthCheck({ setCurrentView }) {
               1
             </div>
             <div>
-              <p className="font-medium" style={{ color: COLORS.darkGray }}>
+              <p className="font-medium" style={{ color: COLORS.textPrimary }}>
                 Collect practice data
               </p>
-              <p className="text-sm" style={{ color: COLORS.mediumGray }}>
+              <p className="text-sm" style={{ color: COLORS.textSecondary }}>
                 Simple 3-step form to gather demographics, staff, and activity data from your EHR
               </p>
             </div>
@@ -1497,10 +1497,10 @@ export default function GMSHealthCheck({ setCurrentView }) {
               2
             </div>
             <div>
-              <p className="font-medium" style={{ color: COLORS.darkGray }}>
+              <p className="font-medium" style={{ color: COLORS.textPrimary }}>
                 Analyze income potential
               </p>
-              <p className="text-sm" style={{ color: COLORS.mediumGray }}>
+              <p className="text-sm" style={{ color: COLORS.textSecondary }}>
                 Compare your actual PCRS payments against what you should be receiving
               </p>
             </div>
@@ -1512,10 +1512,10 @@ export default function GMSHealthCheck({ setCurrentView }) {
               3
             </div>
             <div>
-              <p className="font-medium" style={{ color: COLORS.darkGray }}>
+              <p className="font-medium" style={{ color: COLORS.textPrimary }}>
                 Get actionable recommendations
               </p>
-              <p className="text-sm" style={{ color: COLORS.mediumGray }}>
+              <p className="text-sm" style={{ color: COLORS.textSecondary }}>
                 Prioritized list of administrative actions to claim missing payments
               </p>
             </div>
@@ -1523,7 +1523,7 @@ export default function GMSHealthCheck({ setCurrentView }) {
         </div>
 
         <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-8">
-          <p className="text-sm font-medium" style={{ color: '#065F46' }}>
+          <p className="text-sm font-medium" style={{ color: COLORS.successText }}>
             💰 Typical practices find €20,000 - €80,000 in unclaimed income
           </p>
         </div>
@@ -1538,7 +1538,7 @@ export default function GMSHealthCheck({ setCurrentView }) {
           Run Health Check
         </button>
 
-        <p className="text-sm mt-4" style={{ color: COLORS.mediumGray }}>
+        <p className="text-sm mt-4" style={{ color: COLORS.textSecondary }}>
           Takes approximately 10-15 minutes
         </p>
       </div>

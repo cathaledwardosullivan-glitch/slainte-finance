@@ -32,7 +32,7 @@ const ConfirmDialog = ({
         alignItems: 'center',
         justifyContent: 'center',
         padding: '1rem',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)'
+        backgroundColor: COLORS.overlayDark
       }}
       onClick={onCancel}
     >
@@ -43,7 +43,7 @@ const ConfirmDialog = ({
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
           width: '100%',
           maxWidth: '24rem',
-          border: `1px solid ${COLORS.lightGray}`,
+          border: `1px solid ${COLORS.borderLight}`,
           overflow: 'hidden'
         }}
         onClick={(e) => e.stopPropagation()}
@@ -53,7 +53,7 @@ const ConfirmDialog = ({
           <div
             style={{
               padding: '1rem 1.25rem',
-              borderBottom: `1px solid ${COLORS.lightGray}`,
+              borderBottom: `1px solid ${COLORS.borderLight}`,
               display: 'flex',
               alignItems: 'center',
               gap: '0.75rem'
@@ -70,7 +70,7 @@ const ConfirmDialog = ({
               style={{
                 fontWeight: 600,
                 fontSize: '1rem',
-                color: COLORS.darkGray,
+                color: COLORS.textPrimary,
                 margin: 0
               }}
             >
@@ -83,7 +83,7 @@ const ConfirmDialog = ({
         <div style={{ padding: '1.25rem' }}>
           <p
             style={{
-              color: COLORS.darkGray,
+              color: COLORS.textPrimary,
               fontSize: '0.9375rem',
               lineHeight: 1.5,
               margin: 0
@@ -97,7 +97,7 @@ const ConfirmDialog = ({
         <div
           style={{
             padding: '1rem 1.25rem',
-            borderTop: `1px solid ${COLORS.lightGray}`,
+            borderTop: `1px solid ${COLORS.borderLight}`,
             display: 'flex',
             justifyContent: 'flex-end',
             gap: '0.75rem'
@@ -108,15 +108,15 @@ const ConfirmDialog = ({
             style={{
               padding: '0.5rem 1rem',
               borderRadius: '0.375rem',
-              border: `1px solid ${COLORS.lightGray}`,
+              border: `1px solid ${COLORS.borderLight}`,
               backgroundColor: COLORS.white,
-              color: COLORS.darkGray,
+              color: COLORS.textPrimary,
               fontSize: '0.875rem',
               fontWeight: 500,
               cursor: 'pointer',
               transition: 'background-color 0.15s'
             }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.backgroundGray}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.bgPage}
             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.white}
           >
             {cancelText}

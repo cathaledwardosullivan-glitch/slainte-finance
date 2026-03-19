@@ -118,7 +118,7 @@ export default function OnboardingAIAnalysis({ onComplete, onBack }) {
           backgroundColor: COLORS.white,
           borderRadius: '16px',
           boxShadow: '0 4px 24px rgba(0, 0, 0, 0.08)',
-          border: `1px solid ${COLORS.lightGray}`,
+          border: `1px solid ${COLORS.borderLight}`,
           overflow: 'hidden',
           flex: 1,
           display: 'flex',
@@ -166,7 +166,7 @@ export default function OnboardingAIAnalysis({ onComplete, onBack }) {
                   width: '32px',
                   height: '32px',
                   borderRadius: '50%',
-                  backgroundColor: COLORS.backgroundGray,
+                  backgroundColor: COLORS.bgPage,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -175,7 +175,7 @@ export default function OnboardingAIAnalysis({ onComplete, onBack }) {
                   <MessageCircle style={{ width: '16px', height: '16px', color: COLORS.slainteBlue }} />
                 </div>
                 <div style={{
-                  backgroundColor: COLORS.backgroundGray,
+                  backgroundColor: COLORS.bgPage,
                   padding: '0.875rem 1rem',
                   borderRadius: '12px',
                   maxWidth: '85%'
@@ -183,7 +183,7 @@ export default function OnboardingAIAnalysis({ onComplete, onBack }) {
                   <div style={{
                     fontSize: '1.125rem',
                     fontWeight: 600,
-                    color: COLORS.darkGray
+                    color: COLORS.textPrimary
                   }}>
                     {greeting}
                   </div>
@@ -196,14 +196,14 @@ export default function OnboardingAIAnalysis({ onComplete, onBack }) {
               <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
                 <div style={{ width: '32px', flexShrink: 0 }} />
                 <div style={{
-                  backgroundColor: COLORS.backgroundGray,
+                  backgroundColor: COLORS.bgPage,
                   padding: '0.875rem 1rem',
                   borderRadius: '12px',
                   maxWidth: '85%'
                 }}>
                   <div style={{
                     fontSize: '0.9375rem',
-                    color: COLORS.darkGray,
+                    color: COLORS.textPrimary,
                     lineHeight: 1.5
                   }}>
                     {currentMessage.message}
@@ -225,7 +225,7 @@ export default function OnboardingAIAnalysis({ onComplete, onBack }) {
                 }}>
                   <div style={{
                     fontSize: '0.875rem',
-                    color: COLORS.darkGray,
+                    color: COLORS.textPrimary,
                     lineHeight: 1.5
                   }}>
                     <strong>Tip:</strong> {currentMessage.tip}
@@ -238,8 +238,8 @@ export default function OnboardingAIAnalysis({ onComplete, onBack }) {
           {/* Phase indicator */}
           <div style={{
             padding: '1rem',
-            borderTop: `1px solid ${COLORS.lightGray}`,
-            backgroundColor: COLORS.backgroundGray
+            borderTop: `1px solid ${COLORS.borderLight}`,
+            backgroundColor: COLORS.bgPage
           }}>
             <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
               {/* Staff phase indicator */}
@@ -247,7 +247,7 @@ export default function OnboardingAIAnalysis({ onComplete, onBack }) {
                 flex: 1,
                 height: '4px',
                 borderRadius: '2px',
-                backgroundColor: phase === 'staff' || staffComplete ? COLORS.slainteBlue : COLORS.lightGray,
+                backgroundColor: phase === 'staff' || staffComplete ? COLORS.slainteBlue : COLORS.borderLight,
                 transition: 'background-color 0.3s'
               }} />
               {/* Expenses phase indicator */}
@@ -255,7 +255,7 @@ export default function OnboardingAIAnalysis({ onComplete, onBack }) {
                 flex: 1,
                 height: '4px',
                 borderRadius: '2px',
-                backgroundColor: phase === 'expenses' || expensesComplete ? COLORS.slainteBlue : COLORS.lightGray,
+                backgroundColor: phase === 'expenses' || expensesComplete ? COLORS.slainteBlue : COLORS.borderLight,
                 transition: 'background-color 0.3s'
               }} />
               {/* Complete indicator */}
@@ -263,13 +263,13 @@ export default function OnboardingAIAnalysis({ onComplete, onBack }) {
                 flex: 1,
                 height: '4px',
                 borderRadius: '2px',
-                backgroundColor: phase === 'complete' ? COLORS.incomeColor : COLORS.lightGray,
+                backgroundColor: phase === 'complete' ? COLORS.incomeColor : COLORS.borderLight,
                 transition: 'background-color 0.3s'
               }} />
             </div>
             <div style={{
               fontSize: '0.75rem',
-              color: COLORS.mediumGray,
+              color: COLORS.textSecondary,
               textAlign: 'center'
             }}>
               {phase === 'staff' && 'Step 1: Staff Identification'}
@@ -288,9 +288,9 @@ export default function OnboardingAIAnalysis({ onComplete, onBack }) {
               padding: '0.875rem',
               fontSize: '0.9375rem',
               fontWeight: 500,
-              color: COLORS.mediumGray,
+              color: COLORS.textSecondary,
               backgroundColor: COLORS.white,
-              border: `1px solid ${COLORS.lightGray}`,
+              border: `1px solid ${COLORS.borderLight}`,
               borderRadius: '8px',
               cursor: 'pointer',
               display: 'flex',
@@ -335,7 +335,7 @@ export default function OnboardingAIAnalysis({ onComplete, onBack }) {
         backgroundColor: COLORS.white,
         borderRadius: '16px',
         boxShadow: '0 4px 24px rgba(0, 0, 0, 0.08)',
-        border: `1px solid ${COLORS.lightGray}`,
+        border: `1px solid ${COLORS.borderLight}`,
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column'
@@ -380,7 +380,7 @@ export default function OnboardingAIAnalysis({ onComplete, onBack }) {
             <h2 style={{
               fontSize: '1.75rem',
               fontWeight: 700,
-              color: COLORS.darkGray,
+              color: COLORS.textPrimary,
               marginBottom: '0.75rem'
             }}>
               Analysis Complete!
@@ -388,7 +388,7 @@ export default function OnboardingAIAnalysis({ onComplete, onBack }) {
 
             <p style={{
               fontSize: '1rem',
-              color: COLORS.mediumGray,
+              color: COLORS.textSecondary,
               lineHeight: 1.6,
               maxWidth: '400px',
               marginBottom: '2rem'
@@ -422,7 +422,7 @@ export default function OnboardingAIAnalysis({ onComplete, onBack }) {
                 </div>
                 <div style={{
                   fontSize: '0.875rem',
-                  color: COLORS.mediumGray
+                  color: COLORS.textSecondary
                 }}>
                   Categorized
                 </div>
@@ -444,7 +444,7 @@ export default function OnboardingAIAnalysis({ onComplete, onBack }) {
                 </div>
                 <div style={{
                   fontSize: '0.875rem',
-                  color: COLORS.mediumGray
+                  color: COLORS.textSecondary
                 }}>
                   Need Review
                 </div>

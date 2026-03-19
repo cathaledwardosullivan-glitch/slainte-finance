@@ -536,8 +536,8 @@ Check console for detailed debugging information.`);
         .header { text-align: center; margin-bottom: 30px; position: relative; }
         .draft-badge {
             display: inline-block;
-            background-color: #ff6b6b;
-            color: white;
+            background-color: ${COLORS.expenseColor};
+            color: ${COLORS.white};
             padding: 4px 12px;
             border-radius: 4px;
             font-size: 10px;
@@ -546,16 +546,16 @@ Check console for detailed debugging information.`);
             vertical-align: middle;
         }
         .pl-table { width: 100%; border-collapse: collapse; }
-        .pl-table th, .pl-table td { border: 1px solid #ddd; padding: 6px; text-align: left; }
-        .pl-table th { background-color: #f5f5f5; font-weight: bold; }
+        .pl-table th, .pl-table td { border: 1px solid ${COLORS.borderLight}; padding: 6px; text-align: left; }
+        .pl-table th { background-color: ${COLORS.bgHover}; font-weight: bold; }
         .amount { text-align: right; font-family: monospace; }
-        .total-line { border-top: 2px solid #000; font-weight: bold; }
-        .section-header { background-color: #e6f3ff; font-weight: bold; }
-        .notes { margin-top: 30px; padding: 15px; background-color: #fff9e6; border-left: 4px solid #ffc107; }
-        .notes h4 { margin: 0 0 10px 0; color: #856404; }
+        .total-line { border-top: 2px solid ${COLORS.textPrimary}; font-weight: bold; }
+        .section-header { background-color: ${COLORS.slainteBlueLight}; font-weight: bold; }
+        .notes { margin-top: 30px; padding: 15px; background-color: ${COLORS.warningLighter}; border-left: 4px solid ${COLORS.warning}; }
+        .notes h4 { margin: 0 0 10px 0; color: ${COLORS.warningText}; }
         .notes ul { margin: 5px 0; padding-left: 20px; }
-        .notes li { margin: 5px 0; color: #856404; }
-        .notes .important { font-weight: bold; color: #d32f2f; }
+        .notes li { margin: 5px 0; color: ${COLORS.warningText}; }
+        .notes .important { font-weight: bold; color: ${COLORS.error}; }
         @media print { body { margin: 10px; } }
     </style>
 </head>
@@ -613,7 +613,7 @@ Check console for detailed debugging information.`);
                 <td class="amount"><strong>(${formatCurrency(totalExpenses[currentYear - 1])})</strong></td>
             </tr>
             
-            <tr class="total-line" style="background-color: #e6f3ff;">
+            <tr class="total-line" style="background-color: ${COLORS.slainteBlueLight};">
                 <td><strong>Net Divisible Profit</strong></td>
                 <td class="amount"><strong>${formatCurrency(netProfit[currentYear])}</strong></td>
                 <td class="amount"><strong>${formatCurrency(netProfit[currentYear - 1])}</strong></td>
@@ -636,7 +636,7 @@ Check console for detailed debugging information.`);
         <p style="margin-top: 10px; font-style: italic;">Please review all figures with your accountant before using for tax returns or official purposes.</p>
     </div>
 
-    <div style="margin-top: 30px; font-size: 10px; color: #666;">
+    <div style="margin-top: 30px; font-size: 10px; color: ${COLORS.textMuted};">
         Generated on ${new Date().toLocaleDateString('en-IE')} by sl[Ai]nte.Finance
     </div>
 </body>
@@ -719,8 +719,8 @@ Check console for detailed debugging information.`);
               .header { text-align: center; margin-bottom: 30px; position: relative; }
               .draft-badge {
                   display: inline-block;
-                  background-color: #ff6b6b;
-                  color: white;
+                  background-color: ${COLORS.expenseColor};
+                  color: ${COLORS.white};
                   padding: 4px 12px;
                   border-radius: 4px;
                   font-size: 10px;
@@ -729,16 +729,16 @@ Check console for detailed debugging information.`);
                   vertical-align: middle;
               }
               .pl-table { width: 100%; border-collapse: collapse; }
-              .pl-table th, .pl-table td { border: 1px solid #ddd; padding: 6px; text-align: left; }
-              .pl-table th { background-color: #f5f5f5; font-weight: bold; }
+              .pl-table th, .pl-table td { border: 1px solid ${COLORS.borderLight}; padding: 6px; text-align: left; }
+              .pl-table th { background-color: ${COLORS.bgHover}; font-weight: bold; }
               .amount { text-align: right; font-family: monospace; }
-              .total-line { border-top: 2px solid #000; font-weight: bold; }
-              .section-header { background-color: #e6f3ff; font-weight: bold; }
-              .notes { margin-top: 30px; padding: 15px; background-color: #fff9e6; border-left: 4px solid #ffc107; }
-              .notes h4 { margin: 0 0 10px 0; color: #856404; }
+              .total-line { border-top: 2px solid ${COLORS.textPrimary}; font-weight: bold; }
+              .section-header { background-color: ${COLORS.slainteBlueLight}; font-weight: bold; }
+              .notes { margin-top: 30px; padding: 15px; background-color: ${COLORS.warningLighter}; border-left: 4px solid ${COLORS.warning}; }
+              .notes h4 { margin: 0 0 10px 0; color: ${COLORS.warningText}; }
               .notes ul { margin: 5px 0; padding-left: 20px; }
-              .notes li { margin: 5px 0; color: #856404; }
-              .notes .important { font-weight: bold; color: #d32f2f; }
+              .notes li { margin: 5px 0; color: ${COLORS.warningText}; }
+              .notes .important { font-weight: bold; color: ${COLORS.error}; }
           </style>
       </head>
       <body>
@@ -795,13 +795,13 @@ Check console for detailed debugging information.`);
                       <td class="amount"><strong>(${formatCurrency(totalExpenses[selectedYear - 1])})</strong></td>
                   </tr>
                   
-                  <tr class="total-line" style="background-color: #f0f8ff;">
+                  <tr class="total-line" style="background-color: ${COLORS.slainteBlueLight};">
                       <td><strong>Profit before appropriation</strong></td>
                       <td class="amount"><strong>${formatCurrency(netProfit[selectedYear])}</strong></td>
                       <td class="amount"><strong>${formatCurrency(netProfit[selectedYear - 1])}</strong></td>
                   </tr>
                   
-                  <tr class="total-line" style="background-color: #e6f3ff;">
+                  <tr class="total-line" style="background-color: ${COLORS.slainteBlueLight};">
                       <td><strong>Net Divisible Profit</strong></td>
                       <td class="amount"><strong>${formatCurrency(netProfit[selectedYear])}</strong></td>
                       <td class="amount"><strong>${formatCurrency(netProfit[selectedYear - 1])}</strong></td>
@@ -811,8 +811,8 @@ Check console for detailed debugging information.`);
 
           ${(plData.grossIncomeData?.[selectedYear]?.totalWithholding > 0 || plData.grossIncomeData?.[selectedYear]?.totalSuperannuation > 0) ? `
           <!-- Footnotes for deductions at source -->
-          <div style="margin-top: 20px; padding: 12px 16px; background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; font-size: 10px; color: #666;">
-              <div style="font-weight: 600; color: #333; margin-bottom: 6px;">Notes - Deductions at Source (not P&L expenses):</div>
+          <div style="margin-top: 20px; padding: 12px 16px; background-color: ${COLORS.bgPage}; border: 1px solid ${COLORS.borderLight}; border-radius: 4px; font-size: 10px; color: ${COLORS.textMuted};">
+              <div style="font-weight: 600; color: ${COLORS.textPrimary}; margin-bottom: 6px;">Notes - Deductions at Source (not P&L expenses):</div>
               ${plData.grossIncomeData[selectedYear]?.totalWithholding > 0 ? `<div style="margin-bottom: 3px;">¹ Withholding tax deducted at source: €${plData.grossIncomeData[selectedYear].totalWithholding.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}${plData.grossIncomeData[selectedYear - 1]?.totalWithholding > 0 ? ` (prior year: €${plData.grossIncomeData[selectedYear - 1].totalWithholding.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })})` : ''}</div>` : ''}
               ${plData.grossIncomeData[selectedYear]?.totalSuperannuation > 0 ? `<div style="margin-bottom: 3px;">² Superannuation deducted at source: €${plData.grossIncomeData[selectedYear].totalSuperannuation.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}${plData.grossIncomeData[selectedYear - 1]?.totalSuperannuation > 0 ? ` (prior year: €${plData.grossIncomeData[selectedYear - 1].totalSuperannuation.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })})` : ''}</div>` : ''}
               <div style="margin-top: 6px; font-style: italic;">These items are allocated to Partner's Capital Accounts, not treated as P&L expenses.</div>
@@ -821,71 +821,71 @@ Check console for detailed debugging information.`);
 
           ${(!plData.grossIncomeData?.[selectedYear]?.gmsComplete && plData.grossIncomeData?.[selectedYear]?.hasPCRSData) ? `
           <!-- GMS Incomplete Warning -->
-          <div style="margin-top: 15px; padding: 10px 14px; background-color: #fff3e0; border-left: 4px solid #ff9800; border-radius: 4px; font-size: 10px;">
-              <div style="font-weight: 600; color: #e65100;">⚠️ Incomplete GMS Data for ${selectedYear}</div>
-              <div style="color: #795548;">Only ${plData.grossIncomeData[selectedYear].gmsMonthsFound}/12 months of PCRS statements uploaded. Missing: ${plData.grossIncomeData[selectedYear].gmsMissingMonths?.join(', ')}. GMS income may be understated.</div>
+          <div style="margin-top: 15px; padding: 10px 14px; background-color: ${COLORS.warningLighter}; border-left: 4px solid ${COLORS.warning}; border-radius: 4px; font-size: 10px;">
+              <div style="font-weight: 600; color: ${COLORS.warningText};">⚠️ Incomplete GMS Data for ${selectedYear}</div>
+              <div style="color: ${COLORS.textMuted};">Only ${plData.grossIncomeData[selectedYear].gmsMonthsFound}/12 months of PCRS statements uploaded. Missing: ${plData.grossIncomeData[selectedYear].gmsMissingMonths?.join(', ')}. GMS income may be understated.</div>
           </div>
           ` : ''}
 
           ${(!plData.grossIncomeData?.[selectedYear]?.hasPCRSData) ? `
           <!-- No PCRS Data Warning -->
-          <div style="margin-top: 15px; padding: 10px 14px; background-color: #ffebee; border-left: 4px solid #f44336; border-radius: 4px; font-size: 10px;">
-              <div style="font-weight: 600; color: #c62828;">❌ No PCRS Data for ${selectedYear}</div>
-              <div style="color: #795548;">GMS income is based on bank deposits (NET) rather than PCRS statements (GROSS). Upload PCRS GMS statements for accurate gross income calculation.</div>
+          <div style="margin-top: 15px; padding: 10px 14px; background-color: ${COLORS.errorLight}; border-left: 4px solid ${COLORS.error}; border-radius: 4px; font-size: 10px;">
+              <div style="font-weight: 600; color: ${COLORS.errorDark};">❌ No PCRS Data for ${selectedYear}</div>
+              <div style="color: ${COLORS.textMuted};">GMS income is based on bank deposits (NET) rather than PCRS statements (GROSS). Upload PCRS GMS statements for accurate gross income calculation.</div>
           </div>
           ` : ''}
 
           <!-- Year-on-Year Comparison Chart -->
-          <div style="margin-top: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+          <div style="margin-top: 30px; padding: 20px; border: 1px solid ${COLORS.borderLight}; border-radius: 8px;">
               <h4 style="margin: 0 0 15px 0; font-size: 14px;">Year-on-Year Comparison</h4>
               <div style="display: flex; gap: 40px;">
                   <!-- Income Chart -->
                   <div style="flex: 1; text-align: center;">
-                      <div style="font-size: 11px; color: #666; margin-bottom: 8px; font-weight: 600;">Income</div>
-                      <div style="display: flex; align-items: flex-end; justify-content: center; gap: 10px; height: 80px; border-left: 1px solid #ddd; border-bottom: 1px solid #ddd; padding: 0 15px;">
+                      <div style="font-size: 11px; color: ${COLORS.textMuted}; margin-bottom: 8px; font-weight: 600;">Income</div>
+                      <div style="display: flex; align-items: flex-end; justify-content: center; gap: 10px; height: 80px; border-left: 1px solid ${COLORS.borderLight}; border-bottom: 1px solid ${COLORS.borderLight}; padding: 0 15px;">
                           <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
-                              <div style="width: 40px; height: ${Math.round((totalIncome[selectedYear - 1] / Math.max(totalIncome[selectedYear], totalIncome[selectedYear - 1], 1)) * 60)}px; background-color: #A5D6A7; border-radius: 3px 3px 0 0; min-height: 4px;"></div>
-                              <span style="font-size: 9px; color: #666; margin-top: 3px;">${selectedYear - 1}</span>
+                              <div style="width: 40px; height: ${Math.round((totalIncome[selectedYear - 1] / Math.max(totalIncome[selectedYear], totalIncome[selectedYear - 1], 1)) * 60)}px; background-color: ${COLORS.successLighter}; border-radius: 3px 3px 0 0; min-height: 4px;"></div>
+                              <span style="font-size: 9px; color: ${COLORS.textMuted}; margin-top: 3px;">${selectedYear - 1}</span>
                           </div>
                           <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
-                              <div style="width: 40px; height: ${Math.round((totalIncome[selectedYear] / Math.max(totalIncome[selectedYear], totalIncome[selectedYear - 1], 1)) * 60)}px; background-color: #4ECDC4; border-radius: 3px 3px 0 0; min-height: 4px;"></div>
-                              <span style="font-size: 9px; color: #333; font-weight: 600; margin-top: 3px;">${selectedYear}</span>
+                              <div style="width: 40px; height: ${Math.round((totalIncome[selectedYear] / Math.max(totalIncome[selectedYear], totalIncome[selectedYear - 1], 1)) * 60)}px; background-color: ${COLORS.incomeColor}; border-radius: 3px 3px 0 0; min-height: 4px;"></div>
+                              <span style="font-size: 9px; color: ${COLORS.textPrimary}; font-weight: 600; margin-top: 3px;">${selectedYear}</span>
                           </div>
                       </div>
-                      <div style="font-size: 12px; font-weight: 600; color: #4ECDC4; margin-top: 8px;">${formatCurrency(totalIncome[selectedYear])}</div>
-                      <div style="font-size: 10px; color: #666;">${totalIncome[selectedYear] >= totalIncome[selectedYear - 1] ? '+' : ''}${((totalIncome[selectedYear] - totalIncome[selectedYear - 1]) / (totalIncome[selectedYear - 1] || 1) * 100).toFixed(1)}%</div>
+                      <div style="font-size: 12px; font-weight: 600; color: ${COLORS.incomeColor}; margin-top: 8px;">${formatCurrency(totalIncome[selectedYear])}</div>
+                      <div style="font-size: 10px; color: ${COLORS.textMuted};">${totalIncome[selectedYear] >= totalIncome[selectedYear - 1] ? '+' : ''}${((totalIncome[selectedYear] - totalIncome[selectedYear - 1]) / (totalIncome[selectedYear - 1] || 1) * 100).toFixed(1)}%</div>
                   </div>
                   <!-- Expenditure Chart -->
                   <div style="flex: 1; text-align: center;">
-                      <div style="font-size: 11px; color: #666; margin-bottom: 8px; font-weight: 600;">Expenditure</div>
-                      <div style="display: flex; align-items: flex-end; justify-content: center; gap: 10px; height: 80px; border-left: 1px solid #ddd; border-bottom: 1px solid #ddd; padding: 0 15px;">
+                      <div style="font-size: 11px; color: ${COLORS.textMuted}; margin-bottom: 8px; font-weight: 600;">Expenditure</div>
+                      <div style="display: flex; align-items: flex-end; justify-content: center; gap: 10px; height: 80px; border-left: 1px solid ${COLORS.borderLight}; border-bottom: 1px solid ${COLORS.borderLight}; padding: 0 15px;">
                           <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
-                              <div style="width: 40px; height: ${Math.round((totalExpenses[selectedYear - 1] / Math.max(totalExpenses[selectedYear], totalExpenses[selectedYear - 1], 1)) * 60)}px; background-color: #FFCDD2; border-radius: 3px 3px 0 0; min-height: 4px;"></div>
-                              <span style="font-size: 9px; color: #666; margin-top: 3px;">${selectedYear - 1}</span>
+                              <div style="width: 40px; height: ${Math.round((totalExpenses[selectedYear - 1] / Math.max(totalExpenses[selectedYear], totalExpenses[selectedYear - 1], 1)) * 60)}px; background-color: ${COLORS.errorLight}; border-radius: 3px 3px 0 0; min-height: 4px;"></div>
+                              <span style="font-size: 9px; color: ${COLORS.textMuted}; margin-top: 3px;">${selectedYear - 1}</span>
                           </div>
                           <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
-                              <div style="width: 40px; height: ${Math.round((totalExpenses[selectedYear] / Math.max(totalExpenses[selectedYear], totalExpenses[selectedYear - 1], 1)) * 60)}px; background-color: #FF6B6B; border-radius: 3px 3px 0 0; min-height: 4px;"></div>
-                              <span style="font-size: 9px; color: #333; font-weight: 600; margin-top: 3px;">${selectedYear}</span>
+                              <div style="width: 40px; height: ${Math.round((totalExpenses[selectedYear] / Math.max(totalExpenses[selectedYear], totalExpenses[selectedYear - 1], 1)) * 60)}px; background-color: ${COLORS.expenseColor}; border-radius: 3px 3px 0 0; min-height: 4px;"></div>
+                              <span style="font-size: 9px; color: ${COLORS.textPrimary}; font-weight: 600; margin-top: 3px;">${selectedYear}</span>
                           </div>
                       </div>
-                      <div style="font-size: 12px; font-weight: 600; color: #FF6B6B; margin-top: 8px;">${formatCurrency(totalExpenses[selectedYear])}</div>
-                      <div style="font-size: 10px; color: #666;">${totalExpenses[selectedYear] >= totalExpenses[selectedYear - 1] ? '+' : ''}${((totalExpenses[selectedYear] - totalExpenses[selectedYear - 1]) / (totalExpenses[selectedYear - 1] || 1) * 100).toFixed(1)}%</div>
+                      <div style="font-size: 12px; font-weight: 600; color: ${COLORS.expenseColor}; margin-top: 8px;">${formatCurrency(totalExpenses[selectedYear])}</div>
+                      <div style="font-size: 10px; color: ${COLORS.textMuted};">${totalExpenses[selectedYear] >= totalExpenses[selectedYear - 1] ? '+' : ''}${((totalExpenses[selectedYear] - totalExpenses[selectedYear - 1]) / (totalExpenses[selectedYear - 1] || 1) * 100).toFixed(1)}%</div>
                   </div>
                   <!-- Profit Chart -->
                   <div style="flex: 1; text-align: center;">
-                      <div style="font-size: 11px; color: #666; margin-bottom: 8px; font-weight: 600;">Net Profit</div>
-                      <div style="display: flex; align-items: flex-end; justify-content: center; gap: 10px; height: 80px; border-left: 1px solid #ddd; border-bottom: 1px solid #ddd; padding: 0 15px;">
+                      <div style="font-size: 11px; color: ${COLORS.textMuted}; margin-bottom: 8px; font-weight: 600;">Net Profit</div>
+                      <div style="display: flex; align-items: flex-end; justify-content: center; gap: 10px; height: 80px; border-left: 1px solid ${COLORS.borderLight}; border-bottom: 1px solid ${COLORS.borderLight}; padding: 0 15px;">
                           <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
-                              <div style="width: 40px; height: ${Math.round((Math.abs(netProfit[selectedYear - 1]) / Math.max(Math.abs(netProfit[selectedYear]), Math.abs(netProfit[selectedYear - 1]), 1)) * 60)}px; background-color: #BBDEFB; border-radius: 3px 3px 0 0; min-height: 4px;"></div>
-                              <span style="font-size: 9px; color: #666; margin-top: 3px;">${selectedYear - 1}</span>
+                              <div style="width: 40px; height: ${Math.round((Math.abs(netProfit[selectedYear - 1]) / Math.max(Math.abs(netProfit[selectedYear]), Math.abs(netProfit[selectedYear - 1]), 1)) * 60)}px; background-color: ${COLORS.infoLighter}; border-radius: 3px 3px 0 0; min-height: 4px;"></div>
+                              <span style="font-size: 9px; color: ${COLORS.textMuted}; margin-top: 3px;">${selectedYear - 1}</span>
                           </div>
                           <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
-                              <div style="width: 40px; height: ${Math.round((Math.abs(netProfit[selectedYear]) / Math.max(Math.abs(netProfit[selectedYear]), Math.abs(netProfit[selectedYear - 1]), 1)) * 60)}px; background-color: #4A90E2; border-radius: 3px 3px 0 0; min-height: 4px;"></div>
-                              <span style="font-size: 9px; color: #333; font-weight: 600; margin-top: 3px;">${selectedYear}</span>
+                              <div style="width: 40px; height: ${Math.round((Math.abs(netProfit[selectedYear]) / Math.max(Math.abs(netProfit[selectedYear]), Math.abs(netProfit[selectedYear - 1]), 1)) * 60)}px; background-color: ${COLORS.slainteBlue}; border-radius: 3px 3px 0 0; min-height: 4px;"></div>
+                              <span style="font-size: 9px; color: ${COLORS.textPrimary}; font-weight: 600; margin-top: 3px;">${selectedYear}</span>
                           </div>
                       </div>
-                      <div style="font-size: 12px; font-weight: 600; color: #4A90E2; margin-top: 8px;">${formatCurrency(netProfit[selectedYear])}</div>
-                      <div style="font-size: 10px; color: #666;">${netProfit[selectedYear] >= netProfit[selectedYear - 1] ? '+' : ''}${((netProfit[selectedYear] - netProfit[selectedYear - 1]) / (Math.abs(netProfit[selectedYear - 1]) || 1) * 100).toFixed(1)}%</div>
+                      <div style="font-size: 12px; font-weight: 600; color: ${COLORS.slainteBlue}; margin-top: 8px;">${formatCurrency(netProfit[selectedYear])}</div>
+                      <div style="font-size: 10px; color: ${COLORS.textMuted};">${netProfit[selectedYear] >= netProfit[selectedYear - 1] ? '+' : ''}${((netProfit[selectedYear] - netProfit[selectedYear - 1]) / (Math.abs(netProfit[selectedYear - 1]) || 1) * 100).toFixed(1)}%</div>
                   </div>
               </div>
           </div>
@@ -904,7 +904,7 @@ Check console for detailed debugging information.`);
               <p style="margin-top: 10px; font-style: italic;">Please review all figures with your accountant before using for tax returns or official purposes.</p>
           </div>
 
-          <div style="margin-top: 30px; font-size: 10px; color: #666;">
+          <div style="margin-top: 30px; font-size: 10px; color: ${COLORS.textMuted};">
               Generated on ${new Date().toLocaleDateString('en-IE')} by sl[Ai]nte.Finance
           </div>
       </body>
@@ -1056,14 +1056,14 @@ Check console for detailed debugging information.`);
                 backgroundColor: COLORS.white,
                 padding: '24px',
                 borderRadius: '8px',
-                border: `1px solid ${COLORS.lightGray}`
+                border: `1px solid ${COLORS.borderLight}`
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div>
                         <h2 style={{
                             fontSize: '24px',
                             fontWeight: 'bold',
-                            color: COLORS.darkGray,
+                            color: COLORS.textPrimary,
                             display: 'flex',
                             alignItems: 'center',
                             margin: 0
@@ -1071,12 +1071,12 @@ Check console for detailed debugging information.`);
                             <FileText style={{ height: '24px', width: '24px', marginRight: '12px', color: COLORS.slainteBlue }} />
                             Profit & Loss Report
                         </h2>
-                        <p style={{ color: COLORS.mediumGray, marginTop: '8px', marginBottom: 0 }}>
+                        <p style={{ color: COLORS.textSecondary, marginTop: '8px', marginBottom: 0 }}>
                             Generate a professional P&L report for your accountant
                         </p>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <label style={{ fontSize: '14px', fontWeight: '500', color: COLORS.darkGray }}>Report Year:</label>
+                        <label style={{ fontSize: '14px', fontWeight: '500', color: COLORS.textPrimary }}>Report Year:</label>
                         <select
                             value={selectedYear}
                             onChange={(e) => {
@@ -1113,7 +1113,7 @@ Check console for detailed debugging information.`);
                     <div style={{
                         marginTop: '16px',
                         padding: '12px 16px',
-                        backgroundColor: COLORS.backgroundGray,
+                        backgroundColor: COLORS.bgPage,
                         borderRadius: '6px',
                         display: 'flex',
                         gap: '24px',
@@ -1121,7 +1121,7 @@ Check console for detailed debugging information.`);
                     }}>
                         <span><strong>{transactions.filter(t => new Date(t.date).getFullYear() === selectedYear).length}</strong> transactions in {selectedYear}</span>
                         <span><strong>{transactions.filter(t => new Date(t.date).getFullYear() === selectedYear - 1).length}</strong> transactions in {selectedYear - 1}</span>
-                        <span style={{ color: COLORS.mediumGray }}>|</span>
+                        <span style={{ color: COLORS.textSecondary }}>|</span>
                         <span style={{ color: reportPeriod.isPartialYear ? COLORS.slainteBlue : COLORS.incomeColor, fontWeight: '500' }}>
                             {reportPeriod.isPartialYear ? `Year to Date (1 Jan - ${reportPeriod.cutoffDateString})` : 'Full Year Report'}
                         </span>
@@ -1134,9 +1134,9 @@ Check console for detailed debugging information.`);
                 backgroundColor: COLORS.white,
                 padding: '24px',
                 borderRadius: '8px',
-                border: `1px solid ${COLORS.lightGray}`
+                border: `1px solid ${COLORS.borderLight}`
             }}>
-                <h3 style={{ fontSize: '16px', fontWeight: '600', color: COLORS.darkGray, marginTop: 0, marginBottom: '16px' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: '600', color: COLORS.textPrimary, marginTop: 0, marginBottom: '16px' }}>
                     Data Status for {selectedYear}
                 </h3>
 
@@ -1145,18 +1145,18 @@ Check console for detailed debugging information.`);
                     <div style={{
                         padding: '16px',
                         borderRadius: '8px',
-                        backgroundColor: gmsStatus.complete ? '#E8F5E9' : gmsStatus.hasAnyData ? '#FFF3E0' : '#FFEBEE',
-                        border: `1px solid ${gmsStatus.complete ? COLORS.incomeColor : gmsStatus.hasAnyData ? '#FFB74D' : COLORS.expenseColor}`
+                        backgroundColor: gmsStatus.complete ? COLORS.successLight : gmsStatus.hasAnyData ? COLORS.warningLighter : COLORS.errorLight,
+                        border: `1px solid ${gmsStatus.complete ? COLORS.incomeColor : gmsStatus.hasAnyData ? COLORS.warningDark : COLORS.expenseColor}`
                     }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                             {gmsStatus.complete ? (
                                 <CheckCircle style={{ height: '20px', width: '20px', color: COLORS.incomeColor }} />
                             ) : (
-                                <AlertCircle style={{ height: '20px', width: '20px', color: gmsStatus.hasAnyData ? '#F57C00' : COLORS.expenseColor }} />
+                                <AlertCircle style={{ height: '20px', width: '20px', color: gmsStatus.hasAnyData ? COLORS.warningDark : COLORS.expenseColor }} />
                             )}
-                            <span style={{ fontWeight: '600', color: COLORS.darkGray }}>GMS Payment Statements</span>
+                            <span style={{ fontWeight: '600', color: COLORS.textPrimary }}>GMS Payment Statements</span>
                         </div>
-                        <p style={{ fontSize: '14px', color: COLORS.darkGray, margin: 0 }}>
+                        <p style={{ fontSize: '14px', color: COLORS.textPrimary, margin: 0 }}>
                             {gmsStatus.complete ? (
                                 <>All 12 months of GMS statements uploaded for {selectedYear}</>
                             ) : gmsStatus.hasAnyData ? (
@@ -1166,7 +1166,7 @@ Check console for detailed debugging information.`);
                             )}
                         </p>
                         {!gmsStatus.complete && (
-                            <p style={{ fontSize: '13px', color: COLORS.mediumGray, margin: '8px 0 0 0' }}>
+                            <p style={{ fontSize: '13px', color: COLORS.textSecondary, margin: '8px 0 0 0' }}>
                                 Upload PCRS GMS panel PDFs in Settings → Data to calculate withholding tax accurately.
                             </p>
                         )}
@@ -1176,25 +1176,25 @@ Check console for detailed debugging information.`);
                     <div style={{
                         padding: '16px',
                         borderRadius: '8px',
-                        backgroundColor: withholdingTaxData.total > 0 ? '#E8F5E9' : '#FFF9E6',
-                        border: `1px solid ${withholdingTaxData.total > 0 ? COLORS.incomeColor : '#FFC107'}`
+                        backgroundColor: withholdingTaxData.total > 0 ? COLORS.successLight : COLORS.warningLighter,
+                        border: `1px solid ${withholdingTaxData.total > 0 ? COLORS.incomeColor : COLORS.warning}`
                     }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                             {withholdingTaxData.total > 0 ? (
                                 <CheckCircle style={{ height: '20px', width: '20px', color: COLORS.incomeColor }} />
                             ) : (
-                                <AlertCircle style={{ height: '20px', width: '20px', color: '#F57C00' }} />
+                                <AlertCircle style={{ height: '20px', width: '20px', color: COLORS.warningDark }} />
                             )}
-                            <span style={{ fontWeight: '600', color: COLORS.darkGray }}>Withholding Tax</span>
+                            <span style={{ fontWeight: '600', color: COLORS.textPrimary }}>Withholding Tax</span>
                         </div>
-                        <p style={{ fontSize: '14px', color: COLORS.darkGray, margin: 0 }}>
+                        <p style={{ fontSize: '14px', color: COLORS.textPrimary, margin: 0 }}>
                             {withholdingTaxData.total > 0 ? (
                                 <>Calculated: €{withholdingTaxData.total.toLocaleString()} (GMS: €{withholdingTaxData.gmsWithholdingTax.toLocaleString()}, State: €{withholdingTaxData.stateContractTax.toLocaleString()})</>
                             ) : (
                                 <>Not yet calculated - upload GMS statements to calculate</>
                             )}
                         </p>
-                        <p style={{ fontSize: '13px', color: COLORS.mediumGray, margin: '8px 0 0 0' }}>
+                        <p style={{ fontSize: '13px', color: COLORS.textSecondary, margin: '8px 0 0 0' }}>
                             Bank income shows <strong>net</strong> amounts (after tax deducted). Withholding tax must be added back to calculate <strong>gross</strong> income for tax returns.
                         </p>
                     </div>
@@ -1206,12 +1206,12 @@ Check console for detailed debugging information.`);
                 backgroundColor: COLORS.white,
                 padding: '24px',
                 borderRadius: '8px',
-                border: `1px solid ${COLORS.lightGray}`
+                border: `1px solid ${COLORS.borderLight}`
             }}>
-                <h3 style={{ fontSize: '16px', fontWeight: '600', color: COLORS.darkGray, marginTop: 0, marginBottom: '8px' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: '600', color: COLORS.textPrimary, marginTop: 0, marginBottom: '8px' }}>
                     Optional Calculations
                 </h3>
-                <p style={{ fontSize: '14px', color: COLORS.mediumGray, marginBottom: '16px' }}>
+                <p style={{ fontSize: '14px', color: COLORS.textSecondary, marginBottom: '16px' }}>
                     For a complete P&L report, these calculations should be completed. You can generate a draft report without them,
                     but the draft will indicate that these figures are missing.
                 </p>
@@ -1221,8 +1221,8 @@ Check console for detailed debugging information.`);
                     <div style={{
                         padding: '20px',
                         borderRadius: '8px',
-                        border: `1px solid ${motorExpenses[selectedYear] > 0 ? COLORS.incomeColor : COLORS.lightGray}`,
-                        backgroundColor: motorExpenses[selectedYear] > 0 ? '#E8F5E9' : COLORS.backgroundGray
+                        border: `1px solid ${motorExpenses[selectedYear] > 0 ? COLORS.incomeColor : COLORS.borderLight}`,
+                        backgroundColor: motorExpenses[selectedYear] > 0 ? COLORS.successLight : COLORS.bgPage
                     }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -1238,8 +1238,8 @@ Check console for detailed debugging information.`);
                                     <Car style={{ height: '20px', width: '20px', color: COLORS.white }} />
                                 </div>
                                 <div>
-                                    <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '600', color: COLORS.darkGray }}>Motor Expenses</h4>
-                                    <p style={{ margin: 0, fontSize: '13px', color: COLORS.mediumGray }}>Business mileage calculator</p>
+                                    <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '600', color: COLORS.textPrimary }}>Motor Expenses</h4>
+                                    <p style={{ margin: 0, fontSize: '13px', color: COLORS.textSecondary }}>Business mileage calculator</p>
                                 </div>
                             </div>
                             {motorExpenses[selectedYear] > 0 && (
@@ -1249,15 +1249,15 @@ Check console for detailed debugging information.`);
 
                         {motorExpenses[selectedYear] > 0 || motorExpenses[selectedYear - 1] > 0 ? (
                             <div style={{ marginBottom: '12px', padding: '10px', backgroundColor: COLORS.white, borderRadius: '6px' }}>
-                                <div style={{ fontSize: '14px', color: COLORS.darkGray }}>
+                                <div style={{ fontSize: '14px', color: COLORS.textPrimary }}>
                                     <strong>{selectedYear}:</strong> €{motorExpenses[selectedYear].toFixed(2)}
                                 </div>
-                                <div style={{ fontSize: '14px', color: COLORS.mediumGray }}>
+                                <div style={{ fontSize: '14px', color: COLORS.textSecondary }}>
                                     <strong>{selectedYear - 1}:</strong> €{motorExpenses[selectedYear - 1].toFixed(2)}
                                 </div>
                             </div>
                         ) : (
-                            <p style={{ fontSize: '13px', color: COLORS.mediumGray, marginBottom: '12px' }}>
+                            <p style={{ fontSize: '13px', color: COLORS.textSecondary, marginBottom: '12px' }}>
                                 Calculate business mileage using Irish Civil Service rates. Required for claiming motor expenses.
                             </p>
                         )}
@@ -1284,8 +1284,8 @@ Check console for detailed debugging information.`);
                     <div style={{
                         padding: '20px',
                         borderRadius: '8px',
-                        border: `1px solid ${depreciationExpenses[selectedYear] > 0 ? COLORS.incomeColor : COLORS.lightGray}`,
-                        backgroundColor: depreciationExpenses[selectedYear] > 0 ? '#E8F5E9' : COLORS.backgroundGray
+                        border: `1px solid ${depreciationExpenses[selectedYear] > 0 ? COLORS.incomeColor : COLORS.borderLight}`,
+                        backgroundColor: depreciationExpenses[selectedYear] > 0 ? COLORS.successLight : COLORS.bgPage
                     }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -1293,7 +1293,7 @@ Check console for detailed debugging information.`);
                                     width: '40px',
                                     height: '40px',
                                     borderRadius: '8px',
-                                    backgroundColor: '#9C27B0',
+                                    backgroundColor: COLORS.accentPurple,
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center'
@@ -1301,8 +1301,8 @@ Check console for detailed debugging information.`);
                                     <Building style={{ height: '20px', width: '20px', color: COLORS.white }} />
                                 </div>
                                 <div>
-                                    <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '600', color: COLORS.darkGray }}>Depreciation</h4>
-                                    <p style={{ margin: 0, fontSize: '13px', color: COLORS.mediumGray }}>Capital allowances calculator</p>
+                                    <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '600', color: COLORS.textPrimary }}>Depreciation</h4>
+                                    <p style={{ margin: 0, fontSize: '13px', color: COLORS.textSecondary }}>Capital allowances calculator</p>
                                 </div>
                             </div>
                             {depreciationExpenses[selectedYear] > 0 && (
@@ -1312,15 +1312,15 @@ Check console for detailed debugging information.`);
 
                         {depreciationExpenses[selectedYear] > 0 || depreciationExpenses[selectedYear - 1] > 0 ? (
                             <div style={{ marginBottom: '12px', padding: '10px', backgroundColor: COLORS.white, borderRadius: '6px' }}>
-                                <div style={{ fontSize: '14px', color: COLORS.darkGray }}>
+                                <div style={{ fontSize: '14px', color: COLORS.textPrimary }}>
                                     <strong>{selectedYear}:</strong> €{depreciationExpenses[selectedYear].toFixed(2)}
                                 </div>
-                                <div style={{ fontSize: '14px', color: COLORS.mediumGray }}>
+                                <div style={{ fontSize: '14px', color: COLORS.textSecondary }}>
                                     <strong>{selectedYear - 1}:</strong> €{depreciationExpenses[selectedYear - 1].toFixed(2)}
                                 </div>
                             </div>
                         ) : (
-                            <p style={{ fontSize: '13px', color: COLORS.mediumGray, marginBottom: '12px' }}>
+                            <p style={{ fontSize: '13px', color: COLORS.textSecondary, marginBottom: '12px' }}>
                                 Calculate capital allowances on equipment, furniture, and other assets using straight-line depreciation.
                             </p>
                         )}
@@ -1329,11 +1329,11 @@ Check console for detailed debugging information.`);
                             onClick={() => setShowDepreciationCalculator(true)}
                             style={{
                                 width: '100%',
-                                backgroundColor: depreciationExpenses[selectedYear] > 0 ? COLORS.white : '#9C27B0',
-                                color: depreciationExpenses[selectedYear] > 0 ? '#9C27B0' : COLORS.white,
+                                backgroundColor: depreciationExpenses[selectedYear] > 0 ? COLORS.white : COLORS.accentPurple,
+                                color: depreciationExpenses[selectedYear] > 0 ? COLORS.accentPurple : COLORS.white,
                                 padding: '10px 16px',
                                 borderRadius: '6px',
-                                border: depreciationExpenses[selectedYear] > 0 ? '1px solid #9C27B0' : 'none',
+                                border: depreciationExpenses[selectedYear] > 0 ? `1px solid ${COLORS.accentPurple}` : 'none',
                                 cursor: 'pointer',
                                 fontWeight: '500',
                                 fontSize: '14px'
@@ -1354,7 +1354,7 @@ Check console for detailed debugging information.`);
             }}>
                 {/* Summary of what will be included/missing */}
                 <div style={{ marginBottom: '20px' }}>
-                    <h3 style={{ fontSize: '16px', fontWeight: '600', color: COLORS.darkGray, marginTop: 0, marginBottom: '12px' }}>
+                    <h3 style={{ fontSize: '16px', fontWeight: '600', color: COLORS.textPrimary, marginTop: 0, marginBottom: '12px' }}>
                         Report Summary
                     </h3>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
@@ -1363,7 +1363,7 @@ Check console for detailed debugging information.`);
                             borderRadius: '20px',
                             fontSize: '13px',
                             fontWeight: '500',
-                            backgroundColor: transactions.length > 0 ? '#E8F5E9' : '#FFEBEE',
+                            backgroundColor: transactions.length > 0 ? COLORS.successLight : COLORS.errorLight,
                             color: transactions.length > 0 ? COLORS.incomeColor : COLORS.expenseColor
                         }}>
                             {transactions.length > 0 ? '✓' : '✗'} Bank Transactions
@@ -1373,8 +1373,8 @@ Check console for detailed debugging information.`);
                             borderRadius: '20px',
                             fontSize: '13px',
                             fontWeight: '500',
-                            backgroundColor: gmsStatus.complete ? '#E8F5E9' : gmsStatus.hasAnyData ? '#FFF3E0' : '#FFEBEE',
-                            color: gmsStatus.complete ? COLORS.incomeColor : gmsStatus.hasAnyData ? '#E65100' : COLORS.expenseColor
+                            backgroundColor: gmsStatus.complete ? COLORS.successLight : gmsStatus.hasAnyData ? COLORS.warningLighter : COLORS.errorLight,
+                            color: gmsStatus.complete ? COLORS.incomeColor : gmsStatus.hasAnyData ? COLORS.warningText : COLORS.expenseColor
                         }}>
                             {gmsStatus.complete ? '✓' : gmsStatus.hasAnyData ? '~' : '✗'} GMS Statements ({gmsStatus.monthsFound}/12)
                         </span>
@@ -1383,8 +1383,8 @@ Check console for detailed debugging information.`);
                             borderRadius: '20px',
                             fontSize: '13px',
                             fontWeight: '500',
-                            backgroundColor: withholdingTaxData.total > 0 ? '#E8F5E9' : '#FFF3E0',
-                            color: withholdingTaxData.total > 0 ? COLORS.incomeColor : '#E65100'
+                            backgroundColor: withholdingTaxData.total > 0 ? COLORS.successLight : COLORS.warningLighter,
+                            color: withholdingTaxData.total > 0 ? COLORS.incomeColor : COLORS.warningText
                         }}>
                             {withholdingTaxData.total > 0 ? '✓' : '~'} Withholding Tax
                         </span>
@@ -1393,8 +1393,8 @@ Check console for detailed debugging information.`);
                             borderRadius: '20px',
                             fontSize: '13px',
                             fontWeight: '500',
-                            backgroundColor: motorExpenses[selectedYear] > 0 ? '#E8F5E9' : COLORS.backgroundGray,
-                            color: motorExpenses[selectedYear] > 0 ? COLORS.incomeColor : COLORS.mediumGray
+                            backgroundColor: motorExpenses[selectedYear] > 0 ? COLORS.successLight : COLORS.bgPage,
+                            color: motorExpenses[selectedYear] > 0 ? COLORS.incomeColor : COLORS.textSecondary
                         }}>
                             {motorExpenses[selectedYear] > 0 ? '✓' : '○'} Motor Expenses
                         </span>
@@ -1403,8 +1403,8 @@ Check console for detailed debugging information.`);
                             borderRadius: '20px',
                             fontSize: '13px',
                             fontWeight: '500',
-                            backgroundColor: depreciationExpenses[selectedYear] > 0 ? '#E8F5E9' : COLORS.backgroundGray,
-                            color: depreciationExpenses[selectedYear] > 0 ? COLORS.incomeColor : COLORS.mediumGray
+                            backgroundColor: depreciationExpenses[selectedYear] > 0 ? COLORS.successLight : COLORS.bgPage,
+                            color: depreciationExpenses[selectedYear] > 0 ? COLORS.incomeColor : COLORS.textSecondary
                         }}>
                             {depreciationExpenses[selectedYear] > 0 ? '✓' : '○'} Depreciation
                         </span>
@@ -1416,7 +1416,7 @@ Check console for detailed debugging information.`);
                     disabled={transactions.length === 0 || processing}
                     style={{
                         width: '100%',
-                        backgroundColor: transactions.length === 0 || processing ? COLORS.mediumGray : COLORS.slainteBlue,
+                        backgroundColor: transactions.length === 0 || processing ? COLORS.textSecondary : COLORS.slainteBlue,
                         color: COLORS.white,
                         padding: '16px 24px',
                         borderRadius: '8px',
@@ -1468,7 +1468,7 @@ Check console for detailed debugging information.`);
                 )}
 
                 {transactions.length > 0 && (motorExpenses[selectedYear] === 0 || depreciationExpenses[selectedYear] === 0 || !gmsStatus.complete) && (
-                    <p style={{ fontSize: '13px', color: COLORS.mediumGray, textAlign: 'center', marginTop: '12px', marginBottom: 0 }}>
+                    <p style={{ fontSize: '13px', color: COLORS.textSecondary, textAlign: 'center', marginTop: '12px', marginBottom: 0 }}>
                         Report will be marked as <strong>DRAFT</strong> with notes about missing calculations
                     </p>
                 )}
@@ -1480,7 +1480,7 @@ Check console for detailed debugging information.`);
                     style={{
                         position: 'fixed',
                         inset: 0,
-                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        backgroundColor: COLORS.overlayDark,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -1509,20 +1509,20 @@ Check console for detailed debugging information.`);
                             alignItems: 'center',
                             justifyContent: 'space-between',
                             padding: '1rem 1.5rem',
-                            borderBottom: `1px solid ${COLORS.lightGray}`,
-                            backgroundColor: COLORS.backgroundGray,
+                            borderBottom: `1px solid ${COLORS.borderLight}`,
+                            backgroundColor: COLORS.bgPage,
                             flexShrink: 0
                         }}>
                             <div>
-                                <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600, color: COLORS.darkGray }}>
+                                <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600, color: COLORS.textPrimary }}>
                                     {practiceName}
                                 </h2>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-                                    <span style={{ fontSize: '1rem', color: COLORS.mediumGray }}>
+                                    <span style={{ fontSize: '1rem', color: COLORS.textSecondary }}>
                                         {plData.reportPeriod?.isPartialYear ? 'Year to Date' : 'Full Year'} P&L Statement
                                     </span>
                                     <span style={{
-                                        backgroundColor: '#ff6b6b',
+                                        backgroundColor: COLORS.expenseColor,
                                         color: 'white',
                                         padding: '2px 8px',
                                         borderRadius: '4px',
@@ -1543,10 +1543,10 @@ Check console for detailed debugging information.`);
                                     alignItems: 'center',
                                     justifyContent: 'center'
                                 }}
-                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.lightGray}
+                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.borderLight}
                                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                             >
-                                <X style={{ width: '1.25rem', height: '1.25rem', color: COLORS.mediumGray }} />
+                                <X style={{ width: '1.25rem', height: '1.25rem', color: COLORS.textSecondary }} />
                             </button>
                         </div>
 
@@ -1555,17 +1555,17 @@ Check console for detailed debugging information.`);
                             {/* P&L Table */}
                             <div style={{
                                 backgroundColor: COLORS.white,
-                                border: `1px solid ${COLORS.lightGray}`,
+                                border: `1px solid ${COLORS.borderLight}`,
                                 borderRadius: '8px',
                                 overflow: 'hidden',
                                 marginBottom: '1.5rem'
                             }}>
                                 <div style={{
-                                    backgroundColor: COLORS.backgroundGray,
+                                    backgroundColor: COLORS.bgPage,
                                     padding: '12px 24px',
-                                    borderBottom: `1px solid ${COLORS.lightGray}`
+                                    borderBottom: `1px solid ${COLORS.borderLight}`
                                 }}>
-                                    <p style={{ fontSize: '14px', color: COLORS.mediumGray, margin: 0 }}>
+                                    <p style={{ fontSize: '14px', color: COLORS.textSecondary, margin: 0 }}>
                                         {plData.reportPeriod?.isPartialYear ? (
                                             <>Period: 1 January - {plData.reportPeriod.cutoffDateString} for years {selectedYear} and {selectedYear - 1}</>
                                         ) : (
@@ -1579,7 +1579,7 @@ Check console for detailed debugging information.`);
                                         {/* Header */}
                                         <div style={{
                                             display: 'flex',
-                                            borderBottom: `1px solid ${COLORS.lightGray}`,
+                                            borderBottom: `1px solid ${COLORS.borderLight}`,
                                             paddingBottom: '8px',
                                             marginBottom: '16px',
                                             fontWeight: '600'
@@ -1594,7 +1594,7 @@ Check console for detailed debugging information.`);
                                             <div style={{
                                                 display: 'flex',
                                                 fontWeight: '600',
-                                                backgroundColor: '#E3F2FD',
+                                                backgroundColor: COLORS.slainteBlueLight,
                                                 padding: '8px',
                                                 borderRadius: '4px'
                                             }}>
@@ -1610,7 +1610,7 @@ Check console for detailed debugging information.`);
                                             <div style={{
                                                 display: 'flex',
                                                 fontWeight: '600',
-                                                borderTop: `1px solid ${COLORS.lightGray}`,
+                                                borderTop: `1px solid ${COLORS.borderLight}`,
                                                 paddingTop: '8px'
                                             }}>
                                                 <span style={{ flex: 1 }}>Total Income</span>
@@ -1624,7 +1624,7 @@ Check console for detailed debugging information.`);
                                             <div style={{
                                                 display: 'flex',
                                                 fontWeight: '600',
-                                                backgroundColor: '#FFEBEE',
+                                                backgroundColor: COLORS.errorLight,
                                                 padding: '8px',
                                                 borderRadius: '4px'
                                             }}>
@@ -1645,7 +1645,7 @@ Check console for detailed debugging information.`);
                                             <div style={{
                                                 display: 'flex',
                                                 fontWeight: '600',
-                                                borderTop: `1px solid ${COLORS.lightGray}`,
+                                                borderTop: `1px solid ${COLORS.borderLight}`,
                                                 paddingTop: '8px'
                                             }}>
                                                 <span style={{ flex: 1 }}>Total Expenditure</span>
@@ -1656,7 +1656,7 @@ Check console for detailed debugging information.`);
 
                                         {/* Profit Section */}
                                         <div style={{
-                                            borderTop: `1px solid ${COLORS.lightGray}`,
+                                            borderTop: `1px solid ${COLORS.borderLight}`,
                                             paddingTop: '16px',
                                             display: 'flex',
                                             flexDirection: 'column',
@@ -1679,11 +1679,11 @@ Check console for detailed debugging information.`);
                                             <div style={{
                                                 marginTop: '24px',
                                                 paddingTop: '16px',
-                                                borderTop: `1px solid ${COLORS.lightGray}`,
+                                                borderTop: `1px solid ${COLORS.borderLight}`,
                                                 fontSize: '12px',
-                                                color: COLORS.mediumGray
+                                                color: COLORS.textSecondary
                                             }}>
-                                                <div style={{ fontWeight: '600', marginBottom: '8px', color: COLORS.darkGray }}>
+                                                <div style={{ fontWeight: '600', marginBottom: '8px', color: COLORS.textPrimary }}>
                                                     Notes - Deductions at Source (not P&L expenses):
                                                 </div>
                                                 {plData.grossIncomeData[selectedYear]?.totalWithholding > 0 && (
@@ -1715,8 +1715,8 @@ Check console for detailed debugging information.`);
                             {plData.grossIncomeData && !plData.grossIncomeData[selectedYear]?.gmsComplete && plData.grossIncomeData[selectedYear]?.hasPCRSData && (
                                 <div style={{
                                     padding: '12px 16px',
-                                    backgroundColor: '#fff3e0',
-                                    borderLeft: `4px solid #ff9800`,
+                                    backgroundColor: COLORS.warningLighter,
+                                    borderLeft: `4px solid ${COLORS.warning}`,
                                     borderRadius: '4px',
                                     marginBottom: '1rem',
                                     display: 'flex',
@@ -1725,10 +1725,10 @@ Check console for detailed debugging information.`);
                                 }}>
                                     <span style={{ fontSize: '16px' }}>⚠️</span>
                                     <div>
-                                        <div style={{ fontWeight: '600', color: '#e65100', marginBottom: '4px' }}>
+                                        <div style={{ fontWeight: '600', color: COLORS.warningText, marginBottom: '4px' }}>
                                             Incomplete GMS Data for {selectedYear}
                                         </div>
-                                        <div style={{ fontSize: '13px', color: '#795548' }}>
+                                        <div style={{ fontSize: '13px', color: COLORS.textMuted }}>
                                             Only {plData.grossIncomeData[selectedYear].gmsMonthsFound}/12 months of PCRS statements uploaded.
                                             Missing: {plData.grossIncomeData[selectedYear].gmsMissingMonths?.join(', ')}.
                                             GMS income may be understated.
@@ -1741,8 +1741,8 @@ Check console for detailed debugging information.`);
                             {plData.grossIncomeData && !plData.grossIncomeData[selectedYear]?.hasPCRSData && (
                                 <div style={{
                                     padding: '12px 16px',
-                                    backgroundColor: '#ffebee',
-                                    borderLeft: `4px solid #f44336`,
+                                    backgroundColor: COLORS.errorLight,
+                                    borderLeft: `4px solid ${COLORS.error}`,
                                     borderRadius: '4px',
                                     marginBottom: '1rem',
                                     display: 'flex',
@@ -1751,10 +1751,10 @@ Check console for detailed debugging information.`);
                                 }}>
                                     <span style={{ fontSize: '16px' }}>❌</span>
                                     <div>
-                                        <div style={{ fontWeight: '600', color: '#c62828', marginBottom: '4px' }}>
+                                        <div style={{ fontWeight: '600', color: COLORS.errorDark, marginBottom: '4px' }}>
                                             No PCRS Data for {selectedYear}
                                         </div>
-                                        <div style={{ fontSize: '13px', color: '#795548' }}>
+                                        <div style={{ fontSize: '13px', color: COLORS.textMuted }}>
                                             GMS income is based on bank deposits (NET) rather than PCRS statements (GROSS).
                                             Upload PCRS GMS statements in the GMS Overview tab for accurate gross income calculation.
                                         </div>
@@ -1765,12 +1765,12 @@ Check console for detailed debugging information.`);
                             {/* Bar Chart Comparison */}
                             <div style={{
                                 backgroundColor: COLORS.white,
-                                border: `1px solid ${COLORS.lightGray}`,
+                                border: `1px solid ${COLORS.borderLight}`,
                                 borderRadius: '8px',
                                 padding: '20px',
                                 marginBottom: '1.5rem'
                             }}>
-                                <h4 style={{ margin: '0 0 16px 0', fontSize: '14px', fontWeight: '600', color: COLORS.darkGray }}>
+                                <h4 style={{ margin: '0 0 16px 0', fontSize: '14px', fontWeight: '600', color: COLORS.textPrimary }}>
                                     Year-on-Year Comparison
                                 </h4>
                                 <div style={{ display: 'flex', gap: '32px' }}>
@@ -1781,27 +1781,27 @@ Check console for detailed debugging information.`);
                                         const formatYAxis = (val) => val >= 1000000 ? `€${(val/1000000).toFixed(1)}M` : val >= 1000 ? `€${(val/1000).toFixed(0)}K` : `€${val.toFixed(0)}`;
                                         return (
                                             <div style={{ flex: 1 }}>
-                                                <div style={{ fontSize: '12px', color: COLORS.mediumGray, marginBottom: '8px', fontWeight: '600' }}>Income</div>
+                                                <div style={{ fontSize: '12px', color: COLORS.textSecondary, marginBottom: '8px', fontWeight: '600' }}>Income</div>
                                                 <div style={{ display: 'flex' }}>
                                                     <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: `${chartHeight}px`, marginRight: '6px', paddingBottom: '18px' }}>
-                                                        <span style={{ fontSize: '9px', color: COLORS.mediumGray, textAlign: 'right' }}>{formatYAxis(maxVal)}</span>
-                                                        <span style={{ fontSize: '9px', color: COLORS.mediumGray, textAlign: 'right' }}>{formatYAxis(maxVal * 0.5)}</span>
-                                                        <span style={{ fontSize: '9px', color: COLORS.mediumGray, textAlign: 'right' }}>€0</span>
+                                                        <span style={{ fontSize: '9px', color: COLORS.textSecondary, textAlign: 'right' }}>{formatYAxis(maxVal)}</span>
+                                                        <span style={{ fontSize: '9px', color: COLORS.textSecondary, textAlign: 'right' }}>{formatYAxis(maxVal * 0.5)}</span>
+                                                        <span style={{ fontSize: '9px', color: COLORS.textSecondary, textAlign: 'right' }}>€0</span>
                                                     </div>
-                                                    <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', gap: '6px', height: `${chartHeight}px`, borderLeft: `1px solid ${COLORS.lightGray}`, borderBottom: `1px solid ${COLORS.lightGray}`, paddingLeft: '6px' }}>
+                                                    <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', gap: '6px', height: `${chartHeight}px`, borderLeft: `1px solid ${COLORS.borderLight}`, borderBottom: `1px solid ${COLORS.borderLight}`, paddingLeft: '6px' }}>
                                                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                                            <div style={{ width: '100%', height: `${(totalIncomePrev / maxVal) * (chartHeight - 18)}px`, backgroundColor: '#A5D6A7', borderRadius: '3px 3px 0 0', minHeight: '4px' }} />
-                                                            <span style={{ fontSize: '10px', color: COLORS.mediumGray, marginTop: '3px' }}>{selectedYear - 1}</span>
+                                                            <div style={{ width: '100%', height: `${(totalIncomePrev / maxVal) * (chartHeight - 18)}px`, backgroundColor: COLORS.successLighter, borderRadius: '3px 3px 0 0', minHeight: '4px' }} />
+                                                            <span style={{ fontSize: '10px', color: COLORS.textSecondary, marginTop: '3px' }}>{selectedYear - 1}</span>
                                                         </div>
                                                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                                                             <div style={{ width: '100%', height: `${(totalIncome / maxVal) * (chartHeight - 18)}px`, backgroundColor: COLORS.incomeColor, borderRadius: '3px 3px 0 0', minHeight: '4px' }} />
-                                                            <span style={{ fontSize: '10px', color: COLORS.darkGray, fontWeight: '600', marginTop: '3px' }}>{selectedYear}</span>
+                                                            <span style={{ fontSize: '10px', color: COLORS.textPrimary, fontWeight: '600', marginTop: '3px' }}>{selectedYear}</span>
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div style={{ textAlign: 'center', marginTop: '8px' }}>
                                                     <div style={{ fontSize: '13px', fontWeight: '600', color: COLORS.incomeColor }}>{formatCurrency(totalIncome)}</div>
-                                                    <div style={{ fontSize: '11px', color: COLORS.mediumGray }}>
+                                                    <div style={{ fontSize: '11px', color: COLORS.textSecondary }}>
                                                         {totalIncome >= totalIncomePrev ? '+' : ''}{((totalIncome - totalIncomePrev) / (totalIncomePrev || 1) * 100).toFixed(1)}%
                                                     </div>
                                                 </div>
@@ -1816,27 +1816,27 @@ Check console for detailed debugging information.`);
                                         const formatYAxis = (val) => val >= 1000000 ? `€${(val/1000000).toFixed(1)}M` : val >= 1000 ? `€${(val/1000).toFixed(0)}K` : `€${val.toFixed(0)}`;
                                         return (
                                             <div style={{ flex: 1 }}>
-                                                <div style={{ fontSize: '12px', color: COLORS.mediumGray, marginBottom: '8px', fontWeight: '600' }}>Expenditure</div>
+                                                <div style={{ fontSize: '12px', color: COLORS.textSecondary, marginBottom: '8px', fontWeight: '600' }}>Expenditure</div>
                                                 <div style={{ display: 'flex' }}>
                                                     <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: `${chartHeight}px`, marginRight: '6px', paddingBottom: '18px' }}>
-                                                        <span style={{ fontSize: '9px', color: COLORS.mediumGray, textAlign: 'right' }}>{formatYAxis(maxVal)}</span>
-                                                        <span style={{ fontSize: '9px', color: COLORS.mediumGray, textAlign: 'right' }}>{formatYAxis(maxVal * 0.5)}</span>
-                                                        <span style={{ fontSize: '9px', color: COLORS.mediumGray, textAlign: 'right' }}>€0</span>
+                                                        <span style={{ fontSize: '9px', color: COLORS.textSecondary, textAlign: 'right' }}>{formatYAxis(maxVal)}</span>
+                                                        <span style={{ fontSize: '9px', color: COLORS.textSecondary, textAlign: 'right' }}>{formatYAxis(maxVal * 0.5)}</span>
+                                                        <span style={{ fontSize: '9px', color: COLORS.textSecondary, textAlign: 'right' }}>€0</span>
                                                     </div>
-                                                    <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', gap: '6px', height: `${chartHeight}px`, borderLeft: `1px solid ${COLORS.lightGray}`, borderBottom: `1px solid ${COLORS.lightGray}`, paddingLeft: '6px' }}>
+                                                    <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', gap: '6px', height: `${chartHeight}px`, borderLeft: `1px solid ${COLORS.borderLight}`, borderBottom: `1px solid ${COLORS.borderLight}`, paddingLeft: '6px' }}>
                                                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                                            <div style={{ width: '100%', height: `${(totalExpensesPrev / maxVal) * (chartHeight - 18)}px`, backgroundColor: '#FFCDD2', borderRadius: '3px 3px 0 0', minHeight: '4px' }} />
-                                                            <span style={{ fontSize: '10px', color: COLORS.mediumGray, marginTop: '3px' }}>{selectedYear - 1}</span>
+                                                            <div style={{ width: '100%', height: `${(totalExpensesPrev / maxVal) * (chartHeight - 18)}px`, backgroundColor: COLORS.errorLight, borderRadius: '3px 3px 0 0', minHeight: '4px' }} />
+                                                            <span style={{ fontSize: '10px', color: COLORS.textSecondary, marginTop: '3px' }}>{selectedYear - 1}</span>
                                                         </div>
                                                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                                                             <div style={{ width: '100%', height: `${(totalExpenses / maxVal) * (chartHeight - 18)}px`, backgroundColor: COLORS.expenseColor, borderRadius: '3px 3px 0 0', minHeight: '4px' }} />
-                                                            <span style={{ fontSize: '10px', color: COLORS.darkGray, fontWeight: '600', marginTop: '3px' }}>{selectedYear}</span>
+                                                            <span style={{ fontSize: '10px', color: COLORS.textPrimary, fontWeight: '600', marginTop: '3px' }}>{selectedYear}</span>
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div style={{ textAlign: 'center', marginTop: '8px' }}>
                                                     <div style={{ fontSize: '13px', fontWeight: '600', color: COLORS.expenseColor }}>{formatCurrency(totalExpenses)}</div>
-                                                    <div style={{ fontSize: '11px', color: COLORS.mediumGray }}>
+                                                    <div style={{ fontSize: '11px', color: COLORS.textSecondary }}>
                                                         {totalExpenses >= totalExpensesPrev ? '+' : ''}{((totalExpenses - totalExpensesPrev) / (totalExpensesPrev || 1) * 100).toFixed(1)}%
                                                     </div>
                                                 </div>
@@ -1851,27 +1851,27 @@ Check console for detailed debugging information.`);
                                         const formatYAxis = (val) => val >= 1000000 ? `€${(val/1000000).toFixed(1)}M` : val >= 1000 ? `€${(val/1000).toFixed(0)}K` : `€${val.toFixed(0)}`;
                                         return (
                                             <div style={{ flex: 1 }}>
-                                                <div style={{ fontSize: '12px', color: COLORS.mediumGray, marginBottom: '8px', fontWeight: '600' }}>Net Profit</div>
+                                                <div style={{ fontSize: '12px', color: COLORS.textSecondary, marginBottom: '8px', fontWeight: '600' }}>Net Profit</div>
                                                 <div style={{ display: 'flex' }}>
                                                     <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: `${chartHeight}px`, marginRight: '6px', paddingBottom: '18px' }}>
-                                                        <span style={{ fontSize: '9px', color: COLORS.mediumGray, textAlign: 'right' }}>{formatYAxis(maxVal)}</span>
-                                                        <span style={{ fontSize: '9px', color: COLORS.mediumGray, textAlign: 'right' }}>{formatYAxis(maxVal * 0.5)}</span>
-                                                        <span style={{ fontSize: '9px', color: COLORS.mediumGray, textAlign: 'right' }}>€0</span>
+                                                        <span style={{ fontSize: '9px', color: COLORS.textSecondary, textAlign: 'right' }}>{formatYAxis(maxVal)}</span>
+                                                        <span style={{ fontSize: '9px', color: COLORS.textSecondary, textAlign: 'right' }}>{formatYAxis(maxVal * 0.5)}</span>
+                                                        <span style={{ fontSize: '9px', color: COLORS.textSecondary, textAlign: 'right' }}>€0</span>
                                                     </div>
-                                                    <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', gap: '6px', height: `${chartHeight}px`, borderLeft: `1px solid ${COLORS.lightGray}`, borderBottom: `1px solid ${COLORS.lightGray}`, paddingLeft: '6px' }}>
+                                                    <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', gap: '6px', height: `${chartHeight}px`, borderLeft: `1px solid ${COLORS.borderLight}`, borderBottom: `1px solid ${COLORS.borderLight}`, paddingLeft: '6px' }}>
                                                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                                            <div style={{ width: '100%', height: `${(Math.abs(netProfitPrev) / maxVal) * (chartHeight - 18)}px`, backgroundColor: '#BBDEFB', borderRadius: '3px 3px 0 0', minHeight: '4px' }} />
-                                                            <span style={{ fontSize: '10px', color: COLORS.mediumGray, marginTop: '3px' }}>{selectedYear - 1}</span>
+                                                            <div style={{ width: '100%', height: `${(Math.abs(netProfitPrev) / maxVal) * (chartHeight - 18)}px`, backgroundColor: COLORS.infoLighter, borderRadius: '3px 3px 0 0', minHeight: '4px' }} />
+                                                            <span style={{ fontSize: '10px', color: COLORS.textSecondary, marginTop: '3px' }}>{selectedYear - 1}</span>
                                                         </div>
                                                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                                            <div style={{ width: '100%', height: `${(Math.abs(netProfit) / maxVal) * (chartHeight - 18)}px`, backgroundColor: '#4A90E2', borderRadius: '3px 3px 0 0', minHeight: '4px' }} />
-                                                            <span style={{ fontSize: '10px', color: COLORS.darkGray, fontWeight: '600', marginTop: '3px' }}>{selectedYear}</span>
+                                                            <div style={{ width: '100%', height: `${(Math.abs(netProfit) / maxVal) * (chartHeight - 18)}px`, backgroundColor: COLORS.slainteBlue, borderRadius: '3px 3px 0 0', minHeight: '4px' }} />
+                                                            <span style={{ fontSize: '10px', color: COLORS.textPrimary, fontWeight: '600', marginTop: '3px' }}>{selectedYear}</span>
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div style={{ textAlign: 'center', marginTop: '8px' }}>
                                                     <div style={{ fontSize: '13px', fontWeight: '600', color: COLORS.slainteBlue }}>{formatCurrency(netProfit)}</div>
-                                                    <div style={{ fontSize: '11px', color: COLORS.mediumGray }}>
+                                                    <div style={{ fontSize: '11px', color: COLORS.textSecondary }}>
                                                         {netProfit >= netProfitPrev ? '+' : ''}{((netProfit - netProfitPrev) / (Math.abs(netProfitPrev) || 1) * 100).toFixed(1)}%
                                                     </div>
                                                 </div>
@@ -1884,17 +1884,17 @@ Check console for detailed debugging information.`);
                             {/* Draft Notes Section */}
                             <div style={{
                                 padding: '20px',
-                                backgroundColor: '#fff9e6',
-                                borderLeft: `4px solid #ffc107`,
+                                backgroundColor: COLORS.warningLighter,
+                                borderLeft: `4px solid ${COLORS.warning}`,
                                 borderRadius: '4px'
                             }}>
-                                <h4 style={{ margin: '0 0 12px 0', color: '#856404', fontSize: '16px', fontWeight: '600' }}>
+                                <h4 style={{ margin: '0 0 12px 0', color: COLORS.warningText, fontSize: '16px', fontWeight: '600' }}>
                                     ⚠️ DRAFT REPORT - Important Notes:
                                 </h4>
-                                <p style={{ fontWeight: 'bold', color: '#d32f2f', marginBottom: '12px' }}>
+                                <p style={{ fontWeight: 'bold', color: COLORS.error, marginBottom: '12px' }}>
                                     This report is a DRAFT and should not be used for official submissions without review by a qualified accountant.
                                 </p>
-                                <ul style={{ margin: '8px 0', paddingLeft: '20px', color: '#856404' }}>
+                                <ul style={{ margin: '8px 0', paddingLeft: '20px', color: COLORS.warningText }}>
                                     <li style={{ marginBottom: '8px' }}>
                                         <strong>GMS Statements:</strong> {plData.grossIncomeData?.[selectedYear]?.gmsComplete
                                             ? `✓ All 12 months of GMS statements uploaded for ${selectedYear}`
@@ -1923,7 +1923,7 @@ Check console for detailed debugging information.`);
                                             : 'Full calendar years'}
                                     </li>
                                 </ul>
-                                <p style={{ marginTop: '12px', fontStyle: 'italic', color: '#856404', fontSize: '13px' }}>
+                                <p style={{ marginTop: '12px', fontStyle: 'italic', color: COLORS.warningText, fontSize: '13px' }}>
                                     Please review all figures with your accountant before using for tax returns or official purposes.
                                 </p>
                             </div>
@@ -1934,8 +1934,8 @@ Check console for detailed debugging information.`);
                             display: 'flex',
                             gap: '12px',
                             padding: '1rem 1.5rem',
-                            borderTop: `1px solid ${COLORS.lightGray}`,
-                            backgroundColor: COLORS.backgroundGray,
+                            borderTop: `1px solid ${COLORS.borderLight}`,
+                            backgroundColor: COLORS.bgPage,
                             flexShrink: 0
                         }}>
                             <button
@@ -1972,7 +1972,7 @@ Check console for detailed debugging information.`);
                                     alignItems: 'center',
                                     transition: 'background-color 0.2s'
                                 }}
-                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3DB0A8'}
+                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.incomeColorDark}
                                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.incomeColor}
                             >
                                 <Download style={{ height: '18px', width: '18px', marginRight: '8px' }} />
@@ -1983,15 +1983,15 @@ Check console for detailed debugging information.`);
                                 onClick={() => setShowReportModal(false)}
                                 style={{
                                     backgroundColor: COLORS.white,
-                                    color: COLORS.darkGray,
+                                    color: COLORS.textPrimary,
                                     padding: '10px 20px',
                                     borderRadius: '8px',
-                                    border: `1px solid ${COLORS.lightGray}`,
+                                    border: `1px solid ${COLORS.borderLight}`,
                                     fontWeight: '500',
                                     cursor: 'pointer',
                                     transition: 'background-color 0.2s'
                                 }}
-                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.backgroundGray}
+                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.bgPage}
                                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.white}
                             >
                                 Close
@@ -2004,7 +2004,7 @@ Check console for detailed debugging information.`);
             {/* Success banner when report was generated (show briefly after modal is closed) */}
             {plData && !showReportModal && (
                 <div style={{
-                    backgroundColor: '#E8F5E9',
+                    backgroundColor: COLORS.successLight,
                     padding: '16px',
                     borderRadius: '8px',
                     border: `1px solid ${COLORS.incomeColor}`,
@@ -2014,7 +2014,7 @@ Check console for detailed debugging information.`);
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center' }}>
                         <CheckCircle style={{ height: '20px', width: '20px', color: COLORS.incomeColor, marginRight: '12px' }} />
-                        <span style={{ fontSize: '14px', color: COLORS.darkGray }}>
+                        <span style={{ fontSize: '14px', color: COLORS.textPrimary }}>
                             <strong>{plData.reportPeriod?.isPartialYear ? 'Year to Date' : 'Full Year'} P&L Report</strong> generated and saved to your report library.
                         </span>
                     </div>
@@ -2128,145 +2128,159 @@ const MotorExpenseCalculator = ({ onClose, onSave, currentExpenses, selectedYear
         onClose();
     };
 
+    const inputStyle = {
+        marginTop: '4px', display: 'block', width: '100%',
+        border: `1px solid ${COLORS.borderDark}`, borderRadius: '6px',
+        padding: '8px 12px', fontSize: '14px', boxSizing: 'border-box'
+    };
+
+    const renderVehicleCard = (year, vehicle, index) => (
+        <div key={index} style={{ backgroundColor: COLORS.white, padding: '12px', borderRadius: '8px', marginBottom: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <span style={{ fontWeight: 500 }}>Vehicle {index + 1}</span>
+                {vehicles[year].length > 1 && (
+                    <button
+                        onClick={() => removeVehicle(year, index)}
+                        style={{ color: COLORS.error, background: 'none', border: 'none', cursor: 'pointer' }}
+                    >
+                        <X style={{ height: 16, width: 16 }} />
+                    </button>
+                )}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: COLORS.textPrimary }}>Engine Size</label>
+                    <select
+                        value={vehicle.engineSize}
+                        onChange={(e) => updateVehicle(year, index, 'engineSize', e.target.value)}
+                        style={inputStyle}
+                    >
+                        <option value="up-to-1200cc">Up to 1,200cc</option>
+                        <option value="1201-1500cc">1,201 - 1,500cc</option>
+                        <option value="over-1500cc">Over 1,500cc</option>
+                    </select>
+                </div>
+                <div>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: COLORS.textPrimary }}>Business Kilometers</label>
+                    <input
+                        type="number"
+                        value={vehicle.kilometers}
+                        onChange={(e) => updateVehicle(year, index, 'kilometers', e.target.value)}
+                        style={inputStyle}
+                        placeholder="0"
+                    />
+                </div>
+                <div style={{ fontSize: '13px', color: COLORS.textMuted }}>
+                    Calculated: €{calculateMotorExpense(vehicle.engineSize, vehicle.kilometers).toFixed(2)}
+                </div>
+            </div>
+        </div>
+    );
+
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-                <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-xl font-semibold">Motor Expense Calculator</h3>
-                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-                        <X className="h-6 w-6" />
+        <div style={{
+            position: 'fixed', inset: 0,
+            backgroundColor: COLORS.overlayDark,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 9999, padding: '2rem'
+        }}>
+            <div style={{
+                backgroundColor: COLORS.white, borderRadius: '16px',
+                maxWidth: '900px', width: '100%', maxHeight: '90vh',
+                display: 'flex', flexDirection: 'column',
+                boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+                overflow: 'hidden'
+            }}>
+                {/* Header - fixed */}
+                <div style={{
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    padding: '1.25rem 1.5rem',
+                    borderBottom: `1px solid ${COLORS.borderLight}`, backgroundColor: COLORS.bgPage,
+                    flexShrink: 0
+                }}>
+                    <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600 }}>Motor Expense Calculator</h3>
+                    <button
+                        onClick={onClose}
+                        style={{ color: COLORS.textSecondary, background: 'none', border: 'none', cursor: 'pointer' }}
+                    >
+                        <X style={{ height: 24, width: 24 }} />
                     </button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Current Year */}
-                    <div className="bg-blue-50 p-4 rounded-lg">
-                        <h4 className="font-semibold mb-4">{selectedYear}</h4>
-                        {vehicles[selectedYear].map((vehicle, index) => (
-                            <div key={index} className="bg-white p-3 rounded mb-3">
-                                <div className="flex justify-between items-center mb-2">
-                                    <span className="font-medium">Vehicle {index + 1}</span>
-                                    {vehicles[selectedYear].length > 1 && (
-                                        <button
-                                            onClick={() => removeVehicle(selectedYear, index)}
-                                            className="text-red-500 hover:text-red-700"
-                                        >
-                                            <X className="h-4 w-4" />
-                                        </button>
-                                    )}
-                                </div>
-                                <div className="space-y-2">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700">Engine Size</label>
-                                        <select
-                                            value={vehicle.engineSize}
-                                            onChange={(e) => updateVehicle(selectedYear, index, 'engineSize', e.target.value)}
-                                            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                                        >
-                                            <option value="up-to-1200cc">Up to 1,200cc</option>
-                                            <option value="1201-1500cc">1,201 - 1,500cc</option>
-                                            <option value="over-1500cc">Over 1,500cc</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700">Business Kilometers</label>
-                                        <input
-                                            type="number"
-                                            value={vehicle.kilometers}
-                                            onChange={(e) => updateVehicle(selectedYear, index, 'kilometers', e.target.value)}
-                                            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                                            placeholder="0"
-                                        />
-                                    </div>
-                                    <div className="text-sm text-gray-600">
-                                        Calculated: €{calculateMotorExpense(vehicle.engineSize, vehicle.kilometers).toFixed(2)}
-                                    </div>
-                                </div>
+                {/* Scrollable body */}
+                <div style={{ overflowY: 'auto', flex: 1, padding: '1.5rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                        {/* Current Year */}
+                        <div style={{ backgroundColor: COLORS.slainteBlueLight, padding: '16px', borderRadius: '8px' }}>
+                            <h4 style={{ fontWeight: 600, marginBottom: '16px', marginTop: 0 }}>{selectedYear}</h4>
+                            {vehicles[selectedYear].map((vehicle, index) => renderVehicleCard(selectedYear, vehicle, index))}
+                            <button
+                                onClick={() => addVehicle(selectedYear)}
+                                style={{
+                                    width: '100%', backgroundColor: COLORS.slainteBlue, color: COLORS.white,
+                                    padding: '8px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '14px'
+                                }}
+                            >
+                                Add Another Vehicle
+                            </button>
+                            <div style={{ marginTop: '16px', padding: '12px', backgroundColor: COLORS.white, borderRadius: '8px' }}>
+                                <div style={{ fontWeight: 600 }}>Total {selectedYear}: €{calculateYearTotal(selectedYear).toFixed(2)}</div>
                             </div>
-                        ))}
-                        <button
-                            onClick={() => addVehicle(selectedYear)}
-                            className="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700"
-                        >
-                            Add Another Vehicle
-                        </button>
-                        <div className="mt-4 p-3 bg-white rounded">
-                            <div className="font-semibold">Total {selectedYear}: €{calculateYearTotal(selectedYear).toFixed(2)}</div>
+                        </div>
+
+                        {/* Previous Year */}
+                        <div style={{ backgroundColor: COLORS.bgPage, padding: '16px', borderRadius: '8px' }}>
+                            <h4 style={{ fontWeight: 600, marginBottom: '16px', marginTop: 0 }}>{selectedYear - 1}</h4>
+                            {vehicles[selectedYear - 1].map((vehicle, index) => renderVehicleCard(selectedYear - 1, vehicle, index))}
+                            <button
+                                onClick={() => addVehicle(selectedYear - 1)}
+                                style={{
+                                    width: '100%', backgroundColor: COLORS.textMuted, color: COLORS.white,
+                                    padding: '8px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '14px'
+                                }}
+                            >
+                                Add Another Vehicle
+                            </button>
+                            <div style={{ marginTop: '16px', padding: '12px', backgroundColor: COLORS.white, borderRadius: '8px' }}>
+                                <div style={{ fontWeight: 600 }}>Total {selectedYear - 1}: €{calculateYearTotal(selectedYear - 1).toFixed(2)}</div>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Previous Year */}
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                        <h4 className="font-semibold mb-4">{selectedYear - 1}</h4>
-                        {vehicles[selectedYear - 1].map((vehicle, index) => (
-                            <div key={index} className="bg-white p-3 rounded mb-3">
-                                <div className="flex justify-between items-center mb-2">
-                                    <span className="font-medium">Vehicle {index + 1}</span>
-                                    {vehicles[selectedYear - 1].length > 1 && (
-                                        <button
-                                            onClick={() => removeVehicle(selectedYear - 1, index)}
-                                            className="text-red-500 hover:text-red-700"
-                                        >
-                                            <X className="h-4 w-4" />
-                                        </button>
-                                    )}
-                                </div>
-                                <div className="space-y-2">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700">Engine Size</label>
-                                        <select
-                                            value={vehicle.engineSize}
-                                            onChange={(e) => updateVehicle(selectedYear - 1, index, 'engineSize', e.target.value)}
-                                            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                                        >
-                                            <option value="up-to-1200cc">Up to 1,200cc</option>
-                                            <option value="1201-1500cc">1,201 - 1,500cc</option>
-                                            <option value="over-1500cc">Over 1,500cc</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700">Business Kilometers</label>
-                                        <input
-                                            type="number"
-                                            value={vehicle.kilometers}
-                                            onChange={(e) => updateVehicle(selectedYear - 1, index, 'kilometers', e.target.value)}
-                                            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                                            placeholder="0"
-                                        />
-                                    </div>
-                                    <div className="text-sm text-gray-600">
-                                        Calculated: €{calculateMotorExpense(vehicle.engineSize, vehicle.kilometers).toFixed(2)}
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                        <button
-                            onClick={() => addVehicle(selectedYear - 1)}
-                            className="w-full bg-gray-600 text-white py-2 rounded hover:bg-gray-700"
-                        >
-                            Add Another Vehicle
-                        </button>
-                        <div className="mt-4 p-3 bg-white rounded">
-                            <div className="font-semibold">Total {selectedYear - 1}: €{calculateYearTotal(selectedYear - 1).toFixed(2)}</div>
+                    {/* Rate Information */}
+                    <div style={{ marginTop: '24px', padding: '16px', backgroundColor: COLORS.warningLighter, borderRadius: '8px' }}>
+                        <h5 style={{ fontWeight: 600, marginBottom: '8px', marginTop: 0 }}>Irish Civil Service Mileage Rates (2024)</h5>
+                        <div style={{ fontSize: '13px', color: COLORS.textPrimary }}>
+                            <p style={{ margin: '4px 0' }}><strong>Up to 1,200cc:</strong> €0.39 (first 1,500km), €0.20 (1,501-5,500km), €0.10 (over 5,500km)</p>
+                            <p style={{ margin: '4px 0' }}><strong>1,201-1,500cc:</strong> €0.45 (first 1,500km), €0.22 (1,501-5,500km), €0.11 (over 5,500km)</p>
+                            <p style={{ margin: '4px 0' }}><strong>Over 1,500cc:</strong> €0.55 (first 1,500km), €0.28 (1,501-5,500km), €0.14 (over 5,500km)</p>
                         </div>
                     </div>
                 </div>
 
-                {/* Rate Information */}
-                <div className="mt-6 p-4 bg-yellow-50 rounded-lg">
-                    <h5 className="font-semibold mb-2">Irish Civil Service Mileage Rates (2024)</h5>
-                    <div className="text-sm text-gray-700 space-y-1">
-                        <p><strong>Up to 1,200cc:</strong> €0.39 (first 1,500km), €0.20 (1,501-5,500km), €0.10 (over 5,500km)</p>
-                        <p><strong>1,201-1,500cc:</strong> €0.45 (first 1,500km), €0.22 (1,501-5,500km), €0.11 (over 5,500km)</p>
-                        <p><strong>Over 1,500cc:</strong> €0.55 (first 1,500km), €0.28 (1,501-5,500km), €0.14 (over 5,500km)</p>
-                    </div>
-                </div>
-
-                <div className="flex justify-end space-x-4 mt-6">
-                    <button onClick={onClose} className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">
+                {/* Footer - fixed */}
+                <div style={{
+                    display: 'flex', justifyContent: 'flex-end', gap: '12px',
+                    padding: '1rem 1.5rem',
+                    borderTop: `1px solid ${COLORS.borderLight}`, backgroundColor: COLORS.bgPage,
+                    flexShrink: 0
+                }}>
+                    <button
+                        onClick={onClose}
+                        style={{
+                            padding: '8px 16px', border: `1px solid ${COLORS.borderDark}`,
+                            borderRadius: '6px', backgroundColor: COLORS.white, cursor: 'pointer'
+                        }}
+                    >
                         Cancel
                     </button>
-                    <button onClick={handleSave} className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
+                    <button
+                        onClick={handleSave}
+                        style={{
+                            padding: '8px 16px', backgroundColor: COLORS.slainteBlue, color: COLORS.white,
+                            borderRadius: '6px', border: 'none', cursor: 'pointer'
+                        }}
+                    >
                         Save Motor Expenses
                     </button>
                 </div>

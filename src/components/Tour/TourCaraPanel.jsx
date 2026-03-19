@@ -104,7 +104,7 @@ Provide a helpful, concise answer (2-3 sentences max) that addresses their quest
         backgroundColor: COLORS.white,
         borderRadius: '0.5rem',
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-        border: `1px solid ${COLORS.lightGray}`,
+        border: `1px solid ${COLORS.borderLight}`,
         zIndex: 10003,
         overflow: 'hidden',
         transition: 'all 0.3s ease',
@@ -126,7 +126,7 @@ Provide a helpful, concise answer (2-3 sentences max) that addresses their quest
           style={{
             width: '2rem',
             height: '2rem',
-            backgroundColor: COLORS.slainteBlueDark || '#3D7BC7',
+            backgroundColor: COLORS.slainteBlueDark,
             borderRadius: '9999px',
             display: 'flex',
             alignItems: 'center',
@@ -171,7 +171,7 @@ Provide a helpful, concise answer (2-3 sentences max) that addresses their quest
               padding: '16px',
               fontSize: '14px',
               lineHeight: '1.6',
-              color: COLORS.darkGray,
+              color: COLORS.textPrimary,
               maxHeight: '150px',
               overflowY: 'auto',
             }}
@@ -184,7 +184,7 @@ Provide a helpful, concise answer (2-3 sentences max) that addresses their quest
             <div
               style={{
                 padding: '0 16px 16px',
-                borderTop: `1px solid ${COLORS.lightGray}`,
+                borderTop: `1px solid ${COLORS.borderLight}`,
                 paddingTop: '12px',
               }}
             >
@@ -238,11 +238,11 @@ Provide a helpful, concise answer (2-3 sentences max) that addresses their quest
                         style={{
                           flex: 1,
                           padding: '10px 12px',
-                          border: `1px solid ${COLORS.lightGray}`,
+                          border: `1px solid ${COLORS.borderLight}`,
                           borderRadius: '8px',
                           fontSize: '13px',
                           outline: 'none',
-                          backgroundColor: isLoading ? COLORS.backgroundGray : COLORS.white,
+                          backgroundColor: isLoading ? COLORS.bgPage : COLORS.white,
                         }}
                       />
                       <button
@@ -250,7 +250,7 @@ Provide a helpful, concise answer (2-3 sentences max) that addresses their quest
                         disabled={isLoading || !question.trim()}
                         style={{
                           padding: '10px 14px',
-                          backgroundColor: isLoading || !question.trim() ? COLORS.lightGray : COLORS.slainteBlue,
+                          backgroundColor: isLoading || !question.trim() ? COLORS.borderLight : COLORS.slainteBlue,
                           border: 'none',
                           borderRadius: '8px',
                           color: COLORS.white,
@@ -271,10 +271,10 @@ Provide a helpful, concise answer (2-3 sentences max) that addresses their quest
                       style={{
                         marginTop: '12px',
                         padding: '12px',
-                        backgroundColor: COLORS.backgroundGray,
+                        backgroundColor: COLORS.bgPage,
                         borderRadius: '8px',
                         fontSize: '13px',
-                        color: COLORS.mediumGray,
+                        color: COLORS.textSecondary,
                         textAlign: 'center',
                       }}
                     >
@@ -292,7 +292,7 @@ Provide a helpful, concise answer (2-3 sentences max) that addresses their quest
                         borderRadius: '8px',
                         fontSize: '13px',
                         lineHeight: '1.5',
-                        color: COLORS.darkGray,
+                        color: COLORS.textPrimary,
                         borderLeft: `3px solid ${COLORS.incomeColor}`,
                       }}
                     >

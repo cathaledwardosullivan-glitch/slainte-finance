@@ -31,7 +31,7 @@ export default function CategoryPickerModal({
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: COLORS.overlayDark,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -56,7 +56,7 @@ export default function CategoryPickerModal({
         <div
           style={{
             padding: '1.5rem',
-            borderBottom: `2px solid ${COLORS.lightGray}`,
+            borderBottom: `2px solid ${COLORS.borderLight}`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -70,7 +70,7 @@ export default function CategoryPickerModal({
             style={{
               fontSize: '1.5rem',
               fontWeight: 700,
-              color: COLORS.darkGray,
+              color: COLORS.textPrimary,
               margin: 0
             }}
           >
@@ -83,7 +83,7 @@ export default function CategoryPickerModal({
               height: '32px',
               borderRadius: '50%',
               border: 'none',
-              backgroundColor: COLORS.backgroundGray,
+              backgroundColor: COLORS.bgPage,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -91,13 +91,13 @@ export default function CategoryPickerModal({
               transition: 'all 0.2s'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = COLORS.lightGray;
+              e.currentTarget.style.backgroundColor = COLORS.borderLight;
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = COLORS.backgroundGray;
+              e.currentTarget.style.backgroundColor = COLORS.bgPage;
             }}
           >
-            <X style={{ width: '18px', height: '18px', color: COLORS.mediumGray }} />
+            <X style={{ width: '18px', height: '18px', color: COLORS.textSecondary }} />
           </button>
         </div>
 

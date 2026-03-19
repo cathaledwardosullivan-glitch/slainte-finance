@@ -310,7 +310,7 @@ export default function FinancialChat() {
       if (trimmed.startsWith('•') || trimmed.startsWith('-')) {
         return (
           <div key={index} style={{ marginBottom: '0.5rem' }}>
-            <div style={{ backgroundColor: COLORS.backgroundGray, padding: '0.5rem', borderRadius: '0.25rem', borderLeft: `2px solid ${COLORS.lightGray}` }}>
+            <div style={{ backgroundColor: COLORS.bgPage, padding: '0.5rem', borderRadius: '0.25rem', borderLeft: `2px solid ${COLORS.borderLight}` }}>
               {trimmed}
             </div>
           </div>
@@ -321,7 +321,7 @@ export default function FinancialChat() {
       if (trimmed.startsWith('**') && trimmed.endsWith('**')) {
         const headerText = trimmed.slice(2, -2);
         return (
-          <h4 key={index} style={{ fontWeight: 600, color: COLORS.darkGray, marginTop: '1rem', marginBottom: '0.5rem', fontSize: '1rem' }}>
+          <h4 key={index} style={{ fontWeight: 600, color: COLORS.textPrimary, marginTop: '1rem', marginBottom: '0.5rem', fontSize: '1rem' }}>
             {headerText}
           </h4>
         );
@@ -333,7 +333,7 @@ export default function FinancialChat() {
         return (
           <p key={index} style={{ marginBottom: '0.75rem', lineHeight: 1.625 }}>
             {parts.map((part, i) =>
-              i % 2 === 1 ? <strong key={i} style={{ fontWeight: 600, color: COLORS.darkGray }}>{part}</strong> : part
+              i % 2 === 1 ? <strong key={i} style={{ fontWeight: 600, color: COLORS.textPrimary }}>{part}</strong> : part
             )}
           </p>
         );
@@ -341,7 +341,7 @@ export default function FinancialChat() {
 
       // Regular paragraphs
       return (
-        <p key={index} style={{ marginBottom: '0.75rem', lineHeight: 1.625, color: COLORS.darkGray }}>
+        <p key={index} style={{ marginBottom: '0.75rem', lineHeight: 1.625, color: COLORS.textPrimary }}>
           {trimmed}
         </p>
       );
@@ -1115,7 +1115,7 @@ CHAT HISTORY:
       <div style={{
         backgroundColor: COLORS.white,
         borderRadius: '0.75rem',
-        border: `1px solid ${COLORS.lightGray}`,
+        border: `1px solid ${COLORS.borderLight}`,
         padding: '1rem 1.25rem',
         marginBottom: '1rem',
         boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
@@ -1133,8 +1133,8 @@ CHAT HISTORY:
             }}>
               <Sparkles style={{ height: '1.25rem', width: '1.25rem', color: COLORS.slainteBlue }} />
             </div>
-            <h2 style={{ fontSize: '1rem', fontWeight: 600, color: COLORS.darkGray }}>
-              Finn - <span style={{ fontWeight: 400, color: COLORS.mediumGray }}>Your Practice Chief Financial Officer</span>
+            <h2 style={{ fontSize: '1rem', fontWeight: 600, color: COLORS.textPrimary }}>
+              Finn - <span style={{ fontWeight: 400, color: COLORS.textSecondary }}>Your Practice Chief Financial Officer</span>
             </h2>
           </div>
 
@@ -1145,7 +1145,7 @@ CHAT HISTORY:
               style={{
                 padding: '0.4rem 0.75rem',
                 backgroundColor: headerTab === 'chats' ? `${COLORS.slainteBlue}10` : 'transparent',
-                color: headerTab === 'chats' ? COLORS.slainteBlue : COLORS.mediumGray,
+                color: headerTab === 'chats' ? COLORS.slainteBlue : COLORS.textSecondary,
                 border: 'none',
                 borderRadius: '0.5rem',
                 cursor: 'pointer',
@@ -1157,7 +1157,7 @@ CHAT HISTORY:
                 transition: 'all 0.2s'
               }}
               onMouseEnter={(e) => {
-                if (headerTab !== 'chats') e.currentTarget.style.backgroundColor = COLORS.backgroundGray;
+                if (headerTab !== 'chats') e.currentTarget.style.backgroundColor = COLORS.bgPage;
               }}
               onMouseLeave={(e) => {
                 if (headerTab !== 'chats') e.currentTarget.style.backgroundColor = 'transparent';
@@ -1167,8 +1167,8 @@ CHAT HISTORY:
               Recent Chats
               {allChats.filter(c => c.messages && c.messages.length > 0).length > 0 && (
                 <span style={{
-                  backgroundColor: headerTab === 'chats' ? COLORS.slainteBlue : COLORS.lightGray,
-                  color: headerTab === 'chats' ? COLORS.white : COLORS.mediumGray,
+                  backgroundColor: headerTab === 'chats' ? COLORS.slainteBlue : COLORS.borderLight,
+                  color: headerTab === 'chats' ? COLORS.white : COLORS.textSecondary,
                   fontSize: '0.6rem',
                   padding: '0.1rem 0.35rem',
                   borderRadius: '0.75rem',
@@ -1181,7 +1181,7 @@ CHAT HISTORY:
               style={{
                 padding: '0.4rem 0.75rem',
                 backgroundColor: headerTab === 'artifacts' ? `${COLORS.slainteBlue}10` : 'transparent',
-                color: headerTab === 'artifacts' ? COLORS.slainteBlue : COLORS.mediumGray,
+                color: headerTab === 'artifacts' ? COLORS.slainteBlue : COLORS.textSecondary,
                 border: 'none',
                 borderRadius: '0.5rem',
                 cursor: 'pointer',
@@ -1193,7 +1193,7 @@ CHAT HISTORY:
                 transition: 'all 0.2s'
               }}
               onMouseEnter={(e) => {
-                if (headerTab !== 'artifacts') e.currentTarget.style.backgroundColor = COLORS.backgroundGray;
+                if (headerTab !== 'artifacts') e.currentTarget.style.backgroundColor = COLORS.bgPage;
               }}
               onMouseLeave={(e) => {
                 if (headerTab !== 'artifacts') e.currentTarget.style.backgroundColor = 'transparent';
@@ -1203,8 +1203,8 @@ CHAT HISTORY:
               Reports
               {allArtifacts.length > 0 && (
                 <span style={{
-                  backgroundColor: headerTab === 'artifacts' ? COLORS.slainteBlue : COLORS.lightGray,
-                  color: headerTab === 'artifacts' ? COLORS.white : COLORS.mediumGray,
+                  backgroundColor: headerTab === 'artifacts' ? COLORS.slainteBlue : COLORS.borderLight,
+                  color: headerTab === 'artifacts' ? COLORS.white : COLORS.textSecondary,
                   fontSize: '0.6rem',
                   padding: '0.1rem 0.35rem',
                   borderRadius: '0.75rem',
@@ -1232,7 +1232,7 @@ CHAT HISTORY:
                 marginLeft: '0.5rem'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#1e40af';
+                e.currentTarget.style.backgroundColor = COLORS.infoText;
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = COLORS.slainteBlue;
@@ -1255,7 +1255,7 @@ CHAT HISTORY:
                   const cardColors = [
                     { bg: COLORS.slainteBlue, light: `${COLORS.slainteBlue}08`, border: `${COLORS.slainteBlue}20` },
                     { bg: COLORS.incomeColor, light: `${COLORS.incomeColor}06`, border: `${COLORS.incomeColor}18` },
-                    { bg: '#8b5cf6', light: 'rgba(139,92,246,0.05)', border: 'rgba(139,92,246,0.15)' }, // purple
+                    { bg: COLORS.chartViolet, light: `${COLORS.chartViolet}0D`, border: `${COLORS.chartViolet}26` }, // purple
                     { bg: COLORS.highlightYellow, light: `${COLORS.highlightYellow}08`, border: `${COLORS.highlightYellow}25` }
                   ];
                   const cardColor = cardColors[idx % cardColors.length];
@@ -1293,7 +1293,7 @@ CHAT HISTORY:
                       <p style={{
                         fontSize: '0.8rem',
                         fontWeight: 500,
-                        color: COLORS.darkGray,
+                        color: COLORS.textPrimary,
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
@@ -1301,10 +1301,10 @@ CHAT HISTORY:
                       }}>
                         {chat.title || 'New conversation'}
                       </p>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.7rem', color: COLORS.mediumGray }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.7rem', color: COLORS.textSecondary }}>
                         <Clock style={{ height: '0.7rem', width: '0.7rem', color: cardColor.bg }} />
                         {formatRelativeTime(chat.updated_at)}
-                        <span style={{ color: COLORS.lightGray }}>•</span>
+                        <span style={{ color: COLORS.borderLight }}>•</span>
                         {chat.messages?.length || 0} msgs
                       </div>
                     </div>
@@ -1321,10 +1321,10 @@ CHAT HISTORY:
                       padding: '0.75rem',
                       minWidth: '80px',
                       background: 'none',
-                      border: `1px dashed ${COLORS.lightGray}`,
+                      border: `1px dashed ${COLORS.borderLight}`,
                       borderRadius: '0.625rem',
                       cursor: 'pointer',
-                      color: COLORS.mediumGray,
+                      color: COLORS.textSecondary,
                       fontSize: '0.75rem',
                       transition: 'all 0.2s'
                     }}
@@ -1333,8 +1333,8 @@ CHAT HISTORY:
                       e.currentTarget.style.color = COLORS.slainteBlue;
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = COLORS.lightGray;
-                      e.currentTarget.style.color = COLORS.mediumGray;
+                      e.currentTarget.style.borderColor = COLORS.borderLight;
+                      e.currentTarget.style.color = COLORS.textSecondary;
                     }}
                   >
                     <ChevronRight style={{ height: '1rem', width: '1rem', marginBottom: '0.25rem' }} />
@@ -1343,7 +1343,7 @@ CHAT HISTORY:
                 )}
               </>
             ) : (
-              <div style={{ padding: '1rem', color: COLORS.mediumGray, fontSize: '0.8rem', textAlign: 'center', width: '100%' }}>
+              <div style={{ padding: '1rem', color: COLORS.textSecondary, fontSize: '0.8rem', textAlign: 'center', width: '100%' }}>
                 No conversations yet. Start a new chat!
               </div>
             )}
@@ -1390,7 +1390,7 @@ CHAT HISTORY:
                     <p style={{
                       fontSize: '0.8rem',
                       fontWeight: 500,
-                      color: COLORS.darkGray,
+                      color: COLORS.textPrimary,
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap',
@@ -1398,7 +1398,7 @@ CHAT HISTORY:
                     }}>
                       {artifact.title || 'Untitled Report'}
                     </p>
-                    <div style={{ fontSize: '0.7rem', color: COLORS.mediumGray }}>
+                    <div style={{ fontSize: '0.7rem', color: COLORS.textSecondary }}>
                       {formatRelativeTime(artifact.created_at)}
                     </div>
                   </div>
@@ -1414,10 +1414,10 @@ CHAT HISTORY:
                       padding: '0.75rem',
                       minWidth: '80px',
                       background: 'none',
-                      border: `1px dashed ${COLORS.lightGray}`,
+                      border: `1px dashed ${COLORS.borderLight}`,
                       borderRadius: '0.625rem',
                       cursor: 'pointer',
-                      color: COLORS.mediumGray,
+                      color: COLORS.textSecondary,
                       fontSize: '0.75rem',
                       transition: 'all 0.2s'
                     }}
@@ -1426,8 +1426,8 @@ CHAT HISTORY:
                       e.currentTarget.style.color = COLORS.incomeColor;
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = COLORS.lightGray;
-                      e.currentTarget.style.color = COLORS.mediumGray;
+                      e.currentTarget.style.borderColor = COLORS.borderLight;
+                      e.currentTarget.style.color = COLORS.textSecondary;
                     }}
                   >
                     <ChevronRight style={{ height: '1rem', width: '1rem', marginBottom: '0.25rem' }} />
@@ -1436,7 +1436,7 @@ CHAT HISTORY:
                 )}
               </>
             ) : (
-              <div style={{ padding: '1rem', color: COLORS.mediumGray, fontSize: '0.8rem', textAlign: 'center', width: '100%' }}>
+              <div style={{ padding: '1rem', color: COLORS.textSecondary, fontSize: '0.8rem', textAlign: 'center', width: '100%' }}>
                 No reports yet. Ask Finn for a detailed analysis to create one!
               </div>
             )}
@@ -1449,7 +1449,7 @@ CHAT HISTORY:
         <div style={{
           backgroundColor: COLORS.white,
           borderRadius: '0.75rem',
-          border: `1px solid ${COLORS.lightGray}`,
+          border: `1px solid ${COLORS.borderLight}`,
           padding: '0.75rem 1rem',
           marginBottom: '1rem',
           boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
@@ -1458,10 +1458,10 @@ CHAT HISTORY:
             display: 'flex',
             gap: '0.75rem',
             alignItems: 'center',
-            backgroundColor: COLORS.backgroundGray,
+            backgroundColor: COLORS.bgPage,
             borderRadius: '2rem',
             padding: '0.5rem 0.625rem 0.5rem 1.25rem',
-            border: `1px solid ${COLORS.lightGray}`,
+            border: `1px solid ${COLORS.borderLight}`,
             transition: 'all 0.2s'
           }}>
             <input
@@ -1475,7 +1475,7 @@ CHAT HISTORY:
                 padding: '0.625rem 0',
                 fontSize: '0.9375rem',
                 outline: 'none',
-                color: COLORS.darkGray,
+                color: COLORS.textPrimary,
                 fontWeight: 400
               }}
               disabled={!apiKey || transactions.length === 0 || isLoading}
@@ -1484,7 +1484,7 @@ CHAT HISTORY:
             <button
               onClick={handleSendClick}
               style={{
-                backgroundColor: (!apiKey || transactions.length === 0 || isLoading) ? COLORS.lightGray : COLORS.slainteBlue,
+                backgroundColor: (!apiKey || transactions.length === 0 || isLoading) ? COLORS.borderLight : COLORS.slainteBlue,
                 color: COLORS.white,
                 padding: '0.75rem',
                 borderRadius: '50%',
@@ -1521,7 +1521,7 @@ CHAT HISTORY:
             </p>
           )}
           {apiKey && transactions.length === 0 && (
-            <p style={{ fontSize: '0.7rem', color: COLORS.mediumGray, marginTop: '0.5rem', textAlign: 'center' }}>
+            <p style={{ fontSize: '0.7rem', color: COLORS.textSecondary, marginTop: '0.5rem', textAlign: 'center' }}>
               Upload transaction data to enable AI financial analysis
             </p>
           )}
@@ -1535,7 +1535,7 @@ CHAT HISTORY:
         flexDirection: 'column',
         backgroundColor: COLORS.white,
         borderRadius: '0.75rem',
-        border: `1px solid ${COLORS.lightGray}`,
+        border: `1px solid ${COLORS.borderLight}`,
         boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
         minHeight: 0,
         overflow: 'hidden'
@@ -1544,13 +1544,13 @@ CHAT HISTORY:
         {chatMessages.length > 0 && (
           <div style={{
             padding: '0.5rem 1rem',
-            borderBottom: `1px solid ${COLORS.lightGray}`,
+            borderBottom: `1px solid ${COLORS.borderLight}`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            backgroundColor: COLORS.backgroundGray
+            backgroundColor: COLORS.bgPage
           }}>
-            <span style={{ fontSize: '0.75rem', color: COLORS.mediumGray }}>
+            <span style={{ fontSize: '0.75rem', color: COLORS.textSecondary }}>
               {chatMessages.filter(m => !m.isLoading).length} messages
             </span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
@@ -1574,15 +1574,15 @@ CHAT HISTORY:
                 onClick={() => copyMessage(chatMessages.filter(m => !m.isLoading).map(m => `${m.type.toUpperCase()}: ${m.content}`).join('\n\n'))}
                 style={{
                   padding: '0.25rem',
-                  color: COLORS.mediumGray,
+                  color: COLORS.textSecondary,
                   background: 'none',
                   border: 'none',
                   borderRadius: '0.25rem',
                   cursor: 'pointer'
                 }}
                 title="Copy chat"
-                onMouseEnter={(e) => e.currentTarget.style.color = COLORS.darkGray}
-                onMouseLeave={(e) => e.currentTarget.style.color = COLORS.mediumGray}
+                onMouseEnter={(e) => e.currentTarget.style.color = COLORS.textPrimary}
+                onMouseLeave={(e) => e.currentTarget.style.color = COLORS.textSecondary}
               >
                 <Copy style={{ height: '0.75rem', width: '0.75rem' }} />
               </button>
@@ -1590,15 +1590,15 @@ CHAT HISTORY:
                 onClick={exportChatAsText}
                 style={{
                   padding: '0.25rem',
-                  color: COLORS.mediumGray,
+                  color: COLORS.textSecondary,
                   background: 'none',
                   border: 'none',
                   borderRadius: '0.25rem',
                   cursor: 'pointer'
                 }}
                 title="Export"
-                onMouseEnter={(e) => e.currentTarget.style.color = COLORS.darkGray}
-                onMouseLeave={(e) => e.currentTarget.style.color = COLORS.mediumGray}
+                onMouseEnter={(e) => e.currentTarget.style.color = COLORS.textPrimary}
+                onMouseLeave={(e) => e.currentTarget.style.color = COLORS.textSecondary}
               >
                 <Download style={{ height: '0.75rem', width: '0.75rem' }} />
               </button>
@@ -1606,7 +1606,7 @@ CHAT HISTORY:
                 onClick={clearChatHistory}
                 style={{
                   padding: '0.25rem',
-                  color: COLORS.mediumGray,
+                  color: COLORS.textSecondary,
                   background: 'none',
                   border: 'none',
                   borderRadius: '0.25rem',
@@ -1614,7 +1614,7 @@ CHAT HISTORY:
                 }}
                 title="Clear"
                 onMouseEnter={(e) => e.currentTarget.style.color = COLORS.expenseColor}
-                onMouseLeave={(e) => e.currentTarget.style.color = COLORS.mediumGray}
+                onMouseLeave={(e) => e.currentTarget.style.color = COLORS.textSecondary}
               >
                 <Trash2 style={{ height: '0.75rem', width: '0.75rem' }} />
               </button>
@@ -1652,11 +1652,11 @@ CHAT HISTORY:
                   style={{
                     padding: '0.5rem 1rem',
                     backgroundColor: COLORS.white,
-                    border: `1px solid ${COLORS.lightGray}`,
+                    border: `1px solid ${COLORS.borderLight}`,
                     borderRadius: '2rem',
                     cursor: (!apiKey || transactions.length === 0 || isLoading) ? 'not-allowed' : 'pointer',
                     fontSize: '0.75rem',
-                    color: COLORS.mediumGray,
+                    color: COLORS.textSecondary,
                     transition: 'all 0.2s',
                     opacity: (!apiKey || transactions.length === 0 || isLoading) ? 0.5 : 1
                   }}
@@ -1669,8 +1669,8 @@ CHAT HISTORY:
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.backgroundColor = COLORS.white;
-                    e.currentTarget.style.borderColor = COLORS.lightGray;
-                    e.currentTarget.style.color = COLORS.mediumGray;
+                    e.currentTarget.style.borderColor = COLORS.borderLight;
+                    e.currentTarget.style.color = COLORS.textSecondary;
                   }}
                 >
                   {q.text}
@@ -1684,7 +1684,7 @@ CHAT HISTORY:
               </p>
             )}
             {apiKey && transactions.length === 0 && (
-              <p style={{ fontSize: '0.7rem', color: COLORS.mediumGray, marginTop: '1.5rem' }}>
+              <p style={{ fontSize: '0.7rem', color: COLORS.textSecondary, marginTop: '1.5rem' }}>
                 Upload transaction data to enable AI analysis
               </p>
             )}
@@ -1703,16 +1703,16 @@ CHAT HISTORY:
                 : message.isError
                 ? `${COLORS.expenseColor}08`
                 : COLORS.white,
-              color: message.type === 'user' ? COLORS.white : COLORS.darkGray,
+              color: message.type === 'user' ? COLORS.white : COLORS.textPrimary,
               padding: message.type === 'user' ? '0.875rem 1rem' : '1rem 1.25rem',
               borderRadius: message.type === 'user' ? '1rem 1rem 0.25rem 1rem' : '1rem 1rem 1rem 0.25rem',
               border: message.isLoading
-                ? `1px solid ${COLORS.lightGray}`
+                ? `1px solid ${COLORS.borderLight}`
                 : message.isError
                 ? `1px solid ${COLORS.expenseColor}30`
                 : message.type === 'user'
                 ? 'none'
-                : `1px solid ${COLORS.lightGray}`,
+                : `1px solid ${COLORS.borderLight}`,
               boxShadow: message.type === 'user'
                 ? '0 2px 8px rgba(0,98,204,0.2)'
                 : message.isLoading
@@ -1739,8 +1739,8 @@ CHAT HISTORY:
                     }}></div>
                   </div>
                   <div>
-                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: COLORS.darkGray }}>Finn is thinking...</span>
-                    <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginTop: '0.125rem' }}>Analyzing your financial data</p>
+                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: COLORS.textPrimary }}>Finn is thinking...</span>
+                    <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginTop: '0.125rem' }}>Analyzing your financial data</p>
                   </div>
                 </div>
               )}
@@ -1804,7 +1804,7 @@ CHAT HISTORY:
                           padding: '0.35rem',
                           color: COLORS.expenseColor,
                           backgroundColor: COLORS.white,
-                          border: `1px solid ${COLORS.lightGray}`,
+                          border: `1px solid ${COLORS.borderLight}`,
                           borderRadius: '0.375rem',
                           cursor: 'pointer',
                           transition: 'all 0.2s'
@@ -1816,7 +1816,7 @@ CHAT HISTORY:
                         }}
                         onMouseLeave={(e) => {
                           e.currentTarget.style.backgroundColor = COLORS.white;
-                          e.currentTarget.style.borderColor = COLORS.lightGray;
+                          e.currentTarget.style.borderColor = COLORS.borderLight;
                         }}
                       >
                         <RefreshCw style={{ height: '0.75rem', width: '0.75rem' }} />
@@ -1826,9 +1826,9 @@ CHAT HISTORY:
                       onClick={() => copyMessage(message.content)}
                       style={{
                         padding: '0.35rem',
-                        color: COLORS.mediumGray,
+                        color: COLORS.textSecondary,
                         backgroundColor: COLORS.white,
-                        border: `1px solid ${COLORS.lightGray}`,
+                        border: `1px solid ${COLORS.borderLight}`,
                         borderRadius: '0.375rem',
                         cursor: 'pointer',
                         transition: 'all 0.2s'
@@ -1841,8 +1841,8 @@ CHAT HISTORY:
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.backgroundColor = COLORS.white;
-                        e.currentTarget.style.borderColor = COLORS.lightGray;
-                        e.currentTarget.style.color = COLORS.mediumGray;
+                        e.currentTarget.style.borderColor = COLORS.borderLight;
+                        e.currentTarget.style.color = COLORS.textSecondary;
                       }}
                     >
                       <Copy style={{ height: '0.75rem', width: '0.75rem' }} />
@@ -1861,17 +1861,17 @@ CHAT HISTORY:
         {chatMessages.length > 0 && (
           <div style={{
             padding: '0.75rem 1rem',
-            borderTop: `1px solid ${COLORS.lightGray}`,
+            borderTop: `1px solid ${COLORS.borderLight}`,
             backgroundColor: COLORS.white
           }}>
             <div style={{
               display: 'flex',
               gap: '0.75rem',
               alignItems: 'center',
-              backgroundColor: COLORS.backgroundGray,
+              backgroundColor: COLORS.bgPage,
               borderRadius: '2rem',
               padding: '0.5rem 0.625rem 0.5rem 1.25rem',
-              border: `1px solid ${COLORS.lightGray}`,
+              border: `1px solid ${COLORS.borderLight}`,
               transition: 'all 0.2s'
             }}>
               <input
@@ -1885,7 +1885,7 @@ CHAT HISTORY:
                   padding: '0.625rem 0',
                   fontSize: '0.9375rem',
                   outline: 'none',
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   fontWeight: 400
                 }}
                 disabled={!apiKey || transactions.length === 0 || isLoading}
@@ -1894,7 +1894,7 @@ CHAT HISTORY:
               <button
                 onClick={handleSendClick}
                 style={{
-                  backgroundColor: (!apiKey || transactions.length === 0 || isLoading) ? COLORS.lightGray : COLORS.slainteBlue,
+                  backgroundColor: (!apiKey || transactions.length === 0 || isLoading) ? COLORS.borderLight : COLORS.slainteBlue,
                   color: COLORS.white,
                   padding: '0.75rem',
                   borderRadius: '50%',
@@ -1938,7 +1938,7 @@ CHAT HISTORY:
             style={{
               position: 'fixed',
               inset: 0,
-              backgroundColor: 'rgba(0,0,0,0.3)',
+              backgroundColor: COLORS.overlayLight,
               zIndex: 40
             }}
           />
@@ -1959,12 +1959,12 @@ CHAT HISTORY:
             {/* Panel Header */}
             <div style={{
               padding: '1rem 1.25rem',
-              borderBottom: `1px solid ${COLORS.lightGray}`,
+              borderBottom: `1px solid ${COLORS.borderLight}`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between'
             }}>
-              <h3 style={{ fontSize: '1rem', fontWeight: 600, color: COLORS.darkGray }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: 600, color: COLORS.textPrimary }}>
                 {headerTab === 'chats' ? 'All Conversations' : 'All Reports'}
               </h3>
               <button
@@ -1975,9 +1975,9 @@ CHAT HISTORY:
                   border: 'none',
                   borderRadius: '0.375rem',
                   cursor: 'pointer',
-                  color: COLORS.mediumGray
+                  color: COLORS.textSecondary
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.backgroundGray}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.bgPage}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
               >
                 <X style={{ height: '1.25rem', width: '1.25rem' }} />
@@ -1998,8 +1998,8 @@ CHAT HISTORY:
                     style={{
                       padding: '0.75rem',
                       marginBottom: '0.5rem',
-                      backgroundColor: chat.id === currentChatId ? `${COLORS.slainteBlue}08` : COLORS.backgroundGray,
-                      border: `1px solid ${chat.id === currentChatId ? COLORS.slainteBlue + '30' : COLORS.lightGray}`,
+                      backgroundColor: chat.id === currentChatId ? `${COLORS.slainteBlue}08` : COLORS.bgPage,
+                      border: `1px solid ${chat.id === currentChatId ? COLORS.slainteBlue + '30' : COLORS.borderLight}`,
                       borderRadius: '0.5rem',
                       cursor: 'pointer',
                       transition: 'all 0.2s'
@@ -2012,8 +2012,8 @@ CHAT HISTORY:
                     }}
                     onMouseLeave={(e) => {
                       if (chat.id !== currentChatId) {
-                        e.currentTarget.style.backgroundColor = COLORS.backgroundGray;
-                        e.currentTarget.style.borderColor = COLORS.lightGray;
+                        e.currentTarget.style.backgroundColor = COLORS.bgPage;
+                        e.currentTarget.style.borderColor = COLORS.borderLight;
                       }
                     }}
                   >
@@ -2022,20 +2022,20 @@ CHAT HISTORY:
                         <p style={{
                           fontSize: '0.8rem',
                           fontWeight: 500,
-                          color: COLORS.darkGray,
+                          color: COLORS.textPrimary,
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
                           whiteSpace: 'nowrap'
                         }}>
                           {chat.title || 'New conversation'}
                         </p>
-                        <div style={{ fontSize: '0.7rem', color: COLORS.mediumGray, marginTop: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div style={{ fontSize: '0.7rem', color: COLORS.textSecondary, marginTop: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                           <span>{formatRelativeTime(chat.updated_at)}</span>
-                          <span style={{ color: COLORS.lightGray }}>•</span>
+                          <span style={{ color: COLORS.borderLight }}>•</span>
                           <span>{chat.messages?.length || 0} messages</span>
                           {chat.artifacts?.length > 0 && (
                             <>
-                              <span style={{ color: COLORS.lightGray }}>•</span>
+                              <span style={{ color: COLORS.borderLight }}>•</span>
                               <span style={{ color: COLORS.incomeColor }}>{chat.artifacts.length} reports</span>
                             </>
                           )}
@@ -2054,11 +2054,11 @@ CHAT HISTORY:
                           border: 'none',
                           borderRadius: '0.25rem',
                           cursor: 'pointer',
-                          color: COLORS.mediumGray,
+                          color: COLORS.textSecondary,
                           flexShrink: 0
                         }}
                         onMouseEnter={(e) => e.currentTarget.style.color = COLORS.expenseColor}
-                        onMouseLeave={(e) => e.currentTarget.style.color = COLORS.mediumGray}
+                        onMouseLeave={(e) => e.currentTarget.style.color = COLORS.textSecondary}
                       >
                         <Trash2 style={{ height: '0.875rem', width: '0.875rem' }} />
                       </button>
@@ -2077,8 +2077,8 @@ CHAT HISTORY:
                     style={{
                       padding: '0.75rem',
                       marginBottom: '0.5rem',
-                      backgroundColor: COLORS.backgroundGray,
-                      border: `1px solid ${COLORS.lightGray}`,
+                      backgroundColor: COLORS.bgPage,
+                      border: `1px solid ${COLORS.borderLight}`,
                       borderRadius: '0.5rem',
                       cursor: 'pointer',
                       transition: 'all 0.2s'
@@ -2088,8 +2088,8 @@ CHAT HISTORY:
                       e.currentTarget.style.borderColor = COLORS.incomeColor + '30';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = COLORS.backgroundGray;
-                      e.currentTarget.style.borderColor = COLORS.lightGray;
+                      e.currentTarget.style.backgroundColor = COLORS.bgPage;
+                      e.currentTarget.style.borderColor = COLORS.borderLight;
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.375rem' }}>
@@ -2101,16 +2101,16 @@ CHAT HISTORY:
                     <p style={{
                       fontSize: '0.8rem',
                       fontWeight: 500,
-                      color: COLORS.darkGray,
+                      color: COLORS.textPrimary,
                       marginBottom: '0.25rem'
                     }}>
                       {artifact.title || 'Untitled Report'}
                     </p>
-                    <div style={{ fontSize: '0.7rem', color: COLORS.mediumGray, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{ fontSize: '0.7rem', color: COLORS.textSecondary, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <span>{formatRelativeTime(artifact.created_at)}</span>
                       {artifact.chatTitle && (
                         <>
-                          <span style={{ color: COLORS.lightGray }}>•</span>
+                          <span style={{ color: COLORS.borderLight }}>•</span>
                           <span>from "{artifact.chatTitle}"</span>
                         </>
                       )}

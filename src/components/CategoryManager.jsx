@@ -60,7 +60,7 @@ function ClearAllDataButton({ onClear }) {
             ) : (
                 <div className="space-y-3">
                     <div>
-                        <label className="block text-sm font-medium mb-2" style={{ color: COLORS.darkGray }}>
+                        <label className="block text-sm font-medium mb-2" style={{ color: COLORS.textPrimary }}>
                             Type <strong>"DELETE ALL DATA"</strong> to confirm:
                         </label>
                         <input
@@ -68,7 +68,7 @@ function ClearAllDataButton({ onClear }) {
                             value={confirmText}
                             onChange={(e) => setConfirmText(e.target.value)}
                             className="w-full p-2 border rounded"
-                            style={{ borderColor: COLORS.lightGray }}
+                            style={{ borderColor: COLORS.borderLight }}
                             placeholder="DELETE ALL DATA"
                             autoFocus
                         />
@@ -79,7 +79,7 @@ function ClearAllDataButton({ onClear }) {
                             disabled={confirmText !== 'DELETE ALL DATA'}
                             className="px-4 py-2 rounded font-medium"
                             style={{
-                                backgroundColor: confirmText === 'DELETE ALL DATA' ? COLORS.expenseColor : COLORS.lightGray,
+                                backgroundColor: confirmText === 'DELETE ALL DATA' ? COLORS.expenseColor : COLORS.borderLight,
                                 color: COLORS.white,
                                 cursor: confirmText === 'DELETE ALL DATA' ? 'pointer' : 'not-allowed'
                             }}
@@ -89,7 +89,7 @@ function ClearAllDataButton({ onClear }) {
                         <button
                             onClick={() => { setShowConfirm(false); setConfirmText(''); }}
                             className="px-4 py-2 rounded border"
-                            style={{ borderColor: COLORS.lightGray, color: COLORS.darkGray }}
+                            style={{ borderColor: COLORS.borderLight, color: COLORS.textPrimary }}
                         >
                             Cancel
                         </button>
@@ -1089,12 +1089,12 @@ export default function CategoryManager() {
         <div className="space-y-6">
 
             {/* Upload Data Card */}
-            <div data-tour-id="admin-upload-data" style={{ backgroundColor: COLORS.white, padding: '1.5rem', borderRadius: '0.5rem', border: `1px solid ${COLORS.lightGray}` }}>
-                <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.5rem', color: COLORS.darkGray, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div data-tour-id="admin-upload-data" style={{ backgroundColor: COLORS.white, padding: '1.5rem', borderRadius: '0.5rem', border: `1px solid ${COLORS.borderLight}` }}>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.5rem', color: COLORS.textPrimary, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <Upload style={{ height: '1.25rem', width: '1.25rem', color: COLORS.slainteBlue }} />
                     Upload Data
                 </h2>
-                <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray, marginBottom: '1.5rem' }}>
+                <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary, marginBottom: '1.5rem' }}>
                     Import financial data and upload PCRS PDFs
                 </p>
 
@@ -1103,8 +1103,8 @@ export default function CategoryManager() {
                     {/* Column 1: Bank Transactions */}
                     <div style={{ border: `2px dashed ${COLORS.slainteBlue}`, borderRadius: '0.5rem', padding: '1.5rem', textAlign: 'center' }}>
                         <Upload style={{ margin: '0 auto 0.75rem', height: '2.5rem', width: '2.5rem', color: COLORS.slainteBlue }} />
-                        <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: COLORS.darkGray }}>Bank Transactions</h3>
-                        <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginBottom: '1rem' }}>
+                        <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: COLORS.textPrimary }}>Bank Transactions</h3>
+                        <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginBottom: '1rem' }}>
                             CSV files from your bank
                         </p>
                         <input
@@ -1120,8 +1120,8 @@ export default function CategoryManager() {
                     {/* Column 2: Training Data */}
                     <div style={{ border: `2px dashed ${COLORS.highlightYellow}`, borderRadius: '0.5rem', padding: '1.5rem', textAlign: 'center' }}>
                         <FileText style={{ margin: '0 auto 0.75rem', height: '2.5rem', width: '2.5rem', color: COLORS.highlightYellow }} />
-                        <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: COLORS.darkGray }}>Training Data</h3>
-                        <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginBottom: '1rem' }}>
+                        <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: COLORS.textPrimary }}>Training Data</h3>
+                        <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginBottom: '1rem' }}>
                             Pre-categorized JSON backup files
                         </p>
                         <input
@@ -1136,8 +1136,8 @@ export default function CategoryManager() {
                     {/* Column 3: Bank Statement PDFs */}
                     <div style={{ border: `2px dashed ${COLORS.incomeColor}`, borderRadius: '0.5rem', padding: '1.5rem', textAlign: 'center' }}>
                         <Building2 style={{ margin: '0 auto 0.75rem', height: '2.5rem', width: '2.5rem', color: COLORS.incomeColor }} />
-                        <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: COLORS.darkGray }}>Bank Statement PDFs</h3>
-                        <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginBottom: '1rem' }}>
+                        <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: COLORS.textPrimary }}>Bank Statement PDFs</h3>
+                        <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginBottom: '1rem' }}>
                             BOI statement PDFs (beta)
                         </p>
                         <input
@@ -1154,8 +1154,8 @@ export default function CategoryManager() {
                     {/* Column 4: PCRS Payment PDFs */}
                     <div style={{ border: `2px dashed ${COLORS.expenseColor}`, borderRadius: '0.5rem', padding: '1.5rem', textAlign: 'center' }}>
                         <Activity style={{ margin: '0 auto 0.75rem', height: '2.5rem', width: '2.5rem', color: COLORS.expenseColor }} />
-                        <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: COLORS.darkGray }}>PCRS Payments</h3>
-                        <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginBottom: '1rem' }}>
+                        <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: COLORS.textPrimary }}>PCRS Payments</h3>
+                        <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginBottom: '1rem' }}>
                             GMS payment statement PDFs
                         </p>
                         <input
@@ -1182,7 +1182,7 @@ export default function CategoryManager() {
                             borderTopColor: 'transparent',
                             margin: '0 auto'
                         }}></div>
-                        <p style={{ fontSize: '0.875rem', color: COLORS.darkGray, marginTop: '0.5rem' }}>
+                        <p style={{ fontSize: '0.875rem', color: COLORS.textPrimary, marginTop: '0.5rem' }}>
                             Processing {selectedFile?.name.endsWith('.json') ? 'training data' : 'transactions'}...
                         </p>
                     </div>
@@ -1193,19 +1193,19 @@ export default function CategoryManager() {
                     <div style={{ marginTop: '1.5rem', padding: '1rem', backgroundColor: `${COLORS.incomeColor}20`, borderRadius: '0.5rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
                             <CheckCircle style={{ height: '1.25rem', width: '1.25rem', color: COLORS.incomeColor, marginRight: '0.5rem' }} />
-                            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: COLORS.darkGray }}>
+                            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: COLORS.textPrimary }}>
                                 Processed {selectedFile.name}
                             </span>
                         </div>
                         {uploadResult.type === 'training' ? (
-                            <p style={{ fontSize: '0.875rem', color: COLORS.darkGray }}>
+                            <p style={{ fontSize: '0.875rem', color: COLORS.textPrimary }}>
                                 {uploadResult.categorized} pre-categorized transactions imported
                             </p>
                         ) : (
-                            <p style={{ fontSize: '0.875rem', color: COLORS.darkGray }}>
+                            <p style={{ fontSize: '0.875rem', color: COLORS.textPrimary }}>
                                 {uploadResult.categorized} categorized, {uploadResult.unidentified} need review
                                 {uploadResult.skippedDuplicates > 0 && (
-                                    <span style={{ color: COLORS.mediumGray }}>
+                                    <span style={{ color: COLORS.textSecondary }}>
                                         {' '}({uploadResult.skippedDuplicates} duplicates skipped)
                                     </span>
                                 )}
@@ -1226,7 +1226,7 @@ export default function CategoryManager() {
                             borderTopColor: 'transparent',
                             margin: '0 auto'
                         }}></div>
-                        <p style={{ fontSize: '0.875rem', color: COLORS.darkGray, marginTop: '0.5rem' }}>
+                        <p style={{ fontSize: '0.875rem', color: COLORS.textPrimary, marginTop: '0.5rem' }}>
                             Processing PCRS payment PDFs...
                         </p>
                     </div>
@@ -1247,16 +1247,16 @@ export default function CategoryManager() {
                                 color: pcrsUploadResult.success > 0 ? COLORS.incomeColor : COLORS.expenseColor,
                                 marginRight: '0.5rem'
                             }} />
-                            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: COLORS.darkGray }}>
+                            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: COLORS.textPrimary }}>
                                 PCRS PDF Processing Complete
                             </span>
                         </div>
-                        <p style={{ fontSize: '0.875rem', color: COLORS.darkGray }}>
+                        <p style={{ fontSize: '0.875rem', color: COLORS.textPrimary }}>
                             {pcrsUploadResult.success} uploaded successfully
                             {pcrsUploadResult.error > 0 && `, ${pcrsUploadResult.error} failed`}
                         </p>
                         {pcrsUploadResult.success > 0 && (
-                            <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginTop: '0.5rem' }}>
+                            <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginTop: '0.5rem' }}>
                                 View extracted data in GMS Dashboard
                             </p>
                         )}
@@ -1275,7 +1275,7 @@ export default function CategoryManager() {
                             borderTopColor: 'transparent',
                             margin: '0 auto'
                         }}></div>
-                        <p style={{ fontSize: '0.875rem', color: COLORS.darkGray, marginTop: '0.5rem' }}>
+                        <p style={{ fontSize: '0.875rem', color: COLORS.textPrimary, marginTop: '0.5rem' }}>
                             Extracting transactions from bank statement PDF...
                         </p>
                     </div>
@@ -1295,19 +1295,19 @@ export default function CategoryManager() {
                             ) : (
                                 <AlertCircle style={{ height: '1.25rem', width: '1.25rem', color: COLORS.expenseColor, marginRight: '0.5rem' }} />
                             )}
-                            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: COLORS.darkGray }}>
+                            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: COLORS.textPrimary }}>
                                 {bankPdfResult.success > 0 ? 'Bank Statement PDF Processed' : 'Error Processing PDF'}
                             </span>
                         </div>
                         {bankPdfResult.success > 0 ? (
                             <>
-                                <p style={{ fontSize: '0.875rem', color: COLORS.darkGray }}>
+                                <p style={{ fontSize: '0.875rem', color: COLORS.textPrimary }}>
                                     {bankPdfResult.transactionCount} transactions extracted from {bankPdfResult.bank === 'boi' ? 'Bank of Ireland' : bankPdfResult.bank} statement
                                 </p>
-                                <p style={{ fontSize: '0.875rem', color: COLORS.darkGray }}>
+                                <p style={{ fontSize: '0.875rem', color: COLORS.textPrimary }}>
                                     {bankPdfResult.categorized} categorized, {bankPdfResult.unidentified} need review
                                     {bankPdfResult.duplicates > 0 && (
-                                        <span style={{ color: COLORS.mediumGray }}>
+                                        <span style={{ color: COLORS.textSecondary }}>
                                             {' '}({bankPdfResult.duplicates} duplicates skipped)
                                         </span>
                                     )}
@@ -1481,7 +1481,7 @@ export default function CategoryManager() {
                         <Settings className="h-5 w-5" />
                         Category Management
                     </h3>
-                    <span className="text-lg" style={{ color: COLORS.darkGray }}>
+                    <span className="text-lg" style={{ color: COLORS.textPrimary }}>
                         {categoryManagementExpanded ? '▼' : '▶'}
                     </span>
                 </button>
@@ -1552,7 +1552,7 @@ export default function CategoryManager() {
                     </button>
                 </div>
 
-                <p className="text-sm text-center mb-4" style={{ color: COLORS.mediumGray }}>
+                <p className="text-sm text-center mb-4" style={{ color: COLORS.textSecondary }}>
                     View and edit category identifiers to resolve conflicts flagged in Identifier Quality Review above.
                 </p>
 
@@ -1564,14 +1564,14 @@ export default function CategoryManager() {
                     <button
                         onClick={() => setShowAdvancedAdd(!showAdvancedAdd)}
                         className="text-sm font-medium flex items-center gap-2 px-3 py-2 rounded border hover:bg-gray-50"
-                        style={{ borderColor: COLORS.lightGray, color: COLORS.mediumGray }}
+                        style={{ borderColor: COLORS.borderLight, color: COLORS.textSecondary }}
                     >
                         {showAdvancedAdd ? '▼' : '▶'} Advanced: Add Custom Category
                     </button>
                     <button
                         onClick={() => setShowVisibilityPrefs(!showVisibilityPrefs)}
                         className="text-sm font-medium flex items-center gap-2 px-3 py-2 rounded border hover:bg-gray-50"
-                        style={{ borderColor: COLORS.lightGray, color: COLORS.mediumGray }}
+                        style={{ borderColor: COLORS.borderLight, color: COLORS.textSecondary }}
                     >
                         {showVisibilityPrefs ? '▼' : '▶'} Manage Category Visibility Preferences
                     </button>
@@ -1596,7 +1596,7 @@ export default function CategoryManager() {
                         <div className="grid grid-cols-1 gap-3 mb-3">
                             <div className="grid grid-cols-6 gap-3">
                                 <div>
-                                    <label className="block text-xs font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                    <label className="block text-xs font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                         Code *
                                     </label>
                                     <input
@@ -1609,7 +1609,7 @@ export default function CategoryManager() {
                                     />
                                 </div>
                                 <div className="col-span-2">
-                                    <label className="block text-xs font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                    <label className="block text-xs font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                         Name *
                                     </label>
                                     <input
@@ -1621,7 +1621,7 @@ export default function CategoryManager() {
                                     />
                                 </div>
                                 <div className="col-span-2">
-                                    <label className="block text-xs font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                    <label className="block text-xs font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                         Identifiers
                                     </label>
                                     <input
@@ -1633,7 +1633,7 @@ export default function CategoryManager() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                    <label className="block text-xs font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                         Type *
                                     </label>
                                     <select
@@ -1662,7 +1662,7 @@ export default function CategoryManager() {
                             <button
                                 onClick={generateCategoryCode}
                                 className="px-3 py-2 rounded text-sm border"
-                                style={{ borderColor: COLORS.lightGray, color: COLORS.mediumGray }}
+                                style={{ borderColor: COLORS.borderLight, color: COLORS.textSecondary }}
                                 title="Generate next available code"
                             >
                                 Generate Code
@@ -1721,15 +1721,15 @@ export default function CategoryManager() {
                                 <>
                                     {/* Statistics */}
                                     <div className="grid grid-cols-3 gap-4 mb-6">
-                                <div className="p-3 rounded-lg border" style={{ backgroundColor: COLORS.backgroundGray }}>
+                                <div className="p-3 rounded-lg border" style={{ backgroundColor: COLORS.bgPage }}>
                                     <div className="text-center">
-                                        <p className="text-xs" style={{ color: COLORS.mediumGray }}>Total Categories</p>
-                                        <p className="text-2xl font-bold mt-1" style={{ color: COLORS.darkGray }}>
+                                        <p className="text-xs" style={{ color: COLORS.textSecondary }}>Total Categories</p>
+                                        <p className="text-2xl font-bold mt-1" style={{ color: COLORS.textPrimary }}>
                                             {stats.total}
                                         </p>
                                     </div>
                                 </div>
-                                <div className="p-3 rounded-lg border" style={{ backgroundColor: '#DCFCE7' }}>
+                                <div className="p-3 rounded-lg border" style={{ backgroundColor: COLORS.successLighter }}>
                                     <div className="text-center">
                                         <div className="flex items-center justify-center gap-1">
                                             <Eye className="h-4 w-4" style={{ color: COLORS.incomeColor }} />
@@ -1740,7 +1740,7 @@ export default function CategoryManager() {
                                         </p>
                                     </div>
                                 </div>
-                                <div className="p-3 rounded-lg border" style={{ backgroundColor: '#FEF3C7' }}>
+                                <div className="p-3 rounded-lg border" style={{ backgroundColor: COLORS.warningLight }}>
                                     <div className="text-center">
                                         <div className="flex items-center justify-center gap-1">
                                             <EyeOff className="h-4 w-4" style={{ color: COLORS.highlightYellow }} />
@@ -1758,7 +1758,7 @@ export default function CategoryManager() {
                                 <button
                                     onClick={handleResetPreferences}
                                     className="px-4 py-2 rounded text-sm font-medium border"
-                                    style={{ borderColor: COLORS.lightGray, color: COLORS.mediumGray }}
+                                    style={{ borderColor: COLORS.borderLight, color: COLORS.textSecondary }}
                                 >
                                     Reset to Defaults
                                 </button>
@@ -1790,17 +1790,17 @@ export default function CategoryManager() {
                                                 <button
                                                     onClick={() => togglePreferenceSection(section)}
                                                     className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
-                                                    style={{ backgroundColor: expandedPreferenceSections[section] ? COLORS.backgroundGray : COLORS.white }}
+                                                    style={{ backgroundColor: expandedPreferenceSections[section] ? COLORS.bgPage : COLORS.white }}
                                                 >
                                                     <div className="flex items-center gap-3">
                                                         <span className="text-lg">
                                                             {expandedPreferenceSections[section] ? '▼' : '▶'}
                                                         </span>
                                                         <div className="text-left">
-                                                            <h4 className="font-semibold" style={{ color: COLORS.darkGray }}>
+                                                            <h4 className="font-semibold" style={{ color: COLORS.textPrimary }}>
                                                                 {section}
                                                             </h4>
-                                                            <p className="text-xs" style={{ color: COLORS.mediumGray }}>
+                                                            <p className="text-xs" style={{ color: COLORS.textSecondary }}>
                                                                 {visibleCount} visible, {hiddenCount} hidden
                                                             </p>
                                                         </div>
@@ -1838,15 +1838,15 @@ export default function CategoryManager() {
                                                                         />
                                                                         <div className="flex-1 min-w-0">
                                                                             <div className="flex items-center gap-2">
-                                                                                <span className="font-mono text-xs" style={{ color: COLORS.mediumGray }}>
+                                                                                <span className="font-mono text-xs" style={{ color: COLORS.textSecondary }}>
                                                                                     {category.code}
                                                                                 </span>
-                                                                                <span className="text-sm truncate" style={{ color: COLORS.darkGray }}>
+                                                                                <span className="text-sm truncate" style={{ color: COLORS.textPrimary }}>
                                                                                     {category.name}
                                                                                 </span>
                                                                             </div>
                                                                             {category.identifiers && category.identifiers.length > 0 && (
-                                                                                <p className="text-xs truncate" style={{ color: COLORS.lightGray }}>
+                                                                                <p className="text-xs truncate" style={{ color: COLORS.borderLight }}>
                                                                                     {category.identifiers.length} identifier{category.identifiers.length !== 1 ? 's' : ''}
                                                                                 </p>
                                                                             )}
@@ -1854,7 +1854,7 @@ export default function CategoryManager() {
                                                                         {category.visible ? (
                                                                             <Eye className="h-4 w-4 flex-shrink-0" style={{ color: COLORS.incomeColor }} />
                                                                         ) : (
-                                                                            <EyeOff className="h-4 w-4 flex-shrink-0" style={{ color: COLORS.lightGray }} />
+                                                                            <EyeOff className="h-4 w-4 flex-shrink-0" style={{ color: COLORS.borderLight }} />
                                                                         )}
                                                                     </label>
                                                                 ))}
@@ -1912,11 +1912,11 @@ export default function CategoryManager() {
                                                 ref={(el) => categoryRefs.current[category.code] = el}
                                                 className="border-t border-gray-100 hover:bg-gray-50 transition-colors"
                                             >
-                                                <td className="px-4 py-2 font-mono text-sm" style={{ color: COLORS.mediumGray }}>
+                                                <td className="px-4 py-2 font-mono text-sm" style={{ color: COLORS.textSecondary }}>
                                                     {category.code}
                                                 </td>
                                                 <td className="px-4 py-2">
-                                                    <span className="text-sm" style={{ color: COLORS.darkGray }}>
+                                                    <span className="text-sm" style={{ color: COLORS.textPrimary }}>
                                                         {category.name}
                                                     </span>
                                                 </td>
@@ -1928,7 +1928,7 @@ export default function CategoryManager() {
                                                                     <span
                                                                         key={idx}
                                                                         className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs"
-                                                                        style={{ backgroundColor: COLORS.backgroundGray, color: COLORS.darkGray }}
+                                                                        style={{ backgroundColor: COLORS.bgPage, color: COLORS.textPrimary }}
                                                                     >
                                                                         {identifier}
                                                                         <button
@@ -1941,7 +1941,7 @@ export default function CategoryManager() {
                                                                     </span>
                                                                 ))
                                                             ) : (
-                                                                <span className="text-xs" style={{ color: COLORS.lightGray }}>No identifiers</span>
+                                                                <span className="text-xs" style={{ color: COLORS.borderLight }}>No identifiers</span>
                                                             )}
                                                         </div>
                                                         {addingIdentifierTo === category.code ? (
@@ -1965,7 +1965,7 @@ export default function CategoryManager() {
                                                                 <button
                                                                     onClick={() => { setAddingIdentifierTo(null); setNewIdentifier(''); }}
                                                                     className="px-2 py-1 rounded text-xs"
-                                                                    style={{ color: COLORS.mediumGray }}
+                                                                    style={{ color: COLORS.textSecondary }}
                                                                 >
                                                                     Cancel
                                                                 </button>
@@ -2009,7 +2009,7 @@ export default function CategoryManager() {
                             <button
                                 onClick={() => toggleSection(group.name)}
                                 className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
-                                style={{ backgroundColor: expandedSections[group.name] ? COLORS.backgroundGray : COLORS.white }}
+                                style={{ backgroundColor: expandedSections[group.name] ? COLORS.bgPage : COLORS.white }}
                             >
                                 <div className="flex items-center gap-3">
                                     <span className="text-lg">
@@ -2019,10 +2019,10 @@ export default function CategoryManager() {
                                         <span className="text-2xl">{group.icon}</span>
                                     )}
                                     <div className="text-left">
-                                        <h4 className="font-semibold" style={{ color: COLORS.darkGray }}>
+                                        <h4 className="font-semibold" style={{ color: COLORS.textPrimary }}>
                                             {group.name}
                                         </h4>
-                                        <p className="text-xs" style={{ color: COLORS.mediumGray }}>
+                                        <p className="text-xs" style={{ color: COLORS.textSecondary }}>
                                             {group.categories.length} {group.categories.length === 1 ? 'category' : 'categories'} • {group.description}
                                         </p>
                                     </div>
@@ -2061,7 +2061,7 @@ export default function CategoryManager() {
                                                     ref={(el) => categoryRefs.current[category.code] = el}
                                                     className="border-t border-gray-100 hover:bg-gray-50 transition-colors"
                                                 >
-                                                    <td className="px-4 py-2 font-mono text-sm" style={{ color: COLORS.mediumGray }}>
+                                                    <td className="px-4 py-2 font-mono text-sm" style={{ color: COLORS.textSecondary }}>
                                                         {category.code}
                                                     </td>
                                                     <td className="px-4 py-2">
@@ -2075,7 +2075,7 @@ export default function CategoryManager() {
                                                                 autoFocus
                                                             />
                                                         ) : (
-                                                            <span className="text-sm" style={{ color: COLORS.darkGray }}>
+                                                            <span className="text-sm" style={{ color: COLORS.textPrimary }}>
                                                                 {category.name}
                                                             </span>
                                                         )}
@@ -2088,7 +2088,7 @@ export default function CategoryManager() {
                                                                         <span
                                                                             key={idx}
                                                                             className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs"
-                                                                            style={{ backgroundColor: COLORS.backgroundGray, color: COLORS.darkGray }}
+                                                                            style={{ backgroundColor: COLORS.bgPage, color: COLORS.textPrimary }}
                                                                         >
                                                                             {identifier}
                                                                             <button
@@ -2101,7 +2101,7 @@ export default function CategoryManager() {
                                                                         </span>
                                                                     ))
                                                                 ) : (
-                                                                    <span className="text-xs" style={{ color: COLORS.lightGray }}>No identifiers</span>
+                                                                    <span className="text-xs" style={{ color: COLORS.borderLight }}>No identifiers</span>
                                                                 )}
                                                             </div>
                                                             {addingIdentifierTo === category.code ? (
@@ -2125,7 +2125,7 @@ export default function CategoryManager() {
                                                                     <button
                                                                         onClick={() => { setAddingIdentifierTo(null); setNewIdentifier(''); }}
                                                                         className="px-2 py-1 rounded text-xs"
-                                                                        style={{ color: COLORS.mediumGray }}
+                                                                        style={{ color: COLORS.textSecondary }}
                                                                     >
                                                                         Cancel
                                                                     </button>
@@ -2199,11 +2199,11 @@ export default function CategoryManager() {
                                                 ref={(el) => categoryRefs.current[category.code] = el}
                                                 className="border-t border-gray-100 hover:bg-gray-50 transition-colors"
                                             >
-                                                <td className="px-4 py-2 font-mono text-sm" style={{ color: COLORS.mediumGray }}>
+                                                <td className="px-4 py-2 font-mono text-sm" style={{ color: COLORS.textSecondary }}>
                                                     {category.code}
                                                 </td>
                                                 <td className="px-4 py-2">
-                                                    <span className="text-sm" style={{ color: COLORS.darkGray }}>
+                                                    <span className="text-sm" style={{ color: COLORS.textPrimary }}>
                                                         {category.name}
                                                     </span>
                                                 </td>
@@ -2215,7 +2215,7 @@ export default function CategoryManager() {
                                                                     <span
                                                                         key={idx}
                                                                         className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs"
-                                                                        style={{ backgroundColor: COLORS.backgroundGray, color: COLORS.darkGray }}
+                                                                        style={{ backgroundColor: COLORS.bgPage, color: COLORS.textPrimary }}
                                                                     >
                                                                         {identifier}
                                                                         <button
@@ -2228,7 +2228,7 @@ export default function CategoryManager() {
                                                                     </span>
                                                                 ))
                                                             ) : (
-                                                                <span className="text-xs" style={{ color: COLORS.lightGray }}>No identifiers</span>
+                                                                <span className="text-xs" style={{ color: COLORS.borderLight }}>No identifiers</span>
                                                             )}
                                                         </div>
                                                         {addingIdentifierTo === category.code ? (
@@ -2252,7 +2252,7 @@ export default function CategoryManager() {
                                                                 <button
                                                                     onClick={() => { setAddingIdentifierTo(null); setNewIdentifier(''); }}
                                                                     className="px-2 py-1 rounded text-xs"
-                                                                    style={{ color: COLORS.mediumGray }}
+                                                                    style={{ color: COLORS.textSecondary }}
                                                                 >
                                                                     Cancel
                                                                 </button>
@@ -2386,7 +2386,7 @@ export default function CategoryManager() {
                     return (
                         <>
                             {/* Description */}
-                            <p className="text-sm mb-4" style={{ color: COLORS.mediumGray }}>
+                            <p className="text-sm mb-4" style={{ color: COLORS.textSecondary }}>
                                 {totalIssues === 0 ? (
                                     'All identifiers are unique, specific, and properly configured.'
                                 ) : (
@@ -2402,10 +2402,10 @@ export default function CategoryManager() {
 
                             {/* Interactive Statistics Boxes */}
                             <div className="grid grid-cols-4 gap-4 mb-6">
-                                <div className="p-3 rounded-lg border" style={{ backgroundColor: COLORS.backgroundGray }}>
+                                <div className="p-3 rounded-lg border" style={{ backgroundColor: COLORS.bgPage }}>
                                     <div className="text-center">
-                                        <p className="text-xs" style={{ color: COLORS.mediumGray }}>Total Identifiers</p>
-                                        <p className="text-2xl font-bold mt-1" style={{ color: COLORS.darkGray }}>
+                                        <p className="text-xs" style={{ color: COLORS.textSecondary }}>Total Identifiers</p>
+                                        <p className="text-2xl font-bold mt-1" style={{ color: COLORS.textPrimary }}>
                                             {identifierMap.size}
                                         </p>
                                     </div>
@@ -2418,13 +2418,13 @@ export default function CategoryManager() {
                                             ? 'hover:bg-red-100 cursor-pointer'
                                             : 'cursor-not-allowed'
                                     }`}
-                                    style={{ backgroundColor: issues.duplicates.length > 0 ? '#FEE2E2' : '#F3F4F6' }}
+                                    style={{ backgroundColor: issues.duplicates.length > 0 ? COLORS.errorLight : COLORS.bgHover }}
                                 >
                                     <div className="text-center">
-                                        <p className="text-xs" style={{ color: issues.duplicates.length > 0 ? COLORS.expenseColor : COLORS.lightGray }}>
+                                        <p className="text-xs" style={{ color: issues.duplicates.length > 0 ? COLORS.expenseColor : COLORS.borderLight }}>
                                             Duplicates
                                         </p>
-                                        <p className="text-2xl font-bold mt-1" style={{ color: issues.duplicates.length > 0 ? COLORS.expenseColor : COLORS.lightGray }}>
+                                        <p className="text-2xl font-bold mt-1" style={{ color: issues.duplicates.length > 0 ? COLORS.expenseColor : COLORS.borderLight }}>
                                             {issues.duplicates.length}
                                         </p>
                                         {issues.duplicates.length > 0 && (
@@ -2440,17 +2440,17 @@ export default function CategoryManager() {
                                             ? 'hover:bg-orange-100 cursor-pointer'
                                             : 'cursor-not-allowed'
                                     }`}
-                                    style={{ backgroundColor: issues.conflicts.length > 0 ? '#FFEDD5' : '#F3F4F6' }}
+                                    style={{ backgroundColor: issues.conflicts.length > 0 ? COLORS.warningLight : COLORS.bgHover }}
                                 >
                                     <div className="text-center">
-                                        <p className="text-xs" style={{ color: issues.conflicts.length > 0 ? '#EA580C' : COLORS.lightGray }}>
+                                        <p className="text-xs" style={{ color: issues.conflicts.length > 0 ? COLORS.warningDark : COLORS.borderLight }}>
                                             Conflicts
                                         </p>
-                                        <p className="text-2xl font-bold mt-1" style={{ color: issues.conflicts.length > 0 ? '#EA580C' : COLORS.lightGray }}>
+                                        <p className="text-2xl font-bold mt-1" style={{ color: issues.conflicts.length > 0 ? COLORS.warningDark : COLORS.borderLight }}>
                                             {issues.conflicts.length}
                                         </p>
                                         {issues.conflicts.length > 0 && (
-                                            <p className="text-xs mt-1" style={{ color: '#EA580C' }}>Click to view</p>
+                                            <p className="text-xs mt-1" style={{ color: COLORS.warningDark }}>Click to view</p>
                                         )}
                                     </div>
                                 </button>
@@ -2462,13 +2462,13 @@ export default function CategoryManager() {
                                             ? 'hover:bg-yellow-100 cursor-pointer'
                                             : 'cursor-not-allowed'
                                     }`}
-                                    style={{ backgroundColor: issues.tooBrief.length > 0 ? '#FEF3C7' : '#F3F4F6' }}
+                                    style={{ backgroundColor: issues.tooBrief.length > 0 ? COLORS.warningLight : COLORS.bgHover }}
                                 >
                                     <div className="text-center">
-                                        <p className="text-xs" style={{ color: issues.tooBrief.length > 0 ? COLORS.highlightYellow : COLORS.lightGray }}>
+                                        <p className="text-xs" style={{ color: issues.tooBrief.length > 0 ? COLORS.highlightYellow : COLORS.borderLight }}>
                                             Too Brief
                                         </p>
-                                        <p className="text-2xl font-bold mt-1" style={{ color: issues.tooBrief.length > 0 ? COLORS.highlightYellow : COLORS.lightGray }}>
+                                        <p className="text-2xl font-bold mt-1" style={{ color: issues.tooBrief.length > 0 ? COLORS.highlightYellow : COLORS.borderLight }}>
                                             {issues.tooBrief.length}
                                         </p>
                                         {issues.tooBrief.length > 0 && (
@@ -2479,12 +2479,12 @@ export default function CategoryManager() {
                             </div>
 
                             {totalIssues === 0 ? (
-                                <div className="p-8 text-center rounded-lg" style={{ backgroundColor: '#DCFCE7' }}>
+                                <div className="p-8 text-center rounded-lg" style={{ backgroundColor: COLORS.successLighter }}>
                                     <CheckCircle className="h-12 w-12 mx-auto mb-3" style={{ color: COLORS.incomeColor }} />
                                     <p className="font-semibold mb-2" style={{ color: COLORS.incomeColor }}>
                                         Excellent! No identifier issues found
                                     </p>
-                                    <p className="text-sm" style={{ color: COLORS.mediumGray }}>
+                                    <p className="text-sm" style={{ color: COLORS.textSecondary }}>
                                         All identifiers are unique, specific, and properly configured
                                     </p>
                                 </div>
@@ -2493,12 +2493,12 @@ export default function CategoryManager() {
                                     {/* Duplicates */}
                                     {issues.duplicates.length > 0 && showDuplicateIdentifiers && (
                                         <div className="border rounded-lg overflow-hidden" style={{ borderColor: COLORS.expenseColor }}>
-                                            <div className="p-4 text-left" style={{ backgroundColor: '#FEE2E2' }}>
+                                            <div className="p-4 text-left" style={{ backgroundColor: COLORS.errorLight }}>
                                                 <h4 className="font-semibold flex items-center gap-2" style={{ color: COLORS.expenseColor }}>
                                                     <AlertCircle className="h-5 w-5" />
                                                     Duplicate Identifiers ({issues.duplicates.length})
                                                 </h4>
-                                                <p className="text-xs mt-1" style={{ color: '#7F1D1D' }}>
+                                                <p className="text-xs mt-1" style={{ color: COLORS.errorText }}>
                                                     These identifiers appear in multiple categories. This can cause transactions to be categorized incorrectly.
                                                 </p>
                                             </div>
@@ -2507,10 +2507,10 @@ export default function CategoryManager() {
                                                         <div key={idx} className="p-4 hover:bg-gray-50">
                                                             <div className="flex items-start gap-3">
                                                                 <div className="flex-1">
-                                                                    <p className="font-semibold mb-2" style={{ color: COLORS.darkGray }}>
+                                                                    <p className="font-semibold mb-2" style={{ color: COLORS.textPrimary }}>
                                                                         "{issue.identifier}"
                                                                     </p>
-                                                                    <p className="text-sm mb-2" style={{ color: COLORS.mediumGray }}>
+                                                                    <p className="text-sm mb-2" style={{ color: COLORS.textSecondary }}>
                                                                         Found in {issue.categories.length} categories:
                                                                     </p>
                                                                     <div className="flex flex-wrap gap-2">
@@ -2519,7 +2519,7 @@ export default function CategoryManager() {
                                                                                 key={catIdx}
                                                                                 onClick={() => scrollToCategory(cat.code)}
                                                                                 className="px-2 py-1 rounded text-xs font-medium hover:bg-blue-100 transition-colors cursor-pointer"
-                                                                                style={{ backgroundColor: COLORS.backgroundGray, color: COLORS.slainteBlue }}
+                                                                                style={{ backgroundColor: COLORS.bgPage, color: COLORS.slainteBlue }}
                                                                                 title="Click to view this category"
                                                                             >
                                                                                 {cat.code}: {cat.category}
@@ -2536,13 +2536,13 @@ export default function CategoryManager() {
 
                                     {/* Conflicts */}
                                     {issues.conflicts.length > 0 && showConflicts && (
-                                        <div className="border rounded-lg overflow-hidden" style={{ borderColor: '#EA580C' }}>
-                                            <div className="p-4 text-left" style={{ backgroundColor: '#FFEDD5' }}>
-                                                <h4 className="font-semibold flex items-center gap-2" style={{ color: '#EA580C' }}>
+                                        <div className="border rounded-lg overflow-hidden" style={{ borderColor: COLORS.warningDark }}>
+                                            <div className="p-4 text-left" style={{ backgroundColor: COLORS.warningLight }}>
+                                                <h4 className="font-semibold flex items-center gap-2" style={{ color: COLORS.warningDark }}>
                                                     <AlertCircle className="h-5 w-5" />
                                                     Potential Conflicts ({issues.conflicts.length})
                                                 </h4>
-                                                <p className="text-xs mt-1" style={{ color: '#7C2D12' }}>
+                                                <p className="text-xs mt-1" style={{ color: COLORS.warningText }}>
                                                     These identifiers may cause false matches. Example: "Sandra Glen" will match "Sand" if both are identifiers.
                                                 </p>
                                             </div>
@@ -2551,7 +2551,7 @@ export default function CategoryManager() {
                                                     <div key={idx} className="p-4 hover:bg-gray-50">
                                                         <div className="flex items-start gap-3">
                                                             <div className="flex-1">
-                                                                <p className="text-sm mb-2" style={{ color: COLORS.darkGray }}>
+                                                                <p className="text-sm mb-2" style={{ color: COLORS.textPrimary }}>
                                                                     <span className="font-mono font-semibold" style={{ color: COLORS.expenseColor }}>
                                                                         "{issue.shorter}"
                                                                     </span>
@@ -2562,7 +2562,7 @@ export default function CategoryManager() {
                                                                 </p>
                                                                 <div className="grid grid-cols-2 gap-4 text-xs">
                                                                     <div>
-                                                                        <p className="font-semibold mb-1" style={{ color: COLORS.mediumGray }}>
+                                                                        <p className="font-semibold mb-1" style={{ color: COLORS.textSecondary }}>
                                                                             Shorter identifier in:
                                                                         </p>
                                                                         {issue.shorterCats.map((cat, catIdx) => (
@@ -2578,7 +2578,7 @@ export default function CategoryManager() {
                                                                         ))}
                                                                     </div>
                                                                     <div>
-                                                                        <p className="font-semibold mb-1" style={{ color: COLORS.mediumGray }}>
+                                                                        <p className="font-semibold mb-1" style={{ color: COLORS.textSecondary }}>
                                                                             Longer identifier in:
                                                                         </p>
                                                                         {issue.longerCats.map((cat, catIdx) => (
@@ -2599,7 +2599,7 @@ export default function CategoryManager() {
                                                     </div>
                                                 ))}
                                                 {issues.conflicts.length > 10 && (
-                                                    <div className="p-3 text-center text-sm" style={{ backgroundColor: COLORS.backgroundGray, color: COLORS.mediumGray }}>
+                                                    <div className="p-3 text-center text-sm" style={{ backgroundColor: COLORS.bgPage, color: COLORS.textSecondary }}>
                                                         ... and {issues.conflicts.length - 10} more conflicts
                                                     </div>
                                                 )}
@@ -2610,12 +2610,12 @@ export default function CategoryManager() {
                                     {/* Too Brief */}
                                     {issues.tooBrief.length > 0 && showBriefIdentifiers && (
                                         <div className="border rounded-lg overflow-hidden" style={{ borderColor: COLORS.highlightYellow }}>
-                                            <div className="p-4 text-left" style={{ backgroundColor: '#FEF3C7' }}>
-                                                <h4 className="font-semibold flex items-center gap-2" style={{ color: COLORS.darkGray }}>
+                                            <div className="p-4 text-left" style={{ backgroundColor: COLORS.warningLight }}>
+                                                <h4 className="font-semibold flex items-center gap-2" style={{ color: COLORS.textPrimary }}>
                                                     <AlertCircle className="h-5 w-5" style={{ color: COLORS.highlightYellow }} />
                                                     Too Brief or Generic ({issues.tooBrief.length})
                                                 </h4>
-                                                <p className="text-xs mt-1" style={{ color: '#78350F' }}>
+                                                <p className="text-xs mt-1" style={{ color: COLORS.warningText }}>
                                                     These identifiers are very short (≤3 characters) or generic (like "POS"). They may cause too many false matches.
                                                 </p>
                                             </div>
@@ -2624,7 +2624,7 @@ export default function CategoryManager() {
                                                         <div key={idx} className="p-4 hover:bg-gray-50">
                                                             <div className="flex items-start justify-between gap-3">
                                                                 <div>
-                                                                    <p className="font-mono font-semibold mb-1" style={{ color: COLORS.darkGray }}>
+                                                                    <p className="font-mono font-semibold mb-1" style={{ color: COLORS.textPrimary }}>
                                                                         "{issue.identifier}"
                                                                     </p>
                                                                     <div className="flex flex-wrap gap-2">
@@ -2633,7 +2633,7 @@ export default function CategoryManager() {
                                                                                 key={catIdx}
                                                                                 onClick={() => scrollToCategory(cat.code)}
                                                                                 className="px-2 py-1 rounded text-xs font-medium hover:bg-blue-100 transition-colors cursor-pointer"
-                                                                                style={{ backgroundColor: COLORS.backgroundGray, color: COLORS.slainteBlue }}
+                                                                                style={{ backgroundColor: COLORS.bgPage, color: COLORS.slainteBlue }}
                                                                                 title="Click to view this category"
                                                                             >
                                                                                 {cat.code}: {cat.category}
@@ -2642,7 +2642,7 @@ export default function CategoryManager() {
                                                                     </div>
                                                                 </div>
                                                                 <span className="px-2 py-1 rounded text-xs font-medium whitespace-nowrap"
-                                                                    style={{ backgroundColor: COLORS.backgroundGray, color: COLORS.mediumGray }}>
+                                                                    style={{ backgroundColor: COLORS.bgPage, color: COLORS.textSecondary }}>
                                                                     {issue.identifier.length} chars
                                                                 </span>
                                                             </div>
@@ -2676,7 +2676,7 @@ export default function CategoryManager() {
 
                 {showExportImport && (
                     <>
-                        <p className="text-sm mb-6" style={{ color: COLORS.mediumGray }}>
+                        <p className="text-sm mb-6" style={{ color: COLORS.textSecondary }}>
                             Save your progress before app updates or restore from a previous backup
                         </p>
 
@@ -2687,7 +2687,7 @@ export default function CategoryManager() {
                                     <Download className="h-5 w-5" style={{ color: COLORS.incomeColor }} />
                                     <h4 className="font-semibold" style={{ color: COLORS.incomeColor }}>Backup All Data</h4>
                                 </div>
-                                <p className="text-sm mb-4" style={{ color: COLORS.darkGray }}>
+                                <p className="text-sm mb-4" style={{ color: COLORS.textPrimary }}>
                                     Creates a complete backup including all transactions, categories, identifiers, PCRS data, practice profile, and settings.
                                 </p>
                                 <button
@@ -2723,7 +2723,7 @@ export default function CategoryManager() {
                                     <Download className="h-4 w-4" />
                                     Download Backup
                                 </button>
-                                <p className="text-xs mt-3 text-center" style={{ color: COLORS.mediumGray }}>
+                                <p className="text-xs mt-3 text-center" style={{ color: COLORS.textSecondary }}>
                                     {transactions.length} transactions, {unidentifiedTransactions.length} unidentified, {paymentAnalysisData.length} PCRS records
                                 </p>
                             </div>
@@ -2734,7 +2734,7 @@ export default function CategoryManager() {
                                     <Upload className="h-5 w-5" style={{ color: COLORS.slainteBlue }} />
                                     <h4 className="font-semibold" style={{ color: COLORS.slainteBlue }}>Restore from Backup</h4>
                                 </div>
-                                <p className="text-sm mb-4" style={{ color: COLORS.darkGray }}>
+                                <p className="text-sm mb-4" style={{ color: COLORS.textPrimary }}>
                                     Restore all data from a previous backup file. This will replace all current data.
                                 </p>
                                 <label
@@ -2808,7 +2808,7 @@ export default function CategoryManager() {
                                         className="hidden"
                                     />
                                 </label>
-                                <p className="text-xs mt-3 text-center" style={{ color: COLORS.mediumGray }}>
+                                <p className="text-xs mt-3 text-center" style={{ color: COLORS.textSecondary }}>
                                     Accepts .json backup files
                                 </p>
                             </div>
@@ -2816,15 +2816,15 @@ export default function CategoryManager() {
 
                         {/* Auto-Backup Section */}
                         {window.electronAPI?.isElectron && (
-                            <div className="mt-6 p-4 border-2 rounded-lg" style={{ borderColor: '#8B5CF6', backgroundColor: '#F3E8FF' }}>
+                            <div className="mt-6 p-4 border-2 rounded-lg" style={{ borderColor: COLORS.chartViolet, backgroundColor: COLORS.accentPurpleLight }}>
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="flex items-center gap-2">
-                                        <Shield className="h-5 w-5" style={{ color: '#8B5CF6' }} />
-                                        <h4 className="font-semibold" style={{ color: '#8B5CF6' }}>Encrypted Auto-Backup</h4>
+                                        <Shield className="h-5 w-5" style={{ color: COLORS.chartViolet }} />
+                                        <h4 className="font-semibold" style={{ color: COLORS.chartViolet }}>Encrypted Auto-Backup</h4>
                                     </div>
                                     {securityPasswordSet ? (
                                         <label className="flex items-center gap-2 cursor-pointer">
-                                            <span className="text-sm" style={{ color: COLORS.darkGray }}>
+                                            <span className="text-sm" style={{ color: COLORS.textPrimary }}>
                                                 {autoBackupEnabled ? 'Enabled' : 'Disabled'}
                                             </span>
                                             <div
@@ -2836,7 +2836,7 @@ export default function CategoryManager() {
                                                     }
                                                 }}
                                                 className="relative w-12 h-6 rounded-full transition-colors cursor-pointer"
-                                                style={{ backgroundColor: autoBackupEnabled ? '#8B5CF6' : COLORS.lightGray }}
+                                                style={{ backgroundColor: autoBackupEnabled ? COLORS.chartViolet : COLORS.borderLight }}
                                             >
                                                 <div
                                                     className="absolute top-1 w-4 h-4 rounded-full bg-white transition-transform"
@@ -2845,19 +2845,19 @@ export default function CategoryManager() {
                                             </div>
                                         </label>
                                     ) : (
-                                        <span className="text-xs px-2 py-1 rounded" style={{ backgroundColor: COLORS.highlightYellow, color: '#92400E' }}>
+                                        <span className="text-xs px-2 py-1 rounded" style={{ backgroundColor: COLORS.highlightYellow, color: COLORS.warningText }}>
                                             Set Security Password First
                                         </span>
                                     )}
                                 </div>
 
-                                <p className="text-sm mb-4" style={{ color: COLORS.darkGray }}>
+                                <p className="text-sm mb-4" style={{ color: COLORS.textPrimary }}>
                                     When enabled, your data is automatically encrypted and backed up every time you close the app.
                                     Backups use your App Security Password for encryption (AES-256).
                                 </p>
 
                                 {lastBackupDate && (
-                                    <div className="flex items-center gap-2 mb-4 text-sm" style={{ color: COLORS.mediumGray }}>
+                                    <div className="flex items-center gap-2 mb-4 text-sm" style={{ color: COLORS.textSecondary }}>
                                         <Clock className="h-4 w-4" />
                                         <span>Last backup: {new Date(lastBackupDate).toLocaleString()}</span>
                                     </div>
@@ -2886,7 +2886,7 @@ export default function CategoryManager() {
                                             }}
                                             disabled={isCreatingBackup}
                                             className="px-4 py-2 rounded-lg text-sm font-semibold text-white flex items-center gap-2"
-                                            style={{ backgroundColor: '#8B5CF6', opacity: isCreatingBackup ? 0.7 : 1 }}
+                                            style={{ backgroundColor: COLORS.chartViolet, opacity: isCreatingBackup ? 0.7 : 1 }}
                                         >
                                             {isCreatingBackup ? (
                                                 <>
@@ -2904,17 +2904,17 @@ export default function CategoryManager() {
                                 </div>
 
                                 {backupList.length > 0 && (
-                                    <div className="mt-4 pt-4 border-t" style={{ borderColor: '#D8B4FE' }}>
-                                        <p className="text-xs font-semibold mb-2" style={{ color: '#8B5CF6' }}>
+                                    <div className="mt-4 pt-4 border-t" style={{ borderColor: COLORS.accentPurpleLight }}>
+                                        <p className="text-xs font-semibold mb-2" style={{ color: COLORS.chartViolet }}>
                                             Recent Encrypted Backups ({backupList.length})
                                         </p>
                                         <div className="space-y-1 max-h-32 overflow-y-auto">
                                             {backupList.slice(0, 5).map((backup, index) => (
                                                 <div key={index} className="flex items-center justify-between text-xs p-2 rounded" style={{ backgroundColor: 'white' }}>
-                                                    <span style={{ color: COLORS.darkGray }}>
+                                                    <span style={{ color: COLORS.textPrimary }}>
                                                         {new Date(backup.created).toLocaleString()}
                                                     </span>
-                                                    <span style={{ color: COLORS.mediumGray }}>
+                                                    <span style={{ color: COLORS.textSecondary }}>
                                                         {(backup.size / 1024).toFixed(1)} KB
                                                     </span>
                                                 </div>
@@ -2924,8 +2924,8 @@ export default function CategoryManager() {
                                 )}
 
                                 {!securityPasswordSet && (
-                                    <div className="mt-3 p-3 rounded-lg" style={{ backgroundColor: '#FEF3C7' }}>
-                                        <p className="text-xs" style={{ color: '#92400E' }}>
+                                    <div className="mt-3 p-3 rounded-lg" style={{ backgroundColor: COLORS.warningLight }}>
+                                        <p className="text-xs" style={{ color: COLORS.warningText }}>
                                             <strong>Setup Required:</strong> To enable encrypted auto-backups, you need to set up an App Security Password during the initial setup process, or restart onboarding from Data Management below.
                                         </p>
                                     </div>
@@ -2934,8 +2934,8 @@ export default function CategoryManager() {
                         )}
 
                         {/* Warning note */}
-                        <div className="mt-4 p-3 rounded-lg" style={{ backgroundColor: '#FEF3C7' }}>
-                            <p className="text-xs" style={{ color: '#92400E' }}>
+                        <div className="mt-4 p-3 rounded-lg" style={{ backgroundColor: COLORS.warningLight }}>
+                            <p className="text-xs" style={{ color: COLORS.warningText }}>
                                 <strong>Tip:</strong> {window.electronAPI?.isElectron
                                     ? 'Encrypted backups are stored securely in your app data folder and require your App Security Password to restore.'
                                     : 'Create a backup before major app updates or when you\'ve made significant progress categorising transactions. Backups are saved to your Downloads folder.'}
@@ -2961,7 +2961,7 @@ export default function CategoryManager() {
                         )}
                     </div>
 
-                    <p className="text-sm mb-4" style={{ color: COLORS.mediumGray }}>
+                    <p className="text-sm mb-4" style={{ color: COLORS.textSecondary }}>
                         Automatically download your PCRS payment statements directly from the portal.
                         Your login credentials are never stored - you authenticate via the secure PCRS website.
                     </p>
@@ -2977,7 +2977,7 @@ export default function CategoryManager() {
                         </button>
 
                         {pcrsSessionStatus?.valid && (
-                            <div className="text-sm" style={{ color: COLORS.mediumGray }}>
+                            <div className="text-sm" style={{ color: COLORS.textSecondary }}>
                                 <Clock className="h-4 w-4 inline mr-1" />
                                 Session expires in {pcrsSessionStatus.remainingHours} hours
                             </div>
@@ -2985,8 +2985,8 @@ export default function CategoryManager() {
                     </div>
 
                     {pcrsSessionStatus?.exists && !pcrsSessionStatus?.valid && (
-                        <div className="mt-3 p-3 rounded-lg" style={{ backgroundColor: '#FEF3C7' }}>
-                            <p className="text-xs" style={{ color: '#92400E' }}>
+                        <div className="mt-3 p-3 rounded-lg" style={{ backgroundColor: COLORS.warningLight }}>
+                            <p className="text-xs" style={{ color: COLORS.warningText }}>
                                 <AlertCircle className="h-3 w-3 inline mr-1" />
                                 Your previous session has expired. Click "Download Statements" to log in again.
                             </p>
@@ -2994,8 +2994,8 @@ export default function CategoryManager() {
                     )}
 
                     {!pcrsSessionStatus?.exists && (
-                        <div className="mt-3 p-3 rounded-lg" style={{ backgroundColor: COLORS.backgroundGray }}>
-                            <p className="text-xs" style={{ color: COLORS.mediumGray }}>
+                        <div className="mt-3 p-3 rounded-lg" style={{ backgroundColor: COLORS.bgPage }}>
+                            <p className="text-xs" style={{ color: COLORS.textSecondary }}>
                                 <Shield className="h-3 w-3 inline mr-1" />
                                 First time setup: You'll be prompted to log in to the PCRS portal. Your session will be
                                 remembered for 24 hours so you don't need to log in each time.
@@ -3099,21 +3099,21 @@ export default function CategoryManager() {
                 {showPracticeProfileViewer && (
                     <div className="space-y-4">
                         {/* Practice Details */}
-                        <div className="p-4 rounded-lg" style={{ backgroundColor: COLORS.backgroundGray }}>
-                            <h4 className="font-semibold mb-3 flex items-center gap-2" style={{ color: COLORS.darkGray }}>
+                        <div className="p-4 rounded-lg" style={{ backgroundColor: COLORS.bgPage }}>
+                            <h4 className="font-semibold mb-3 flex items-center gap-2" style={{ color: COLORS.textPrimary }}>
                                 <Building2 className="h-4 w-4" />
                                 Practice Details
                             </h4>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <div>
-                                    <span className="text-sm" style={{ color: COLORS.mediumGray }}>Practice Name:</span>
-                                    <p className="font-medium" style={{ color: COLORS.darkGray }}>
+                                    <span className="text-sm" style={{ color: COLORS.textSecondary }}>Practice Name:</span>
+                                    <p className="font-medium" style={{ color: COLORS.textPrimary }}>
                                         {profile?.practiceDetails?.practiceName || <em className="text-gray-400">Not set</em>}
                                     </p>
                                 </div>
                                 <div>
-                                    <span className="text-sm" style={{ color: COLORS.mediumGray }}>Location:</span>
-                                    <p className="font-medium" style={{ color: COLORS.darkGray }}>
+                                    <span className="text-sm" style={{ color: COLORS.textSecondary }}>Location:</span>
+                                    <p className="font-medium" style={{ color: COLORS.textPrimary }}>
                                         {(() => {
                                             // Check for locations array (from Cara) or location string (legacy)
                                             if (profile?.practiceDetails?.locations?.length > 0) {
@@ -3124,8 +3124,8 @@ export default function CategoryManager() {
                                     </p>
                                 </div>
                                 <div>
-                                    <span className="text-sm" style={{ color: COLORS.mediumGray }}>Number of GPs:</span>
-                                    <p className="font-medium" style={{ color: COLORS.darkGray }}>
+                                    <span className="text-sm" style={{ color: COLORS.textSecondary }}>Number of GPs:</span>
+                                    <p className="font-medium" style={{ color: COLORS.textPrimary }}>
                                         {(() => {
                                             const partners = profile?.gps?.partners?.length || 0;
                                             const salaried = profile?.gps?.salaried?.length || 0;
@@ -3138,8 +3138,8 @@ export default function CategoryManager() {
                                     </p>
                                 </div>
                                 <div>
-                                    <span className="text-sm" style={{ color: COLORS.mediumGray }}>Practice Type:</span>
-                                    <p className="font-medium" style={{ color: COLORS.darkGray }}>
+                                    <span className="text-sm" style={{ color: COLORS.textSecondary }}>Practice Type:</span>
+                                    <p className="font-medium" style={{ color: COLORS.textPrimary }}>
                                         {(() => {
                                             const partners = profile?.gps?.partners?.length || 0;
                                             if (partners > 1) return 'Partnership';
@@ -3153,16 +3153,16 @@ export default function CategoryManager() {
 
                         {/* GP Partners */}
                         {profile?.gps?.partners && profile.gps.partners.length > 0 && (
-                            <div className="p-4 rounded-lg" style={{ backgroundColor: COLORS.backgroundGray }}>
-                                <h4 className="font-semibold mb-3 flex items-center gap-2" style={{ color: COLORS.darkGray }}>
+                            <div className="p-4 rounded-lg" style={{ backgroundColor: COLORS.bgPage }}>
+                                <h4 className="font-semibold mb-3 flex items-center gap-2" style={{ color: COLORS.textPrimary }}>
                                     <UserCog className="h-4 w-4" />
                                     GP Partners ({profile.gps.partners.length})
                                 </h4>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                                     {profile.gps.partners.map((partner, idx) => (
-                                        <div key={idx} className="p-2 rounded bg-white border" style={{ borderColor: COLORS.lightGray }}>
-                                            <p className="font-medium" style={{ color: COLORS.darkGray }}>{partner.name || `Partner ${idx + 1}`}</p>
-                                            {partner.profitShare && <p className="text-xs" style={{ color: COLORS.mediumGray }}>{partner.profitShare}% profit share</p>}
+                                        <div key={idx} className="p-2 rounded bg-white border" style={{ borderColor: COLORS.borderLight }}>
+                                            <p className="font-medium" style={{ color: COLORS.textPrimary }}>{partner.name || `Partner ${idx + 1}`}</p>
+                                            {partner.profitShare && <p className="text-xs" style={{ color: COLORS.textSecondary }}>{partner.profitShare}% profit share</p>}
                                         </div>
                                     ))}
                                 </div>
@@ -3171,16 +3171,16 @@ export default function CategoryManager() {
 
                         {/* Salaried GPs */}
                         {profile?.gps?.salaried && profile.gps.salaried.length > 0 && (
-                            <div className="p-4 rounded-lg" style={{ backgroundColor: COLORS.backgroundGray }}>
-                                <h4 className="font-semibold mb-3 flex items-center gap-2" style={{ color: COLORS.darkGray }}>
+                            <div className="p-4 rounded-lg" style={{ backgroundColor: COLORS.bgPage }}>
+                                <h4 className="font-semibold mb-3 flex items-center gap-2" style={{ color: COLORS.textPrimary }}>
                                     <UserCog className="h-4 w-4" />
                                     Salaried GPs ({profile.gps.salaried.length})
                                 </h4>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                                     {profile.gps.salaried.map((gp, idx) => (
-                                        <div key={idx} className="p-2 rounded bg-white border" style={{ borderColor: COLORS.lightGray }}>
-                                            <p className="font-medium" style={{ color: COLORS.darkGray }}>{gp.name || `Salaried GP ${idx + 1}`}</p>
-                                            <p className="text-xs" style={{ color: COLORS.mediumGray }}>Salaried GP</p>
+                                        <div key={idx} className="p-2 rounded bg-white border" style={{ borderColor: COLORS.borderLight }}>
+                                            <p className="font-medium" style={{ color: COLORS.textPrimary }}>{gp.name || `Salaried GP ${idx + 1}`}</p>
+                                            <p className="text-xs" style={{ color: COLORS.textSecondary }}>Salaried GP</p>
                                         </div>
                                     ))}
                                 </div>
@@ -3189,17 +3189,17 @@ export default function CategoryManager() {
 
                         {/* Staff Members */}
                         {profile?.staff && profile.staff.length > 0 && (
-                            <div className="p-4 rounded-lg" style={{ backgroundColor: COLORS.backgroundGray }}>
-                                <h4 className="font-semibold mb-3 flex items-center gap-2" style={{ color: COLORS.darkGray }}>
+                            <div className="p-4 rounded-lg" style={{ backgroundColor: COLORS.bgPage }}>
+                                <h4 className="font-semibold mb-3 flex items-center gap-2" style={{ color: COLORS.textPrimary }}>
                                     <UserCog className="h-4 w-4" />
                                     Staff Members ({profile.staff.length})
                                 </h4>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                                     {profile.staff.map((staff, idx) => (
-                                        <div key={idx} className="p-2 rounded bg-white border" style={{ borderColor: COLORS.lightGray }}>
-                                            <p className="font-medium" style={{ color: COLORS.darkGray }}>{staff.name || `Staff ${idx + 1}`}</p>
+                                        <div key={idx} className="p-2 rounded bg-white border" style={{ borderColor: COLORS.borderLight }}>
+                                            <p className="font-medium" style={{ color: COLORS.textPrimary }}>{staff.name || `Staff ${idx + 1}`}</p>
                                             {staff.role && (
-                                                <p className="text-xs capitalize" style={{ color: COLORS.mediumGray }}>
+                                                <p className="text-xs capitalize" style={{ color: COLORS.textSecondary }}>
                                                     {staff.role.replace(/_/g, ' ')}
                                                 </p>
                                             )}
@@ -3211,28 +3211,28 @@ export default function CategoryManager() {
 
                         {/* GMS Contract Info */}
                         {(profile?.gmsContract?.panelSize || profile?.gmsContract?.gmsIncomePercentage) && (
-                            <div className="p-4 rounded-lg" style={{ backgroundColor: COLORS.backgroundGray }}>
-                                <h4 className="font-semibold mb-3 flex items-center gap-2" style={{ color: COLORS.darkGray }}>
+                            <div className="p-4 rounded-lg" style={{ backgroundColor: COLORS.bgPage }}>
+                                <h4 className="font-semibold mb-3 flex items-center gap-2" style={{ color: COLORS.textPrimary }}>
                                     <Activity className="h-4 w-4" />
                                     GMS Contract
                                 </h4>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                                     {profile.gmsContract.panelSize && (
                                         <div>
-                                            <span className="text-sm" style={{ color: COLORS.mediumGray }}>Panel Size:</span>
-                                            <p className="font-medium" style={{ color: COLORS.darkGray }}>{profile.gmsContract.panelSize.toLocaleString()} patients</p>
+                                            <span className="text-sm" style={{ color: COLORS.textSecondary }}>Panel Size:</span>
+                                            <p className="font-medium" style={{ color: COLORS.textPrimary }}>{profile.gmsContract.panelSize.toLocaleString()} patients</p>
                                         </div>
                                     )}
                                     {profile.gmsContract.averageCapitationRate && (
                                         <div>
-                                            <span className="text-sm" style={{ color: COLORS.mediumGray }}>Avg Capitation Rate:</span>
-                                            <p className="font-medium" style={{ color: COLORS.darkGray }}>€{profile.gmsContract.averageCapitationRate}/patient/year</p>
+                                            <span className="text-sm" style={{ color: COLORS.textSecondary }}>Avg Capitation Rate:</span>
+                                            <p className="font-medium" style={{ color: COLORS.textPrimary }}>€{profile.gmsContract.averageCapitationRate}/patient/year</p>
                                         </div>
                                     )}
                                     {profile.gmsContract.gmsIncomePercentage && (
                                         <div>
-                                            <span className="text-sm" style={{ color: COLORS.mediumGray }}>GMS % of Income:</span>
-                                            <p className="font-medium" style={{ color: COLORS.darkGray }}>{profile.gmsContract.gmsIncomePercentage}%</p>
+                                            <span className="text-sm" style={{ color: COLORS.textSecondary }}>GMS % of Income:</span>
+                                            <p className="font-medium" style={{ color: COLORS.textPrimary }}>{profile.gmsContract.gmsIncomePercentage}%</p>
                                         </div>
                                     )}
                                 </div>
@@ -3240,17 +3240,17 @@ export default function CategoryManager() {
                         )}
 
                         {/* Metadata */}
-                        <div className="p-4 rounded-lg border-2 border-dashed" style={{ borderColor: COLORS.lightGray }}>
+                        <div className="p-4 rounded-lg border-2 border-dashed" style={{ borderColor: COLORS.borderLight }}>
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm" style={{ color: COLORS.mediumGray }}>
+                                    <p className="text-sm" style={{ color: COLORS.textSecondary }}>
                                         Setup Status: {' '}
                                         <span className={`font-medium ${profile?.metadata?.setupComplete ? 'text-green-600' : 'text-yellow-600'}`}>
                                             {profile?.metadata?.setupComplete ? '✓ Complete' : '⏳ In Progress'}
                                         </span>
                                     </p>
                                     {profile?.metadata?.lastUpdated && (
-                                        <p className="text-xs mt-1" style={{ color: COLORS.mediumGray }}>
+                                        <p className="text-xs mt-1" style={{ color: COLORS.textSecondary }}>
                                             Last updated: {new Date(profile.metadata.lastUpdated).toLocaleDateString('en-IE', {
                                                 day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
                                             })}
@@ -3296,11 +3296,11 @@ export default function CategoryManager() {
                             </div>
                             <h4 className="font-semibold" style={{ color: COLORS.slainteBlue }}>App Tour</h4>
                         </div>
-                        <p className="text-sm mb-4" style={{ color: COLORS.darkGray }}>
+                        <p className="text-sm mb-4" style={{ color: COLORS.textPrimary }}>
                             Take a guided tour through the key features of Sláinte Finance. Perfect for new users or a quick refresher.
                         </p>
                         {getTourCompletionDate() && (
-                            <p className="text-xs mb-3" style={{ color: COLORS.mediumGray }}>
+                            <p className="text-xs mb-3" style={{ color: COLORS.textSecondary }}>
                                 Last completed: {getTourCompletionDate().toLocaleDateString()}
                             </p>
                         )}
@@ -3322,7 +3322,7 @@ export default function CategoryManager() {
                             </div>
                             <h4 className="font-semibold" style={{ color: COLORS.incomeColor }}>User Guide</h4>
                         </div>
-                        <p className="text-sm mb-4" style={{ color: COLORS.darkGray }}>
+                        <p className="text-sm mb-4" style={{ color: COLORS.textPrimary }}>
                             View or print a comprehensive guide to all features in Sláinte Finance. Perfect for training or reference.
                         </p>
                         <button
@@ -3337,8 +3337,8 @@ export default function CategoryManager() {
 
                     {/* Restart from Scratch */}
                     <div className="p-4 border-2 rounded-lg" style={{ borderColor: COLORS.highlightYellow, backgroundColor: `${COLORS.highlightYellow}10` }}>
-                        <h4 className="font-semibold mb-2" style={{ color: COLORS.darkGray }}>🔄 Start Fresh</h4>
-                        <p className="text-sm mb-4" style={{ color: COLORS.darkGray }}>
+                        <h4 className="font-semibold mb-2" style={{ color: COLORS.textPrimary }}>🔄 Start Fresh</h4>
+                        <p className="text-sm mb-4" style={{ color: COLORS.textPrimary }}>
                             Clear all personalized categories and restart the onboarding wizard from scratch. This will not delete transaction data.
                         </p>
                         <button
@@ -3352,7 +3352,7 @@ export default function CategoryManager() {
                                 }
                             }}
                             className="px-4 py-2 rounded font-medium"
-                            style={{ backgroundColor: COLORS.highlightYellow, color: COLORS.darkGray }}
+                            style={{ backgroundColor: COLORS.highlightYellow, color: COLORS.textPrimary }}
                         >
                             Restart Onboarding
                         </button>
@@ -3360,14 +3360,14 @@ export default function CategoryManager() {
 
                     {/* AI Staff Suggestions */}
                     {unidentifiedTransactions.length > 0 && (
-                        <div className="p-4 border-2 rounded-lg" style={{ borderColor: COLORS.slainteBlue, backgroundColor: '#DBEAFE' }}>
+                        <div className="p-4 border-2 rounded-lg" style={{ borderColor: COLORS.slainteBlue, backgroundColor: COLORS.infoLighter }}>
                             <div className="flex items-center gap-3 mb-3">
                                 <div className="p-2 rounded-lg" style={{ backgroundColor: COLORS.white }}>
                                     <Brain className="h-5 w-5" style={{ color: COLORS.slainteBlue }} />
                                 </div>
                                 <h4 className="font-semibold" style={{ color: COLORS.slainteBlue }}>AI Staff Suggestions</h4>
                             </div>
-                            <p className="text-sm mb-4" style={{ color: COLORS.darkGray }}>
+                            <p className="text-sm mb-4" style={{ color: COLORS.textPrimary }}>
                                 Automatically identify and categorize staff-related payments. Best for detecting salaries, wages, and regular staff expenses.
                             </p>
                             <button
@@ -3383,14 +3383,14 @@ export default function CategoryManager() {
 
                     {/* AI Expense Patterns */}
                     {unidentifiedTransactions.length > 0 && (
-                        <div className="p-4 border-2 rounded-lg" style={{ borderColor: COLORS.highlightYellow, backgroundColor: '#FEF3C7' }}>
+                        <div className="p-4 border-2 rounded-lg" style={{ borderColor: COLORS.highlightYellow, backgroundColor: COLORS.warningLight }}>
                             <div className="flex items-center gap-3 mb-3">
                                 <div className="p-2 rounded-lg" style={{ backgroundColor: COLORS.white }}>
                                     <Activity className="h-5 w-5" style={{ color: COLORS.highlightYellow }} />
                                 </div>
-                                <h4 className="font-semibold" style={{ color: COLORS.darkGray }}>AI Expense Patterns</h4>
+                                <h4 className="font-semibold" style={{ color: COLORS.textPrimary }}>AI Expense Patterns</h4>
                             </div>
-                            <p className="text-sm mb-4" style={{ color: COLORS.darkGray }}>
+                            <p className="text-sm mb-4" style={{ color: COLORS.textPrimary }}>
                                 Identify common expense patterns and suggest appropriate categories. Helps with utilities, supplies, and recurring expenses.
                             </p>
                             <button
@@ -3409,14 +3409,14 @@ export default function CategoryManager() {
                     )}
 
                     {/* Re-apply Categories */}
-                    <div className="p-4 border-2 rounded-lg" style={{ borderColor: '#8B5CF6', backgroundColor: '#F3E8FF' }}>
+                    <div className="p-4 border-2 rounded-lg" style={{ borderColor: COLORS.chartViolet, backgroundColor: COLORS.accentPurpleLight }}>
                         <div className="flex items-center gap-3 mb-3">
                             <div className="p-2 rounded-lg" style={{ backgroundColor: COLORS.white }}>
-                                <RefreshCw className="h-5 w-5" style={{ color: '#8B5CF6' }} />
+                                <RefreshCw className="h-5 w-5" style={{ color: COLORS.chartViolet }} />
                             </div>
-                            <h4 className="font-semibold" style={{ color: '#8B5CF6' }}>Re-apply Categories</h4>
+                            <h4 className="font-semibold" style={{ color: COLORS.chartViolet }}>Re-apply Categories</h4>
                         </div>
-                        <p className="text-sm mb-4" style={{ color: COLORS.darkGray }}>
+                        <p className="text-sm mb-4" style={{ color: COLORS.textPrimary }}>
                             Re-categorize all transactions based on current identifier mappings. Use this after moving identifiers between subcategories.
                         </p>
                         {recategorizeResult && (
@@ -3439,7 +3439,7 @@ export default function CategoryManager() {
                             }}
                             disabled={isRecategorizing}
                             className="w-full px-4 py-2 rounded font-medium text-white flex items-center justify-center gap-2"
-                            style={{ backgroundColor: '#8B5CF6', opacity: isRecategorizing ? 0.7 : 1 }}
+                            style={{ backgroundColor: COLORS.chartViolet, opacity: isRecategorizing ? 0.7 : 1 }}
                         >
                             <RefreshCw className={`h-4 w-4 ${isRecategorizing ? 'animate-spin' : ''}`} />
                             {isRecategorizing ? 'Re-applying...' : 'Re-apply Categories'}
@@ -3449,7 +3449,7 @@ export default function CategoryManager() {
                     {/* Danger Zone */}
                     <div className="p-4 border-2 rounded-lg md:col-span-2" style={{ borderColor: COLORS.expenseColor, backgroundColor: `${COLORS.expenseColor}10` }}>
                         <h4 className="font-semibold mb-2" style={{ color: COLORS.expenseColor }}>⚠️ Danger Zone</h4>
-                        <p className="text-sm mb-4" style={{ color: COLORS.darkGray }}>
+                        <p className="text-sm mb-4" style={{ color: COLORS.textPrimary }}>
                             <strong>Warning:</strong> This will permanently delete ALL data including transactions, categories, and settings. This cannot be undone.
                         </p>
                         <ClearAllDataButton onClear={clearAllData} />
@@ -3477,21 +3477,21 @@ export default function CategoryManager() {
                 {showAppUpdates && (
                     <div className="space-y-4">
                         {/* Current Version */}
-                        <div className="p-4 border rounded-lg" style={{ backgroundColor: COLORS.backgroundGray }}>
+                        <div className="p-4 border rounded-lg" style={{ backgroundColor: COLORS.bgPage }}>
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm" style={{ color: COLORS.mediumGray }}>Current Version</p>
-                                    <p className="text-xl font-semibold" style={{ color: COLORS.darkGray }}>
+                                    <p className="text-sm" style={{ color: COLORS.textSecondary }}>Current Version</p>
+                                    <p className="text-xl font-semibold" style={{ color: COLORS.textPrimary }}>
                                         {appVersion || 'Loading...'}
                                     </p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-sm" style={{ color: COLORS.mediumGray }}>Status</p>
+                                    <p className="text-sm" style={{ color: COLORS.textSecondary }}>Status</p>
                                     <p className="font-medium" style={{
                                         color: updateStatus === 'ready' ? COLORS.incomeColor :
                                                updateStatus === 'available' ? COLORS.highlightYellow :
                                                updateStatus === 'error' ? COLORS.expenseColor :
-                                               COLORS.darkGray
+                                               COLORS.textPrimary
                                     }}>
                                         {updateStatus === 'idle' && 'Up to date'}
                                         {updateStatus === 'checking' && 'Checking...'}
@@ -3557,7 +3557,7 @@ export default function CategoryManager() {
                         </div>
 
                         {/* Update Note */}
-                        <p className="text-xs" style={{ color: COLORS.mediumGray }}>
+                        <p className="text-xs" style={{ color: COLORS.textSecondary }}>
                             Updates are downloaded automatically when available. Your data is preserved during updates.
                         </p>
                     </div>
@@ -3584,7 +3584,7 @@ export default function CategoryManager() {
                     style={{
                         position: 'fixed',
                         inset: 0,
-                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        backgroundColor: COLORS.overlayDark,
                         zIndex: 9999,
                         overflow: 'auto',
                     }}

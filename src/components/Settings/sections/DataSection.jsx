@@ -19,6 +19,7 @@ import COLORS from '../../../utils/colors';
 import Papa from 'papaparse';
 import { categorizeTransactionSimple, processTransactionData } from '../../../utils/transactionProcessor';
 import { parsePCRSPaymentPDF, validateExtractedData } from '../../../utils/pdfParser';
+import { syncPanelNumbersFromPaymentData } from '../../../storage/practiceProfileStorage';
 import { parseBankStatementPDF } from '../../../utils/bankStatementParser';
 import PCRSDownloader from '../../PCRSDownloader';
 import BulkUploadFlow, { PENDING_UPLOAD_KEY } from '../../ProcessingFlow/BulkUploadFlow';
@@ -267,6 +268,7 @@ const DataSection = () => {
 
     let successCount = 0;
     let errorCount = 0;
+    const allDownloadedPcrs = [];
 
     for (const download of downloads) {
       try {
@@ -305,6 +307,7 @@ const DataSection = () => {
             console.log('Added payment data:', download.filename);
             return [...prev, result];
           });
+          allDownloadedPcrs.push(result);
           successCount++;
         } else {
           console.error('Failed to parse/validate:', download.filename);
@@ -314,6 +317,11 @@ const DataSection = () => {
         console.error('Error processing downloaded PDF:', download.filename, error);
         errorCount++;
       }
+    }
+
+    // Sync panel numbers from downloaded PCRS data
+    if (allDownloadedPcrs.length > 0) {
+      syncPanelNumbersFromPaymentData(allDownloadedPcrs);
     }
 
     console.log(`Auto-import complete: ${successCount} succeeded, ${errorCount} failed`);
@@ -557,6 +565,7 @@ const DataSection = () => {
 
     let successCount = 0;
     let errorCount = 0;
+    const allExtractedPcrs = [];
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
@@ -568,8 +577,6 @@ const DataSection = () => {
 
         if (result && validateExtractedData(result)) {
           setPaymentAnalysisData(prev => {
-            // Check for duplicates using paymentDate, totalGrossPayment, AND doctorNumber
-            // doctorNumber uniquely identifies each panel
             const exists = prev.some(p =>
               p.paymentDate === result.paymentDate &&
               p.totalGrossPayment === result.totalGrossPayment &&
@@ -582,6 +589,7 @@ const DataSection = () => {
             console.log('Added PCRS payment data:', result.doctorNumber, result.paymentDate);
             return [...prev, result];
           });
+          allExtractedPcrs.push(result);
           successCount++;
         } else {
           errorCount++;
@@ -590,6 +598,11 @@ const DataSection = () => {
         console.error('Error processing PCRS PDF:', error);
         errorCount++;
       }
+    }
+
+    // Sync panel numbers from extracted PCRS data
+    if (allExtractedPcrs.length > 0) {
+      syncPanelNumbersFromPaymentData(allExtractedPcrs);
     }
 
     setPcrsUploadResult({ success: successCount, error: errorCount });
@@ -698,12 +711,12 @@ const DataSection = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       {/* Upload Data Card */}
-      <div style={{ backgroundColor: COLORS.white, padding: '1.5rem', borderRadius: '0.5rem', border: `1px solid ${COLORS.lightGray}` }}>
-        <h2 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem', color: COLORS.darkGray, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+      <div style={{ backgroundColor: COLORS.white, padding: '1.5rem', borderRadius: '0.5rem', border: `1px solid ${COLORS.borderLight}` }}>
+        <h2 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem', color: COLORS.textPrimary, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <Upload style={{ height: '1.25rem', width: '1.25rem', color: COLORS.slainteBlue }} />
           Upload Data
         </h2>
-        <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray, marginBottom: '1rem' }}>
+        <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary, marginBottom: '1rem' }}>
           Import financial data and upload PCRS PDFs
         </p>
 
@@ -721,10 +734,10 @@ const DataSection = () => {
           }}>
             <Clock style={{ width: '1.25rem', height: '1.25rem', color: COLORS.slainteBlue, flexShrink: 0 }} />
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '0.875rem', fontWeight: 600, color: COLORS.darkGray }}>
+              <div style={{ fontSize: '0.875rem', fontWeight: 600, color: COLORS.textPrimary }}>
                 Saved upload in progress
               </div>
-              <div style={{ fontSize: '0.8125rem', color: COLORS.mediumGray }}>
+              <div style={{ fontSize: '0.8125rem', color: COLORS.textSecondary }}>
                 {bulkResumeData.remainingTransactions.length} transactions remaining
                 ({bulkResumeData.completedWaveCount} of {bulkResumeData.totalWaveCount} waves completed)
                 — saved {new Date(bulkResumeData.savedAt).toLocaleDateString()}
@@ -750,9 +763,9 @@ const DataSection = () => {
               style={{
                 padding: '0.375rem 0.625rem',
                 borderRadius: '6px',
-                border: `1px solid ${COLORS.lightGray}`,
+                border: `1px solid ${COLORS.borderLight}`,
                 backgroundColor: 'transparent',
-                color: COLORS.mediumGray,
+                color: COLORS.textSecondary,
                 fontSize: '0.75rem',
                 cursor: 'pointer'
               }}
@@ -767,8 +780,8 @@ const DataSection = () => {
           {/* Column 1: Bank Transactions */}
           <div style={{ border: `2px dashed ${COLORS.slainteBlue}`, borderRadius: '0.5rem', padding: '1rem', textAlign: 'center' }}>
             <Upload style={{ margin: '0 auto 0.5rem', height: '1.75rem', width: '1.75rem', color: COLORS.slainteBlue }} />
-            <h3 style={{ fontSize: '0.8125rem', fontWeight: 600, marginBottom: '0.25rem', color: COLORS.darkGray }}>Bank CSV</h3>
-            <p style={{ fontSize: '0.6875rem', color: COLORS.mediumGray, marginBottom: '0.5rem' }}>
+            <h3 style={{ fontSize: '0.8125rem', fontWeight: 600, marginBottom: '0.25rem', color: COLORS.textPrimary }}>Bank CSV</h3>
+            <p style={{ fontSize: '0.6875rem', color: COLORS.textSecondary, marginBottom: '0.5rem' }}>
               CSV from your bank
             </p>
             <label style={{
@@ -798,8 +811,8 @@ const DataSection = () => {
           {/* Column 2: Training Data */}
           <div style={{ border: `2px dashed ${COLORS.highlightYellow}`, borderRadius: '0.5rem', padding: '1rem', textAlign: 'center' }}>
             <FileText style={{ margin: '0 auto 0.5rem', height: '1.75rem', width: '1.75rem', color: COLORS.highlightYellow }} />
-            <h3 style={{ fontSize: '0.8125rem', fontWeight: 600, marginBottom: '0.25rem', color: COLORS.darkGray }}>Training JSON</h3>
-            <p style={{ fontSize: '0.6875rem', color: COLORS.mediumGray, marginBottom: '0.5rem' }}>
+            <h3 style={{ fontSize: '0.8125rem', fontWeight: 600, marginBottom: '0.25rem', color: COLORS.textPrimary }}>Training JSON</h3>
+            <p style={{ fontSize: '0.6875rem', color: COLORS.textSecondary, marginBottom: '0.5rem' }}>
               Pre-categorized data
             </p>
             <label style={{
@@ -807,9 +820,9 @@ const DataSection = () => {
               padding: '0.375rem 0.75rem',
               fontSize: '0.75rem',
               fontWeight: 500,
-              color: '#B45309',
+              color: COLORS.warningText,
               backgroundColor: 'transparent',
-              border: '1px solid #B45309',
+              border: `1px solid ${COLORS.warningText}`,
               borderRadius: '0.25rem',
               cursor: isProcessing ? 'not-allowed' : 'pointer',
               opacity: isProcessing ? 0.5 : 1
@@ -828,8 +841,8 @@ const DataSection = () => {
           {/* Column 3: Bank Statement PDFs */}
           <div style={{ border: `2px dashed ${COLORS.incomeColor}`, borderRadius: '0.5rem', padding: '1rem', textAlign: 'center' }}>
             <Building2 style={{ margin: '0 auto 0.5rem', height: '1.75rem', width: '1.75rem', color: COLORS.incomeColor }} />
-            <h3 style={{ fontSize: '0.8125rem', fontWeight: 600, marginBottom: '0.25rem', color: COLORS.darkGray }}>Bank PDFs</h3>
-            <p style={{ fontSize: '0.6875rem', color: COLORS.mediumGray, marginBottom: '0.5rem' }}>
+            <h3 style={{ fontSize: '0.8125rem', fontWeight: 600, marginBottom: '0.25rem', color: COLORS.textPrimary }}>Bank PDFs</h3>
+            <p style={{ fontSize: '0.6875rem', color: COLORS.textSecondary, marginBottom: '0.5rem' }}>
               Bank Statements
             </p>
             <label style={{
@@ -860,8 +873,8 @@ const DataSection = () => {
           {/* Column 4: PCRS Payment PDFs */}
           <div style={{ border: `2px dashed ${COLORS.expenseColor}`, borderRadius: '0.5rem', padding: '1rem', textAlign: 'center' }}>
             <Activity style={{ margin: '0 auto 0.5rem', height: '1.75rem', width: '1.75rem', color: COLORS.expenseColor }} />
-            <h3 style={{ fontSize: '0.8125rem', fontWeight: 600, marginBottom: '0.25rem', color: COLORS.darkGray }}>PCRS PDFs</h3>
-            <p style={{ fontSize: '0.6875rem', color: COLORS.mediumGray, marginBottom: '0.5rem' }}>
+            <h3 style={{ fontSize: '0.8125rem', fontWeight: 600, marginBottom: '0.25rem', color: COLORS.textPrimary }}>PCRS PDFs</h3>
+            <p style={{ fontSize: '0.6875rem', color: COLORS.textSecondary, marginBottom: '0.5rem' }}>
               GMS statements
             </p>
             <label style={{
@@ -902,7 +915,7 @@ const DataSection = () => {
               borderTopColor: 'transparent',
               margin: '0 auto'
             }}></div>
-            <p style={{ fontSize: '0.8125rem', color: COLORS.darkGray, marginTop: '0.5rem' }}>
+            <p style={{ fontSize: '0.8125rem', color: COLORS.textPrimary, marginTop: '0.5rem' }}>
               Processing {selectedFile?.name.endsWith('.json') ? 'training data' : 'transactions'}...
             </p>
           </div>
@@ -912,17 +925,17 @@ const DataSection = () => {
           <div style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: `${COLORS.incomeColor}20`, borderRadius: '0.5rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.25rem' }}>
               <CheckCircle style={{ height: '1rem', width: '1rem', color: COLORS.incomeColor, marginRight: '0.5rem' }} />
-              <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: COLORS.darkGray }}>
+              <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: COLORS.textPrimary }}>
                 Processed {selectedFile.name}
               </span>
             </div>
             {uploadResult.type === 'training' ? (
-              <p style={{ fontSize: '0.8125rem', color: COLORS.darkGray }}>
+              <p style={{ fontSize: '0.8125rem', color: COLORS.textPrimary }}>
                 {uploadResult.categorized} transactions imported
                 {uploadResult.skippedDuplicates > 0 && ` (${uploadResult.skippedDuplicates} duplicates skipped)`}
               </p>
             ) : (
-              <p style={{ fontSize: '0.8125rem', color: COLORS.darkGray }}>
+              <p style={{ fontSize: '0.8125rem', color: COLORS.textPrimary }}>
                 {uploadResult.categorized} categorized, {uploadResult.unidentified} need review
                 {uploadResult.skippedDuplicates > 0 && ` (${uploadResult.skippedDuplicates} duplicates skipped)`}
               </p>
@@ -943,7 +956,7 @@ const DataSection = () => {
             }}></div>
             {pcrsProgress ? (
               <>
-                <p style={{ fontSize: '0.8125rem', fontWeight: 600, color: COLORS.darkGray, marginTop: '0.5rem' }}>
+                <p style={{ fontSize: '0.8125rem', fontWeight: 600, color: COLORS.textPrimary, marginTop: '0.5rem' }}>
                   Processing PDF {pcrsProgress.current} of {pcrsProgress.total}
                 </p>
                 {/* Progress bar */}
@@ -962,18 +975,18 @@ const DataSection = () => {
                   const perFile = elapsed / pcrsProgress.current;
                   const remaining = Math.ceil(perFile * (pcrsProgress.total - pcrsProgress.current));
                   return (
-                    <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginTop: '0.25rem' }}>
+                    <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginTop: '0.25rem' }}>
                       ~{remaining}s remaining
                     </p>
                   );
                 })()}
-                <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginTop: '0.5rem', lineHeight: 1.4 }}>
+                <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginTop: '0.5rem', lineHeight: 1.4 }}>
                   Each PDF contains panel sizes, demographics, and payment breakdowns.
                   <br />Duplicates are automatically detected and skipped.
                 </p>
               </>
             ) : (
-              <p style={{ fontSize: '0.8125rem', color: COLORS.darkGray, marginTop: '0.5rem' }}>
+              <p style={{ fontSize: '0.8125rem', color: COLORS.textPrimary, marginTop: '0.5rem' }}>
                 Processing PCRS PDFs...
               </p>
             )}
@@ -989,11 +1002,11 @@ const DataSection = () => {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.25rem' }}>
               <CheckCircle style={{ height: '1rem', width: '1rem', color: pcrsUploadResult.success > 0 ? COLORS.incomeColor : COLORS.expenseColor, marginRight: '0.5rem' }} />
-              <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: COLORS.darkGray }}>
+              <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: COLORS.textPrimary }}>
                 PCRS Processing Complete
               </span>
             </div>
-            <p style={{ fontSize: '0.8125rem', color: COLORS.darkGray }}>
+            <p style={{ fontSize: '0.8125rem', color: COLORS.textPrimary }}>
               {pcrsUploadResult.success} uploaded{pcrsUploadResult.error > 0 && `, ${pcrsUploadResult.error} failed`}
             </p>
           </div>
@@ -1010,7 +1023,7 @@ const DataSection = () => {
               borderTopColor: 'transparent',
               margin: '0 auto'
             }}></div>
-            <p style={{ fontSize: '0.8125rem', color: COLORS.darkGray, marginTop: '0.5rem' }}>
+            <p style={{ fontSize: '0.8125rem', color: COLORS.textPrimary, marginTop: '0.5rem' }}>
               Extracting from bank statement PDF...
             </p>
           </div>
@@ -1029,12 +1042,12 @@ const DataSection = () => {
               ) : (
                 <AlertCircle style={{ height: '1rem', width: '1rem', color: COLORS.expenseColor, marginRight: '0.5rem' }} />
               )}
-              <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: COLORS.darkGray }}>
+              <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: COLORS.textPrimary }}>
                 {bankPdfResult.success > 0 ? 'Bank PDF Processed' : 'Error Processing PDF'}
               </span>
             </div>
             {bankPdfResult.success > 0 ? (
-              <p style={{ fontSize: '0.8125rem', color: COLORS.darkGray }}>
+              <p style={{ fontSize: '0.8125rem', color: COLORS.textPrimary }}>
                 {bankPdfResult.transactionCount} transactions: {bankPdfResult.categorized} categorized, {bankPdfResult.unidentified} need review
                 {bankPdfResult.duplicates > 0 && ` (${bankPdfResult.duplicates} duplicates skipped)`}
               </p>
@@ -1049,9 +1062,9 @@ const DataSection = () => {
 
       {/* PCRS Statement Download Section - Desktop Only */}
       {window.electronAPI?.isElectron && (
-        <div style={{ backgroundColor: COLORS.white, padding: '1.5rem', borderRadius: '0.5rem', border: `1px solid ${COLORS.lightGray}` }}>
+        <div style={{ backgroundColor: COLORS.white, padding: '1.5rem', borderRadius: '0.5rem', border: `1px solid ${COLORS.borderLight}` }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-            <h3 style={{ fontSize: '1.125rem', fontWeight: 600, display: 'flex', alignItems: 'center', color: COLORS.darkGray }}>
+            <h3 style={{ fontSize: '1.125rem', fontWeight: 600, display: 'flex', alignItems: 'center', color: COLORS.textPrimary }}>
               <Activity style={{ height: '1.25rem', width: '1.25rem', marginRight: '0.5rem', color: COLORS.slainteBlue }} />
               PCRS Statement Downloads
             </h3>
@@ -1063,7 +1076,7 @@ const DataSection = () => {
             )}
           </div>
 
-          <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray, marginBottom: '1rem' }}>
+          <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary, marginBottom: '1rem' }}>
             Automatically download your PCRS payment statements directly from the portal.
             Your login credentials are never stored - you authenticate via the secure PCRS website.
           </p>
@@ -1116,7 +1129,7 @@ const DataSection = () => {
             </button>
 
             {pcrsSessionStatus?.valid && (
-              <div style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>
+              <div style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>
                 <Clock style={{ height: '1rem', width: '1rem', display: 'inline', marginRight: '0.25rem', verticalAlign: 'middle' }} />
                 Session expires in {pcrsSessionStatus.remainingHours} hours
               </div>
@@ -1124,8 +1137,8 @@ const DataSection = () => {
           </div>
 
           {pcrsSessionStatus?.exists && !pcrsSessionStatus?.valid && (
-            <div style={{ marginTop: '0.75rem', padding: '0.75rem', borderRadius: '0.5rem', backgroundColor: '#FEF3C7' }}>
-              <p style={{ fontSize: '0.75rem', color: '#92400E' }}>
+            <div style={{ marginTop: '0.75rem', padding: '0.75rem', borderRadius: '0.5rem', backgroundColor: COLORS.warningLight }}>
+              <p style={{ fontSize: '0.75rem', color: COLORS.warningText }}>
                 <AlertCircle style={{ height: '0.75rem', width: '0.75rem', display: 'inline', marginRight: '0.25rem', verticalAlign: 'middle' }} />
                 Your previous session has expired. Click "Download Statements" to log in again.
               </p>
@@ -1133,8 +1146,8 @@ const DataSection = () => {
           )}
 
           {!pcrsSessionStatus?.exists && (
-            <div style={{ marginTop: '0.75rem', padding: '0.75rem', borderRadius: '0.5rem', backgroundColor: COLORS.backgroundGray }}>
-              <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray }}>
+            <div style={{ marginTop: '0.75rem', padding: '0.75rem', borderRadius: '0.5rem', backgroundColor: COLORS.bgPage }}>
+              <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary }}>
                 <Shield style={{ height: '0.75rem', width: '0.75rem', display: 'inline', marginRight: '0.25rem', verticalAlign: 'middle' }} />
                 First time setup: You'll be prompted to log in to the PCRS portal. Your session will be remembered for 24 hours.
               </p>

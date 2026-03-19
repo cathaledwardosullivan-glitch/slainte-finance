@@ -123,10 +123,10 @@ const ReportsSection = ({ setCurrentView }) => {
         <>
           {/* Reports Card with Report Type Selection */}
           <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', padding: '1.5rem' }}>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '0.5rem', color: COLORS.darkGray }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '0.5rem', color: COLORS.textPrimary }}>
               Reports
             </h2>
-            <p style={{ fontSize: '0.875rem', marginBottom: '1.5rem', color: COLORS.mediumGray }}>
+            <p style={{ fontSize: '0.875rem', marginBottom: '1.5rem', color: COLORS.textSecondary }}>
               Generate reports for your accountant
             </p>
 
@@ -137,7 +137,7 @@ const ReportsSection = ({ setCurrentView }) => {
                 onClick={handlePLReportClick}
                 style={{
                   padding: '1.5rem',
-                  border: `2px solid ${COLORS.lightGray}`,
+                  border: `2px solid ${COLORS.borderLight}`,
                   borderRadius: '0.5rem',
                   textAlign: 'left',
                   cursor: 'pointer',
@@ -145,18 +145,18 @@ const ReportsSection = ({ setCurrentView }) => {
                   transition: 'all 0.15s'
                 }}
                 onMouseEnter={(e) => e.currentTarget.style.borderColor = COLORS.slainteBlue}
-                onMouseLeave={(e) => e.currentTarget.style.borderColor = COLORS.lightGray}
+                onMouseLeave={(e) => e.currentTarget.style.borderColor = COLORS.borderLight}
               >
                 <div style={{ padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1rem', display: 'inline-block', backgroundColor: COLORS.slainteBlue }}>
                   <FileText size={28} color="white" />
                 </div>
-                <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem', color: COLORS.darkGray }}>
+                <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem', color: COLORS.textPrimary }}>
                   Profit & Loss Report
                 </h3>
-                <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>
+                <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>
                   Professional accountant format P&L for your practice
                 </p>
-                <div style={{ marginTop: '0.75rem', fontSize: '0.75rem', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', display: 'inline-block', backgroundColor: COLORS.highlightYellow, color: COLORS.darkGray }}>
+                <div style={{ marginTop: '0.75rem', fontSize: '0.75rem', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', display: 'inline-block', backgroundColor: COLORS.highlightYellow, color: COLORS.textPrimary }}>
                   Step 1
                 </div>
               </button>
@@ -166,26 +166,26 @@ const ReportsSection = ({ setCurrentView }) => {
                 onClick={() => setView('partner-capital')}
                 style={{
                   padding: '1.5rem',
-                  border: `2px solid ${COLORS.lightGray}`,
+                  border: `2px solid ${COLORS.borderLight}`,
                   borderRadius: '0.5rem',
                   textAlign: 'left',
                   cursor: 'pointer',
                   backgroundColor: 'white',
                   transition: 'all 0.15s'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.borderColor = '#9C27B0'}
-                onMouseLeave={(e) => e.currentTarget.style.borderColor = COLORS.lightGray}
+                onMouseEnter={(e) => e.currentTarget.style.borderColor = COLORS.accentPurple}
+                onMouseLeave={(e) => e.currentTarget.style.borderColor = COLORS.borderLight}
               >
-                <div style={{ padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1rem', display: 'inline-block', backgroundColor: '#9C27B0' }}>
+                <div style={{ padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1rem', display: 'inline-block', backgroundColor: COLORS.accentPurple }}>
                   <Users size={28} color="white" />
                 </div>
-                <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem', color: COLORS.darkGray }}>
+                <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem', color: COLORS.textPrimary }}>
                   Partner's Capital Accounts
                 </h3>
-                <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>
+                <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>
                   Allocate profit to partners and track capital balances
                 </p>
-                <div style={{ marginTop: '0.75rem', fontSize: '0.75rem', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', display: 'inline-block', backgroundColor: '#F3E5F5', color: '#9C27B0' }}>
+                <div style={{ marginTop: '0.75rem', fontSize: '0.75rem', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', display: 'inline-block', backgroundColor: COLORS.accentPurpleLight, color: COLORS.accentPurple }}>
                   Step 2
                 </div>
               </button>
@@ -195,7 +195,7 @@ const ReportsSection = ({ setCurrentView }) => {
                 onClick={() => setView('tax-return')}
                 style={{
                   padding: '1.5rem',
-                  border: `2px solid ${COLORS.lightGray}`,
+                  border: `2px solid ${COLORS.borderLight}`,
                   borderRadius: '0.5rem',
                   textAlign: 'left',
                   cursor: 'pointer',
@@ -203,18 +203,18 @@ const ReportsSection = ({ setCurrentView }) => {
                   transition: 'all 0.15s'
                 }}
                 onMouseEnter={(e) => e.currentTarget.style.borderColor = COLORS.incomeColor}
-                onMouseLeave={(e) => e.currentTarget.style.borderColor = COLORS.lightGray}
+                onMouseLeave={(e) => e.currentTarget.style.borderColor = COLORS.borderLight}
               >
                 <div style={{ padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1rem', display: 'inline-block', backgroundColor: COLORS.incomeColor }}>
                   <Calculator size={28} color="white" />
                 </div>
-                <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem', color: COLORS.darkGray }}>
+                <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem', color: COLORS.textPrimary }}>
                   Personal Tax Return Form
                 </h3>
-                <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>
+                <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>
                   Comprehensive tax information checklist for self-employed GPs
                 </p>
-                <div style={{ marginTop: '0.75rem', fontSize: '0.75rem', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', display: 'inline-block', backgroundColor: '#E8F5E9', color: COLORS.incomeColor }}>
+                <div style={{ marginTop: '0.75rem', fontSize: '0.75rem', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', display: 'inline-block', backgroundColor: COLORS.successLight, color: COLORS.incomeColor }}>
                   Step 3
                 </div>
               </button>
@@ -223,22 +223,22 @@ const ReportsSection = ({ setCurrentView }) => {
               <div
                 style={{
                   padding: '1.5rem',
-                  border: `2px solid ${COLORS.lightGray}`,
+                  border: `2px solid ${COLORS.borderLight}`,
                   borderRadius: '0.5rem',
                   textAlign: 'left',
                   opacity: 0.5
                 }}
               >
-                <div style={{ padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1rem', display: 'inline-block', backgroundColor: COLORS.mediumGray }}>
+                <div style={{ padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1rem', display: 'inline-block', backgroundColor: COLORS.textSecondary }}>
                   <PiggyBank size={28} color="white" />
                 </div>
-                <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem', color: COLORS.darkGray }}>
+                <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem', color: COLORS.textPrimary }}>
                   AVC Calculator
                 </h3>
-                <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>
+                <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>
                   Calculate maximum Additional Voluntary Contributions
                 </p>
-                <div style={{ marginTop: '0.75rem', fontSize: '0.75rem', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', display: 'inline-block', backgroundColor: COLORS.backgroundGray, color: COLORS.mediumGray }}>
+                <div style={{ marginTop: '0.75rem', fontSize: '0.75rem', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', display: 'inline-block', backgroundColor: COLORS.bgPage, color: COLORS.textSecondary }}>
                   Coming Soon
                 </div>
               </div>
@@ -259,11 +259,11 @@ const ReportsSection = ({ setCurrentView }) => {
                 border: 'none',
                 background: 'transparent',
                 cursor: 'pointer',
-                borderBottom: savedReportsExpanded ? `1px solid ${COLORS.lightGray}` : 'none'
+                borderBottom: savedReportsExpanded ? `1px solid ${COLORS.borderLight}` : 'none'
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <h3 style={{ fontSize: '1.125rem', fontWeight: 600, margin: 0, color: COLORS.darkGray }}>
+                <h3 style={{ fontSize: '1.125rem', fontWeight: 600, margin: 0, color: COLORS.textPrimary }}>
                   Saved Reports
                 </h3>
                 {savedReports.length > 0 && (
@@ -271,17 +271,17 @@ const ReportsSection = ({ setCurrentView }) => {
                     fontSize: '0.75rem',
                     padding: '0.125rem 0.5rem',
                     borderRadius: '0.25rem',
-                    backgroundColor: COLORS.backgroundGray,
-                    color: COLORS.mediumGray
+                    backgroundColor: COLORS.bgPage,
+                    color: COLORS.textSecondary
                   }}>
                     {savedReports.length}
                   </span>
                 )}
               </div>
               {savedReportsExpanded ? (
-                <ChevronUp size={20} color={COLORS.mediumGray} />
+                <ChevronUp size={20} color={COLORS.textSecondary} />
               ) : (
-                <ChevronDown size={20} color={COLORS.mediumGray} />
+                <ChevronDown size={20} color={COLORS.textSecondary} />
               )}
             </button>
 
@@ -290,11 +290,11 @@ const ReportsSection = ({ setCurrentView }) => {
               <div style={{ padding: '1.5rem' }}>
                 {savedReports.length === 0 ? (
                   <div style={{ textAlign: 'center', padding: '2rem' }}>
-                    <FileText size={48} style={{ margin: '0 auto 1rem', color: COLORS.lightGray }} />
-                    <h4 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: COLORS.darkGray }}>
+                    <FileText size={48} style={{ margin: '0 auto 1rem', color: COLORS.borderLight }} />
+                    <h4 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: COLORS.textPrimary }}>
                       No Saved Reports
                     </h4>
-                    <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>
+                    <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>
                       Generate your first report to see it here
                     </p>
                   </div>
@@ -308,7 +308,7 @@ const ReportsSection = ({ setCurrentView }) => {
                           key={report.id}
                           style={{
                             padding: '1rem',
-                            border: `1px solid ${COLORS.lightGray}`,
+                            border: `1px solid ${COLORS.borderLight}`,
                             borderRadius: '0.5rem'
                           }}
                         >
@@ -317,7 +317,7 @@ const ReportsSection = ({ setCurrentView }) => {
                               <FileText size={24} color={COLORS.slainteBlue} />
                               <div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                                  <h4 style={{ fontWeight: 600, color: COLORS.darkGray }}>
+                                  <h4 style={{ fontWeight: 600, color: COLORS.textPrimary }}>
                                     {report.title}
                                   </h4>
                                   {report.type && (
@@ -327,19 +327,19 @@ const ReportsSection = ({ setCurrentView }) => {
                                         padding: '0.125rem 0.5rem',
                                         borderRadius: '0.25rem',
                                         fontWeight: 500,
-                                        backgroundColor: report.type === 'AI Report' ? '#3b82f620' :
-                                                        report.type === 'GMS Health Check' ? '#10b98120' :
-                                                        '#f59e0b20',
-                                        color: report.type === 'AI Report' ? '#3b82f6' :
-                                              report.type === 'GMS Health Check' ? '#10b981' :
-                                              '#f59e0b'
+                                        backgroundColor: report.type === 'AI Report' ? `${COLORS.slainteBlue}20` :
+                                                        report.type === 'GMS Health Check' ? `${COLORS.success}20` :
+                                                        `${COLORS.warning}20`,
+                                        color: report.type === 'AI Report' ? COLORS.slainteBlue :
+                                              report.type === 'GMS Health Check' ? COLORS.success :
+                                              COLORS.warning
                                       }}
                                     >
                                       {report.type}
                                     </span>
                                   )}
                                 </div>
-                                <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>
+                                <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>
                                   Generated {formatReportDate(report.generatedDate)}
                                 </p>
                               </div>
@@ -381,7 +381,7 @@ const ReportsSection = ({ setCurrentView }) => {
                         gap: '1rem',
                         marginTop: '1rem',
                         paddingTop: '1rem',
-                        borderTop: `1px solid ${COLORS.lightGray}`
+                        borderTop: `1px solid ${COLORS.borderLight}`
                       }}>
                         <button
                           onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
@@ -389,7 +389,7 @@ const ReportsSection = ({ setCurrentView }) => {
                           style={{
                             padding: '0.5rem',
                             borderRadius: '0.25rem',
-                            border: `1px solid ${COLORS.lightGray}`,
+                            border: `1px solid ${COLORS.borderLight}`,
                             background: 'white',
                             cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
                             opacity: currentPage === 1 ? 0.5 : 1,
@@ -397,9 +397,9 @@ const ReportsSection = ({ setCurrentView }) => {
                             alignItems: 'center'
                           }}
                         >
-                          <ChevronLeft size={18} color={COLORS.mediumGray} />
+                          <ChevronLeft size={18} color={COLORS.textSecondary} />
                         </button>
-                        <span style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>
+                        <span style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>
                           Page {currentPage} of {Math.ceil(savedReports.length / REPORTS_PER_PAGE)}
                         </span>
                         <button
@@ -408,7 +408,7 @@ const ReportsSection = ({ setCurrentView }) => {
                           style={{
                             padding: '0.5rem',
                             borderRadius: '0.25rem',
-                            border: `1px solid ${COLORS.lightGray}`,
+                            border: `1px solid ${COLORS.borderLight}`,
                             background: 'white',
                             cursor: currentPage >= Math.ceil(savedReports.length / REPORTS_PER_PAGE) ? 'not-allowed' : 'pointer',
                             opacity: currentPage >= Math.ceil(savedReports.length / REPORTS_PER_PAGE) ? 0.5 : 1,
@@ -416,7 +416,7 @@ const ReportsSection = ({ setCurrentView }) => {
                             alignItems: 'center'
                           }}
                         >
-                          <ChevronRight size={18} color={COLORS.mediumGray} />
+                          <ChevronRight size={18} color={COLORS.textSecondary} />
                         </button>
                       </div>
                     )}
@@ -438,14 +438,14 @@ const ReportsSection = ({ setCurrentView }) => {
             style={{
               marginBottom: '1rem',
               padding: '0.5rem 1rem',
-              border: `1px solid ${COLORS.lightGray}`,
+              border: `1px solid ${COLORS.borderLight}`,
               borderRadius: '0.25rem',
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem',
               backgroundColor: 'white',
               cursor: 'pointer',
-              color: COLORS.mediumGray
+              color: COLORS.textSecondary
             }}
           >
             &larr; Back to Reports
@@ -464,14 +464,14 @@ const ReportsSection = ({ setCurrentView }) => {
             style={{
               marginBottom: '1rem',
               padding: '0.5rem 1rem',
-              border: `1px solid ${COLORS.lightGray}`,
+              border: `1px solid ${COLORS.borderLight}`,
               borderRadius: '0.25rem',
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem',
               backgroundColor: 'white',
               cursor: 'pointer',
-              color: COLORS.mediumGray
+              color: COLORS.textSecondary
             }}
           >
             &larr; Back to Reports
@@ -490,14 +490,14 @@ const ReportsSection = ({ setCurrentView }) => {
             style={{
               marginBottom: '1rem',
               padding: '0.5rem 1rem',
-              border: `1px solid ${COLORS.lightGray}`,
+              border: `1px solid ${COLORS.borderLight}`,
               borderRadius: '0.25rem',
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem',
               backgroundColor: 'white',
               cursor: 'pointer',
-              color: COLORS.mediumGray
+              color: COLORS.textSecondary
             }}
           >
             &larr; Back to Reports

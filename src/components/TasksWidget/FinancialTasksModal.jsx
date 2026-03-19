@@ -25,7 +25,7 @@ import ConfirmDialog from './ConfirmDialog';
  * FinancialTasksModal - Extracted from Dashboard.jsx
  * Modal for viewing and managing all financial tasks
  */
-const FinancialTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
+const FinancialTasksModal = ({ isOpen, onClose, onTasksChanged, autoEditTaskId }) => {
   const [allFinancialTasks, setAllFinancialTasks] = useState([]);
   const [showAddFinancialTask, setShowAddFinancialTask] = useState(false);
   const [showCustomTaskForm, setShowCustomTaskForm] = useState(false);
@@ -46,6 +46,26 @@ const FinancialTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
       setAllFinancialTasks(getFinancialTasks());
     }
   }, [isOpen]);
+
+  // Auto-open edit form when a specific task ID is passed (e.g. from Finn)
+  useEffect(() => {
+    if (isOpen && autoEditTaskId) {
+      const tasks = getFinancialTasks();
+      const taskToEdit = tasks.find(t => t.id === autoEditTaskId);
+      if (taskToEdit) {
+        setEditingFinancialTask(taskToEdit);
+        setFinancialTaskForm({
+          title: taskToEdit.title || '',
+          description: taskToEdit.description || '',
+          category: taskToEdit.category || 'reporting',
+          priority: taskToEdit.priority || 'medium',
+          assignedTo: taskToEdit.assignedTo || '',
+          dueDate: taskToEdit.dueDate || '',
+          status: taskToEdit.status || 'pending'
+        });
+      }
+    }
+  }, [isOpen, autoEditTaskId]);
 
   // Get assignee list from practice profile
   const getAssigneeList = () => {
@@ -233,17 +253,17 @@ const FinancialTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
   ];
 
   const categoryColors = {
-    reporting: { bg: '#EEF2FF', text: '#4F46E5' },
-    transactions: { bg: '#FEF3C7', text: '#D97706' },
-    refinement: { bg: '#FEE2E2', text: '#DC2626' },
-    upload: { bg: '#DCFCE7', text: '#16A34A' },
-    admin: { bg: '#F3E8FF', text: '#7C3AED' }
+    reporting: { bg: COLORS.slainteBlueLight, text: COLORS.accentPurple },
+    transactions: { bg: COLORS.warningLight, text: COLORS.warningDark },
+    refinement: { bg: COLORS.errorLight, text: COLORS.error },
+    upload: { bg: COLORS.successLighter, text: COLORS.success },
+    admin: { bg: COLORS.accentPurpleLight, text: COLORS.daraViolet }
   };
 
   const statusColors = {
-    pending: { bg: '#F3F4F6', text: '#6B7280' },
-    in_progress: { bg: '#DBEAFE', text: COLORS.slainteBlue },
-    completed: { bg: '#DCFCE7', text: COLORS.incomeColor }
+    pending: { bg: COLORS.bgHover, text: COLORS.textMuted },
+    in_progress: { bg: COLORS.infoLighter, text: COLORS.slainteBlue },
+    completed: { bg: COLORS.successLighter, text: COLORS.incomeColor }
   };
 
   return (
@@ -258,7 +278,7 @@ const FinancialTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
           alignItems: 'center',
           justifyContent: 'center',
           padding: '1rem',
-          backgroundColor: 'rgba(0, 0, 0, 0.5)'
+          backgroundColor: COLORS.overlayDark
         }}
       >
         <div
@@ -272,7 +292,7 @@ const FinancialTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
-            border: `1px solid ${COLORS.lightGray}`
+            border: `1px solid ${COLORS.borderLight}`
           }}
         >
           {/* Header */}
@@ -282,13 +302,13 @@ const FinancialTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
               alignItems: 'center',
               justifyContent: 'space-between',
               padding: '1rem',
-              borderBottom: `1px solid ${COLORS.lightGray}`,
+              borderBottom: `1px solid ${COLORS.borderLight}`,
               flexShrink: 0
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <DollarSign className="h-5 w-5" style={{ color: COLORS.incomeColor }} />
-              <h3 style={{ fontWeight: 600, color: COLORS.darkGray, margin: 0 }}>Financial Action Plan - All Tasks</h3>
+              <h3 style={{ fontWeight: 600, color: COLORS.textPrimary, margin: 0 }}>Financial Action Plan - All Tasks</h3>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <button
@@ -303,9 +323,9 @@ const FinancialTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.25rem',
-                  border: `1px solid ${COLORS.lightGray}`,
+                  border: `1px solid ${COLORS.borderLight}`,
                   background: 'none',
-                  color: COLORS.mediumGray,
+                  color: COLORS.textSecondary,
                   cursor: 'pointer'
                 }}
               >
@@ -321,7 +341,7 @@ const FinancialTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
                   cursor: 'pointer'
                 }}
               >
-                <X className="h-5 w-5" style={{ color: COLORS.mediumGray }} />
+                <X className="h-5 w-5" style={{ color: COLORS.textSecondary }} />
               </button>
             </div>
           </div>
@@ -330,27 +350,27 @@ const FinancialTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
           <div
             style={{
               padding: '1rem',
-              borderBottom: `1px solid ${COLORS.lightGray}`,
-              backgroundColor: '#F9FAFB',
+              borderBottom: `1px solid ${COLORS.borderLight}`,
+              backgroundColor: COLORS.bgPage,
               flexShrink: 0
             }}
           >
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', textAlign: 'center' }}>
               <div>
-                <p style={{ fontSize: '1.5rem', fontWeight: 700, color: COLORS.darkGray, margin: 0 }}>{allFinancialTasks.length}</p>
-                <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, margin: 0 }}>Total</p>
+                <p style={{ fontSize: '1.5rem', fontWeight: 700, color: COLORS.textPrimary, margin: 0 }}>{allFinancialTasks.length}</p>
+                <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, margin: 0 }}>Total</p>
               </div>
               <div>
-                <p style={{ fontSize: '1.5rem', fontWeight: 700, color: '#6B7280', margin: 0 }}>{allFinancialTasks.filter(t => t.status === 'pending').length}</p>
-                <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, margin: 0 }}>Pending</p>
+                <p style={{ fontSize: '1.5rem', fontWeight: 700, color: COLORS.textMuted, margin: 0 }}>{allFinancialTasks.filter(t => t.status === 'pending').length}</p>
+                <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, margin: 0 }}>Pending</p>
               </div>
               <div>
                 <p style={{ fontSize: '1.5rem', fontWeight: 700, color: COLORS.slainteBlue, margin: 0 }}>{allFinancialTasks.filter(t => t.status === 'in_progress').length}</p>
-                <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, margin: 0 }}>In Progress</p>
+                <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, margin: 0 }}>In Progress</p>
               </div>
               <div>
                 <p style={{ fontSize: '1.5rem', fontWeight: 700, color: COLORS.incomeColor, margin: 0 }}>{allFinancialTasks.filter(t => t.status === 'completed').length}</p>
-                <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, margin: 0 }}>Completed</p>
+                <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, margin: 0 }}>Completed</p>
               </div>
             </div>
           </div>
@@ -365,7 +385,7 @@ const FinancialTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
             }}
           >
             {allFinancialTasks.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '2rem 0', color: COLORS.mediumGray }}>
+              <div style={{ textAlign: 'center', padding: '2rem 0', color: COLORS.textSecondary }}>
                 <DollarSign style={{ height: '3rem', width: '3rem', margin: '0 auto 0.5rem', opacity: 0.3 }} />
                 <p style={{ margin: 0 }}>No financial tasks yet</p>
                 <p style={{ fontSize: '0.875rem', marginTop: '0.25rem' }}>Click "Add" to create your first task</p>
@@ -382,8 +402,8 @@ const FinancialTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
                       style={{
                         padding: '0.75rem',
                         borderRadius: '0.5rem',
-                        border: `1px solid ${isOverdue ? '#FCA5A5' : COLORS.lightGray}`,
-                        backgroundColor: isOverdue ? '#FEF2F2' : COLORS.white,
+                        border: `1px solid ${isOverdue ? COLORS.errorLight : COLORS.borderLight}`,
+                        backgroundColor: isOverdue ? COLORS.errorLighter : COLORS.white,
                         opacity: task.status === 'completed' ? 0.6 : 1
                       }}
                     >
@@ -403,11 +423,11 @@ const FinancialTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
                             <span className="px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-700">Overdue</span>
                           )}
                         </div>
-                        <p className={`font-medium mt-1 ${task.status === 'completed' ? 'line-through' : ''}`} style={{ color: COLORS.darkGray }}>{task.title}</p>
+                        <p className={`font-medium mt-1 ${task.status === 'completed' ? 'line-through' : ''}`} style={{ color: COLORS.textPrimary }}>{task.title}</p>
                         {task.description && (
-                          <p className="text-sm mt-1" style={{ color: COLORS.mediumGray }}>{task.description}</p>
+                          <p className="text-sm mt-1" style={{ color: COLORS.textSecondary }}>{task.description}</p>
                         )}
-                        <div className="flex items-center gap-3 mt-1 text-xs" style={{ color: COLORS.mediumGray }}>
+                        <div className="flex items-center gap-3 mt-1 text-xs" style={{ color: COLORS.textSecondary }}>
                           {task.assignedTo && (
                             <span className="flex items-center gap-1">
                               <User className="h-3 w-3" /> {task.assignedTo}
@@ -441,7 +461,7 @@ const FinancialTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
                             className="p-1.5 rounded hover:bg-green-100 transition-colors"
                             title="Mark as complete"
                           >
-                            <CheckCircle className="h-4 w-4" style={{ color: '#059669' }} />
+                            <CheckCircle className="h-4 w-4" style={{ color: COLORS.successDark }} />
                           </button>
                         )}
                         <button
@@ -467,11 +487,11 @@ const FinancialTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
               alignItems: 'center',
               justifyContent: 'space-between',
               padding: '1rem',
-              borderTop: `1px solid ${COLORS.lightGray}`,
+              borderTop: `1px solid ${COLORS.borderLight}`,
               flexShrink: 0
             }}
           >
-            <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray, margin: 0 }}>
+            <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary, margin: 0 }}>
               {allFinancialTasks.filter(t => t.status === 'completed').length} of {allFinancialTasks.length} tasks completed
             </p>
             <button
@@ -504,34 +524,34 @@ const FinancialTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
             alignItems: 'center',
             justifyContent: 'center',
             padding: '1rem',
-            backgroundColor: 'rgba(0, 0, 0, 0.5)'
+            backgroundColor: COLORS.overlayDark
           }}
         >
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md" style={{ border: `1px solid ${COLORS.lightGray}` }}>
-            <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: COLORS.lightGray }}>
-              <h3 className="font-semibold" style={{ color: COLORS.darkGray }}>Edit Task</h3>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md" style={{ border: `1px solid ${COLORS.borderLight}` }}>
+            <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: COLORS.borderLight }}>
+              <h3 className="font-semibold" style={{ color: COLORS.textPrimary }}>Edit Task</h3>
               <button onClick={() => setEditingFinancialTask(null)} className="p-1 rounded hover:bg-gray-100">
-                <X className="h-5 w-5" style={{ color: COLORS.mediumGray }} />
+                <X className="h-5 w-5" style={{ color: COLORS.textSecondary }} />
               </button>
             </div>
             <div className="p-4 space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>Title</label>
+                <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>Title</label>
                 <input
                   type="text"
                   value={financialTaskForm.title}
                   onChange={(e) => setFinancialTaskForm({ ...financialTaskForm, title: e.target.value })}
                   className="w-full p-2 border rounded-lg"
-                  style={{ borderColor: COLORS.lightGray }}
+                  style={{ borderColor: COLORS.borderLight }}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>Status</label>
+                <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>Status</label>
                 <select
                   value={financialTaskForm.status}
                   onChange={(e) => setFinancialTaskForm({ ...financialTaskForm, status: e.target.value })}
                   className="w-full p-2 border rounded-lg"
-                  style={{ borderColor: COLORS.lightGray }}
+                  style={{ borderColor: COLORS.borderLight }}
                 >
                   <option value="pending">Pending</option>
                   <option value="in_progress">In Progress</option>
@@ -539,12 +559,12 @@ const FinancialTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>Assign To</label>
+                <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>Assign To</label>
                 <select
                   value={financialTaskForm.assignedTo}
                   onChange={(e) => setFinancialTaskForm({ ...financialTaskForm, assignedTo: e.target.value })}
                   className="w-full p-2 border rounded-lg"
-                  style={{ borderColor: COLORS.lightGray }}
+                  style={{ borderColor: COLORS.borderLight }}
                 >
                   <option value="">Unassigned</option>
                   {getAssigneeList().map((person, idx) => (
@@ -553,17 +573,17 @@ const FinancialTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>Due Date</label>
+                <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>Due Date</label>
                 <input
                   type="date"
                   value={financialTaskForm.dueDate}
                   onChange={(e) => setFinancialTaskForm({ ...financialTaskForm, dueDate: e.target.value })}
                   className="w-full p-2 border rounded-lg"
-                  style={{ borderColor: COLORS.lightGray }}
+                  style={{ borderColor: COLORS.borderLight }}
                 />
               </div>
             </div>
-            <div className="flex justify-between p-4 border-t" style={{ borderColor: COLORS.lightGray }}>
+            <div className="flex justify-between p-4 border-t" style={{ borderColor: COLORS.borderLight }}>
               <button
                 onClick={() => handleDeleteFinancialTask(editingFinancialTask.id)}
                 className="px-4 py-2 text-sm rounded-lg text-red-600 hover:bg-red-50"
@@ -574,7 +594,7 @@ const FinancialTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
                 <button
                   onClick={() => setEditingFinancialTask(null)}
                   className="px-4 py-2 text-sm rounded-lg border"
-                  style={{ borderColor: COLORS.lightGray, color: COLORS.mediumGray }}
+                  style={{ borderColor: COLORS.borderLight, color: COLORS.textSecondary }}
                 >
                   Cancel
                 </button>
@@ -602,7 +622,7 @@ const FinancialTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
             alignItems: 'center',
             justifyContent: 'center',
             padding: '1rem',
-            backgroundColor: 'rgba(0, 0, 0, 0.5)'
+            backgroundColor: COLORS.overlayDark
           }}
         >
           <div
@@ -615,11 +635,11 @@ const FinancialTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
               maxHeight: '85vh',
               display: 'flex',
               flexDirection: 'column',
-              border: `1px solid ${COLORS.lightGray}`
+              border: `1px solid ${COLORS.borderLight}`
             }}
           >
-            <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: COLORS.lightGray }}>
-              <h3 className="font-semibold" style={{ color: COLORS.darkGray }}>
+            <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: COLORS.borderLight }}>
+              <h3 className="font-semibold" style={{ color: COLORS.textPrimary }}>
                 {showCustomTaskForm ? 'Create Custom Task' : 'Add Financial Task'}
               </h3>
               <button
@@ -629,7 +649,7 @@ const FinancialTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
                 }}
                 className="p-1 rounded hover:bg-gray-100"
               >
-                <X className="h-5 w-5" style={{ color: COLORS.mediumGray }} />
+                <X className="h-5 w-5" style={{ color: COLORS.textSecondary }} />
               </button>
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -637,7 +657,7 @@ const FinancialTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
                 <>
                   {/* Quick Add - Preset Tasks */}
                   <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: COLORS.darkGray }}>Select a task to add:</label>
+                    <label className="block text-sm font-medium mb-2" style={{ color: COLORS.textPrimary }}>Select a task to add:</label>
                     <div className="grid grid-cols-1 gap-2">
                       {presetTasks.map((preset, idx) => (
                         <button
@@ -655,11 +675,11 @@ const FinancialTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
                             setShowCustomTaskForm(true);
                           }}
                           className="flex items-center gap-3 p-3 rounded-lg border text-left hover:bg-gray-50 transition-colors"
-                          style={{ borderColor: COLORS.lightGray }}
+                          style={{ borderColor: COLORS.borderLight }}
                         >
                           <div className="flex-1">
-                            <p className="font-medium text-sm" style={{ color: COLORS.darkGray }}>{preset.title}</p>
-                            <p className="text-xs mt-0.5" style={{ color: COLORS.mediumGray }}>{preset.description}</p>
+                            <p className="font-medium text-sm" style={{ color: COLORS.textPrimary }}>{preset.title}</p>
+                            <p className="text-xs mt-0.5" style={{ color: COLORS.textSecondary }}>{preset.description}</p>
                           </div>
                           <Plus className="h-4 w-4 flex-shrink-0" style={{ color: COLORS.slainteBlue }} />
                         </button>
@@ -671,7 +691,7 @@ const FinancialTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
                   <button
                     onClick={() => setShowCustomTaskForm(true)}
                     className="w-full p-3 rounded-lg border-2 border-dashed text-center hover:bg-gray-50 transition-colors"
-                    style={{ borderColor: COLORS.lightGray, color: COLORS.mediumGray }}
+                    style={{ borderColor: COLORS.borderLight, color: COLORS.textSecondary }}
                   >
                     <Plus className="h-5 w-5 mx-auto mb-1" />
                     <span className="text-sm font-medium">Create Custom Task</span>
@@ -691,34 +711,34 @@ const FinancialTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
 
                   {/* Custom Task Form */}
                   <div>
-                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>Title *</label>
+                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>Title *</label>
                     <input
                       type="text"
                       value={financialTaskForm.title}
                       onChange={(e) => setFinancialTaskForm({ ...financialTaskForm, title: e.target.value })}
                       className="w-full p-2 border rounded-lg"
-                      style={{ borderColor: COLORS.lightGray }}
+                      style={{ borderColor: COLORS.borderLight }}
                       placeholder="e.g., Quarterly tax review"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>Description</label>
+                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>Description</label>
                     <textarea
                       value={financialTaskForm.description}
                       onChange={(e) => setFinancialTaskForm({ ...financialTaskForm, description: e.target.value })}
                       className="w-full p-2 border rounded-lg"
-                      style={{ borderColor: COLORS.lightGray }}
+                      style={{ borderColor: COLORS.borderLight }}
                       rows={2}
                       placeholder="Optional details..."
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>Category</label>
+                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>Category</label>
                     <select
                       value={financialTaskForm.category}
                       onChange={(e) => setFinancialTaskForm({ ...financialTaskForm, category: e.target.value })}
                       className="w-full p-2 border rounded-lg"
-                      style={{ borderColor: COLORS.lightGray }}
+                      style={{ borderColor: COLORS.borderLight }}
                     >
                       <option value="reporting">Reporting (P&L, accounts)</option>
                       <option value="upload">Upload (transactions, data)</option>
@@ -728,12 +748,12 @@ const FinancialTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>Priority</label>
+                      <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>Priority</label>
                       <select
                         value={financialTaskForm.priority}
                         onChange={(e) => setFinancialTaskForm({ ...financialTaskForm, priority: e.target.value })}
                         className="w-full p-2 border rounded-lg"
-                        style={{ borderColor: COLORS.lightGray }}
+                        style={{ borderColor: COLORS.borderLight }}
                       >
                         <option value="low">Low</option>
                         <option value="medium">Medium</option>
@@ -741,23 +761,23 @@ const FinancialTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>Due Date</label>
+                      <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>Due Date</label>
                       <input
                         type="date"
                         value={financialTaskForm.dueDate}
                         onChange={(e) => setFinancialTaskForm({ ...financialTaskForm, dueDate: e.target.value })}
                         className="w-full p-2 border rounded-lg"
-                        style={{ borderColor: COLORS.lightGray }}
+                        style={{ borderColor: COLORS.borderLight }}
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>Assign To</label>
+                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>Assign To</label>
                     <select
                       value={financialTaskForm.assignedTo}
                       onChange={(e) => setFinancialTaskForm({ ...financialTaskForm, assignedTo: e.target.value })}
                       className="w-full p-2 border rounded-lg"
-                      style={{ borderColor: COLORS.lightGray }}
+                      style={{ borderColor: COLORS.borderLight }}
                     >
                       <option value="">Unassigned</option>
                       {getAssigneeList().map((person, idx) => (
@@ -771,14 +791,14 @@ const FinancialTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
               )}
             </div>
             {showCustomTaskForm && (
-              <div className="flex justify-end gap-2 p-4 border-t" style={{ borderColor: COLORS.lightGray }}>
+              <div className="flex justify-end gap-2 p-4 border-t" style={{ borderColor: COLORS.borderLight }}>
                 <button
                   onClick={() => {
                     setShowAddFinancialTask(false);
                     setShowCustomTaskForm(false);
                   }}
                   className="px-4 py-2 text-sm rounded-lg border"
-                  style={{ borderColor: COLORS.lightGray, color: COLORS.mediumGray }}
+                  style={{ borderColor: COLORS.borderLight, color: COLORS.textSecondary }}
                 >
                   Cancel
                 </button>

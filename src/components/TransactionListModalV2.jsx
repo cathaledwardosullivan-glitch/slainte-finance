@@ -33,7 +33,7 @@ const TransactionListModalV2 = ({ isOpen, onClose }) => {
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: COLORS.overlayDark,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -44,7 +44,7 @@ const TransactionListModalV2 = ({ isOpen, onClose }) => {
     >
       <div
         style={{
-          backgroundColor: COLORS.backgroundGray,
+          backgroundColor: COLORS.bgPage,
           borderRadius: '16px',
           width: '100%',
           maxWidth: '1400px',
@@ -64,11 +64,11 @@ const TransactionListModalV2 = ({ isOpen, onClose }) => {
             justifyContent: 'space-between',
             padding: '1rem 1.5rem',
             backgroundColor: COLORS.white,
-            borderBottom: `1px solid ${COLORS.lightGray}`,
+            borderBottom: `1px solid ${COLORS.borderLight}`,
             flexShrink: 0
           }}
         >
-          <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600, color: COLORS.darkGray }}>
+          <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600, color: COLORS.textPrimary }}>
             Manage Transactions
           </h2>
           <button
@@ -83,10 +83,10 @@ const TransactionListModalV2 = ({ isOpen, onClose }) => {
               alignItems: 'center',
               justifyContent: 'center'
             }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.backgroundGray}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.bgPage}
             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
           >
-            <X style={{ width: '1.25rem', height: '1.25rem', color: COLORS.mediumGray }} />
+            <X style={{ width: '1.25rem', height: '1.25rem', color: COLORS.textSecondary }} />
           </button>
         </div>
 

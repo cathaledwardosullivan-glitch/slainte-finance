@@ -4,6 +4,7 @@
  * and provides API fetching capabilities
  */
 import { useState, useEffect, useCallback } from 'react';
+import { setDemoModeFlag, initDemoMode } from '../utils/demoMode';
 
 /**
  * Check if we're running in LAN mode (mobile accessing via IP)
@@ -66,10 +67,14 @@ export default function useLANMode() {
   const [isLAN, setIsLAN] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isOffline, setIsOffline] = useState(false);
   const [error, setError] = useState(null);
 
   // Check LAN mode on mount
   useEffect(() => {
+    // Clean up expired demo keys on startup
+    initDemoMode();
+
     const lanMode = isLANMode();
     setIsLAN(lanMode);
 
@@ -80,6 +85,13 @@ export default function useLANMode() {
         // Verify token by making a test API call
         verifyToken(token);
       } else {
+        // No token — check if we have cached data for offline demo
+        if (hasCachedData()) {
+          console.log('[LAN] No token but cached data found — entering offline demo mode');
+          setIsOffline(true);
+          setDemoModeFlag(true);
+          setIsAuthenticated(true);
+        }
         setIsLoading(false);
       }
     } else {
@@ -98,13 +110,23 @@ export default function useLANMode() {
 
       if (response.ok) {
         setIsAuthenticated(true);
+        setIsOffline(false);
+        setDemoModeFlag(false);
       } else {
         clearAuthToken();
         setIsAuthenticated(false);
       }
     } catch (err) {
-      console.error('[LAN] Token verification failed:', err);
-      setError('Unable to connect to desktop app');
+      console.error('[LAN] Token verification failed (network error):', err);
+      // Network error — server unreachable. If we have cached data, enter offline mode.
+      if (hasCachedData()) {
+        console.log('[LAN] Server unreachable but cached data available — entering offline demo mode');
+        setIsOffline(true);
+        setDemoModeFlag(true);
+        setIsAuthenticated(true);
+      } else {
+        setError('Unable to connect to desktop app');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -205,6 +227,7 @@ export default function useLANMode() {
     isLAN,
     isAuthenticated,
     isLoading,
+    isOffline,
     error,
     login,
     logout,
@@ -215,4 +238,17 @@ export default function useLANMode() {
     fetchReports,
     fetchGMSHealthCheck
   };
+}
+
+/**
+ * Check if localStorage has enough cached data from a previous sync
+ * to run the app in offline demo mode.
+ */
+function hasCachedData() {
+  try {
+    const transactions = localStorage.getItem('gp_finance_transactions');
+    return transactions && JSON.parse(transactions).length > 0;
+  } catch {
+    return false;
+  }
 }

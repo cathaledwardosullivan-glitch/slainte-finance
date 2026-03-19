@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useFinn } from '../../context/FinnContext';
 import { useTour } from '../Tour';
-import { Send, MessageCircle, Loader2, X, FileText, Play, RefreshCw, SkipForward, Download, FolderOpen, MessageSquare, CheckCircle, Navigation, Search, FileSearch, BookOpen } from 'lucide-react';
+import { Send, MessageCircle, Loader2, X, FileText, Play, RefreshCw, SkipForward, Download, FolderOpen, MessageSquare, CheckCircle, Navigation, Search, FileSearch, BookOpen, Copy, Mail, CheckSquare } from 'lucide-react';
 import COLORS from '../../utils/colors';
+import { isDemoMode, getDemoApiKey, setDemoApiKey, getDemoKeyTimeRemaining } from '../../utils/demoMode';
 
 /**
  * FinnChatPanel - Chat interface for the unified Finn widget
@@ -14,9 +15,9 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
     sendMessage,
     hasData,
     apiKey,
+    setApiKey,
     backgroundTask,
     cancelBackgroundTask,
-    setActiveTab,
     getFinancialContext,
     pendingClarifications,
     submitClarifications,
@@ -96,8 +97,8 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
               ? COLORS.slainteBlue
               : isError
                 ? `${COLORS.expenseColor}15`
-                : COLORS.backgroundGray,
-            color: isUser ? COLORS.white : COLORS.darkGray,
+                : COLORS.bgPage,
+            color: isUser ? COLORS.white : COLORS.textPrimary,
             border: isError ? `1px solid ${COLORS.expenseColor}40` : 'none'
           }}
         >
@@ -115,10 +116,14 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
                   borderRadius: '0.375rem',
                   backgroundColor: `${COLORS.slainteBlue}10`,
                   fontSize: '0.75rem',
-                  color: COLORS.mediumGray
+                  color: COLORS.textSecondary
                 }}>
-                  {action.name === 'navigate' ? (
+                  {action.name === 'navigate' && action.input?.target === 'tasks:create' ? (
+                    <CheckSquare size={12} color={COLORS.incomeColor} />
+                  ) : action.name === 'navigate' ? (
                     <Navigation size={12} color={COLORS.slainteBlue} />
+                  ) : action.name === 'generate_report' && action.input?.reportType === 'communication_draft' ? (
+                    <Mail size={12} color={COLORS.slainteBlue} />
                   ) : action.name === 'search_transactions' ? (
                     <FileSearch size={12} color={COLORS.slainteBlue} />
                   ) : action.name === 'generate_report' ? (
@@ -164,7 +169,7 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
                 justifyContent: 'center',
                 gap: '0.5rem'
               }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.slainteBlueDark || '#3D7BC7'}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.slainteBlueDark}
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.slainteBlue}
             >
               <Play style={{ height: '0.875rem', width: '0.875rem' }} />
@@ -173,9 +178,17 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
           )}
 
           {/* Report ready notification */}
-          {message.isReportNotification && (
+          {message.isReportNotification && !message.isCommunicationDraft && (
             <button
-              onClick={() => setActiveTab('reports')}
+              onClick={() => {
+                window.dispatchEvent(new CustomEvent('navigate:advancedInsights'));
+                setTimeout(() => {
+                  window.dispatchEvent(new CustomEvent('advanced-insights:openReport', {
+                    detail: { reportId: message.reportId }
+                  }));
+                }, 400);
+                closeWidget();
+              }}
               style={{
                 marginTop: '0.75rem',
                 width: '100%',
@@ -192,12 +205,145 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
                 justifyContent: 'center',
                 gap: '0.5rem'
               }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3db8ab'}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.incomeColorDark}
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.incomeColor}
             >
               <FileText style={{ height: '0.875rem', width: '0.875rem' }} />
               View Report
             </button>
+          )}
+
+          {/* Communication draft notification */}
+          {message.isReportNotification && message.isCommunicationDraft && (
+            <div style={{ marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {/* Contact info card */}
+              {message.contactInfo && (
+                <div style={{
+                  backgroundColor: `${COLORS.slainteBlue}10`,
+                  borderRadius: '0.375rem',
+                  padding: '0.5rem 0.75rem',
+                  fontSize: '0.75rem',
+                  border: `1px solid ${COLORS.slainteBlue}20`
+                }}>
+                  <div style={{ fontWeight: 500, color: COLORS.textPrimary, marginBottom: '0.125rem' }}>
+                    {message.contactInfo.name}
+                  </div>
+                  {message.contactInfo.email && (
+                    <div style={{ color: COLORS.textSecondary }}>{message.contactInfo.email}</div>
+                  )}
+                  {message.contactInfo.phone && (
+                    <div style={{ color: COLORS.textSecondary }}>{message.contactInfo.phone}</div>
+                  )}
+                </div>
+              )}
+
+              {/* Action buttons */}
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                {/* View full draft */}
+                <button
+                  onClick={() => {
+                    window.dispatchEvent(new CustomEvent('navigate:advancedInsights'));
+                    setTimeout(() => {
+                      window.dispatchEvent(new CustomEvent('advanced-insights:openReport', {
+                        detail: { reportId: message.reportId }
+                      }));
+                    }, 400);
+                    closeWidget();
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '0.5rem 0.75rem',
+                    backgroundColor: COLORS.incomeColor,
+                    color: COLORS.white,
+                    border: 'none',
+                    borderRadius: '0.375rem',
+                    fontSize: '0.75rem',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.375rem'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.incomeColorDark}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.incomeColor}
+                >
+                  <FileText style={{ height: '0.75rem', width: '0.75rem' }} />
+                  View Draft
+                </button>
+
+                {/* Copy to clipboard */}
+                <button
+                  onClick={async () => {
+                    try {
+                      const reports = JSON.parse(localStorage.getItem('gp_finance_saved_reports') || '[]');
+                      const report = reports.find(r => r.id === message.reportId);
+                      if (report?.content) {
+                        await navigator.clipboard.writeText(report.content);
+                        // Brief visual feedback
+                        const btn = document.activeElement;
+                        if (btn) {
+                          const origText = btn.textContent;
+                          btn.textContent = 'Copied!';
+                          setTimeout(() => { btn.textContent = origText; }, 1500);
+                        }
+                      }
+                    } catch (err) {
+                      console.error('Failed to copy:', err);
+                    }
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '0.5rem 0.75rem',
+                    backgroundColor: COLORS.bgPage,
+                    color: COLORS.textPrimary,
+                    border: `1px solid ${COLORS.borderLight}`,
+                    borderRadius: '0.375rem',
+                    fontSize: '0.75rem',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.375rem'
+                  }}
+                >
+                  <Copy style={{ height: '0.75rem', width: '0.75rem' }} />
+                  Copy
+                </button>
+
+                {/* Open in email client */}
+                {message.contactInfo?.email && (
+                  <button
+                    onClick={() => {
+                      const subject = encodeURIComponent(message.emailSubject || 'Query from GP Practice');
+                      const body = encodeURIComponent(message.emailBody || '');
+                      window.open(`mailto:${message.contactInfo.email}?subject=${subject}&body=${body}`);
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '0.5rem 0.75rem',
+                      backgroundColor: COLORS.slainteBlue,
+                      color: COLORS.white,
+                      border: 'none',
+                      borderRadius: '0.375rem',
+                      fontSize: '0.75rem',
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.375rem'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.slainteBlueDark}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.slainteBlue}
+                  >
+                    <Mail style={{ height: '0.75rem', width: '0.75rem' }} />
+                    Email
+                  </button>
+                )}
+              </div>
+            </div>
           )}
 
           {/* PCRS download complete notification */}
@@ -211,11 +357,11 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
                   marginBottom: '0.5rem',
                   fontSize: '0.75rem'
                 }}>
-                  <div style={{ fontWeight: 500, marginBottom: '0.25rem', color: COLORS.darkGray }}>
+                  <div style={{ fontWeight: 500, marginBottom: '0.25rem', color: COLORS.textPrimary }}>
                     Downloaded files:
                   </div>
                   {message.downloadedFiles.map((file, idx) => (
-                    <div key={idx} style={{ color: COLORS.mediumGray }}>
+                    <div key={idx} style={{ color: COLORS.textSecondary }}>
                       {file.panelName}: {file.filename}
                     </div>
                   ))}
@@ -242,7 +388,7 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
                   justifyContent: 'center',
                   gap: '0.5rem'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3db8ab'}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.incomeColorDark}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.incomeColor}
               >
                 <FolderOpen style={{ height: '0.875rem', width: '0.875rem' }} />
@@ -262,7 +408,7 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
                 marginTop: '0.75rem',
                 width: '100%',
                 padding: '0.625rem 1rem',
-                backgroundColor: COLORS.mediumGray,
+                backgroundColor: COLORS.textSecondary,
                 color: COLORS.white,
                 border: 'none',
                 borderRadius: '0.5rem',
@@ -282,7 +428,7 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
 
           {/* Timestamp for assistant messages */}
           {!isUser && message.timestamp && (
-            <div style={{ fontSize: '0.6875rem', color: COLORS.mediumGray, marginTop: '0.375rem' }}>
+            <div style={{ fontSize: '0.6875rem', color: COLORS.textSecondary, marginTop: '0.375rem' }}>
               Finn • {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </div>
           )}
@@ -315,7 +461,7 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
               marginBottom: '0.75rem'
             }}
           >
-            <div style={{ color: COLORS.darkGray, lineHeight: '1.5' }}>
+            <div style={{ color: COLORS.textPrimary, lineHeight: '1.5' }}>
               {getWelcomeMessage()}
             </div>
           </div>
@@ -323,19 +469,19 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
 
         {/* No data message */}
         {!hasData && (
-          <div style={{ textAlign: 'center', color: COLORS.mediumGray, padding: '2rem 1rem' }}>
+          <div style={{ textAlign: 'center', color: COLORS.textSecondary, padding: '2rem 1rem' }}>
             <MessageCircle
               style={{
                 margin: '0 auto 0.75rem',
                 height: '2.5rem',
                 width: '2.5rem',
-                color: COLORS.lightGray
+                color: COLORS.borderLight
               }}
             />
             <div style={{ fontSize: '0.875rem', marginBottom: '0.5rem' }}>
               Upload transaction data to start chatting with Finn
             </div>
-            <div style={{ fontSize: '0.75rem', color: COLORS.lightGray }}>
+            <div style={{ fontSize: '0.75rem', color: COLORS.borderLight }}>
               Go to Transactions to import your data
             </div>
           </div>
@@ -349,7 +495,7 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
           <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '0.75rem' }}>
             <div
               style={{
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 padding: '0.75rem 1rem',
                 borderRadius: '0.75rem',
                 fontSize: '0.875rem',
@@ -366,7 +512,7 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
                   animation: 'spin 1s linear infinite'
                 }}
               />
-              <span style={{ color: COLORS.mediumGray }}>Finn is thinking...</span>
+              <span style={{ color: COLORS.textSecondary }}>Finn is thinking...</span>
             </div>
           </div>
         )}
@@ -400,12 +546,12 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
                   style={{
                     height: '1rem',
                     width: '1rem',
-                    color: COLORS.darkGray,
+                    color: COLORS.textPrimary,
                     animation: 'spin 1s linear infinite'
                   }}
                 />
               )}
-              <span style={{ fontSize: '0.8125rem', fontWeight: 500, color: COLORS.darkGray }}>
+              <span style={{ fontSize: '0.8125rem', fontWeight: 500, color: COLORS.textPrimary }}>
                 {backgroundTask.type === TASK_TYPES?.PCRS_DOWNLOAD
                   ? 'Downloading PCRS statements...'
                   : 'Working on your report...'}
@@ -415,7 +561,7 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
             {/* PCRS progress indicator */}
             {backgroundTask.type === TASK_TYPES?.PCRS_DOWNLOAD && pcrsDownloadProgress && (
               <div style={{ marginBottom: '0.5rem' }}>
-                <div style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginBottom: '0.25rem' }}>
+                <div style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginBottom: '0.25rem' }}>
                   {pcrsDownloadProgress.currentPanel && `Downloading: ${pcrsDownloadProgress.currentPanel}`}
                 </div>
                 {pcrsDownloadProgress.total > 0 && (
@@ -433,7 +579,7 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
                     }} />
                   </div>
                 )}
-                <div style={{ fontSize: '0.6875rem', color: COLORS.mediumGray, marginTop: '0.25rem' }}>
+                <div style={{ fontSize: '0.6875rem', color: COLORS.textSecondary, marginTop: '0.25rem' }}>
                   {pcrsDownloadProgress.completed} of {pcrsDownloadProgress.total} panels complete
                 </div>
               </div>
@@ -445,10 +591,10 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
                 style={{
                   padding: '0.375rem 0.75rem',
                   backgroundColor: 'transparent',
-                  border: `1px solid ${COLORS.mediumGray}`,
+                  border: `1px solid ${COLORS.textSecondary}`,
                   borderRadius: '0.375rem',
                   fontSize: '0.75rem',
-                  color: COLORS.mediumGray,
+                  color: COLORS.textSecondary,
                   cursor: 'pointer'
                 }}
               >
@@ -470,7 +616,7 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
               marginBottom: '0.75rem'
             }}
           >
-            <div style={{ fontSize: '0.8125rem', fontWeight: 500, color: COLORS.darkGray, marginBottom: '0.75rem' }}>
+            <div style={{ fontSize: '0.8125rem', fontWeight: 500, color: COLORS.textPrimary, marginBottom: '0.75rem' }}>
               Quick clarifications to improve your report:
             </div>
 
@@ -480,7 +626,7 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
                   style={{
                     display: 'block',
                     fontSize: '0.8125rem',
-                    color: COLORS.darkGray,
+                    color: COLORS.textPrimary,
                     marginBottom: '0.375rem'
                   }}
                 >
@@ -495,13 +641,13 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
                     width: '100%',
                     padding: '0.5rem 0.75rem',
                     fontSize: '0.8125rem',
-                    border: `1px solid ${COLORS.lightGray}`,
+                    border: `1px solid ${COLORS.borderLight}`,
                     borderRadius: '0.375rem',
                     outline: 'none',
                     backgroundColor: COLORS.white
                   }}
                   onFocus={(e) => e.target.style.borderColor = COLORS.slainteBlue}
-                  onBlur={(e) => e.target.style.borderColor = COLORS.lightGray}
+                  onBlur={(e) => e.target.style.borderColor = COLORS.borderLight}
                 />
               </div>
             ))}
@@ -538,9 +684,9 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
                 }}
                 style={{
                   padding: '0.625rem 1rem',
-                  backgroundColor: COLORS.backgroundGray,
-                  color: COLORS.mediumGray,
-                  border: `1px solid ${COLORS.lightGray}`,
+                  backgroundColor: COLORS.bgPage,
+                  color: COLORS.textSecondary,
+                  border: `1px solid ${COLORS.borderLight}`,
                   borderRadius: '0.5rem',
                   fontSize: '0.8125rem',
                   fontWeight: 500,
@@ -564,7 +710,7 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
       {/* Input Area */}
       <div
         style={{
-          borderTop: `1px solid ${COLORS.lightGray}`,
+          borderTop: `1px solid ${COLORS.borderLight}`,
           padding: '0.75rem',
           backgroundColor: COLORS.white,
           flexShrink: 0
@@ -586,12 +732,12 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
             rows={1}
             style={{
               flex: 1,
-              border: `1px solid ${COLORS.lightGray}`,
+              border: `1px solid ${COLORS.borderLight}`,
               borderRadius: '0.5rem',
               padding: '0.625rem 0.875rem',
               fontSize: '0.875rem',
               outline: 'none',
-              backgroundColor: (!hasData || isLoading || !apiKey) ? COLORS.backgroundGray : COLORS.white,
+              backgroundColor: (!hasData || isLoading || !apiKey) ? COLORS.bgPage : COLORS.white,
               transition: 'box-shadow 0.2s, border-color 0.2s',
               resize: 'none',
               minHeight: '2.5rem',
@@ -604,7 +750,7 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
               e.target.style.boxShadow = `0 0 0 2px ${COLORS.slainteBlue}30`;
             }}
             onBlur={(e) => {
-              e.target.style.borderColor = COLORS.lightGray;
+              e.target.style.borderColor = COLORS.borderLight;
               e.target.style.boxShadow = 'none';
             }}
           />
@@ -628,7 +774,7 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
             }}
             onMouseEnter={(e) => {
               if (inputValue.trim() && !isLoading && hasData && apiKey) {
-                e.currentTarget.style.backgroundColor = COLORS.slainteBlueDark || '#3D7BC7';
+                e.currentTarget.style.backgroundColor = COLORS.slainteBlueDark;
               }
             }}
             onMouseLeave={(e) => {
@@ -641,15 +787,24 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
 
         {/* Helper text */}
         {hasData && apiKey && (
-          <div style={{ fontSize: '0.6875rem', color: COLORS.mediumGray, marginTop: '0.375rem' }}>
+          <div style={{ fontSize: '0.6875rem', color: COLORS.textSecondary, marginTop: '0.375rem' }}>
             Enter to send • Shift+Enter for new line
           </div>
         )}
 
-        {/* API key warning */}
+        {/* API key warning / demo key entry */}
         {!apiKey && hasData && (
-          <div style={{ fontSize: '0.6875rem', color: COLORS.expenseColor, marginTop: '0.375rem' }}>
-            API key required. Configure in Admin Settings.
+          isDemoMode() ? (
+            <DemoKeyPrompt onKeySaved={(key) => { setDemoApiKey(key); setApiKey(key); }} />
+          ) : (
+            <div style={{ fontSize: '0.6875rem', color: COLORS.expenseColor, marginTop: '0.375rem' }}>
+              API key required. Configure in Admin Settings.
+            </div>
+          )
+        )}
+        {apiKey && isDemoMode() && (
+          <div style={{ fontSize: '0.6875rem', color: COLORS.textSecondary, marginTop: '0.375rem' }}>
+            Demo key expires in {getDemoKeyTimeRemaining() || 'soon'}
           </div>
         )}
       </div>
@@ -657,10 +812,10 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
       {/* Persistent disclaimer footer */}
       <div style={{
         padding: '0.5rem 0.75rem',
-        backgroundColor: COLORS.backgroundGray,
-        borderTop: `1px solid ${COLORS.lightGray}`,
+        backgroundColor: COLORS.bgPage,
+        borderTop: `1px solid ${COLORS.borderLight}`,
         fontSize: '0.875rem',
-        color: COLORS.mediumGray,
+        color: COLORS.textSecondary,
         textAlign: 'center',
         lineHeight: '1.4',
         flexShrink: 0
@@ -678,6 +833,77 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
           to { transform: rotate(360deg); }
         }
       `}</style>
+    </div>
+  );
+};
+
+/**
+ * Inline prompt for entering a demo API key in the chat panel.
+ */
+const DemoKeyPrompt = ({ onKeySaved }) => {
+  const [showInput, setShowInput] = React.useState(false);
+  const [key, setKey] = React.useState('');
+
+  if (!showInput) {
+    return (
+      <button
+        onClick={() => setShowInput(true)}
+        style={{
+          fontSize: '0.6875rem',
+          color: COLORS.slainteBlue,
+          marginTop: '0.375rem',
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          padding: 0,
+          textDecoration: 'underline'
+        }}
+      >
+        Set demo API key to chat with Finn
+      </button>
+    );
+  }
+
+  return (
+    <div style={{ marginTop: '0.375rem', display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
+      <input
+        type="password"
+        value={key}
+        onChange={(e) => setKey(e.target.value)}
+        placeholder="sk-ant-..."
+        autoFocus
+        style={{
+          fontSize: '0.6875rem',
+          padding: '0.25rem 0.375rem',
+          border: `1px solid ${COLORS.borderLight}`,
+          borderRadius: '0.25rem',
+          flex: 1,
+          minWidth: 0
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && key.trim()) {
+            onKeySaved(key.trim());
+            setShowInput(false);
+          } else if (e.key === 'Escape') {
+            setShowInput(false);
+          }
+        }}
+      />
+      <button
+        onClick={() => { if (key.trim()) { onKeySaved(key.trim()); setShowInput(false); } }}
+        style={{
+          fontSize: '0.6875rem',
+          padding: '0.25rem 0.5rem',
+          backgroundColor: COLORS.slainteBlue,
+          color: 'white',
+          border: 'none',
+          borderRadius: '0.25rem',
+          cursor: 'pointer',
+          whiteSpace: 'nowrap'
+        }}
+      >
+        Save
+      </button>
     </div>
   );
 };

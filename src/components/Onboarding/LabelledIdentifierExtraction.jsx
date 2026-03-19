@@ -422,7 +422,7 @@ export default function LabelledIdentifierExtraction({ mappingData, onComplete }
   };
 
   const getParentCategory = (id) => {
-    return PARENT_CATEGORIES[id] || { name: 'Unknown', icon: '❓', color: COLORS.mediumGray };
+    return PARENT_CATEGORIES[id] || { name: 'Unknown', icon: '❓', color: COLORS.textSecondary };
   };
 
   // Group extracted identifiers by Sláinte category
@@ -452,7 +452,7 @@ export default function LabelledIdentifierExtraction({ mappingData, onComplete }
         backgroundColor: COLORS.white,
         borderRadius: '0.75rem',
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-        border: `1px solid ${COLORS.lightGray}`,
+        border: `1px solid ${COLORS.borderLight}`,
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column'
@@ -498,7 +498,7 @@ export default function LabelledIdentifierExtraction({ mappingData, onComplete }
                 width: '32px',
                 height: '32px',
                 borderRadius: '50%',
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -507,7 +507,7 @@ export default function LabelledIdentifierExtraction({ mappingData, onComplete }
                 <MessageCircle style={{ width: '16px', height: '16px', color: COLORS.slainteBlue }} />
               </div>
               <div style={{
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 padding: '0.875rem 1rem',
                 borderRadius: '12px',
                 maxWidth: '85%'
@@ -515,7 +515,7 @@ export default function LabelledIdentifierExtraction({ mappingData, onComplete }
                 <div style={{
                   fontSize: '1.125rem',
                   fontWeight: 600,
-                  color: COLORS.darkGray
+                  color: COLORS.textPrimary
                 }}>
                   {greeting}
                 </div>
@@ -527,14 +527,14 @@ export default function LabelledIdentifierExtraction({ mappingData, onComplete }
             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
               <div style={{ width: '32px', flexShrink: 0 }} />
               <div style={{
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 padding: '0.875rem 1rem',
                 borderRadius: '12px',
                 maxWidth: '85%'
               }}>
                 <div style={{
                   fontSize: '0.9375rem',
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   lineHeight: 1.5
                 }}>
                   {message}
@@ -555,7 +555,7 @@ export default function LabelledIdentifierExtraction({ mappingData, onComplete }
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Loader style={{ width: '18px', height: '18px', color: COLORS.slainteBlue, animation: 'spin 1s linear infinite' }} />
-                  <span style={{ fontSize: '0.9375rem', color: COLORS.darkGray }}>
+                  <span style={{ fontSize: '0.9375rem', color: COLORS.textPrimary }}>
                     Processing {mappingData.transactions.length} transactions...
                   </span>
                 </div>
@@ -576,26 +576,26 @@ export default function LabelledIdentifierExtraction({ mappingData, onComplete }
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
                   <CheckCircle style={{ width: '18px', height: '18px', color: COLORS.incomeColor }} />
-                  <span style={{ fontSize: '0.9375rem', fontWeight: 600, color: COLORS.darkGray }}>
+                  <span style={{ fontSize: '0.9375rem', fontWeight: 600, color: COLORS.textPrimary }}>
                     Import Complete!
                   </span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.8125rem' }}>
                   <div>
-                    <span style={{ color: COLORS.mediumGray }}>Transactions:</span>
-                    <span style={{ marginLeft: '0.5rem', fontWeight: 600, color: COLORS.darkGray }}>{stats.totalTransactions}</span>
+                    <span style={{ color: COLORS.textSecondary }}>Transactions:</span>
+                    <span style={{ marginLeft: '0.5rem', fontWeight: 600, color: COLORS.textPrimary }}>{stats.totalTransactions}</span>
                   </div>
                   <div>
-                    <span style={{ color: COLORS.mediumGray }}>Categorized:</span>
+                    <span style={{ color: COLORS.textSecondary }}>Categorized:</span>
                     <span style={{ marginLeft: '0.5rem', fontWeight: 600, color: COLORS.incomeColor }}>{stats.categorizedTransactions}</span>
                   </div>
                   <div>
-                    <span style={{ color: COLORS.mediumGray }}>New Identifiers:</span>
+                    <span style={{ color: COLORS.textSecondary }}>New Identifiers:</span>
                     <span style={{ marginLeft: '0.5rem', fontWeight: 600, color: COLORS.slainteBlue }}>{stats.newIdentifiers}</span>
                   </div>
                   <div>
-                    <span style={{ color: COLORS.mediumGray }}>Categories:</span>
-                    <span style={{ marginLeft: '0.5rem', fontWeight: 600, color: COLORS.darkGray }}>{stats.categoriesUpdated}</span>
+                    <span style={{ color: COLORS.textSecondary }}>Categories:</span>
+                    <span style={{ marginLeft: '0.5rem', fontWeight: 600, color: COLORS.textPrimary }}>{stats.categoriesUpdated}</span>
                   </div>
                 </div>
               </div>
@@ -606,7 +606,7 @@ export default function LabelledIdentifierExtraction({ mappingData, onComplete }
         {/* Continue button */}
         <div style={{
           padding: '1rem',
-          borderTop: `1px solid ${COLORS.lightGray}`
+          borderTop: `1px solid ${COLORS.borderLight}`
         }}>
           <button
             onClick={onComplete}
@@ -617,7 +617,7 @@ export default function LabelledIdentifierExtraction({ mappingData, onComplete }
               fontSize: '1rem',
               fontWeight: 600,
               color: COLORS.white,
-              backgroundColor: processComplete ? COLORS.incomeColor : COLORS.mediumGray,
+              backgroundColor: processComplete ? COLORS.incomeColor : COLORS.textSecondary,
               border: 'none',
               borderRadius: '8px',
               cursor: processComplete ? 'pointer' : 'not-allowed',
@@ -667,12 +667,12 @@ export default function LabelledIdentifierExtraction({ mappingData, onComplete }
               <h3 style={{
                 fontSize: '1.25rem',
                 fontWeight: 700,
-                color: COLORS.darkGray,
+                color: COLORS.textPrimary,
                 marginBottom: '0.25rem'
               }}>
                 Extracted Identifiers
               </h3>
-              <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>
+              <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>
                 Patterns learned from your labelled transactions
               </p>
             </div>
@@ -682,7 +682,7 @@ export default function LabelledIdentifierExtraction({ mappingData, onComplete }
           {isProcessing && (
             <div style={{ textAlign: 'center', padding: '3rem' }}>
               <Loader style={{ width: '40px', height: '40px', color: COLORS.slainteBlue, animation: 'spin 1s linear infinite', margin: '0 auto 1rem' }} />
-              <p style={{ color: COLORS.mediumGray }}>Extracting patterns...</p>
+              <p style={{ color: COLORS.textSecondary }}>Extracting patterns...</p>
             </div>
           )}
 
@@ -693,11 +693,11 @@ export default function LabelledIdentifierExtraction({ mappingData, onComplete }
                 <div style={{
                   textAlign: 'center',
                   padding: '2rem',
-                  backgroundColor: COLORS.backgroundGray,
+                  backgroundColor: COLORS.bgPage,
                   borderRadius: '12px'
                 }}>
-                  <Tag style={{ width: '32px', height: '32px', color: COLORS.mediumGray, margin: '0 auto 0.75rem' }} />
-                  <p style={{ color: COLORS.mediumGray }}>
+                  <Tag style={{ width: '32px', height: '32px', color: COLORS.textSecondary, margin: '0 auto 0.75rem' }} />
+                  <p style={{ color: COLORS.textSecondary }}>
                     No new identifier patterns found. Your transactions may not have recurring patterns, or existing identifiers already cover them.
                   </p>
                 </div>
@@ -724,13 +724,13 @@ export default function LabelledIdentifierExtraction({ mappingData, onComplete }
                         gap: '0.5rem'
                       }}>
                         <span style={{ fontSize: '1.25rem' }}>{parent.icon}</span>
-                        <span style={{ fontSize: '1rem', fontWeight: 600, color: COLORS.darkGray }}>
+                        <span style={{ fontSize: '1rem', fontWeight: 600, color: COLORS.textPrimary }}>
                           {parent.name}
                         </span>
                         <span style={{
                           marginLeft: 'auto',
                           fontSize: '0.8125rem',
-                          color: COLORS.mediumGray,
+                          color: COLORS.textSecondary,
                           backgroundColor: COLORS.white,
                           padding: '0.25rem 0.5rem',
                           borderRadius: '4px'
@@ -747,18 +747,18 @@ export default function LabelledIdentifierExtraction({ mappingData, onComplete }
                               key={idx}
                               style={{
                                 backgroundColor: COLORS.white,
-                                border: `1px solid ${COLORS.lightGray}`,
+                                border: `1px solid ${COLORS.borderLight}`,
                                 borderRadius: '8px',
                                 padding: '0.625rem 0.875rem'
                               }}
                             >
                               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
                                 <Plus style={{ width: '12px', height: '12px', color: COLORS.incomeColor }} />
-                                <span style={{ fontSize: '0.875rem', fontWeight: 600, color: COLORS.darkGray }}>
+                                <span style={{ fontSize: '0.875rem', fontWeight: 600, color: COLORS.textPrimary }}>
                                   {item.identifier}
                                 </span>
                               </div>
-                              <div style={{ fontSize: '0.6875rem', color: COLORS.mediumGray }}>
+                              <div style={{ fontSize: '0.6875rem', color: COLORS.textSecondary }}>
                                 From: "{item.userCategory}" • {item.transactionCount} txns
                               </div>
                             </div>

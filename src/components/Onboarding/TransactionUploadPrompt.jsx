@@ -159,7 +159,7 @@ export default function TransactionUploadPrompt({ onUpload, onSkip }) {
         backgroundColor: COLORS.white,
         borderRadius: '0.75rem',
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-        border: `1px solid ${COLORS.lightGray}`,
+        border: `1px solid ${COLORS.borderLight}`,
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column'
@@ -206,7 +206,7 @@ export default function TransactionUploadPrompt({ onUpload, onSkip }) {
                 width: '32px',
                 height: '32px',
                 borderRadius: '50%',
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -215,7 +215,7 @@ export default function TransactionUploadPrompt({ onUpload, onSkip }) {
                 <MessageCircle style={{ width: '16px', height: '16px', color: COLORS.slainteBlue }} />
               </div>
               <div style={{
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 padding: '0.875rem 1rem',
                 borderRadius: '12px',
                 maxWidth: '85%'
@@ -223,7 +223,7 @@ export default function TransactionUploadPrompt({ onUpload, onSkip }) {
                 <div style={{
                   fontSize: '1.125rem',
                   fontWeight: 600,
-                  color: COLORS.darkGray
+                  color: COLORS.textPrimary
                 }}>
                   {greeting}
                 </div>
@@ -236,14 +236,14 @@ export default function TransactionUploadPrompt({ onUpload, onSkip }) {
             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
               <div style={{ width: '32px', flexShrink: 0 }} />
               <div style={{
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 padding: '0.875rem 1rem',
                 borderRadius: '12px',
                 maxWidth: '85%'
               }}>
                 <div style={{
                   fontSize: '0.9375rem',
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   lineHeight: 1.5
                 }}>
                   {message}
@@ -257,7 +257,7 @@ export default function TransactionUploadPrompt({ onUpload, onSkip }) {
             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
               <div style={{ width: '32px', flexShrink: 0 }} />
               <div style={{
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 padding: '0.875rem 1rem',
                 borderRadius: '12px',
                 maxWidth: '85%'
@@ -265,7 +265,7 @@ export default function TransactionUploadPrompt({ onUpload, onSkip }) {
                 <div style={{
                   fontSize: '0.875rem',
                   fontWeight: 600,
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   marginBottom: '0.75rem'
                 }}>
                   What happens next:
@@ -292,7 +292,7 @@ export default function TransactionUploadPrompt({ onUpload, onSkip }) {
                       }}>
                         {item.step}
                       </div>
-                      <span style={{ fontSize: '0.875rem', color: COLORS.darkGray }}>
+                      <span style={{ fontSize: '0.875rem', color: COLORS.textPrimary }}>
                         {item.text}
                       </span>
                     </div>
@@ -317,7 +317,7 @@ export default function TransactionUploadPrompt({ onUpload, onSkip }) {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem',
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   fontSize: '0.9375rem'
                 }}>
                   <CheckCircle style={{ width: '18px', height: '18px', color: COLORS.incomeColor }} />
@@ -348,7 +348,7 @@ export default function TransactionUploadPrompt({ onUpload, onSkip }) {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem',
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   fontSize: '0.9375rem'
                 }}>
                   <Loader style={{
@@ -403,7 +403,7 @@ export default function TransactionUploadPrompt({ onUpload, onSkip }) {
               <h3 style={{
                 fontSize: '1.5rem',
                 fontWeight: 700,
-                color: COLORS.darkGray,
+                color: COLORS.textPrimary,
                 marginBottom: '0.5rem'
               }}>
                 Upload Transactions
@@ -411,7 +411,7 @@ export default function TransactionUploadPrompt({ onUpload, onSkip }) {
 
               <p style={{
                 fontSize: '1rem',
-                color: COLORS.mediumGray,
+                color: COLORS.textSecondary,
                 lineHeight: 1.6
               }}>
                 Export a CSV from online banking, or upload a PDF bank statement.
@@ -426,12 +426,12 @@ export default function TransactionUploadPrompt({ onUpload, onSkip }) {
             onDragOver={handleDrag}
             onDrop={handleDrop}
             style={{
-              border: `2px dashed ${dragActive ? COLORS.slainteBlue : files.length > 0 ? COLORS.incomeColor : COLORS.lightGray}`,
+              border: `2px dashed ${dragActive ? COLORS.slainteBlue : files.length > 0 ? COLORS.incomeColor : COLORS.borderLight}`,
               borderRadius: '12px',
               padding: '2rem 1.5rem',
               textAlign: 'center',
               marginBottom: '1.5rem',
-              backgroundColor: dragActive ? `${COLORS.slainteBlue}05` : files.length > 0 ? `${COLORS.incomeColor}05` : COLORS.backgroundGray,
+              backgroundColor: dragActive ? `${COLORS.slainteBlue}05` : files.length > 0 ? `${COLORS.incomeColor}05` : COLORS.bgPage,
               cursor: 'pointer',
               transition: 'all 0.3s ease'
             }}
@@ -459,7 +459,7 @@ export default function TransactionUploadPrompt({ onUpload, onSkip }) {
                   color: COLORS.slainteBlue,
                   animation: 'spin 1s linear infinite'
                 }} />
-                <p style={{ fontSize: '0.9375rem', color: COLORS.darkGray }}>
+                <p style={{ fontSize: '0.9375rem', color: COLORS.textPrimary }}>
                   Parsing bank statement...
                 </p>
               </div>
@@ -474,7 +474,7 @@ export default function TransactionUploadPrompt({ onUpload, onSkip }) {
                 <p style={{ fontSize: '0.875rem', color: COLORS.expenseColor, textAlign: 'center' }}>
                   {parseError}
                 </p>
-                <p style={{ fontSize: '0.8125rem', color: COLORS.mediumGray }}>
+                <p style={{ fontSize: '0.8125rem', color: COLORS.textSecondary }}>
                   Click to try another file
                 </p>
               </div>
@@ -488,30 +488,30 @@ export default function TransactionUploadPrompt({ onUpload, onSkip }) {
                 }}>
                   <div style={{ textAlign: 'center' }}>
                     <FileSpreadsheet style={{ width: '32px', height: '32px', color: COLORS.slainteBlue }} />
-                    <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginTop: '0.25rem' }}>CSV</p>
+                    <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginTop: '0.25rem' }}>CSV</p>
                   </div>
                   <div style={{ textAlign: 'center' }}>
                     <FileText style={{ width: '32px', height: '32px', color: COLORS.slainteBlue }} />
-                    <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginTop: '0.25rem' }}>PDF</p>
+                    <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginTop: '0.25rem' }}>PDF</p>
                   </div>
                 </div>
                 <h3 style={{
                   fontSize: '1rem',
                   fontWeight: 600,
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   marginBottom: '0.375rem'
                 }}>
                   Drop your files here
                 </h3>
                 <p style={{
                   fontSize: '0.875rem',
-                  color: COLORS.mediumGray
+                  color: COLORS.textSecondary
                 }}>
                   CSV or PDF bank statements (multiple files supported)
                 </p>
                 <p style={{
                   fontSize: '0.75rem',
-                  color: COLORS.mediumGray,
+                  color: COLORS.textSecondary,
                   marginTop: '0.5rem',
                   fontStyle: 'italic'
                 }}>
@@ -530,14 +530,14 @@ export default function TransactionUploadPrompt({ onUpload, onSkip }) {
                   <h3 style={{
                     fontSize: '1rem',
                     fontWeight: 600,
-                    color: COLORS.darkGray,
+                    color: COLORS.textPrimary,
                     marginBottom: '0.125rem'
                   }}>
                     {files.length} file{files.length > 1 ? 's' : ''} selected
                   </h3>
                   <p style={{
                     fontSize: '0.8125rem',
-                    color: COLORS.mediumGray
+                    color: COLORS.textSecondary
                   }}>
                     {fileType === 'pdf' && parsedTransactions.length > 0
                       ? `${parsedTransactions.length} transactions found`
@@ -580,11 +580,11 @@ export default function TransactionUploadPrompt({ onUpload, onSkip }) {
         <div style={{
           textAlign: 'center',
           paddingTop: '1rem',
-          borderTop: `1px solid ${COLORS.lightGray}`
+          borderTop: `1px solid ${COLORS.borderLight}`
         }}>
           <p style={{
             fontSize: '0.875rem',
-            color: COLORS.mediumGray,
+            color: COLORS.textSecondary,
             marginBottom: '0.75rem'
           }}>
             Don't have your transactions ready?
@@ -600,8 +600,8 @@ export default function TransactionUploadPrompt({ onUpload, onSkip }) {
               fontSize: '0.875rem',
               fontWeight: 500,
               cursor: 'pointer',
-              border: `1px solid ${COLORS.lightGray}`,
-              color: COLORS.mediumGray,
+              border: `1px solid ${COLORS.borderLight}`,
+              color: COLORS.textSecondary,
               backgroundColor: 'transparent',
               transition: 'all 0.2s'
             }}

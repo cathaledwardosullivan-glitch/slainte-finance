@@ -107,7 +107,7 @@ const TaskItem = ({ task, onEdit }) => {
       ref={cardRef}
       style={{
         backgroundColor: isHighlighted ? 'rgba(74, 144, 226, 0.08)' : COLORS.white,
-        border: `1px solid ${isHighlighted ? COLORS.slainteBlue : overdue ? COLORS.expenseColor : COLORS.lightGray}`,
+        border: `1px solid ${isHighlighted ? COLORS.slainteBlue : overdue ? COLORS.expenseColor : COLORS.borderLight}`,
         borderRadius: '0.5rem',
         padding: '0.75rem',
         position: 'relative',
@@ -128,11 +128,11 @@ const TaskItem = ({ task, onEdit }) => {
               border: 'none',
               background: 'none',
               cursor: 'pointer',
-              color: COLORS.mediumGray,
+              color: COLORS.textSecondary,
               borderRadius: '0.25rem',
               flexShrink: 0
             }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.backgroundGray}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.bgPage}
             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
           >
             <Play style={{ width: '1rem', height: '1rem' }} />
@@ -152,7 +152,7 @@ const TaskItem = ({ task, onEdit }) => {
               borderRadius: '0.25rem',
               flexShrink: 0
             }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.backgroundGray}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.bgPage}
             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
           >
             <Check style={{ width: '1rem', height: '1rem' }} />
@@ -166,7 +166,7 @@ const TaskItem = ({ task, onEdit }) => {
             style={{
               fontWeight: 500,
               fontSize: '0.8125rem',
-              color: task.actionLink && task.status !== 'completed' ? COLORS.slainteBlue : COLORS.darkGray,
+              color: task.actionLink && task.status !== 'completed' ? COLORS.slainteBlue : COLORS.textPrimary,
               lineHeight: 1.3,
               cursor: task.actionLink && task.status !== 'completed' ? 'pointer' : 'default',
               overflow: 'hidden',
@@ -192,10 +192,10 @@ const TaskItem = ({ task, onEdit }) => {
               border: 'none',
               background: 'none',
               cursor: 'pointer',
-              color: COLORS.mediumGray,
+              color: COLORS.textSecondary,
               borderRadius: '0.25rem'
             }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.backgroundGray}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.bgPage}
             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
           >
             <MoreVertical style={{ width: '1rem', height: '1rem' }} />
@@ -218,7 +218,7 @@ const TaskItem = ({ task, onEdit }) => {
                   top: '100%',
                   right: 0,
                   backgroundColor: COLORS.white,
-                  border: `1px solid ${COLORS.lightGray}`,
+                  border: `1px solid ${COLORS.borderLight}`,
                   borderRadius: '0.375rem',
                   boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                   zIndex: 20,
@@ -239,10 +239,10 @@ const TaskItem = ({ task, onEdit }) => {
                       background: 'none',
                       cursor: 'pointer',
                       fontSize: '0.8125rem',
-                      color: COLORS.darkGray,
+                      color: COLORS.textPrimary,
                       textAlign: 'left'
                     }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.backgroundGray}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.bgPage}
                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                   >
                     <Edit3 style={{ width: '0.875rem', height: '0.875rem', color: COLORS.slainteBlue }} />
@@ -262,10 +262,10 @@ const TaskItem = ({ task, onEdit }) => {
                       background: 'none',
                       cursor: 'pointer',
                       fontSize: '0.8125rem',
-                      color: COLORS.darkGray,
+                      color: COLORS.textPrimary,
                       textAlign: 'left'
                     }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.backgroundGray}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.bgPage}
                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                   >
                     <Check style={{ width: '0.875rem', height: '0.875rem', color: COLORS.incomeColor }} />
@@ -287,7 +287,7 @@ const TaskItem = ({ task, onEdit }) => {
                     color: COLORS.expenseColor,
                     textAlign: 'left'
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.backgroundGray}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.bgPage}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                 >
                   <Trash2 style={{ width: '0.875rem', height: '0.875rem' }} />
@@ -347,7 +347,7 @@ const TaskItem = ({ task, onEdit }) => {
               display: 'flex',
               alignItems: 'center',
               gap: '0.25rem',
-              color: overdue ? COLORS.expenseColor : dueSoon ? '#D97706' : COLORS.mediumGray
+              color: overdue ? COLORS.expenseColor : dueSoon ? COLORS.warningDark : COLORS.textSecondary
             }}
           >
             {overdue ? (
@@ -379,7 +379,7 @@ const TaskItem = ({ task, onEdit }) => {
           style={{
             marginTop: '0.375rem',
             fontSize: '0.75rem',
-            color: COLORS.mediumGray,
+            color: COLORS.textSecondary,
             lineHeight: 1.4,
             overflow: 'hidden',
             textOverflow: 'ellipsis',

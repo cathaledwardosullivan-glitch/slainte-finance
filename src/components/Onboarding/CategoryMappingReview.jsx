@@ -571,12 +571,12 @@ REMEMBER:
       case 'high': return COLORS.incomeColor;
       case 'medium': return COLORS.highlightYellow;
       case 'low': return COLORS.expenseColor;
-      default: return COLORS.mediumGray;
+      default: return COLORS.textSecondary;
     }
   };
 
   const getParentCategory = (id) => {
-    return PARENT_CATEGORIES[id] || { name: 'Unknown', icon: '❓', color: COLORS.mediumGray };
+    return PARENT_CATEGORIES[id] || { name: 'Unknown', icon: '❓', color: COLORS.textSecondary };
   };
 
   // Group mappings by Sláinte category for summary
@@ -606,7 +606,7 @@ REMEMBER:
         backgroundColor: COLORS.white,
         borderRadius: '0.75rem',
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-        border: `1px solid ${COLORS.lightGray}`,
+        border: `1px solid ${COLORS.borderLight}`,
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column'
@@ -652,7 +652,7 @@ REMEMBER:
                 width: '32px',
                 height: '32px',
                 borderRadius: '50%',
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -661,7 +661,7 @@ REMEMBER:
                 <MessageCircle style={{ width: '16px', height: '16px', color: COLORS.slainteBlue }} />
               </div>
               <div style={{
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 padding: '0.875rem 1rem',
                 borderRadius: '12px',
                 maxWidth: '85%'
@@ -669,7 +669,7 @@ REMEMBER:
                 <div style={{
                   fontSize: '1.125rem',
                   fontWeight: 600,
-                  color: COLORS.darkGray
+                  color: COLORS.textPrimary
                 }}>
                   {greeting}
                 </div>
@@ -681,14 +681,14 @@ REMEMBER:
             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
               <div style={{ width: '32px', flexShrink: 0 }} />
               <div style={{
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 padding: '0.875rem 1rem',
                 borderRadius: '12px',
                 maxWidth: '85%'
               }}>
                 <div style={{
                   fontSize: '0.9375rem',
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   lineHeight: 1.5
                 }}>
                   {message}
@@ -709,7 +709,7 @@ REMEMBER:
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Loader style={{ width: '18px', height: '18px', color: COLORS.slainteBlue, animation: 'spin 1s linear infinite' }} />
-                  <span style={{ fontSize: '0.9375rem', color: COLORS.darkGray }}>
+                  <span style={{ fontSize: '0.9375rem', color: COLORS.textPrimary }}>
                     Matching {importData.userCategories.length} categories...
                   </span>
                 </div>
@@ -728,7 +728,7 @@ REMEMBER:
                 maxWidth: '85%',
                 border: `1px solid ${COLORS.incomeColor}`
               }}>
-                <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: COLORS.darkGray, marginBottom: '0.75rem' }}>
+                <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: COLORS.textPrimary, marginBottom: '0.75rem' }}>
                   Category Summary:
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
@@ -738,8 +738,8 @@ REMEMBER:
                     return (
                       <div key={slainteId} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8125rem' }}>
                         <span>{parent.icon}</span>
-                        <span style={{ color: COLORS.darkGray }}>{parent.name}:</span>
-                        <span style={{ color: COLORS.mediumGray }}>{items.length} labels ({totalCount} txns)</span>
+                        <span style={{ color: COLORS.textPrimary }}>{parent.name}:</span>
+                        <span style={{ color: COLORS.textSecondary }}>{items.length} labels ({totalCount} txns)</span>
                       </div>
                     );
                   })}
@@ -752,7 +752,7 @@ REMEMBER:
         {/* Action buttons */}
         <div style={{
           padding: '1rem',
-          borderTop: `1px solid ${COLORS.lightGray}`,
+          borderTop: `1px solid ${COLORS.borderLight}`,
           display: 'flex',
           gap: '0.75rem'
         }}>
@@ -763,9 +763,9 @@ REMEMBER:
               padding: '0.75rem',
               fontSize: '0.9375rem',
               fontWeight: 500,
-              color: COLORS.mediumGray,
+              color: COLORS.textSecondary,
               backgroundColor: COLORS.white,
-              border: `1px solid ${COLORS.lightGray}`,
+              border: `1px solid ${COLORS.borderLight}`,
               borderRadius: '8px',
               cursor: 'pointer'
             }}
@@ -781,7 +781,7 @@ REMEMBER:
               fontSize: '0.9375rem',
               fontWeight: 600,
               color: COLORS.white,
-              backgroundColor: analysisComplete ? COLORS.incomeColor : COLORS.mediumGray,
+              backgroundColor: analysisComplete ? COLORS.incomeColor : COLORS.textSecondary,
               border: 'none',
               borderRadius: '8px',
               cursor: analysisComplete ? 'pointer' : 'not-allowed',
@@ -821,12 +821,12 @@ REMEMBER:
               <h3 style={{
                 fontSize: '1.25rem',
                 fontWeight: 700,
-                color: COLORS.darkGray,
+                color: COLORS.textPrimary,
                 marginBottom: '0.25rem'
               }}>
                 Category Mapping
               </h3>
-              <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>
+              <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>
                 Your labels → Sláinte categories
               </p>
             </div>
@@ -872,7 +872,7 @@ REMEMBER:
           {isAnalyzing && (
             <div style={{ textAlign: 'center', padding: '3rem' }}>
               <Loader style={{ width: '40px', height: '40px', color: COLORS.slainteBlue, animation: 'spin 1s linear infinite', margin: '0 auto 1rem' }} />
-              <p style={{ color: COLORS.mediumGray }}>Analyzing your categories...</p>
+              <p style={{ color: COLORS.textSecondary }}>Analyzing your categories...</p>
             </div>
           )}
 
@@ -909,7 +909,7 @@ REMEMBER:
                         </span>
                         <span style={{
                           fontSize: '0.75rem',
-                          color: COLORS.mediumGray,
+                          color: COLORS.textSecondary,
                           marginLeft: '0.25rem'
                         }}>
                           ({categoryMappings.filter(m => m.slainteCategory === mapping.slainteCategory).length} labels)
@@ -918,7 +918,7 @@ REMEMBER:
                     )}
                     <div
                       style={{
-                        border: `2px solid ${mapping.confidence === 'low' ? COLORS.expenseColor : COLORS.lightGray}`,
+                        border: `2px solid ${mapping.confidence === 'low' ? COLORS.expenseColor : COLORS.borderLight}`,
                         borderRadius: '10px',
                         overflow: 'hidden',
                         backgroundColor: mapping.confidence === 'low' ? `${COLORS.expenseColor}05` : COLORS.white
@@ -946,9 +946,9 @@ REMEMBER:
                         }}
                       >
                         {isExpanded ? (
-                          <ChevronDown style={{ width: '18px', height: '18px', color: COLORS.mediumGray }} />
+                          <ChevronDown style={{ width: '18px', height: '18px', color: COLORS.textSecondary }} />
                         ) : (
-                          <ChevronRight style={{ width: '18px', height: '18px', color: COLORS.mediumGray }} />
+                          <ChevronRight style={{ width: '18px', height: '18px', color: COLORS.textSecondary }} />
                         )}
                       </button>
 
@@ -957,20 +957,20 @@ REMEMBER:
                         <div style={{
                           fontSize: '0.9375rem',
                           fontWeight: 600,
-                          color: COLORS.darkGray,
+                          color: COLORS.textPrimary,
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
                           whiteSpace: 'nowrap'
                         }}>
                           {mapping.userCategory}
                         </div>
-                        <div style={{ fontSize: '0.75rem', color: COLORS.mediumGray }}>
+                        <div style={{ fontSize: '0.75rem', color: COLORS.textSecondary }}>
                           {mapping.transactionCount} transactions • €{mapping.totalAmount.toFixed(0)}
                         </div>
                       </div>
 
                       {/* Arrow */}
-                      <ArrowRight style={{ width: '16px', height: '16px', color: COLORS.lightGray, flexShrink: 0 }} />
+                      <ArrowRight style={{ width: '16px', height: '16px', color: COLORS.borderLight, flexShrink: 0 }} />
 
                       {/* Sláinte category (or dropdown if editing) */}
                       {isEditing ? (
@@ -994,13 +994,13 @@ REMEMBER:
                             onClick={() => setEditingMapping(null)}
                             style={{
                               padding: '0.375rem',
-                              backgroundColor: COLORS.lightGray,
+                              backgroundColor: COLORS.borderLight,
                               border: 'none',
                               borderRadius: '4px',
                               cursor: 'pointer'
                             }}
                           >
-                            <X style={{ width: '14px', height: '14px', color: COLORS.darkGray }} />
+                            <X style={{ width: '14px', height: '14px', color: COLORS.textPrimary }} />
                           </button>
                         </div>
                       ) : (
@@ -1015,7 +1015,7 @@ REMEMBER:
                             border: `1px solid ${parent.color}30`
                           }}>
                             <span style={{ fontSize: '1rem' }}>{parent.icon}</span>
-                            <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: COLORS.darkGray }}>{parent.name}</span>
+                            <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: COLORS.textPrimary }}>{parent.name}</span>
                           </div>
 
                           {/* Confidence indicator */}
@@ -1040,7 +1040,7 @@ REMEMBER:
                               opacity: 0.6
                             }}
                           >
-                            <Edit2 style={{ width: '14px', height: '14px', color: COLORS.mediumGray }} />
+                            <Edit2 style={{ width: '14px', height: '14px', color: COLORS.textSecondary }} />
                           </button>
                         </div>
                       )}
@@ -1050,27 +1050,27 @@ REMEMBER:
                     {isExpanded && (
                       <div style={{
                         padding: '0.75rem 1rem',
-                        backgroundColor: COLORS.backgroundGray,
-                        borderTop: `1px solid ${COLORS.lightGray}`,
+                        backgroundColor: COLORS.bgPage,
+                        borderTop: `1px solid ${COLORS.borderLight}`,
                         fontSize: '0.8125rem'
                       }}>
                         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                           <div>
-                            <span style={{ color: COLORS.mediumGray }}>Match type:</span>{' '}
-                            <span style={{ color: COLORS.darkGray, fontWeight: 500 }}>
+                            <span style={{ color: COLORS.textSecondary }}>Match type:</span>{' '}
+                            <span style={{ color: COLORS.textPrimary, fontWeight: 500 }}>
                               {mapping.matchType === 'exact' ? 'Direct match' :
                                mapping.matchType === 'ai' ? 'AI suggested' :
                                mapping.matchType === 'manual' ? 'Manually set' : 'Needs review'}
                             </span>
                           </div>
                           <div>
-                            <span style={{ color: COLORS.mediumGray }}>Confidence:</span>{' '}
+                            <span style={{ color: COLORS.textSecondary }}>Confidence:</span>{' '}
                             <span style={{ color: getConfidenceColor(mapping.confidence), fontWeight: 500 }}>
                               {mapping.confidence}
                             </span>
                           </div>
                         </div>
-                        <div style={{ marginTop: '0.5rem', color: COLORS.mediumGray }}>
+                        <div style={{ marginTop: '0.5rem', color: COLORS.textSecondary }}>
                           {mapping.reason}
                         </div>
                       </div>

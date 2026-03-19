@@ -52,10 +52,10 @@ export default function PWAUpdateNotification() {
           <RefreshCw className="h-5 w-5" style={{ color: COLORS.incomeColor }} />
         </div>
         <div className="flex-1">
-          <h3 className="font-semibold mb-1" style={{ color: COLORS.darkGray }}>
+          <h3 className="font-semibold mb-1" style={{ color: COLORS.textPrimary }}>
             Update Available
           </h3>
-          <p className="text-sm mb-3" style={{ color: COLORS.mediumGray }}>
+          <p className="text-sm mb-3" style={{ color: COLORS.textSecondary }}>
             A new version of Sláinte Finance is available
           </p>
           <button

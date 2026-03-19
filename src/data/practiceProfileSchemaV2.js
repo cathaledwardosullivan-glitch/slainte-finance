@@ -37,6 +37,7 @@ export function createUnifiedProfile() {
                 // {
                 //   name: "Dr. Sarah Murphy",
                 //   profitShare: 33.33, // Percentage
+                //   panelNumber: "60265", // GMS panel number (auto-synced from PCRS PDFs or manually entered)
                 //   categoryCode: "90.1" // Generated during category creation
                 // }
             ],

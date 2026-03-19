@@ -30,10 +30,10 @@ const CollapsedStatusBar = ({ onExpand, waveInfo, aiStatus }) => {
       alignItems: 'center',
       gap: '0.75rem',
       padding: '0.5rem 1rem',
-      backgroundColor: COLORS.backgroundGray,
-      borderBottom: `1px solid ${COLORS.lightGray}`,
+      backgroundColor: COLORS.bgPage,
+      borderBottom: `1px solid ${COLORS.borderLight}`,
       fontSize: '0.8125rem',
-      color: COLORS.mediumGray
+      color: COLORS.textSecondary
     }}>
       <button
         onClick={onExpand}
@@ -377,7 +377,7 @@ export default function BulkUploadFlow({
     <div style={{
       position: 'fixed',
       inset: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      backgroundColor: COLORS.overlayDark,
       zIndex: 1000,
       display: 'flex',
       alignItems: 'center',
@@ -439,13 +439,13 @@ export default function BulkUploadFlow({
         {currentWaveIndex > 0 && !flowComplete && waves.length > 1 && (
           <div style={{
             padding: '0.5rem 1rem',
-            borderTop: `1px solid ${COLORS.lightGray}`,
-            backgroundColor: COLORS.backgroundGray,
+            borderTop: `1px solid ${COLORS.borderLight}`,
+            backgroundColor: COLORS.bgPage,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between'
           }}>
-            <span style={{ fontSize: '0.8125rem', color: COLORS.mediumGray }}>
+            <span style={{ fontSize: '0.8125rem', color: COLORS.textSecondary }}>
               {currentWaveIndex} of {waves.length} waves completed — progress saved automatically
             </span>
             <button

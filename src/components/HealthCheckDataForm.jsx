@@ -8,10 +8,10 @@ import { parsePracticeDistributionCSV } from '../utils/socratesReportParser';
  * Reusable Disease Field Component - defined outside to prevent re-creation on each render
  */
 const DiseaseField = ({ id, label, placeholder, ehrGuide, value, onChange, expandedEHRGuide, setExpandedEHRGuide }) => (
-  <div className="border rounded-lg overflow-hidden" style={{ borderColor: COLORS.lightGray }}>
+  <div className="border rounded-lg overflow-hidden" style={{ borderColor: COLORS.borderLight }}>
     <div className="p-3">
       <div className="flex items-center justify-between mb-2">
-        <label className="block text-sm font-medium" style={{ color: COLORS.darkGray }}>
+        <label className="block text-sm font-medium" style={{ color: COLORS.textPrimary }}>
           {label}
         </label>
         <button
@@ -31,15 +31,15 @@ const DiseaseField = ({ id, label, placeholder, ehrGuide, value, onChange, expan
         value={value}
         onChange={onChange}
         className="w-full p-2 border rounded"
-        style={{ borderColor: COLORS.lightGray }}
+        style={{ borderColor: COLORS.borderLight }}
         placeholder={placeholder}
       />
     </div>
     {expandedEHRGuide === id && (
       <div className="px-3 pb-3 pt-0">
-        <div className="p-3 rounded text-xs" style={{ backgroundColor: '#EFF6FF', color: '#1E40AF' }}>
+        <div className="p-3 rounded text-xs" style={{ backgroundColor: COLORS.slainteBlueLight, color: COLORS.infoText }}>
           <p className="font-medium mb-2">How to find this in your EHR:</p>
-          <div className="space-y-1" style={{ color: '#3B82F6' }}>
+          <div className="space-y-1" style={{ color: COLORS.slainteBlue }}>
             {ehrGuide.map((step, idx) => (
               <p key={idx}>• {step}</p>
             ))}
@@ -54,10 +54,10 @@ const DiseaseField = ({ id, label, placeholder, ehrGuide, value, onChange, expan
  * Reusable Prevention Programme Field Component - defined outside to prevent re-creation on each render
  */
 const PPField = ({ id, label, placeholder, ehrGuide, description, value, onChange, expandedEHRGuide, setExpandedEHRGuide }) => (
-  <div className="border rounded-lg overflow-hidden mb-3" style={{ borderColor: COLORS.lightGray }}>
+  <div className="border rounded-lg overflow-hidden mb-3" style={{ borderColor: COLORS.borderLight }}>
     <div className="p-3">
       <div className="flex items-center justify-between mb-1">
-        <label className="block text-sm font-medium" style={{ color: COLORS.darkGray }}>
+        <label className="block text-sm font-medium" style={{ color: COLORS.textPrimary }}>
           {label}
         </label>
         <button
@@ -72,7 +72,7 @@ const PPField = ({ id, label, placeholder, ehrGuide, description, value, onChang
         </button>
       </div>
       {description && (
-        <p className="text-xs mb-2" style={{ color: COLORS.mediumGray }}>{description}</p>
+        <p className="text-xs mb-2" style={{ color: COLORS.textSecondary }}>{description}</p>
       )}
       <input
         type="number"
@@ -80,15 +80,15 @@ const PPField = ({ id, label, placeholder, ehrGuide, description, value, onChang
         value={value}
         onChange={onChange}
         className="w-full p-2 border rounded"
-        style={{ borderColor: COLORS.lightGray }}
+        style={{ borderColor: COLORS.borderLight }}
         placeholder={placeholder}
       />
     </div>
     {expandedEHRGuide === id && (
       <div className="px-3 pb-3 pt-0">
-        <div className="p-3 rounded text-xs" style={{ backgroundColor: '#F0FDF4', color: '#166534' }}>
+        <div className="p-3 rounded text-xs" style={{ backgroundColor: COLORS.successLight, color: COLORS.successText }}>
           <p className="font-medium mb-2">How to find this in your EHR:</p>
-          <div className="space-y-1" style={{ color: '#15803D' }}>
+          <div className="space-y-1" style={{ color: COLORS.successText }}>
             {ehrGuide.map((step, idx) => (
               <p key={idx}>• {step}</p>
             ))}
@@ -103,10 +103,10 @@ const PPField = ({ id, label, placeholder, ehrGuide, description, value, onChang
  * Reusable OCF Field Component - defined outside to prevent re-creation on each render
  */
 const OCFField = ({ id, label, placeholder, ehrGuide, description, value, onChange, expandedEHRGuide, setExpandedEHRGuide }) => (
-  <div className="border rounded-lg overflow-hidden mb-3" style={{ borderColor: COLORS.lightGray }}>
+  <div className="border rounded-lg overflow-hidden mb-3" style={{ borderColor: COLORS.borderLight }}>
     <div className="p-3">
       <div className="flex items-center justify-between mb-1">
-        <label className="block text-sm font-medium" style={{ color: COLORS.darkGray }}>
+        <label className="block text-sm font-medium" style={{ color: COLORS.textPrimary }}>
           {label}
         </label>
         <button
@@ -121,7 +121,7 @@ const OCFField = ({ id, label, placeholder, ehrGuide, description, value, onChan
         </button>
       </div>
       {description && (
-        <p className="text-xs mb-2" style={{ color: COLORS.mediumGray }}>{description}</p>
+        <p className="text-xs mb-2" style={{ color: COLORS.textSecondary }}>{description}</p>
       )}
       <input
         type="number"
@@ -129,15 +129,15 @@ const OCFField = ({ id, label, placeholder, ehrGuide, description, value, onChan
         value={value}
         onChange={onChange}
         className="w-full p-2 border rounded"
-        style={{ borderColor: COLORS.lightGray }}
+        style={{ borderColor: COLORS.borderLight }}
         placeholder={placeholder}
       />
     </div>
     {expandedEHRGuide === id && (
       <div className="px-3 pb-3 pt-0">
-        <div className="p-3 rounded text-xs" style={{ backgroundColor: '#FEF3C7', color: '#92400E' }}>
+        <div className="p-3 rounded text-xs" style={{ backgroundColor: COLORS.warningLight, color: COLORS.warningText }}>
           <p className="font-medium mb-2">How to find this in your EHR:</p>
-          <div className="space-y-1" style={{ color: '#B45309' }}>
+          <div className="space-y-1" style={{ color: COLORS.warningDark }}>
             {ehrGuide.map((step, idx) => (
               <p key={idx}>• {step}</p>
             ))}
@@ -942,7 +942,7 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
     if (!autoFilledFields.has(field)) return null;
     return (
       <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ml-2"
-        style={{ backgroundColor: '#DCFCE7', color: '#166534' }}>
+        style={{ backgroundColor: COLORS.successLighter, color: COLORS.successText }}>
         <CheckCircle2 className="h-3 w-3" />
         Auto-filled
       </span>
@@ -953,15 +953,15 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 overflow-y-auto py-4 px-4">
       <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full my-auto flex flex-col" style={{ maxHeight: 'calc(100vh - 2rem)' }}>
         {/* Header - Fixed */}
-        <div className="p-6 border-b flex-shrink-0" style={{ borderColor: COLORS.lightGray }}>
-          <h2 className="text-2xl font-bold mb-2" style={{ color: COLORS.darkGray }}>
+        <div className="p-6 border-b flex-shrink-0" style={{ borderColor: COLORS.borderLight }}>
+          <h2 className="text-2xl font-bold mb-2" style={{ color: COLORS.textPrimary }}>
             GMS Health Check - Data Collection
           </h2>
-          <p className="text-sm" style={{ color: COLORS.mediumGray }}>
+          <p className="text-sm" style={{ color: COLORS.textSecondary }}>
             Step {currentStep} of {totalSteps}
           </p>
           {/* Progress bar */}
-          <div className="mt-4 h-2 rounded-full" style={{ backgroundColor: COLORS.backgroundGray }}>
+          <div className="mt-4 h-2 rounded-full" style={{ backgroundColor: COLORS.bgPage }}>
             <div
               className="h-full rounded-full transition-all duration-300"
               style={{
@@ -979,25 +979,25 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
             <div className="space-y-6">
               <div className="flex items-center gap-3 mb-2">
                 <Users className="h-6 w-6" style={{ color: COLORS.slainteBlue }} />
-                <h3 className="text-xl font-semibold" style={{ color: COLORS.darkGray }}>
+                <h3 className="text-xl font-semibold" style={{ color: COLORS.textPrimary }}>
                   1. Patient Demographics
                 </h3>
               </div>
-              <p className="text-sm mb-4" style={{ color: COLORS.mediumGray }}>
+              <p className="text-sm mb-4" style={{ color: COLORS.textSecondary }}>
                 Patient counts from your EHR are used to calculate capitation income and cervical screening potential.
                 {isSocrates && ' You can import these automatically from a Socrates report.'}
               </p>
 
               {/* CSV Upload Section - prominent for Socrates users */}
               {isSocrates && (
-                <div className="border-2 rounded-lg p-4" style={{ borderColor: csvResult?.success ? '#22C55E' : COLORS.slainteBlue, backgroundColor: csvResult?.success ? '#F0FDF4' : '#EFF6FF' }}>
+                <div className="border-2 rounded-lg p-4" style={{ borderColor: csvResult?.success ? COLORS.success : COLORS.slainteBlue, backgroundColor: csvResult?.success ? COLORS.successLight : COLORS.slainteBlueLight }}>
                   <div className="flex items-center gap-2 mb-2">
-                    <FileText className="h-5 w-5" style={{ color: csvResult?.success ? '#166534' : '#1E40AF' }} />
-                    <h4 className="font-semibold" style={{ color: csvResult?.success ? '#166534' : '#1E40AF' }}>
+                    <FileText className="h-5 w-5" style={{ color: csvResult?.success ? COLORS.successText : COLORS.infoText }} />
+                    <h4 className="font-semibold" style={{ color: csvResult?.success ? COLORS.successText : COLORS.infoText }}>
                       {csvResult?.success ? 'Report Imported Successfully' : 'Import from Socrates Report'}
                     </h4>
                     {!csvResult?.success && (
-                      <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: '#DBEAFE', color: '#1E40AF' }}>
+                      <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: COLORS.infoLighter, color: COLORS.infoText }}>
                         Recommended
                       </span>
                     )}
@@ -1008,26 +1008,26 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                     <div className="space-y-2">
                       <div className="grid grid-cols-4 gap-2 text-sm">
                         <div className="p-2 rounded" style={{ backgroundColor: 'white' }}>
-                          <span style={{ color: COLORS.mediumGray }}>GMS</span>
+                          <span style={{ color: COLORS.textSecondary }}>GMS</span>
                           <p className="font-semibold">{csvResult.data.panelSummary.totalGMS.toLocaleString()}</p>
                         </div>
                         <div className="p-2 rounded" style={{ backgroundColor: 'white' }}>
-                          <span style={{ color: COLORS.mediumGray }}>DVC</span>
+                          <span style={{ color: COLORS.textSecondary }}>DVC</span>
                           <p className="font-semibold">{csvResult.data.panelSummary.totalDVC.toLocaleString()}</p>
                         </div>
                         <div className="p-2 rounded" style={{ backgroundColor: 'white' }}>
-                          <span style={{ color: COLORS.mediumGray }}>Private</span>
+                          <span style={{ color: COLORS.textSecondary }}>Private</span>
                           <p className="font-semibold">{csvResult.data.panelSummary.totalPrivate.toLocaleString()}</p>
                         </div>
                         <div className="p-2 rounded" style={{ backgroundColor: 'white' }}>
-                          <span style={{ color: COLORS.mediumGray }}>Total</span>
+                          <span style={{ color: COLORS.textSecondary }}>Total</span>
                           <p className="font-semibold">{csvResult.data.panelSummary.grandTotal.toLocaleString()}</p>
                         </div>
                       </div>
                       {csvResult.warnings?.length > 0 && (
                         <div className="space-y-1 mt-2">
                           {csvResult.warnings.map((w, i) => (
-                            <p key={i} className="flex items-start gap-1 text-xs" style={{ color: '#92400E' }}>
+                            <p key={i} className="flex items-start gap-1 text-xs" style={{ color: COLORS.warningText }}>
                               <AlertCircle className="h-3 w-3 mt-0.5 flex-shrink-0" />
                               {w}
                             </p>
@@ -1038,7 +1038,7 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                         type="button"
                         onClick={() => { setCsvResult(null); setAutoFilledFields(new Set()); }}
                         className="text-xs mt-1 underline"
-                        style={{ color: COLORS.mediumGray }}
+                        style={{ color: COLORS.textSecondary }}
                       >
                         Upload a different file
                       </button>
@@ -1046,7 +1046,7 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                   ) : (
                     // Upload state
                     <div>
-                      <p className="text-sm mb-3" style={{ color: '#3B82F6' }}>
+                      <p className="text-sm mb-3" style={{ color: COLORS.slainteBlue }}>
                         Export the "Practice Distribution Breakdown" report from Socrates as CSV and upload it here.
                         This contains aggregate patient counts only — no patient identifiers.
                       </p>
@@ -1056,13 +1056,13 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                         type="button"
                         onClick={() => setShowSocratesGuide(!showSocratesGuide)}
                         className="flex items-center gap-1 text-xs mb-3 font-medium"
-                        style={{ color: '#1E40AF' }}
+                        style={{ color: COLORS.infoText }}
                       >
                         <ChevronDown className={`h-3 w-3 transition-transform ${showSocratesGuide ? 'rotate-180' : ''}`} />
                         Step-by-step guide
                       </button>
                       {showSocratesGuide && (
-                        <div className="p-3 rounded text-sm mb-3 space-y-1" style={{ backgroundColor: 'white', color: '#1E40AF' }}>
+                        <div className="p-3 rounded text-sm mb-3 space-y-1" style={{ backgroundColor: 'white', color: COLORS.infoText }}>
                           <p>1. Open Socrates and go to <strong>Reports</strong></p>
                           <p>2. Select the <strong>Patients</strong> category</p>
                           <p>3. Double-click <strong>Practice Distribution Breakdown</strong></p>
@@ -1083,23 +1083,23 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                         />
                         {csvProcessing ? (
                           <div className="flex flex-col items-center gap-2">
-                            <div className="animate-spin h-6 w-6 border-2 rounded-full" style={{ borderColor: COLORS.lightGray, borderTopColor: COLORS.slainteBlue }} />
-                            <span className="text-sm" style={{ color: COLORS.mediumGray }}>Processing...</span>
+                            <div className="animate-spin h-6 w-6 border-2 rounded-full" style={{ borderColor: COLORS.borderLight, borderTopColor: COLORS.slainteBlue }} />
+                            <span className="text-sm" style={{ color: COLORS.textSecondary }}>Processing...</span>
                           </div>
                         ) : (
                           <div className="flex flex-col items-center gap-2">
                             <Upload className="h-6 w-6" style={{ color: COLORS.slainteBlue }} />
                             <span className="text-sm font-medium" style={{ color: COLORS.slainteBlue }}>Upload CSV</span>
-                            <span className="text-xs" style={{ color: COLORS.mediumGray }}>Drop file or click to browse</span>
+                            <span className="text-xs" style={{ color: COLORS.textSecondary }}>Drop file or click to browse</span>
                           </div>
                         )}
                       </label>
 
                       {/* Error display */}
                       {csvResult && !csvResult.success && (
-                        <div className="mt-3 p-3 rounded-lg flex items-start gap-2" style={{ backgroundColor: '#FEF2F2' }}>
-                          <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" style={{ color: '#DC2626' }} />
-                          <p className="text-sm" style={{ color: '#991B1B' }}>{csvResult.error}</p>
+                        <div className="mt-3 p-3 rounded-lg flex items-start gap-2" style={{ backgroundColor: COLORS.errorLighter }}>
+                          <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" style={{ color: COLORS.error }} />
+                          <p className="text-sm" style={{ color: COLORS.errorText }}>{csvResult.error}</p>
                         </div>
                       )}
                     </div>
@@ -1110,27 +1110,27 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
               {/* Divider between CSV upload and manual entry */}
               {isSocrates && (
                 <div className="flex items-center gap-4">
-                  <div className="flex-1 h-px" style={{ backgroundColor: COLORS.lightGray }} />
-                  <span className="text-sm font-medium" style={{ color: COLORS.mediumGray }}>
+                  <div className="flex-1 h-px" style={{ backgroundColor: COLORS.borderLight }} />
+                  <span className="text-sm font-medium" style={{ color: COLORS.textSecondary }}>
                     {csvResult?.success ? 'Review & adjust' : 'or enter manually'}
                   </span>
-                  <div className="flex-1 h-px" style={{ backgroundColor: COLORS.lightGray }} />
+                  <div className="flex-1 h-px" style={{ backgroundColor: COLORS.borderLight }} />
                 </div>
               )}
 
               {/* Demographics fields */}
               <div className="space-y-4">
-                <div className="p-3 rounded-lg" style={{ backgroundColor: '#EFF6FF', borderLeft: '4px solid #3B82F6' }}>
-                  <h4 className="font-semibold" style={{ color: '#1E40AF' }}>
+                <div className="p-3 rounded-lg" style={{ backgroundColor: COLORS.slainteBlueLight, borderLeft: `4px solid ${COLORS.slainteBlue}` }}>
+                  <h4 className="font-semibold" style={{ color: COLORS.infoText }}>
                     Capitation Demographics
                   </h4>
-                  <p className="text-sm mt-1" style={{ color: '#3B82F6' }}>
+                  <p className="text-sm mt-1" style={{ color: COLORS.slainteBlue }}>
                     Capitation rates vary by age: Under 6 (€156/qtr), 6-7 (€66.70), 8-69 (€44.43), 70+ (€273.38)
                   </p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                       Under 6 years (GMS + DVC)
                       <AutoFilledBadge field="under6" />
                     </label>
@@ -1140,12 +1140,12 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                       value={formData.demographics.under6}
                       onChange={(e) => updateField('demographics', 'under6', e.target.value)}
                       className="w-full p-2 border rounded"
-                      style={{ borderColor: autoFilledFields.has('under6') ? '#22C55E' : COLORS.lightGray }}
+                      style={{ borderColor: autoFilledFields.has('under6') ? COLORS.success : COLORS.borderLight }}
                       placeholder="e.g., 274"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                       Age 6-7 years
                     </label>
                     <input
@@ -1154,18 +1154,18 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                       value={formData.demographics.age6to7}
                       onChange={(e) => updateField('demographics', 'age6to7', e.target.value)}
                       className="w-full p-2 border rounded"
-                      style={{ borderColor: COLORS.lightGray }}
+                      style={{ borderColor: COLORS.borderLight }}
                       placeholder="e.g., 205"
                     />
                     {csvResult?.success && csvResult.data.demographics.age6to9 > 0 && (
-                      <p className="text-xs mt-1 flex items-start gap-1" style={{ color: '#92400E' }}>
+                      <p className="text-xs mt-1 flex items-start gap-1" style={{ color: COLORS.warningText }}>
                         <AlertCircle className="h-3 w-3 mt-0.5 flex-shrink-0" />
                         Socrates groups ages 6-9 together ({csvResult.data.demographics.age6to9} patients). Enter the 6-7 count manually if known.
                       </p>
                     )}
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                       Over 70 years (GMS + DVC)
                       <AutoFilledBadge field="over70" />
                     </label>
@@ -1175,12 +1175,12 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                       value={formData.demographics.over70}
                       onChange={(e) => updateField('demographics', 'over70', e.target.value)}
                       className="w-full p-2 border rounded"
-                      style={{ borderColor: autoFilledFields.has('over70') ? '#22C55E' : COLORS.lightGray }}
+                      style={{ borderColor: autoFilledFields.has('over70') ? COLORS.success : COLORS.borderLight }}
                       placeholder="e.g., 950"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                       Nursing Home Residents
                     </label>
                     <input
@@ -1189,11 +1189,11 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                       value={formData.demographics.nursingHomeResidents}
                       onChange={(e) => updateField('demographics', 'nursingHomeResidents', e.target.value)}
                       className="w-full p-2 border rounded"
-                      style={{ borderColor: COLORS.lightGray }}
+                      style={{ borderColor: COLORS.borderLight }}
                       placeholder="e.g., 12"
                     />
                     {csvResult?.success && (
-                      <p className="text-xs mt-1" style={{ color: COLORS.mediumGray }}>
+                      <p className="text-xs mt-1" style={{ color: COLORS.textSecondary }}>
                         Not available from the report — enter manually.
                       </p>
                     )}
@@ -1203,17 +1203,17 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
 
               {/* Cervical Screening Section (merged from old Step 4) */}
               <div className="space-y-4">
-                <div className="p-3 rounded-lg" style={{ backgroundColor: '#FDF2F8', borderLeft: '4px solid #EC4899' }}>
-                  <h4 className="font-semibold" style={{ color: '#9D174D' }}>
+                <div className="p-3 rounded-lg" style={{ backgroundColor: COLORS.errorLighter, borderLeft: '4px solid #EC4899' }}>
+                  <h4 className="font-semibold" style={{ color: COLORS.errorText }}>
                     Cervical Screening Eligibility
                   </h4>
-                  <p className="text-sm mt-1" style={{ color: '#BE185D' }}>
+                  <p className="text-sm mt-1" style={{ color: COLORS.errorDark }}>
                     All women aged 25-65 are eligible. Screening interval: 3 years (25-44), 5 years (45-65). Rate: €65.00 per smear.
                   </p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                       Eligible Women (aged 25-44)
                       <AutoFilledBadge field="eligibleWomen25to44" />
                     </label>
@@ -1223,12 +1223,12 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                       value={formData.cervicalCheckActivity.eligibleWomen25to44}
                       onChange={(e) => updateField('cervicalCheckActivity', 'eligibleWomen25to44', e.target.value)}
                       className="w-full p-2 border rounded"
-                      style={{ borderColor: autoFilledFields.has('eligibleWomen25to44') ? '#22C55E' : COLORS.lightGray }}
+                      style={{ borderColor: autoFilledFields.has('eligibleWomen25to44') ? COLORS.success : COLORS.borderLight }}
                       placeholder="e.g., 1450"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                       Eligible Women (aged 45-65)
                       <AutoFilledBadge field="eligibleWomen45to65" />
                     </label>
@@ -1238,15 +1238,15 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                       value={formData.cervicalCheckActivity.eligibleWomen45to65}
                       onChange={(e) => updateField('cervicalCheckActivity', 'eligibleWomen45to65', e.target.value)}
                       className="w-full p-2 border rounded"
-                      style={{ borderColor: autoFilledFields.has('eligibleWomen45to65') ? '#22C55E' : COLORS.lightGray }}
+                      style={{ borderColor: autoFilledFields.has('eligibleWomen45to65') ? COLORS.success : COLORS.borderLight }}
                       placeholder="e.g., 1237"
                     />
                   </div>
                 </div>
 
                 {/* Note about auto-calculated smears */}
-                <div className="p-3 rounded-lg" style={{ backgroundColor: COLORS.backgroundGray }}>
-                  <p className="text-sm" style={{ color: COLORS.mediumGray }}>
+                <div className="p-3 rounded-lg" style={{ backgroundColor: COLORS.bgPage }}>
+                  <p className="text-sm" style={{ color: COLORS.textSecondary }}>
                     <strong>Auto-calculated from PCRS:</strong> Smears performed count is automatically extracted from your uploaded PCRS PDFs.
                   </p>
                 </div>
@@ -1259,20 +1259,20 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
             <div className="space-y-6">
               <div className="flex items-center gap-3 mb-2">
                 <Users className="h-6 w-6" style={{ color: COLORS.slainteBlue }} />
-                <h3 className="text-xl font-semibold" style={{ color: COLORS.darkGray }}>
+                <h3 className="text-xl font-semibold" style={{ color: COLORS.textPrimary }}>
                   2. Practice Support Subsidies
                 </h3>
               </div>
-              <p className="text-sm mb-4" style={{ color: COLORS.mediumGray }}>
+              <p className="text-sm mb-4" style={{ color: COLORS.textSecondary }}>
                 Staff details are used to verify subsidy claims and detect incorrect pay scales. Years of experience helps identify if staff are on the correct increment point.
               </p>
 
               <div className="space-y-4">
-                <div className="p-3 rounded-lg" style={{ backgroundColor: '#F0FDF4', borderLeft: '4px solid #22C55E' }}>
-                  <h4 className="font-semibold" style={{ color: '#166534' }}>
+                <div className="p-3 rounded-lg" style={{ backgroundColor: COLORS.successLight, borderLeft: `4px solid ${COLORS.success}` }}>
+                  <h4 className="font-semibold" style={{ color: COLORS.successText }}>
                     Staff Details (Secretaries, Nurses, Practice Manager)
                   </h4>
-                  <p className="text-sm mt-1" style={{ color: '#15803D' }}>
+                  <p className="text-sm mt-1" style={{ color: COLORS.successText }}>
                     Subsidy entitlement is based on panel size × staff ratios. PCRS subsidises up to 35 hours/week per staff member.
                   </p>
                 </div>
@@ -1296,7 +1296,7 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                         key={index}
                         className="border rounded-lg p-4 relative"
                         style={{
-                          borderColor: (staff.fromProfile || staff.fromPCRS) ? COLORS.slainteBlue : COLORS.lightGray,
+                          borderColor: (staff.fromProfile || staff.fromPCRS) ? COLORS.slainteBlue : COLORS.borderLight,
                           backgroundColor: (staff.fromProfile || staff.fromPCRS) ? `${COLORS.slainteBlue}08` : 'white'
                         }}
                       >
@@ -1325,7 +1325,7 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                           type="button"
                           onClick={() => removeStaffMember(index)}
                           className="absolute top-2 right-2 p-1 rounded hover:bg-gray-100"
-                          style={{ color: COLORS.mediumGray }}
+                          style={{ color: COLORS.textSecondary }}
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -1333,7 +1333,7 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                         <div className="grid grid-cols-6 gap-3">
                           {/* First Name */}
                           <div>
-                            <label className="block text-xs mb-1" style={{ color: COLORS.mediumGray }}>
+                            <label className="block text-xs mb-1" style={{ color: COLORS.textSecondary }}>
                               First Name
                             </label>
                             <input
@@ -1342,8 +1342,8 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                               onChange={(e) => updateStaffMember(index, 'firstName', e.target.value)}
                               className="w-full p-2 border rounded text-sm"
                               style={{
-                                borderColor: COLORS.lightGray,
-                                backgroundColor: (staff.fromProfile || staff.fromPCRS) ? '#f3f4f6' : 'white'
+                                borderColor: COLORS.borderLight,
+                                backgroundColor: (staff.fromProfile || staff.fromPCRS) ? COLORS.bgHover : 'white'
                               }}
                               placeholder="Jane"
                               disabled={staff.fromProfile || staff.fromPCRS}
@@ -1352,7 +1352,7 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
 
                           {/* Surname */}
                           <div>
-                            <label className="block text-xs mb-1" style={{ color: COLORS.mediumGray }}>
+                            <label className="block text-xs mb-1" style={{ color: COLORS.textSecondary }}>
                               Surname
                             </label>
                             <input
@@ -1361,8 +1361,8 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                               onChange={(e) => updateStaffMember(index, 'surname', e.target.value)}
                               className="w-full p-2 border rounded text-sm"
                               style={{
-                                borderColor: COLORS.lightGray,
-                                backgroundColor: (staff.fromProfile || staff.fromPCRS) ? '#f3f4f6' : 'white'
+                                borderColor: COLORS.borderLight,
+                                backgroundColor: (staff.fromProfile || staff.fromPCRS) ? COLORS.bgHover : 'white'
                               }}
                               placeholder="Smith"
                               disabled={staff.fromProfile || staff.fromPCRS}
@@ -1371,7 +1371,7 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
 
                           {/* Staff Type */}
                           <div>
-                            <label className="block text-xs mb-1" style={{ color: COLORS.mediumGray }}>
+                            <label className="block text-xs mb-1" style={{ color: COLORS.textSecondary }}>
                               Role
                             </label>
                             <select
@@ -1379,8 +1379,8 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                               onChange={(e) => updateStaffMember(index, 'staffType', e.target.value)}
                               className="w-full p-2 border rounded text-sm"
                               style={{
-                                borderColor: COLORS.lightGray,
-                                backgroundColor: staff.fromProfile ? '#f3f4f6' : 'white'
+                                borderColor: COLORS.borderLight,
+                                backgroundColor: staff.fromProfile ? COLORS.bgHover : 'white'
                               }}
                               disabled={staff.fromProfile}
                             >
@@ -1393,14 +1393,14 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
 
                           {/* Increment Point (from PCRS) - Always read-only */}
                           <div>
-                            <label className="block text-xs mb-1" style={{ color: COLORS.mediumGray }}>
+                            <label className="block text-xs mb-1" style={{ color: COLORS.textSecondary }}>
                               Incr. Point (PCRS)
                             </label>
                             <input
                               type="number"
                               value={staff.incrementPoint || '-'}
                               className="w-full p-2 border rounded text-sm"
-                              style={{ borderColor: COLORS.lightGray, backgroundColor: '#f3f4f6', color: COLORS.mediumGray }}
+                              style={{ borderColor: COLORS.borderLight, backgroundColor: COLORS.bgHover, color: COLORS.textSecondary }}
                               disabled={true}
                               title="Extracted from PCRS data"
                             />
@@ -1408,7 +1408,7 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
 
                           {/* Years Experience - Dropdown with role-appropriate max values */}
                           <div>
-                            <label className="block text-xs mb-1" style={{ color: COLORS.darkGray, fontWeight: 600 }}>
+                            <label className="block text-xs mb-1" style={{ color: COLORS.textPrimary, fontWeight: 600 }}>
                               Years Exp. *
                             </label>
                             {staff.staffType === 'practiceManager' ? (
@@ -1417,7 +1417,7 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                                 type="text"
                                 value="1"
                                 className="w-full p-2 border rounded text-sm"
-                                style={{ borderColor: COLORS.lightGray, backgroundColor: '#f3f4f6', color: COLORS.mediumGray }}
+                                style={{ borderColor: COLORS.borderLight, backgroundColor: COLORS.bgHover, color: COLORS.textSecondary }}
                                 disabled={true}
                                 title="Practice Manager has only 1 increment point on the pay scale"
                               />
@@ -1445,7 +1445,7 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
 
                           {/* Actual Hours Worked - ALWAYS EDITABLE */}
                           <div>
-                            <label className="block text-xs mb-1" style={{ color: COLORS.darkGray, fontWeight: 600 }}>
+                            <label className="block text-xs mb-1" style={{ color: COLORS.textPrimary, fontWeight: 600 }}>
                               Hrs/Week *
                             </label>
                             <input
@@ -1472,7 +1472,7 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
 
                           if (yearsExp > incPoint && incPoint < maxPoint) {
                             return (
-                              <div className="mt-2 flex items-center gap-2 text-sm" style={{ color: '#D97706' }}>
+                              <div className="mt-2 flex items-center gap-2 text-sm" style={{ color: COLORS.warningDark }}>
                                 <AlertCircle className="h-4 w-4" />
                                 <span>
                                   {yearsExp >= maxPoint ? `${maxPoint}+` : yearsExp} years experience but on increment point {incPoint}
@@ -1487,18 +1487,18 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                     ))}
                   </div>
                 ) : (
-                  <div className="border border-dashed rounded-lg p-6 text-center" style={{ borderColor: COLORS.lightGray }}>
-                    <p className="text-sm" style={{ color: COLORS.mediumGray }}>
+                  <div className="border border-dashed rounded-lg p-6 text-center" style={{ borderColor: COLORS.borderLight }}>
+                    <p className="text-sm" style={{ color: COLORS.textSecondary }}>
                       No staff members detected from PCRS PDFs.
                     </p>
-                    <p className="text-sm mt-1" style={{ color: COLORS.mediumGray }}>
+                    <p className="text-sm mt-1" style={{ color: COLORS.textSecondary }}>
                       Upload PCRS PDFs or add staff manually to analyze Practice Support subsidies.
                     </p>
                     <button
                       type="button"
                       onClick={addStaffMember}
                       className="mt-3 flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium mx-auto"
-                      style={{ backgroundColor: COLORS.backgroundGray, color: COLORS.darkGray }}
+                      style={{ backgroundColor: COLORS.bgPage, color: COLORS.textPrimary }}
                     >
                       <Plus className="h-4 w-4" />
                       Add Staff Member
@@ -1506,7 +1506,7 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                   </div>
                 )}
 
-                <p className="text-xs mt-2" style={{ color: COLORS.mediumGray }}>
+                <p className="text-xs mt-2" style={{ color: COLORS.textSecondary }}>
                   * Years experience is used to check if staff are on the correct pay scale (increment point).
                   This helps identify potential additional subsidies you may be entitled to.
                 </p>
@@ -1519,21 +1519,21 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
             <div className="space-y-6">
               <div className="flex items-center gap-3 mb-2">
                 <Stethoscope className="h-6 w-6" style={{ color: COLORS.slainteBlue }} />
-                <h3 className="text-xl font-semibold" style={{ color: COLORS.darkGray }}>
+                <h3 className="text-xl font-semibold" style={{ color: COLORS.textPrimary }}>
                   3. Chronic Disease Management
                 </h3>
               </div>
-              <p className="text-sm mb-4" style={{ color: COLORS.mediumGray }}>
+              <p className="text-sm mb-4" style={{ color: COLORS.textSecondary }}>
                 Enter your disease register counts from your EHR. This is used to calculate potential CDM, Prevention Programme, and OCF income.
               </p>
 
               {/* Disease Registers - CDM Treatment Programme */}
               <div className="space-y-4">
-                <div className="p-3 rounded-lg" style={{ backgroundColor: '#EFF6FF', borderLeft: '4px solid #3B82F6' }}>
-                  <h4 className="font-semibold" style={{ color: '#1E40AF' }}>
+                <div className="p-3 rounded-lg" style={{ backgroundColor: COLORS.slainteBlueLight, borderLeft: `4px solid ${COLORS.slainteBlue}` }}>
+                  <h4 className="font-semibold" style={{ color: COLORS.infoText }}>
                     CDM Treatment Programme (Established Disease)
                   </h4>
-                  <p className="text-sm mt-1" style={{ color: '#3B82F6' }}>
+                  <p className="text-sm mt-1" style={{ color: COLORS.slainteBlue }}>
                     GMS/DVC patients aged 18+ with established chronic conditions. Eligible for 2 structured reviews per year (AO/AP/AQ codes: €165-€205 per review).
                   </p>
                 </div>
@@ -1613,12 +1613,12 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                 </div>
 
                 {/* Prevention Programme Section */}
-                <div className="mt-6 pt-4 border-t" style={{ borderColor: COLORS.lightGray }}>
-                  <div className="p-3 rounded-lg mb-4" style={{ backgroundColor: '#F0FDF4', borderLeft: '4px solid #22C55E' }}>
-                    <h4 className="font-semibold" style={{ color: '#166534' }}>
+                <div className="mt-6 pt-4 border-t" style={{ borderColor: COLORS.borderLight }}>
+                  <div className="p-3 rounded-lg mb-4" style={{ backgroundColor: COLORS.successLight, borderLeft: `4px solid ${COLORS.success}` }}>
+                    <h4 className="font-semibold" style={{ color: COLORS.successText }}>
                       Prevention Programme (High Risk / Pre-Disease)
                     </h4>
-                    <p className="text-sm mt-1" style={{ color: '#15803D' }}>
+                    <p className="text-sm mt-1" style={{ color: COLORS.successText }}>
                       Annual review (€82 BB code) for patients at high risk of developing chronic disease. Multiple eligibility pathways available.
                     </p>
                   </div>
@@ -1681,12 +1681,12 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                 </div>
 
                 {/* OCF Section */}
-                <div className="mt-6 pt-4 border-t" style={{ borderColor: COLORS.lightGray }}>
-                  <div className="p-3 rounded-lg mb-4" style={{ backgroundColor: '#FEF3C7', borderLeft: '4px solid #F59E0B' }}>
-                    <h4 className="font-semibold" style={{ color: '#92400E' }}>
+                <div className="mt-6 pt-4 border-t" style={{ borderColor: COLORS.borderLight }}>
+                  <div className="p-3 rounded-lg mb-4" style={{ backgroundColor: COLORS.warningLight, borderLeft: `4px solid ${COLORS.warning}` }}>
+                    <h4 className="font-semibold" style={{ color: COLORS.warningText }}>
                       Opportunistic Case Finding (OCF)
                     </h4>
-                    <p className="text-sm mt-1" style={{ color: '#B45309' }}>
+                    <p className="text-sm mt-1" style={{ color: COLORS.warningDark }}>
                       One-off assessment (€60 BC code) for GMS/DVC patients 45+ with risk factors who are not yet on CDM or Prevention Programme.
                     </p>
                   </div>
@@ -1711,13 +1711,13 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
         </div>
 
         {/* Footer with navigation - Fixed */}
-        <div className="p-6 border-t flex justify-between flex-shrink-0" style={{ borderColor: COLORS.lightGray }}>
+        <div className="p-6 border-t flex justify-between flex-shrink-0" style={{ borderColor: COLORS.borderLight }}>
           <button
             onClick={onCancel}
             className="px-4 py-2 rounded border font-medium transition-colors"
             style={{
-              borderColor: COLORS.lightGray,
-              color: COLORS.mediumGray
+              borderColor: COLORS.borderLight,
+              color: COLORS.textSecondary
             }}
           >
             Cancel
@@ -1728,8 +1728,8 @@ export default function HealthCheckDataForm({ practiceProfile, paymentAnalysisDa
                 onClick={handleBack}
                 className="px-4 py-2 rounded border font-medium flex items-center gap-2 transition-colors hover:bg-gray-50"
                 style={{
-                  borderColor: COLORS.lightGray,
-                  color: COLORS.darkGray
+                  borderColor: COLORS.borderLight,
+                  color: COLORS.textPrimary
                 }}
               >
                 <ChevronLeft className="h-4 w-4" />

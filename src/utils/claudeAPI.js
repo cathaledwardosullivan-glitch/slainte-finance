@@ -5,9 +5,22 @@
 
 import { isAIEnabled } from './privacyGate';
 import { MODELS } from '../data/modelConfig';
+import { isDemoMode, getDemoApiKey } from './demoMode';
+import { isLANMode, getAPIBaseURL } from '../hooks/useLANMode';
 
-// Configuration - Set this to your Cloudflare Tunnel URL when deployed
-const CLOUDFLARE_TUNNEL_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+// Fallback URL for non-LAN browser environments (e.g. local dev)
+const DEFAULT_API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
+/**
+ * Get the correct API base URL for the current environment.
+ * LAN companion devices use the hub's origin; otherwise use the default.
+ */
+function getBaseURL() {
+  if (isLANMode()) {
+    return getAPIBaseURL();
+  }
+  return DEFAULT_API_URL;
+}
 
 /**
  * Check if running in Electron
@@ -110,6 +123,47 @@ export async function callClaude(message, options = {}) {
         source: 'electron'
       };
 
+    } else if (isDemoMode()) {
+      // Offline demo mode — call Claude API directly
+      const demoKey = getDemoApiKey();
+      if (!demoKey) {
+        throw new Error('Demo API key has expired. Please re-enter it.');
+      }
+
+      console.log('[Claude API] Direct call (demo mode)');
+
+      const requestBody = {
+        model,
+        max_tokens: maxTokens,
+        temperature,
+        messages: [{ role: 'user', content: context ? `${context}\n\n${message}` : message }]
+      };
+
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': demoKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData?.error?.message || `API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      return {
+        success: true,
+        data: data,
+        content: data.content?.[0]?.text || '',
+        source: 'demo-direct'
+      };
+
     } else {
       // Running in Browser/PWA - use HTTP API
       console.log('[Claude API] Calling via HTTP API');
@@ -121,7 +175,7 @@ export async function callClaude(message, options = {}) {
         throw new Error('Authentication required. Please log in.');
       }
 
-      const response = await fetch(`${CLOUDFLARE_TUNNEL_URL}/api/chat`, {
+      const response = await fetch(`${getBaseURL()}/api/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -214,6 +268,33 @@ export async function callClaudeWithTools(request) {
 
       throw new Error('No API key configured. Add your own key in Settings, or connect to the practice network.');
 
+    } else if (isDemoMode()) {
+      // Offline demo mode — call Claude API directly with client-side key
+      const demoKey = getDemoApiKey();
+      if (!demoKey) {
+        throw new Error('Demo API key has expired. Please re-enter it in the chat panel.');
+      }
+
+      console.log(`[Claude API] Direct call (demo mode), model: ${request.model}, tools: ${request.tools?.length || 0}`);
+
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': demoKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify(request)
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData?.error?.message || `API error: ${response.status}`);
+      }
+
+      return await response.json();
+
     } else {
       // Browser/PWA — use Express proxy
       const token = localStorage.getItem('partner_token');
@@ -221,7 +302,7 @@ export async function callClaudeWithTools(request) {
 
       console.log(`[Claude API] Raw call via HTTP, model: ${request.model}, tools: ${request.tools?.length || 0}`);
 
-      const response = await fetch(`${CLOUDFLARE_TUNNEL_URL}/api/chat`, {
+      const response = await fetch(`${getBaseURL()}/api/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -276,7 +357,7 @@ export async function checkAPIAvailability() {
       return { available: true, source: 'electron' };
     } else {
       // In browser, check if API server is reachable
-      const response = await fetch(`${CLOUDFLARE_TUNNEL_URL}/api/health`, {
+      const response = await fetch(`${getBaseURL()}/api/health`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'

@@ -95,11 +95,11 @@ const AreaTaskPanel = ({ areaId, recommendations, canAnalyze, healthCheckData })
     return (
       <div style={{
         padding: '1rem',
-        backgroundColor: '#F0FDF4',
+        backgroundColor: COLORS.successLight,
         borderRadius: '0.5rem',
-        border: '1px solid #BBF7D0',
+        border: `1px solid ${COLORS.successLighter}`,
         fontSize: '0.875rem',
-        color: '#166534',
+        color: COLORS.successText,
         textAlign: 'center'
       }}>
         <CheckCircle2 style={{ width: '1.25rem', height: '1.25rem', margin: '0 auto 0.5rem' }} />
@@ -119,9 +119,9 @@ const AreaTaskPanel = ({ areaId, recommendations, canAnalyze, healthCheckData })
               key={i}
               style={{
                 padding: '1rem',
-                backgroundColor: rec.type === 'priority' ? '#FEF2F2' : '#F0FDF4',
+                backgroundColor: rec.type === 'priority' ? COLORS.errorLighter : COLORS.successLight,
                 borderRadius: '0.5rem',
-                border: `1px solid ${rec.type === 'priority' ? '#FECACA' : '#BBF7D0'}`
+                border: `1px solid ${rec.type === 'priority' ? COLORS.errorLight : COLORS.successLighter}`
               }}
             >
               {/* Recommendation header */}
@@ -130,15 +130,15 @@ const AreaTaskPanel = ({ areaId, recommendations, canAnalyze, healthCheckData })
                   {rec.type === 'priority' ? (
                     <AlertTriangle style={{ width: '1rem', height: '1rem', color: COLORS.expenseColor }} />
                   ) : (
-                    <Circle style={{ width: '1rem', height: '1rem', color: '#059669' }} />
+                    <Circle style={{ width: '1rem', height: '1rem', color: COLORS.successDark }} />
                   )}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600, color: COLORS.darkGray }}>
+                  <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600, color: COLORS.textPrimary }}>
                     {rec.title}
                   </p>
                   {rec.summary && (
-                    <p style={{ margin: '0.25rem 0 0', fontSize: '0.8rem', color: COLORS.mediumGray }}>
+                    <p style={{ margin: '0.25rem 0 0', fontSize: '0.8rem', color: COLORS.textSecondary }}>
                       {rec.summary}
                     </p>
                   )}
@@ -175,12 +175,12 @@ const AreaTaskPanel = ({ areaId, recommendations, canAnalyze, healthCheckData })
                           alignItems: 'center',
                           gap: '0.5rem',
                           padding: '0.5rem 0.75rem',
-                          backgroundColor: COLORS.backgroundGray,
+                          backgroundColor: COLORS.bgPage,
                           borderRadius: '0.375rem',
                           fontSize: '0.8rem'
                         }}
                       >
-                        <div style={{ flex: 1, minWidth: 0, color: COLORS.darkGray }}>
+                        <div style={{ flex: 1, minWidth: 0, color: COLORS.textPrimary }}>
                           <span>{action.action}</span>
                           {action.value > 0 && (
                             <span style={{ marginLeft: '0.5rem', fontWeight: 600, color: COLORS.incomeColor }}>
@@ -194,8 +194,8 @@ const AreaTaskPanel = ({ areaId, recommendations, canAnalyze, healthCheckData })
                           <span style={{
                             flexShrink: 0,
                             padding: '0.125rem 0.5rem',
-                            backgroundColor: action.effort === 'Low' ? '#F0FDF4' : action.effort === 'Medium' ? '#FFF7ED' : '#FEF2F2',
-                            color: action.effort === 'Low' ? '#166534' : action.effort === 'Medium' ? '#9A3412' : '#991B1B',
+                            backgroundColor: action.effort === 'Low' ? COLORS.successLight : action.effort === 'Medium' ? COLORS.warningLighter : COLORS.errorLighter,
+                            color: action.effort === 'Low' ? COLORS.successText : action.effort === 'Medium' ? COLORS.warningText : COLORS.errorText,
                             borderRadius: '0.25rem',
                             fontSize: '0.7rem',
                             fontWeight: 500
@@ -212,8 +212,8 @@ const AreaTaskPanel = ({ areaId, recommendations, canAnalyze, healthCheckData })
                             gap: '0.25rem',
                             flexShrink: 0,
                             padding: '0.25rem 0.5rem',
-                            backgroundColor: '#F0FDF4',
-                            color: '#166534',
+                            backgroundColor: COLORS.successLight,
+                            color: COLORS.successText,
                             borderRadius: '0.25rem',
                             fontSize: '0.7rem',
                             fontWeight: 500
@@ -267,7 +267,7 @@ const AreaTaskPanel = ({ areaId, recommendations, canAnalyze, healthCheckData })
           alignItems: 'center',
           justifyContent: 'center',
           padding: '1rem',
-          backgroundColor: 'rgba(0, 0, 0, 0.5)'
+          backgroundColor: COLORS.overlayDark
         }}>
           <div style={{
             backgroundColor: COLORS.white,
@@ -275,7 +275,7 @@ const AreaTaskPanel = ({ areaId, recommendations, canAnalyze, healthCheckData })
             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
             width: '100%',
             maxWidth: '28rem',
-            border: `1px solid ${COLORS.lightGray}`
+            border: `1px solid ${COLORS.borderLight}`
           }}>
             {/* Modal Header */}
             <div style={{
@@ -283,25 +283,25 @@ const AreaTaskPanel = ({ areaId, recommendations, canAnalyze, healthCheckData })
               alignItems: 'center',
               justifyContent: 'space-between',
               padding: '1rem',
-              borderBottom: `1px solid ${COLORS.lightGray}`
+              borderBottom: `1px solid ${COLORS.borderLight}`
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <div style={{
                   padding: '0.5rem',
                   borderRadius: '0.5rem',
-                  backgroundColor: taskDialogOpen.recommendation.type === 'priority' ? '#FEE2E2' : '#ECFDF5'
+                  backgroundColor: taskDialogOpen.recommendation.type === 'priority' ? COLORS.errorLight : COLORS.successLight
                 }}>
                   <Target style={{
                     width: '1.25rem',
                     height: '1.25rem',
-                    color: taskDialogOpen.recommendation.type === 'priority' ? '#DC2626' : '#059669'
+                    color: taskDialogOpen.recommendation.type === 'priority' ? COLORS.error : COLORS.successDark
                   }} />
                 </div>
                 <div>
-                  <h3 style={{ margin: 0, fontWeight: 600, fontSize: '0.9375rem', color: COLORS.darkGray }}>
+                  <h3 style={{ margin: 0, fontWeight: 600, fontSize: '0.9375rem', color: COLORS.textPrimary }}>
                     Set as Task
                   </h3>
-                  <p style={{ margin: 0, fontSize: '0.75rem', color: COLORS.mediumGray }}>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: COLORS.textSecondary }}>
                     {taskDialogOpen.recommendation.category}
                   </p>
                 </div>
@@ -316,7 +316,7 @@ const AreaTaskPanel = ({ areaId, recommendations, canAnalyze, healthCheckData })
                   borderRadius: '0.25rem'
                 }}
               >
-                <X style={{ width: '1.25rem', height: '1.25rem', color: COLORS.mediumGray }} />
+                <X style={{ width: '1.25rem', height: '1.25rem', color: COLORS.textSecondary }} />
               </button>
             </div>
 
@@ -326,9 +326,9 @@ const AreaTaskPanel = ({ areaId, recommendations, canAnalyze, healthCheckData })
               <div style={{
                 padding: '0.75rem',
                 borderRadius: '0.5rem',
-                backgroundColor: COLORS.backgroundGray
+                backgroundColor: COLORS.bgPage
               }}>
-                <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500, color: COLORS.darkGray }}>
+                <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500, color: COLORS.textPrimary }}>
                   {taskDialogOpen.action.action}
                 </p>
                 {taskDialogOpen.action.value > 0 && (
@@ -347,7 +347,7 @@ const AreaTaskPanel = ({ areaId, recommendations, canAnalyze, healthCheckData })
                   fontSize: '0.875rem',
                   fontWeight: 500,
                   marginBottom: '0.5rem',
-                  color: COLORS.darkGray
+                  color: COLORS.textPrimary
                 }}>
                   <User style={{ width: '1rem', height: '1rem' }} />
                   Assign to
@@ -358,10 +358,10 @@ const AreaTaskPanel = ({ areaId, recommendations, canAnalyze, healthCheckData })
                   style={{
                     width: '100%',
                     padding: '0.5rem 0.75rem',
-                    border: `1px solid ${COLORS.lightGray}`,
+                    border: `1px solid ${COLORS.borderLight}`,
                     borderRadius: '0.5rem',
                     fontSize: '0.875rem',
-                    color: COLORS.darkGray,
+                    color: COLORS.textPrimary,
                     backgroundColor: COLORS.white,
                     outline: 'none'
                   }}
@@ -384,7 +384,7 @@ const AreaTaskPanel = ({ areaId, recommendations, canAnalyze, healthCheckData })
                   fontSize: '0.875rem',
                   fontWeight: 500,
                   marginBottom: '0.5rem',
-                  color: COLORS.darkGray
+                  color: COLORS.textPrimary
                 }}>
                   <Calendar style={{ width: '1rem', height: '1rem' }} />
                   Review/Completion Date
@@ -397,10 +397,10 @@ const AreaTaskPanel = ({ areaId, recommendations, canAnalyze, healthCheckData })
                   style={{
                     width: '100%',
                     padding: '0.5rem 0.75rem',
-                    border: `1px solid ${COLORS.lightGray}`,
+                    border: `1px solid ${COLORS.borderLight}`,
                     borderRadius: '0.5rem',
                     fontSize: '0.875rem',
-                    color: COLORS.darkGray,
+                    color: COLORS.textPrimary,
                     backgroundColor: COLORS.white,
                     outline: 'none'
                   }}
@@ -415,7 +415,7 @@ const AreaTaskPanel = ({ areaId, recommendations, canAnalyze, healthCheckData })
               justifyContent: 'flex-end',
               gap: '0.75rem',
               padding: '1rem',
-              borderTop: `1px solid ${COLORS.lightGray}`
+              borderTop: `1px solid ${COLORS.borderLight}`
             }}>
               <button
                 onClick={() => setTaskDialogOpen(null)}
@@ -424,9 +424,9 @@ const AreaTaskPanel = ({ areaId, recommendations, canAnalyze, healthCheckData })
                   borderRadius: '0.5rem',
                   fontSize: '0.875rem',
                   fontWeight: 500,
-                  border: `1px solid ${COLORS.lightGray}`,
+                  border: `1px solid ${COLORS.borderLight}`,
                   backgroundColor: COLORS.white,
-                  color: COLORS.mediumGray,
+                  color: COLORS.textSecondary,
                   cursor: 'pointer'
                 }}
               >

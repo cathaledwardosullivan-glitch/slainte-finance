@@ -113,7 +113,7 @@ Provide a helpful, concise answer (2-3 sentences max) that addresses their quest
         backgroundColor: COLORS.white,
         borderRadius: '0.75rem',
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-        border: `1px solid ${COLORS.lightGray}`,
+        border: `1px solid ${COLORS.borderLight}`,
         zIndex: 10003, // Above tour overlay
         overflow: 'hidden',
         transition: 'all 0.3s ease',
@@ -136,7 +136,7 @@ Provide a helpful, concise answer (2-3 sentences max) that addresses their quest
           style={{
             width: '2rem',
             height: '2rem',
-            backgroundColor: COLORS.slainteBlueDark || '#3D7BC7',
+            backgroundColor: COLORS.slainteBlueDark,
             borderRadius: '9999px',
             display: 'flex',
             alignItems: 'center',
@@ -169,7 +169,7 @@ Provide a helpful, concise answer (2-3 sentences max) that addresses their quest
               padding: '1rem',
               fontSize: '0.875rem',
               lineHeight: '1.6',
-              color: COLORS.darkGray,
+              color: COLORS.textPrimary,
               minHeight: '120px',
               maxHeight: '180px',
               overflowY: 'auto',
@@ -183,7 +183,7 @@ Provide a helpful, concise answer (2-3 sentences max) that addresses their quest
             <div
               style={{
                 padding: '0 1rem 0.75rem',
-                borderTop: `1px solid ${COLORS.lightGray}`,
+                borderTop: `1px solid ${COLORS.borderLight}`,
                 paddingTop: '0.75rem',
                 display: 'flex',
                 flexDirection: 'column',
@@ -233,14 +233,14 @@ Provide a helpful, concise answer (2-3 sentences max) that addresses their quest
                       <ChoiceIcon size={18} color={COLORS.slainteBlue} />
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 600, fontSize: '0.8125rem', color: COLORS.darkGray }}>
+                      <div style={{ fontWeight: 600, fontSize: '0.8125rem', color: COLORS.textPrimary }}>
                         {choice.label}
                       </div>
-                      <div style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginTop: '0.125rem' }}>
+                      <div style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginTop: '0.125rem' }}>
                         {choice.description}
                       </div>
                     </div>
-                    <ChevronRight size={16} color={COLORS.mediumGray} style={{ flexShrink: 0 }} />
+                    <ChevronRight size={16} color={COLORS.textSecondary} style={{ flexShrink: 0 }} />
                   </button>
                 );
               })}
@@ -249,7 +249,7 @@ Provide a helpful, concise answer (2-3 sentences max) that addresses their quest
             <div
               style={{
                 padding: '0 1rem 0.75rem',
-                borderTop: `1px solid ${COLORS.lightGray}`,
+                borderTop: `1px solid ${COLORS.borderLight}`,
                 paddingTop: '0.75rem',
               }}
             >
@@ -293,11 +293,11 @@ Provide a helpful, concise answer (2-3 sentences max) that addresses their quest
                         style={{
                           flex: 1,
                           padding: '0.625rem 0.75rem',
-                          border: `1px solid ${COLORS.lightGray}`,
+                          border: `1px solid ${COLORS.borderLight}`,
                           borderRadius: '0.5rem',
                           fontSize: '0.8125rem',
                           outline: 'none',
-                          backgroundColor: isQALoading ? COLORS.backgroundGray : COLORS.white,
+                          backgroundColor: isQALoading ? COLORS.bgPage : COLORS.white,
                         }}
                       />
                       <button
@@ -305,7 +305,7 @@ Provide a helpful, concise answer (2-3 sentences max) that addresses their quest
                         disabled={isQALoading || !question.trim()}
                         style={{
                           padding: '0.625rem 0.875rem',
-                          backgroundColor: isQALoading || !question.trim() ? COLORS.lightGray : COLORS.slainteBlue,
+                          backgroundColor: isQALoading || !question.trim() ? COLORS.borderLight : COLORS.slainteBlue,
                           border: 'none',
                           borderRadius: '0.5rem',
                           color: COLORS.white,
@@ -326,10 +326,10 @@ Provide a helpful, concise answer (2-3 sentences max) that addresses their quest
                       style={{
                         marginTop: '0.75rem',
                         padding: '0.75rem',
-                        backgroundColor: COLORS.backgroundGray,
+                        backgroundColor: COLORS.bgPage,
                         borderRadius: '0.5rem',
                         fontSize: '0.8125rem',
-                        color: COLORS.mediumGray,
+                        color: COLORS.textSecondary,
                         textAlign: 'center',
                       }}
                     >
@@ -347,7 +347,7 @@ Provide a helpful, concise answer (2-3 sentences max) that addresses their quest
                         borderRadius: '0.5rem',
                         fontSize: '0.8125rem',
                         lineHeight: '1.5',
-                        color: COLORS.darkGray,
+                        color: COLORS.textPrimary,
                         borderLeft: `3px solid ${COLORS.incomeColor}`,
                       }}
                     >
@@ -386,11 +386,11 @@ Provide a helpful, concise answer (2-3 sentences max) that addresses their quest
           <div
             style={{
               padding: '0.75rem 1rem',
-              borderTop: `1px solid ${COLORS.lightGray}`,
+              borderTop: `1px solid ${COLORS.borderLight}`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: currentStepData.choices ? 'center' : 'space-between',
-              backgroundColor: COLORS.backgroundGray,
+              backgroundColor: COLORS.bgPage,
             }}
           >
             {currentStepData.choices ? (
@@ -406,7 +406,7 @@ Provide a helpful, concise answer (2-3 sentences max) that addresses their quest
                     padding: '0.375rem 0.75rem',
                     backgroundColor: 'transparent',
                     border: 'none',
-                    color: isFirstStep ? COLORS.lightGray : COLORS.mediumGray,
+                    color: isFirstStep ? COLORS.borderLight : COLORS.textSecondary,
                     fontSize: '0.8125rem',
                     cursor: isFirstStep || isTransitioning ? 'not-allowed' : 'pointer',
                   }}
@@ -420,7 +420,7 @@ Provide a helpful, concise answer (2-3 sentences max) that addresses their quest
                     padding: '0.375rem 0.75rem',
                     backgroundColor: 'transparent',
                     border: 'none',
-                    color: COLORS.mediumGray,
+                    color: COLORS.textSecondary,
                     fontSize: '0.8125rem',
                     cursor: 'pointer',
                   }}
@@ -439,7 +439,7 @@ Provide a helpful, concise answer (2-3 sentences max) that addresses their quest
                     padding: '0.375rem 0.75rem',
                     backgroundColor: 'transparent',
                     border: 'none',
-                    color: COLORS.mediumGray,
+                    color: COLORS.textSecondary,
                     fontSize: '0.8125rem',
                     cursor: isTransitioning ? 'not-allowed' : 'pointer',
                     opacity: isTransitioning ? 0.5 : 1,
@@ -463,10 +463,10 @@ Provide a helpful, concise answer (2-3 sentences max) that addresses their quest
                       justifyContent: 'center',
                       width: '2rem',
                       height: '2rem',
-                      backgroundColor: isFirstStep ? COLORS.backgroundGray : COLORS.white,
-                      border: `1px solid ${isFirstStep ? COLORS.lightGray : COLORS.slainteBlue}`,
+                      backgroundColor: isFirstStep ? COLORS.bgPage : COLORS.white,
+                      border: `1px solid ${isFirstStep ? COLORS.borderLight : COLORS.slainteBlue}`,
                       borderRadius: '50%',
-                      color: isFirstStep ? COLORS.lightGray : COLORS.slainteBlue,
+                      color: isFirstStep ? COLORS.borderLight : COLORS.slainteBlue,
                       cursor: isFirstStep || isTransitioning ? 'not-allowed' : 'pointer',
                       opacity: isTransitioning ? 0.5 : 1,
                     }}

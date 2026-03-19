@@ -12,7 +12,7 @@ import { Search, Filter, FileText, Target, X, Save, ChevronDown, ChevronUp, Aler
 // ─── Confidence helpers ──────────────────────────────────────────────
 const getConfidenceColor = (confidence) => {
     if (confidence >= 0.95) return COLORS.incomeColor;   // green
-    if (confidence >= 0.50) return '#F59E0B';             // amber
+    if (confidence >= 0.50) return COLORS.warning;     // amber
     return COLORS.expenseColor;                           // red
 };
 
@@ -59,11 +59,11 @@ const TransactionRowV2 = ({
     return (
         <tr
             style={{
-                borderBottom: `1px solid ${COLORS.lightGray}`,
-                backgroundColor: isUnidentified ? '#FFF7ED' : 'transparent'
+                borderBottom: `1px solid ${COLORS.borderLight}`,
+                backgroundColor: isUnidentified ? COLORS.warningLighter : 'transparent'
             }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = isUnidentified ? '#FFF7ED' : COLORS.backgroundGray}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = isUnidentified ? '#FFF7ED' : 'transparent'}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = isUnidentified ? COLORS.warningLighter : COLORS.bgPage}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = isUnidentified ? COLORS.warningLighter : 'transparent'}
         >
             {/* Confidence dot */}
             <td style={{ padding: '0.5rem 0.5rem', textAlign: 'center' }}>
@@ -101,7 +101,7 @@ const TransactionRowV2 = ({
                     borderRadius: '0.25rem',
                     fontSize: '0.7rem',
                     fontWeight: '500',
-                    backgroundColor: isCredit ? '#CCFBF1' : '#FECACA',
+                    backgroundColor: isCredit ? COLORS.incomeColorLight : COLORS.errorLight,
                     color: isCredit ? COLORS.incomeColor : COLORS.expenseColor
                 }}>
                     {isCredit ? 'CR' : 'DR'}
@@ -113,7 +113,7 @@ const TransactionRowV2 = ({
                     padding: '0.2rem 0.5rem',
                     borderRadius: '0.25rem',
                     backgroundColor: `${groupInfo?.type === 'income' ? COLORS.incomeColor : groupInfo?.type === 'non-business' ? COLORS.slainteBlue : COLORS.expenseColor}15`,
-                    color: COLORS.darkGray,
+                    color: COLORS.textPrimary,
                     fontSize: '0.75rem'
                 }}>
                     {groupInfo?.name || group}
@@ -177,9 +177,9 @@ const TransactionRowV2 = ({
                         </button>
                         <button
                             onClick={() => { setCommentValue(transaction.comment || ''); setEditingComment(false); }}
-                            style={{ padding: '0.25rem', backgroundColor: COLORS.lightGray, border: 'none', borderRadius: '0.25rem', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                            style={{ padding: '0.25rem', backgroundColor: COLORS.borderLight, border: 'none', borderRadius: '0.25rem', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                         >
-                            <X style={{ height: '0.875rem', width: '0.875rem', color: COLORS.darkGray }} />
+                            <X style={{ height: '0.875rem', width: '0.875rem', color: COLORS.textPrimary }} />
                         </button>
                     </div>
                 ) : (
@@ -187,7 +187,7 @@ const TransactionRowV2 = ({
                         onClick={() => setEditingComment(true)}
                         style={{
                             fontSize: '0.75rem',
-                            color: transaction.comment ? COLORS.darkGray : COLORS.mediumGray,
+                            color: transaction.comment ? COLORS.textPrimary : COLORS.textSecondary,
                             cursor: 'pointer',
                             padding: '0.25rem',
                             borderRadius: '0.25rem',
@@ -195,7 +195,7 @@ const TransactionRowV2 = ({
                             display: 'flex',
                             alignItems: 'center'
                         }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.backgroundGray}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.bgPage}
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                         title="Click to add/edit comment"
                     >
@@ -234,19 +234,19 @@ const PaginationControls = ({ currentPage, setCurrentPage, totalPages }) => {
     const btnStyle = (disabled) => ({
         padding: '0.25rem 0.5rem',
         fontSize: '0.75rem',
-        border: `1px solid ${COLORS.lightGray}`,
+        border: `1px solid ${COLORS.borderLight}`,
         borderRadius: '0.25rem',
         cursor: disabled ? 'not-allowed' : 'pointer',
         opacity: disabled ? 0.5 : 1,
         backgroundColor: COLORS.white,
-        color: COLORS.darkGray
+        color: COLORS.textPrimary
     });
 
     return (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginTop: '1rem' }}>
             <button style={btnStyle(currentPage === 0)} onClick={() => setCurrentPage(0)} disabled={currentPage === 0}>First</button>
             <button style={btnStyle(currentPage === 0)} onClick={() => setCurrentPage(p => Math.max(0, p - 1))} disabled={currentPage === 0}>Prev</button>
-            <span style={{ fontSize: '0.8rem', color: COLORS.mediumGray }}>Page {currentPage + 1} of {totalPages}</span>
+            <span style={{ fontSize: '0.8rem', color: COLORS.textSecondary }}>Page {currentPage + 1} of {totalPages}</span>
             <button style={btnStyle(currentPage >= totalPages - 1)} onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))} disabled={currentPage >= totalPages - 1}>Next</button>
             <button style={btnStyle(currentPage >= totalPages - 1)} onClick={() => setCurrentPage(totalPages - 1)} disabled={currentPage >= totalPages - 1}>Last</button>
         </div>
@@ -302,18 +302,18 @@ const PipelineStatusSummary = ({ allTransactions, onFilterClick }) => {
                 borderRadius: '0.25rem'
             }}
             onClick={() => filterKey && onFilterClick(filterKey)}
-            onMouseEnter={(e) => filterKey && (e.currentTarget.style.backgroundColor = COLORS.backgroundGray)}
+            onMouseEnter={(e) => filterKey && (e.currentTarget.style.backgroundColor = COLORS.bgPage)}
             onMouseLeave={(e) => filterKey && (e.currentTarget.style.backgroundColor = 'transparent')}
         >
             <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: color, flexShrink: 0 }} />
-            <span style={{ color: COLORS.darkGray }}>{count.toLocaleString()} {label}</span>
+            <span style={{ color: COLORS.textPrimary }}>{count.toLocaleString()} {label}</span>
         </div>
     );
 
     const StatusBadge = ({ done }) => (
         <div style={{
             fontSize: '0.7rem', fontWeight: 600,
-            color: done ? COLORS.incomeColor : '#F59E0B',
+            color: done ? COLORS.incomeColor : COLORS.warning,
             display: 'flex', alignItems: 'center', gap: '0.25rem', marginTop: '0.25rem'
         }}>
             {done ? <CheckCircle style={{ width: 12, height: 12 }} /> : <AlertTriangle style={{ width: 12, height: 12 }} />}
@@ -329,38 +329,38 @@ const PipelineStatusSummary = ({ allTransactions, onFilterClick }) => {
             padding: '1rem',
             backgroundColor: COLORS.white,
             borderRadius: '0.5rem',
-            border: `1px solid ${COLORS.lightGray}`
+            border: `1px solid ${COLORS.borderLight}`
         }}>
             {/* Type column */}
             <div>
-                <div style={{ fontSize: '0.75rem', fontWeight: 600, color: COLORS.mediumGray, letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Level 1 — Type</div>
+                <div style={{ fontSize: '0.75rem', fontWeight: 600, color: COLORS.textSecondary, letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Level 1 — Type</div>
                 <StatRow color={COLORS.expenseColor} label="expense" count={typeStats.expense} />
                 <StatRow color={COLORS.incomeColor} label="income" count={typeStats.income} />
                 <StatRow color={COLORS.slainteBlue} label="non-business" count={typeStats.nonBusiness} />
                 {typeStats.anomaly > 0 && (
-                    <StatRow color="#F59E0B" label="anomalies" count={typeStats.anomaly} filterKey="anomaly" />
+                    <StatRow color={COLORS.warning} label="anomalies" count={typeStats.anomaly} filterKey="anomaly" />
                 )}
                 <StatusBadge done={typeStats.anomaly === 0} />
             </div>
             {/* Group column */}
             <div>
-                <div style={{ fontSize: '0.75rem', fontWeight: 600, color: COLORS.mediumGray, letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Level 2 — Group</div>
+                <div style={{ fontSize: '0.75rem', fontWeight: 600, color: COLORS.textSecondary, letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Level 2 — Group</div>
                 <StatRow color={COLORS.incomeColor} label="auto-matched" count={groupStats.auto} />
-                <StatRow color="#F59E0B" label="AI-assisted" count={groupStats.ai_assist} filterKey="group_ai" />
+                <StatRow color={COLORS.warning} label="AI-assisted" count={groupStats.ai_assist} filterKey="group_ai" />
                 <StatRow color={COLORS.expenseColor} label="need review" count={groupStats.review} filterKey="group_review" />
                 {groupStats.conflict > 0 && (
-                    <StatRow color="#8B5CF6" label="conflicts" count={groupStats.conflict} filterKey="group_conflict" />
+                    <StatRow color={COLORS.chartViolet} label="conflicts" count={groupStats.conflict} filterKey="group_conflict" />
                 )}
                 <StatusBadge done={allGroupsDone} />
             </div>
             {/* Category column */}
             <div>
-                <div style={{ fontSize: '0.75rem', fontWeight: 600, color: COLORS.mediumGray, letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Level 3 — Category</div>
+                <div style={{ fontSize: '0.75rem', fontWeight: 600, color: COLORS.textSecondary, letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Level 3 — Category</div>
                 <StatRow color={COLORS.incomeColor} label="matched" count={categoryStats.matched} />
-                <StatRow color="#F59E0B" label="AI-assisted" count={categoryStats.ai_assist} filterKey="category_ai" />
+                <StatRow color={COLORS.warning} label="AI-assisted" count={categoryStats.ai_assist} filterKey="category_ai" />
                 <StatRow color={COLORS.expenseColor} label="need review" count={categoryStats.review} filterKey="category_review" />
                 {categoryStats.unmatched > 0 && (
-                    <StatRow color={COLORS.mediumGray} label="uncategorized" count={categoryStats.unmatched} filterKey="uncategorized" />
+                    <StatRow color={COLORS.textSecondary} label="uncategorized" count={categoryStats.unmatched} filterKey="uncategorized" />
                 )}
                 <StatusBadge done={allCategoriesDone} />
             </div>
@@ -382,12 +382,12 @@ const ActionRequiredBanner = ({ allTransactions, unidentifiedCount, onReviewClic
             <div style={{
                 display: 'flex', alignItems: 'center', gap: '0.5rem',
                 padding: '0.75rem 1rem',
-                backgroundColor: '#ECFDF5',
+                backgroundColor: COLORS.successLight,
                 borderRadius: '0.5rem',
-                border: '1px solid #A7F3D0'
+                border: `1px solid ${COLORS.successLighter}`
             }}>
                 <CheckCircle style={{ width: 16, height: 16, color: COLORS.incomeColor }} />
-                <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#065F46' }}>
+                <span style={{ fontSize: '0.875rem', fontWeight: 500, color: COLORS.successText }}>
                     All transactions categorized
                 </span>
             </div>
@@ -397,20 +397,20 @@ const ActionRequiredBanner = ({ allTransactions, unidentifiedCount, onReviewClic
     return (
         <div style={{
             padding: '0.75rem 1rem',
-            backgroundColor: '#FFFBEB',
+            backgroundColor: COLORS.warningLighter,
             borderRadius: '0.5rem',
-            border: '1px solid #FDE68A',
+            border: `1px solid ${COLORS.warningLight}`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between'
         }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <AlertTriangle style={{ width: 18, height: 18, color: '#D97706', flexShrink: 0 }} />
+                <AlertTriangle style={{ width: 18, height: 18, color: COLORS.warningDark, flexShrink: 0 }} />
                 <div>
-                    <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#92400E' }}>
+                    <div style={{ fontSize: '0.875rem', fontWeight: 600, color: COLORS.warningText }}>
                         {totalNeedAttention} transaction{totalNeedAttention !== 1 ? 's' : ''} need attention
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: '#B45309', marginTop: '0.15rem' }}>
+                    <div style={{ fontSize: '0.75rem', color: COLORS.warningDark, marginTop: '0.15rem' }}>
                         {anomalyCount > 0 && <span>{anomalyCount} type anomal{anomalyCount !== 1 ? 'ies' : 'y'} &middot; </span>}
                         {reviewCount > 0 && <span>{reviewCount} low-confidence (need review) &middot; </span>}
                         {unidentifiedCount > 0 && <span>{unidentifiedCount} uncategorized</span>}
@@ -423,15 +423,15 @@ const ActionRequiredBanner = ({ allTransactions, unidentifiedCount, onReviewClic
                     padding: '0.4rem 1rem',
                     fontSize: '0.8rem',
                     fontWeight: 600,
-                    color: '#92400E',
-                    backgroundColor: '#FEF3C7',
-                    border: '1px solid #FDE68A',
+                    color: COLORS.warningText,
+                    backgroundColor: COLORS.warningLight,
+                    border: `1px solid ${COLORS.warningLight}`,
                     borderRadius: '0.375rem',
                     cursor: 'pointer',
                     whiteSpace: 'nowrap'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FDE68A'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FEF3C7'}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.warningLight}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.warningLight}
             >
                 Review Now
             </button>
@@ -768,9 +768,9 @@ export default function TransactionListV2() {
                     padding: '0.3rem 0.75rem',
                     fontSize: '0.75rem',
                     fontWeight: active ? 600 : 400,
-                    color: active ? COLORS.white : COLORS.darkGray,
+                    color: active ? COLORS.white : COLORS.textPrimary,
                     backgroundColor: active ? COLORS.slainteBlue : COLORS.white,
-                    border: `1px solid ${active ? COLORS.slainteBlue : COLORS.lightGray}`,
+                    border: `1px solid ${active ? COLORS.slainteBlue : COLORS.borderLight}`,
                     borderRadius: '0.25rem',
                     cursor: 'pointer'
                 }}
@@ -794,9 +794,9 @@ export default function TransactionListV2() {
     if (allTransactions.length === 0) {
         return (
             <div style={{ textAlign: 'center', padding: '3rem' }}>
-                <FileText style={{ margin: '0 auto 1rem', height: '3rem', width: '3rem', color: COLORS.mediumGray }} />
-                <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem', color: COLORS.darkGray }}>No Transactions Loaded</h3>
-                <p style={{ color: COLORS.mediumGray }}>Upload a CSV file to see your transactions here.</p>
+                <FileText style={{ margin: '0 auto 1rem', height: '3rem', width: '3rem', color: COLORS.textSecondary }} />
+                <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem', color: COLORS.textPrimary }}>No Transactions Loaded</h3>
+                <p style={{ color: COLORS.textSecondary }}>Upload a CSV file to see your transactions here.</p>
             </div>
         );
     }
@@ -805,10 +805,10 @@ export default function TransactionListV2() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {/* ─── Header ───────────────────────────────────────── */}
             <div>
-                <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: COLORS.darkGray, marginBottom: '0.25rem' }}>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: COLORS.textPrimary, marginBottom: '0.25rem' }}>
                     Transactions
                 </h2>
-                <p style={{ fontSize: '0.8rem', color: COLORS.mediumGray }}>
+                <p style={{ fontSize: '0.8rem', color: COLORS.textSecondary }}>
                     {transactions.length.toLocaleString()} categorized{unidentifiedTransactions.length > 0 && `, ${unidentifiedTransactions.length.toLocaleString()} unidentified`}
                 </p>
             </div>
@@ -827,20 +827,20 @@ export default function TransactionListV2() {
             />
 
             {/* ─── Unified Transaction Table ─────────────────────── */}
-            <div style={{ backgroundColor: COLORS.white, borderRadius: '0.5rem', border: `1px solid ${COLORS.lightGray}`, overflow: 'hidden' }}>
+            <div style={{ backgroundColor: COLORS.white, borderRadius: '0.5rem', border: `1px solid ${COLORS.borderLight}`, overflow: 'hidden' }}>
                 {/* Filter Bar */}
                 <div style={{
                     display: 'flex',
                     flexWrap: 'wrap',
                     gap: '0.5rem',
                     padding: '0.75rem 1rem',
-                    backgroundColor: COLORS.backgroundGray,
-                    borderBottom: `1px solid ${COLORS.lightGray}`,
+                    backgroundColor: COLORS.bgPage,
+                    borderBottom: `1px solid ${COLORS.borderLight}`,
                     alignItems: 'center'
                 }}>
                     {/* Search */}
                     <div style={{ position: 'relative', flex: '1 1 200px', minWidth: '150px' }}>
-                        <Search style={{ position: 'absolute', left: '0.6rem', top: '50%', transform: 'translateY(-50%)', height: '0.875rem', width: '0.875rem', color: COLORS.mediumGray }} />
+                        <Search style={{ position: 'absolute', left: '0.6rem', top: '50%', transform: 'translateY(-50%)', height: '0.875rem', width: '0.875rem', color: COLORS.textSecondary }} />
                         <input
                             type="text"
                             placeholder="Search..."
@@ -850,11 +850,11 @@ export default function TransactionListV2() {
                                 width: '100%',
                                 paddingLeft: '2rem',
                                 padding: '0.4rem 0.6rem 0.4rem 2rem',
-                                border: `1px solid ${COLORS.lightGray}`,
+                                border: `1px solid ${COLORS.borderLight}`,
                                 borderRadius: '0.375rem',
                                 fontSize: '0.8rem',
                                 backgroundColor: COLORS.white,
-                                color: COLORS.darkGray
+                                color: COLORS.textPrimary
                             }}
                         />
                     </div>
@@ -862,7 +862,7 @@ export default function TransactionListV2() {
                     <select
                         value={filterGroup}
                         onChange={(e) => setFilterGroup(e.target.value)}
-                        style={{ padding: '0.4rem 0.5rem', border: `1px solid ${COLORS.lightGray}`, borderRadius: '0.375rem', fontSize: '0.8rem', backgroundColor: COLORS.white, color: COLORS.darkGray }}
+                        style={{ padding: '0.4rem 0.5rem', border: `1px solid ${COLORS.borderLight}`, borderRadius: '0.375rem', fontSize: '0.8rem', backgroundColor: COLORS.white, color: COLORS.textPrimary }}
                     >
                         <option value="">All Groups</option>
                         {groupOptions.map(g => (
@@ -873,7 +873,7 @@ export default function TransactionListV2() {
                     <select
                         value={filterCategory}
                         onChange={(e) => setFilterCategory(e.target.value)}
-                        style={{ padding: '0.4rem 0.5rem', border: `1px solid ${COLORS.lightGray}`, borderRadius: '0.375rem', fontSize: '0.8rem', backgroundColor: COLORS.white, color: COLORS.darkGray, maxWidth: '200px' }}
+                        style={{ padding: '0.4rem 0.5rem', border: `1px solid ${COLORS.borderLight}`, borderRadius: '0.375rem', fontSize: '0.8rem', backgroundColor: COLORS.white, color: COLORS.textPrimary, maxWidth: '200px' }}
                     >
                         <option value="">All Categories</option>
                         {categoryNames.map(cat => (
@@ -884,7 +884,7 @@ export default function TransactionListV2() {
                     <select
                         value={filterType}
                         onChange={(e) => setFilterType(e.target.value)}
-                        style={{ padding: '0.4rem 0.5rem', border: `1px solid ${COLORS.lightGray}`, borderRadius: '0.375rem', fontSize: '0.8rem', backgroundColor: COLORS.white, color: COLORS.darkGray }}
+                        style={{ padding: '0.4rem 0.5rem', border: `1px solid ${COLORS.borderLight}`, borderRadius: '0.375rem', fontSize: '0.8rem', backgroundColor: COLORS.white, color: COLORS.textPrimary }}
                     >
                         <option value="">All Types</option>
                         <option value="income">Income</option>
@@ -895,7 +895,7 @@ export default function TransactionListV2() {
                     <select
                         value={sortBy}
                         onChange={(e) => setSortBy(e.target.value)}
-                        style={{ padding: '0.4rem 0.5rem', border: `1px solid ${COLORS.lightGray}`, borderRadius: '0.375rem', fontSize: '0.8rem', backgroundColor: COLORS.white, color: COLORS.darkGray }}
+                        style={{ padding: '0.4rem 0.5rem', border: `1px solid ${COLORS.borderLight}`, borderRadius: '0.375rem', fontSize: '0.8rem', backgroundColor: COLORS.white, color: COLORS.textPrimary }}
                     >
                         <option value="default">Default Order</option>
                         <option value="date-desc">Date (Newest)</option>
@@ -929,16 +929,16 @@ export default function TransactionListV2() {
                 {/* Cohort quick-filter buttons */}
                 <div style={{
                     display: 'flex', gap: '0.375rem', padding: '0.5rem 1rem',
-                    borderBottom: `1px solid ${COLORS.lightGray}`,
+                    borderBottom: `1px solid ${COLORS.borderLight}`,
                     alignItems: 'center'
                 }}>
-                    <span style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginRight: '0.25rem' }}>Show:</span>
+                    <span style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginRight: '0.25rem' }}>Show:</span>
                     <CohortButton label="All" value="" />
                     <CohortButton label="Auto-matched" value="auto" />
                     <CohortButton label="AI Assisted" value="ai_assist" />
                     <CohortButton label="Needs Review" value="review" />
                     <div style={{ flex: 1 }} />
-                    <span style={{ fontSize: '0.75rem', color: COLORS.mediumGray }}>
+                    <span style={{ fontSize: '0.75rem', color: COLORS.textSecondary }}>
                         <Filter style={{ height: '0.75rem', width: '0.75rem', display: 'inline', verticalAlign: 'middle', marginRight: '0.25rem' }} />
                         {filteredTransactions.length} of {allTransactions.length}
                     </span>
@@ -948,16 +948,16 @@ export default function TransactionListV2() {
                 <div style={{ overflowX: 'auto' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                         <thead>
-                            <tr style={{ backgroundColor: COLORS.backgroundGray }}>
+                            <tr style={{ backgroundColor: COLORS.bgPage }}>
                                 <th style={{ padding: '0.5rem 0.5rem', width: '30px' }} title="Confidence"></th>
-                                <th style={{ padding: '0.5rem 0.75rem', textAlign: 'left', fontSize: '0.8rem', fontWeight: 600, color: COLORS.darkGray }}>Date</th>
-                                <th style={{ padding: '0.5rem 0.75rem', textAlign: 'left', fontSize: '0.8rem', fontWeight: 600, color: COLORS.darkGray }}>Details</th>
-                                <th style={{ padding: '0.5rem 0.75rem', textAlign: 'right', fontSize: '0.8rem', fontWeight: 600, color: COLORS.darkGray }}>Amount</th>
-                                <th style={{ padding: '0.5rem 0.75rem', textAlign: 'center', fontSize: '0.8rem', fontWeight: 600, color: COLORS.darkGray }}>Dr/Cr</th>
-                                <th style={{ padding: '0.5rem 0.75rem', textAlign: 'left', fontSize: '0.8rem', fontWeight: 600, color: COLORS.darkGray }}>Group</th>
-                                <th style={{ padding: '0.5rem 0.75rem', textAlign: 'left', fontSize: '0.8rem', fontWeight: 600, color: COLORS.darkGray }}>Category</th>
-                                <th style={{ padding: '0.5rem 0.75rem', textAlign: 'left', fontSize: '0.8rem', fontWeight: 600, color: COLORS.darkGray }}>Comments</th>
-                                <th style={{ padding: '0.5rem 0.75rem', textAlign: 'center', fontSize: '0.8rem', fontWeight: 600, color: COLORS.darkGray }}>Actions</th>
+                                <th style={{ padding: '0.5rem 0.75rem', textAlign: 'left', fontSize: '0.8rem', fontWeight: 600, color: COLORS.textPrimary }}>Date</th>
+                                <th style={{ padding: '0.5rem 0.75rem', textAlign: 'left', fontSize: '0.8rem', fontWeight: 600, color: COLORS.textPrimary }}>Details</th>
+                                <th style={{ padding: '0.5rem 0.75rem', textAlign: 'right', fontSize: '0.8rem', fontWeight: 600, color: COLORS.textPrimary }}>Amount</th>
+                                <th style={{ padding: '0.5rem 0.75rem', textAlign: 'center', fontSize: '0.8rem', fontWeight: 600, color: COLORS.textPrimary }}>Dr/Cr</th>
+                                <th style={{ padding: '0.5rem 0.75rem', textAlign: 'left', fontSize: '0.8rem', fontWeight: 600, color: COLORS.textPrimary }}>Group</th>
+                                <th style={{ padding: '0.5rem 0.75rem', textAlign: 'left', fontSize: '0.8rem', fontWeight: 600, color: COLORS.textPrimary }}>Category</th>
+                                <th style={{ padding: '0.5rem 0.75rem', textAlign: 'left', fontSize: '0.8rem', fontWeight: 600, color: COLORS.textPrimary }}>Comments</th>
+                                <th style={{ padding: '0.5rem 0.75rem', textAlign: 'center', fontSize: '0.8rem', fontWeight: 600, color: COLORS.textPrimary }}>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -973,7 +973,7 @@ export default function TransactionListV2() {
                             ))}
                             {currentPage.length === 0 && (
                                 <tr>
-                                    <td colSpan={9} style={{ textAlign: 'center', padding: '2rem', color: COLORS.mediumGray, fontSize: '0.875rem' }}>
+                                    <td colSpan={9} style={{ textAlign: 'center', padding: '2rem', color: COLORS.textSecondary, fontSize: '0.875rem' }}>
                                         No transactions match the current filters
                                     </td>
                                 </tr>
@@ -991,7 +991,7 @@ export default function TransactionListV2() {
             {showLearningModal && (
                 <div style={{
                     position: 'fixed', inset: 0,
-                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    backgroundColor: COLORS.overlayDark,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     zIndex: 50, padding: '1rem'
                 }}>
@@ -1003,13 +1003,13 @@ export default function TransactionListV2() {
                         {/* Header */}
                         <div style={{
                             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                            padding: '1rem', borderBottom: `1px solid ${COLORS.lightGray}`, flexShrink: 0
+                            padding: '1rem', borderBottom: `1px solid ${COLORS.borderLight}`, flexShrink: 0
                         }}>
-                            <h2 style={{ fontSize: '1.125rem', fontWeight: '600', display: 'flex', alignItems: 'center', color: COLORS.darkGray }}>
+                            <h2 style={{ fontSize: '1.125rem', fontWeight: '600', display: 'flex', alignItems: 'center', color: COLORS.textPrimary }}>
                                 <Target style={{ height: '1.25rem', width: '1.25rem', marginRight: '0.5rem', color: COLORS.slainteBlue }} />
                                 Smart AI Learning
                             </h2>
-                            <button onClick={cancelLearning} style={{ color: COLORS.mediumGray, cursor: 'pointer', border: 'none', background: 'none' }}>
+                            <button onClick={cancelLearning} style={{ color: COLORS.textSecondary, cursor: 'pointer', border: 'none', background: 'none' }}>
                                 <X style={{ height: '1.25rem', width: '1.25rem' }} />
                             </button>
                         </div>
@@ -1017,19 +1017,19 @@ export default function TransactionListV2() {
                         {/* Content */}
                         <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', minHeight: 0 }}>
                             {/* Transaction Details */}
-                            <div style={{ backgroundColor: COLORS.backgroundGray, padding: '1rem', borderRadius: '0.5rem' }}>
-                                <h3 style={{ fontWeight: '500', color: COLORS.darkGray, marginBottom: '0.5rem' }}>Transaction to Categorize:</h3>
-                                <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray, marginBottom: '0.25rem' }}>
+                            <div style={{ backgroundColor: COLORS.bgPage, padding: '1rem', borderRadius: '0.5rem' }}>
+                                <h3 style={{ fontWeight: '500', color: COLORS.textPrimary, marginBottom: '0.5rem' }}>Transaction to Categorize:</h3>
+                                <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary, marginBottom: '0.25rem' }}>
                                     <strong>Details:</strong> {learningTransaction?.details}
                                 </p>
-                                <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray, marginBottom: '0.25rem' }}>
+                                <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary, marginBottom: '0.25rem' }}>
                                     <strong>Group:</strong> {(() => {
                                         const parent = getParentCategoryForCode(selectedCategory?.code, categoryMapping);
                                         return parent ? `${parent.icon} ${parent.name}` : selectedCategory?.section || 'Unknown';
                                     })()}
                                 </p>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
-                                    <strong style={{ fontSize: '0.875rem', color: COLORS.mediumGray, whiteSpace: 'nowrap' }}>Category:</strong>
+                                    <strong style={{ fontSize: '0.875rem', color: COLORS.textSecondary, whiteSpace: 'nowrap' }}>Category:</strong>
                                     <select
                                         value={selectedCategory?.code || ''}
                                         onChange={(e) => {
@@ -1043,7 +1043,7 @@ export default function TransactionListV2() {
                                             borderRadius: '0.375rem',
                                             fontSize: '0.8rem',
                                             backgroundColor: COLORS.white,
-                                            color: COLORS.darkGray
+                                            color: COLORS.textPrimary
                                         }}
                                     >
                                         {(() => {
@@ -1061,23 +1061,23 @@ export default function TransactionListV2() {
 
                             {/* Learning Options */}
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                                <h3 style={{ fontWeight: '500', color: COLORS.darkGray }}>Do you want the AI to learn from this categorization?</h3>
+                                <h3 style={{ fontWeight: '500', color: COLORS.textPrimary }}>Do you want the AI to learn from this categorization?</h3>
                                 <div style={{ display: 'flex', gap: '1rem' }}>
                                     <label style={{ display: 'flex', alignItems: 'center' }}>
                                         <input type="radio" name="learning" checked={!wantToLearn} onChange={() => setWantToLearn(false)} style={{ marginRight: '0.5rem' }} />
-                                        <span style={{ fontSize: '0.875rem', fontWeight: '500', color: COLORS.darkGray }}>No - Just categorize this transaction</span>
+                                        <span style={{ fontSize: '0.875rem', fontWeight: '500', color: COLORS.textPrimary }}>No - Just categorize this transaction</span>
                                     </label>
                                     <label style={{ display: 'flex', alignItems: 'center' }}>
                                         <input type="radio" name="learning" checked={wantToLearn} onChange={() => setWantToLearn(true)} style={{ marginRight: '0.5rem' }} />
-                                        <span style={{ fontSize: '0.875rem', color: COLORS.darkGray }}>Yes - Create AI pattern for future matching</span>
+                                        <span style={{ fontSize: '0.875rem', color: COLORS.textPrimary }}>Yes - Create AI pattern for future matching</span>
                                     </label>
                                 </div>
                             </div>
 
                             {/* Pattern Selection */}
                             {wantToLearn && (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', borderTop: `1px solid ${COLORS.lightGray}`, paddingTop: '1rem' }}>
-                                    <h3 style={{ fontWeight: '500', color: COLORS.darkGray }}>Configure AI Pattern:</h3>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', borderTop: `1px solid ${COLORS.borderLight}`, paddingTop: '1rem' }}>
+                                    <h3 style={{ fontWeight: '500', color: COLORS.textPrimary }}>Configure AI Pattern:</h3>
 
                                     {/* Identified pattern option */}
                                     {learningTransaction?.pattern && (
@@ -1085,16 +1085,16 @@ export default function TransactionListV2() {
                                             style={{
                                                 display: 'flex', alignItems: 'flex-start', gap: '0.75rem',
                                                 padding: '0.75rem',
-                                                backgroundColor: editedPattern === learningTransaction.pattern ? '#DBEAFE' : COLORS.white,
-                                                border: `1px solid ${editedPattern === learningTransaction.pattern ? COLORS.slainteBlue : COLORS.lightGray}`,
+                                                backgroundColor: editedPattern === learningTransaction.pattern ? COLORS.infoLighter : COLORS.white,
+                                                border: `1px solid ${editedPattern === learningTransaction.pattern ? COLORS.slainteBlue : COLORS.borderLight}`,
                                                 borderRadius: '0.5rem', cursor: 'pointer'
                                             }}
                                         >
                                             <input type="radio" name="pattern" checked={editedPattern === learningTransaction.pattern}
                                                 onChange={() => setEditedPattern(learningTransaction.pattern)} style={{ marginTop: '0.25rem', flexShrink: 0 }} />
                                             <div style={{ flex: 1 }}>
-                                                <div style={{ fontWeight: '600', fontSize: '0.9rem', color: COLORS.darkGray }}>"{learningTransaction.pattern}"</div>
-                                                <div style={{ fontSize: '0.75rem', color: COLORS.mediumGray }}>Will match all transactions containing this pattern</div>
+                                                <div style={{ fontWeight: '600', fontSize: '0.9rem', color: COLORS.textPrimary }}>"{learningTransaction.pattern}"</div>
+                                                <div style={{ fontSize: '0.75rem', color: COLORS.textSecondary }}>Will match all transactions containing this pattern</div>
                                             </div>
                                         </label>
                                     )}
@@ -1104,15 +1104,15 @@ export default function TransactionListV2() {
                                         style={{
                                             display: 'flex', alignItems: 'flex-start', gap: '0.75rem',
                                             padding: '0.75rem',
-                                            backgroundColor: editedPattern !== learningTransaction?.pattern ? '#DBEAFE' : COLORS.white,
-                                            border: `1px solid ${editedPattern !== learningTransaction?.pattern ? COLORS.slainteBlue : COLORS.lightGray}`,
+                                            backgroundColor: editedPattern !== learningTransaction?.pattern ? COLORS.infoLighter : COLORS.white,
+                                            border: `1px solid ${editedPattern !== learningTransaction?.pattern ? COLORS.slainteBlue : COLORS.borderLight}`,
                                             borderRadius: '0.5rem', cursor: 'pointer'
                                         }}
                                     >
                                         <input type="radio" name="pattern" checked={editedPattern !== learningTransaction?.pattern}
                                             onChange={() => setEditedPattern('')} style={{ marginTop: '0.25rem', flexShrink: 0 }} />
                                         <div style={{ flex: 1 }}>
-                                            <div style={{ fontWeight: '500', fontSize: '0.875rem', color: COLORS.darkGray, marginBottom: '0.5rem' }}>
+                                            <div style={{ fontWeight: '500', fontSize: '0.875rem', color: COLORS.textPrimary, marginBottom: '0.5rem' }}>
                                                 {learningTransaction?.pattern ? 'Or use a custom pattern:' : 'Enter a pattern:'}
                                             </div>
                                             <input
@@ -1122,8 +1122,8 @@ export default function TransactionListV2() {
                                                 onClick={(e) => { e.stopPropagation(); if (editedPattern === learningTransaction?.pattern) setEditedPattern(''); }}
                                                 onKeyDown={(e) => e.stopPropagation()}
                                                 style={{
-                                                    width: '100%', border: `1px solid ${COLORS.lightGray}`, borderRadius: '0.25rem',
-                                                    padding: '0.5rem 0.75rem', fontFamily: 'monospace', fontSize: '0.875rem', color: COLORS.darkGray
+                                                    width: '100%', border: `1px solid ${COLORS.borderLight}`, borderRadius: '0.25rem',
+                                                    padding: '0.5rem 0.75rem', fontFamily: 'monospace', fontSize: '0.875rem', color: COLORS.textPrimary
                                                 }}
                                                 onFocus={(e) => {
                                                     e.stopPropagation();
@@ -1133,7 +1133,7 @@ export default function TransactionListV2() {
                                                 onBlur={(e) => { e.target.style.outline = 'none'; }}
                                                 placeholder="e.g., 'AMAZON', 'ESB', 'Dr Smith'"
                                             />
-                                            <div style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginTop: '0.5rem' }}>
+                                            <div style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginTop: '0.5rem' }}>
                                                 Enter any text pattern to match future transactions (case-insensitive)
                                             </div>
                                         </div>
@@ -1141,7 +1141,7 @@ export default function TransactionListV2() {
 
                                     {/* Preview */}
                                     {editedPattern.trim() && (
-                                        <div style={{ backgroundColor: '#DBEAFE', padding: '0.75rem', borderRadius: '0.5rem', border: `1px solid ${COLORS.slainteBlue}` }}>
+                                        <div style={{ backgroundColor: COLORS.infoLighter, padding: '0.75rem', borderRadius: '0.5rem', border: `1px solid ${COLORS.slainteBlue}` }}>
                                             <p style={{ fontSize: '0.875rem', color: COLORS.slainteBlue }}>
                                                 <strong>Preview:</strong> This pattern will automatically categorize matching transactions as "<strong>{selectedCategory?.name}</strong>"
                                             </p>
@@ -1154,12 +1154,12 @@ export default function TransactionListV2() {
                         {/* Footer */}
                         <div style={{
                             display: 'flex', justifyContent: 'flex-end', gap: '0.75rem',
-                            padding: '1rem', borderTop: `1px solid ${COLORS.lightGray}`,
-                            backgroundColor: COLORS.backgroundGray, flexShrink: 0
+                            padding: '1rem', borderTop: `1px solid ${COLORS.borderLight}`,
+                            backgroundColor: COLORS.bgPage, flexShrink: 0
                         }}>
                             <button onClick={cancelLearning} style={{
-                                padding: '0.5rem 1rem', color: COLORS.mediumGray,
-                                border: `1px solid ${COLORS.lightGray}`, borderRadius: '0.5rem',
+                                padding: '0.5rem 1rem', color: COLORS.textSecondary,
+                                border: `1px solid ${COLORS.borderLight}`, borderRadius: '0.5rem',
                                 cursor: 'pointer', backgroundColor: COLORS.white
                             }}>
                                 Cancel

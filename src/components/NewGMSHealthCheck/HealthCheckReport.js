@@ -100,12 +100,12 @@ function buildChapterLeave(analysisResults) {
   tableRows += buildTableRow('Study Leave Entitlement', `${leave.studyLeaveEntitlement || 0} days (${formatCurrency(leave.studyLeavePotential || 0)})`);
   tableRows += buildTableRow('Study Leave Claimed', formatCurrency(leave.actualStudyLeave || 0));
   if (leave.studyLeaveUnclaimedDays > 0) {
-    tableRows += `<tr class="highlight"><td>Study Leave Unclaimed</td><td style="text-align: right; font-family: monospace; color: #dc2626;">${leave.studyLeaveUnclaimedDays} days (${formatCurrency(leave.studyLeaveUnclaimedValue)})</td></tr>`;
+    tableRows += `<tr class="highlight"><td>Study Leave Unclaimed</td><td style="text-align: right; font-family: monospace; color: ${COLORS.error};">${leave.studyLeaveUnclaimedDays} days (${formatCurrency(leave.studyLeaveUnclaimedValue)})</td></tr>`;
   }
   tableRows += buildTableRow('Annual Leave Entitlement', `${leave.annualLeaveEntitlement || 0} days (${formatCurrency(leave.annualLeavePotential || 0)})`);
   tableRows += buildTableRow('Annual Leave Claimed', formatCurrency(leave.actualAnnualLeave || 0));
   if (leave.annualLeaveUnclaimedDays > 0) {
-    tableRows += `<tr class="highlight"><td>Annual Leave Unclaimed</td><td style="text-align: right; font-family: monospace; color: #dc2626;">${leave.annualLeaveUnclaimedDays} days (${formatCurrency(leave.annualLeaveUnclaimedValue)})</td></tr>`;
+    tableRows += `<tr class="highlight"><td>Annual Leave Unclaimed</td><td style="text-align: right; font-family: monospace; color: ${COLORS.error};">${leave.annualLeaveUnclaimedDays} days (${formatCurrency(leave.annualLeaveUnclaimedValue)})</td></tr>`;
   }
 
   let actions = '';
@@ -168,7 +168,7 @@ function buildChapterPracticeSupport(analysisResults, healthCheckData) {
   // Individual staff rows from healthCheckData
   const staffDetails = healthCheckData?.staffDetails || [];
   if (staffDetails.length > 0) {
-    tableRows += `<tr><td colspan="2" style="background: #f3f4f6; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Staff Details</td></tr>`;
+    tableRows += `<tr><td colspan="2" style="background: ${COLORS.bgHover}; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Staff Details</td></tr>`;
     staffDetails.forEach(staff => {
       const name = `${staff.firstName || ''} ${staff.surname || ''}`.trim();
       const role = staff.staffType === 'secretary' ? 'Receptionist'
@@ -253,7 +253,7 @@ function buildChapterCapitation(analysisResults, healthCheckData) {
           : '<span class="status-review">Review</span>';
       tableRows += `<tr${check.potentialValue > 0 ? ' class="highlight"' : ''}>
         <td>${escapeHtml(check.category)} (EHR: ${check.ehrCount}, PCRS: ${check.pcrsCount !== undefined ? check.pcrsCount : '\u2014'}) ${statusBadge}</td>
-        <td style="text-align: right; font-family: monospace; ${check.potentialValue > 0 ? 'color: #f59e0b;' : ''}">${check.potentialValue > 0 ? formatCurrency(check.potentialValue) : '\u2014'}</td>
+        <td style="text-align: right; font-family: monospace; ${check.potentialValue > 0 ? `color: ${COLORS.warning};` : ''}">${check.potentialValue > 0 ? formatCurrency(check.potentialValue) : '\u2014'}</td>
       </tr>`;
     });
   }
@@ -307,13 +307,13 @@ function buildChapterCervicalCheck(analysisResults, healthCheckData) {
   tableRows += buildTableRow('Smears Performed', `${cervical.totalSmearsPerformed || cervical.totalSmears || 0}`);
   tableRows += buildTableRow(`Smears Paid (${cervical.paidRate || 0}%)`, `${cervical.smearsPaid || 0} (${formatCurrency(cervical.totalPaidAmount || 0)})`);
   if (cervical.smearsZeroPayment > 0) {
-    tableRows += `<tr class="highlight"><td>Zero Payment Smears</td><td style="text-align: right; font-family: monospace; color: #dc2626;">${cervical.smearsZeroPayment} (-${formatCurrency(lostIncome)})</td></tr>`;
+    tableRows += `<tr class="highlight"><td>Zero Payment Smears</td><td style="text-align: right; font-family: monospace; color: ${COLORS.error};">${cervical.smearsZeroPayment} (-${formatCurrency(lostIncome)})</td></tr>`;
   }
 
   // Eligible population from healthCheckData
   const ccData = healthCheckData?.cervicalCheckActivity;
   if (ccData?.eligibleWomen25to44 > 0 || ccData?.eligibleWomen45to65 > 0) {
-    tableRows += `<tr><td colspan="2" style="background: #f3f4f6; font-weight: 600; font-size: 12px;">Eligible Population (from EHR)</td></tr>`;
+    tableRows += `<tr><td colspan="2" style="background: ${COLORS.bgHover}; font-weight: 600; font-size: 12px;">Eligible Population (from EHR)</td></tr>`;
     tableRows += buildTableRow('Women 25-44', formatNumber(ccData.eligibleWomen25to44));
     tableRows += buildTableRow('Women 45-65', formatNumber(ccData.eligibleWomen45to65));
   }
@@ -637,7 +637,7 @@ function buildCombinedActionPlan(recommendations, tasks) {
     return `
       <div class="chapter action-plan">
         <h2>Combined Action Plan</h2>
-        <p style="color: #6b7280;">No specific recommendations at this time. Your practice appears to be well-optimised.</p>
+        <p style="color: ${COLORS.textMuted};">No specific recommendations at this time. Your practice appears to be well-optimised.</p>
       </div>
     `;
   }
@@ -762,7 +762,7 @@ function buildCombinedActionPlan(recommendations, tasks) {
 
 function buildAppendix(healthCheckData, readiness) {
   let html = '<div class="appendix"><h2>Appendix: Input Data Reference</h2>';
-  html += '<p style="color: #6b7280; font-size: 13px; margin-bottom: 20px;">The following data was entered during the Health Check process and used in the analysis above.</p>';
+  html += `<p style="color: ${COLORS.textMuted}; font-size: 13px; margin-bottom: 20px;">The following data was entered during the Health Check process and used in the analysis above.</p>`;
 
   // 1. Demographics
   const demographics = healthCheckData?.demographics || {};
@@ -873,7 +873,7 @@ function getReportCSS() {
       margin: 0 auto;
       padding: 40px 20px;
       line-height: 1.5;
-      color: #333;
+      color: ${COLORS.textPrimary};
       font-size: 14px;
     }
 
@@ -890,9 +890,9 @@ function getReportCSS() {
       letter-spacing: -1px;
       margin-bottom: 5px;
     }
-    .logo .sl { color: #333; }
+    .logo .sl { color: ${COLORS.textPrimary}; }
     .logo .ai { color: ${COLORS.slainteBlue}; }
-    .logo .nte { color: #333; }
+    .logo .nte { color: ${COLORS.textPrimary}; }
     .logo-finance {
       font-size: 18px;
       color: ${COLORS.slainteBlue};
@@ -901,7 +901,7 @@ function getReportCSS() {
     }
     .tagline {
       font-size: 14px;
-      color: #6b7280;
+      color: ${COLORS.textMuted};
       font-style: italic;
     }
 
@@ -912,28 +912,28 @@ function getReportCSS() {
       margin-bottom: 10px;
     }
     h2 {
-      color: #1e40af;
+      color: ${COLORS.infoText};
       margin-top: 35px;
-      border-bottom: 2px solid #e5e7eb;
+      border-bottom: 2px solid ${COLORS.borderLight};
       padding-bottom: 8px;
       font-size: 20px;
       page-break-after: avoid;
     }
     h3 {
-      color: #2563eb;
+      color: ${COLORS.slainteBlue};
       margin-top: 25px;
       margin-bottom: 10px;
       font-size: 16px;
       page-break-after: avoid;
     }
     h4 {
-      color: #374151;
+      color: ${COLORS.textPrimary};
       margin-top: 15px;
       margin-bottom: 8px;
       font-size: 14px;
     }
     .header-meta {
-      color: #6b7280;
+      color: ${COLORS.textMuted};
       margin-bottom: 30px;
       text-align: center;
     }
@@ -946,25 +946,25 @@ function getReportCSS() {
       margin: 25px 0;
     }
     .summary-card {
-      border: 2px solid #e5e7eb;
+      border: 2px solid ${COLORS.borderLight};
       border-radius: 8px;
       padding: 20px;
       text-align: center;
     }
-    .summary-card.current { border-color: #10b981; background: #f0fdf4; }
-    .summary-card.unclaimed { border-color: #f59e0b; background: #fffbeb; }
-    .summary-card.growth { border-color: #3b82f6; background: #eff6ff; }
+    .summary-card.current { border-color: ${COLORS.success}; background: ${COLORS.successLight}; }
+    .summary-card.unclaimed { border-color: ${COLORS.warning}; background: ${COLORS.warningLighter}; }
+    .summary-card.growth { border-color: ${COLORS.slainteBlue}; background: ${COLORS.slainteBlueLight}; }
     .summary-card .label {
       font-size: 12px;
-      color: #6b7280;
+      color: ${COLORS.textMuted};
       text-transform: uppercase;
       letter-spacing: 0.5px;
       margin-bottom: 8px;
     }
     .summary-card .value { font-size: 26px; font-weight: bold; }
-    .summary-card.current .value { color: #10b981; }
-    .summary-card.unclaimed .value { color: #f59e0b; }
-    .summary-card.growth .value { color: #3b82f6; }
+    .summary-card.current .value { color: ${COLORS.success}; }
+    .summary-card.unclaimed .value { color: ${COLORS.warning}; }
+    .summary-card.growth .value { color: ${COLORS.slainteBlue}; }
 
     /* Data Completeness */
     .completeness-grid {
@@ -978,7 +978,7 @@ function getReportCSS() {
       align-items: center;
       gap: 8px;
       padding: 6px 10px;
-      border: 1px solid #e5e7eb;
+      border: 1px solid ${COLORS.borderLight};
       border-radius: 4px;
       font-size: 13px;
     }
@@ -991,23 +991,23 @@ function getReportCSS() {
       letter-spacing: 0.3px;
       white-space: nowrap;
     }
-    .completeness-status.complete { background: #d1fae5; color: #065f46; }
-    .completeness-status.partial { background: #fef3c7; color: #92400e; }
-    .completeness-status.nodata { background: #f3f4f6; color: #6b7280; }
+    .completeness-status.complete { background: ${COLORS.successLighter}; color: ${COLORS.successText}; }
+    .completeness-status.partial { background: ${COLORS.warningLight}; color: ${COLORS.warningText}; }
+    .completeness-status.nodata { background: ${COLORS.bgHover}; color: ${COLORS.textMuted}; }
     .completeness-label { flex: 1; }
-    .completeness-value { font-weight: 600; color: #059669; white-space: nowrap; }
+    .completeness-value { font-weight: 600; color: ${COLORS.successDark}; white-space: nowrap; }
 
     /* Top Findings */
     .top-findings {
       margin: 20px 0;
       padding: 15px;
-      background: #f9fafb;
+      background: ${COLORS.bgPage};
       border-radius: 8px;
     }
     .top-findings h3 { margin-top: 0; }
     .finding-item {
       padding: 8px 0;
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom: 1px solid ${COLORS.borderLight};
       font-size: 13px;
     }
     .finding-item:last-child { border-bottom: none; }
@@ -1027,28 +1027,28 @@ function getReportCSS() {
 
     /* Data Warning */
     .data-warning {
-      background: #fef3c7;
-      border-left: 4px solid #f59e0b;
+      background: ${COLORS.warningLight};
+      border-left: 4px solid ${COLORS.warning};
       padding: 12px 15px;
       margin: 20px 0;
       border-radius: 0 4px 4px 0;
     }
-    .data-warning strong { color: #92400e; }
+    .data-warning strong { color: ${COLORS.warningText}; }
 
     /* Chapters */
     .chapter {
       margin-bottom: 30px;
       page-break-inside: avoid;
-      border: 1px solid #e5e7eb;
+      border: 1px solid ${COLORS.borderLight};
       border-radius: 8px;
       padding: 20px;
-      background: #fff;
+      background: ${COLORS.white};
     }
     .chapter h2 {
       margin-top: 0;
     }
     .description {
-      color: #6b7280;
+      color: ${COLORS.textMuted};
       font-size: 13px;
       margin-bottom: 15px;
     }
@@ -1057,7 +1057,7 @@ function getReportCSS() {
     .bar-chart {
       margin: 15px 0;
       padding: 15px;
-      background: #f9fafb;
+      background: ${COLORS.bgPage};
       border-radius: 6px;
     }
     .bar-row {
@@ -1069,7 +1069,7 @@ function getReportCSS() {
     .bar-label {
       width: 70px;
       font-size: 12px;
-      color: #6b7280;
+      color: ${COLORS.textMuted};
       font-weight: 500;
     }
     .bar-container {
@@ -1083,12 +1083,12 @@ function getReportCSS() {
       border-radius: 4px;
       min-width: 4px;
     }
-    .actual-bar { background: #10b981; }
-    .potential-bar { background: #d1d5db; }
+    .actual-bar { background: ${COLORS.success}; }
+    .potential-bar { background: ${COLORS.borderDark}; }
     .bar-value {
       font-size: 13px;
       font-weight: 600;
-      color: #374151;
+      color: ${COLORS.textPrimary};
       white-space: nowrap;
     }
 
@@ -1100,22 +1100,22 @@ function getReportCSS() {
       font-size: 13px;
     }
     table th, table td {
-      border: 1px solid #d1d5db;
+      border: 1px solid ${COLORS.borderDark};
       padding: 10px 12px;
       text-align: left;
     }
     table th {
-      background-color: #f3f4f6;
+      background-color: ${COLORS.bgHover};
       font-weight: 600;
-      color: #374151;
+      color: ${COLORS.textPrimary};
     }
-    tr.highlight td { background-color: #fffbeb; }
-    tr.growth td { background-color: #f0fdf4; }
-    tr.total-row td { background-color: #f3f4f6; font-weight: 600; }
-    td.note { font-style: italic; color: #6b7280; text-align: center; }
-    .status-ok { color: #065f46; background: #d1fae5; padding: 2px 6px; border-radius: 10px; font-size: 11px; }
-    .status-gap { color: #991b1b; background: #fee2e2; padding: 2px 6px; border-radius: 10px; font-size: 11px; }
-    .status-review { color: #92400e; background: #fef3c7; padding: 2px 6px; border-radius: 10px; font-size: 11px; }
+    tr.highlight td { background-color: ${COLORS.warningLighter}; }
+    tr.growth td { background-color: ${COLORS.successLight}; }
+    tr.total-row td { background-color: ${COLORS.bgHover}; font-weight: 600; }
+    td.note { font-style: italic; color: ${COLORS.textMuted}; text-align: center; }
+    .status-ok { color: ${COLORS.successText}; background: ${COLORS.successLighter}; padding: 2px 6px; border-radius: 10px; font-size: 11px; }
+    .status-gap { color: ${COLORS.errorText}; background: ${COLORS.errorLight}; padding: 2px 6px; border-radius: 10px; font-size: 11px; }
+    .status-review { color: ${COLORS.warningText}; background: ${COLORS.warningLight}; padding: 2px 6px; border-radius: 10px; font-size: 11px; }
 
     /* Info Boxes */
     .info-box {
@@ -1124,19 +1124,19 @@ function getReportCSS() {
       margin: 10px 0;
       font-size: 13px;
     }
-    .info-box.blue { background: #eff6ff; border-left: 4px solid #3b82f6; }
-    .info-box.green { background: #f0fdf4; border-left: 4px solid #10b981; }
-    .info-box.amber { background: #fffbeb; border-left: 4px solid #f59e0b; }
+    .info-box.blue { background: ${COLORS.slainteBlueLight}; border-left: 4px solid ${COLORS.slainteBlue}; }
+    .info-box.green { background: ${COLORS.successLight}; border-left: 4px solid ${COLORS.success}; }
+    .info-box.amber { background: ${COLORS.warningLighter}; border-left: 4px solid ${COLORS.warning}; }
     .info-box-item {
       padding: 8px 15px;
-      background: #fff;
-      border: 1px solid #e5e7eb;
+      background: ${COLORS.white};
+      border: 1px solid ${COLORS.borderLight};
       border-radius: 4px;
       margin: 5px 0;
       font-size: 12px;
     }
-    .growth-value { float: right; color: #059669; font-weight: 600; }
-    .detail { color: #6b7280; font-size: 11px; }
+    .growth-value { float: right; color: ${COLORS.successDark}; font-weight: 600; }
+    .detail { color: ${COLORS.textMuted}; font-size: 11px; }
 
     /* Explanatory Text */
     .explanatory-text { margin: 15px 0; }
@@ -1145,14 +1145,14 @@ function getReportCSS() {
     .action-items {
       margin-top: 15px;
       padding-top: 15px;
-      border-top: 1px solid #e5e7eb;
+      border-top: 1px solid ${COLORS.borderLight};
     }
     .action-header {
       font-size: 12px;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      color: #6b7280;
+      color: ${COLORS.textMuted};
       margin-bottom: 10px;
     }
     .action-item {
@@ -1163,14 +1163,14 @@ function getReportCSS() {
       position: relative;
       padding-right: 120px;
     }
-    .action-item.high { background: #fef2f2; border-left-color: #dc2626; }
-    .action-item.medium { background: #fffbeb; border-left-color: #f59e0b; }
-    .action-detail { display: block; font-size: 12px; color: #6b7280; margin-top: 4px; white-space: pre-line; }
-    .action-value { position: absolute; right: 15px; top: 12px; font-weight: 600; color: #059669; }
+    .action-item.high { background: ${COLORS.errorLighter}; border-left-color: ${COLORS.error}; }
+    .action-item.medium { background: ${COLORS.warningLighter}; border-left-color: ${COLORS.warning}; }
+    .action-detail { display: block; font-size: 12px; color: ${COLORS.textMuted}; margin-top: 4px; white-space: pre-line; }
+    .action-value { position: absolute; right: 15px; top: 12px; font-weight: 600; color: ${COLORS.successDark}; }
 
     /* Recommendations / Action Plan */
     .recommendations-section { margin: 25px 0; }
-    .rec-subtitle { color: #6b7280; font-size: 13px; margin-bottom: 15px; }
+    .rec-subtitle { color: ${COLORS.textMuted}; font-size: 13px; margin-bottom: 15px; }
     .recommendation-card {
       border: 2px solid;
       border-radius: 8px;
@@ -1178,21 +1178,21 @@ function getReportCSS() {
       overflow: hidden;
       page-break-inside: avoid;
     }
-    .recommendation-card.priority { border-color: #fca5a5; }
-    .recommendation-card.growth { border-color: #a7f3d0; }
+    .recommendation-card.priority { border-color: ${COLORS.errorLight}; }
+    .recommendation-card.growth { border-color: ${COLORS.successLighter}; }
     .rec-header {
       display: flex;
       align-items: flex-start;
       padding: 15px;
       gap: 12px;
     }
-    .recommendation-card.priority .rec-header { background: #fef2f2; }
-    .recommendation-card.growth .rec-header { background: #ecfdf5; }
+    .recommendation-card.priority .rec-header { background: ${COLORS.errorLighter}; }
+    .recommendation-card.growth .rec-header { background: ${COLORS.successLight}; }
     .rec-number {
       width: 28px;
       height: 28px;
       border-radius: 50%;
-      background: #dc2626;
+      background: ${COLORS.error};
       color: white;
       display: flex;
       align-items: center;
@@ -1201,20 +1201,20 @@ function getReportCSS() {
       font-size: 14px;
       flex-shrink: 0;
     }
-    .rec-number.growth { background: #059669; }
+    .rec-number.growth { background: ${COLORS.successDark}; }
     .rec-title-block { flex: 1; }
-    .rec-title-block strong { display: block; color: #374151; }
-    .rec-meta { font-size: 12px; color: #6b7280; }
+    .rec-title-block strong { display: block; color: ${COLORS.textPrimary}; }
+    .rec-meta { font-size: 12px; color: ${COLORS.textMuted}; }
     .rec-value { font-size: 22px; font-weight: bold; white-space: nowrap; }
-    .rec-value.priority { color: #f59e0b; }
-    .rec-value.growth { color: #059669; }
-    .rec-summary { padding: 0 15px 10px; font-size: 13px; color: #6b7280; margin: 0; }
+    .rec-value.priority { color: ${COLORS.warning}; }
+    .rec-value.growth { color: ${COLORS.successDark}; }
+    .rec-summary { padding: 0 15px 10px; font-size: 13px; color: ${COLORS.textMuted}; margin: 0; }
     .rec-actions {
       padding: 15px;
-      background: #f9fafb;
-      border-top: 1px solid #e5e7eb;
+      background: ${COLORS.bgPage};
+      border-top: 1px solid ${COLORS.borderLight};
     }
-    .actions-header { font-size: 12px; font-weight: 600; color: #374151; margin: 0 0 10px 0; }
+    .actions-header { font-size: 12px; font-weight: 600; color: ${COLORS.textPrimary}; margin: 0 0 10px 0; }
     .rec-action-item {
       background: white;
       padding: 10px 12px;
@@ -1224,36 +1224,36 @@ function getReportCSS() {
       position: relative;
       padding-right: 110px;
     }
-    .recommendation-card.priority .rec-action-item { border-left-color: #dc2626; }
-    .recommendation-card.growth .rec-action-item { border-left-color: #059669; }
-    .action-text { font-size: 13px; color: #374151; }
+    .recommendation-card.priority .rec-action-item { border-left-color: ${COLORS.error}; }
+    .recommendation-card.growth .rec-action-item { border-left-color: ${COLORS.successDark}; }
+    .action-text { font-size: 13px; color: ${COLORS.textPrimary}; }
 
     /* Plan Totals */
     .plan-totals {
       margin-top: 25px;
       padding: 15px;
-      background: #f9fafb;
+      background: ${COLORS.bgPage};
       border-radius: 8px;
-      border: 2px solid #e5e7eb;
+      border: 2px solid ${COLORS.borderLight};
     }
     .plan-total-row {
       display: flex;
       justify-content: space-between;
       padding: 8px 0;
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom: 1px solid ${COLORS.borderLight};
       font-size: 14px;
     }
     .plan-total-row:last-child { border-bottom: none; }
-    .plan-total-row.total { border-top: 2px solid #374151; margin-top: 8px; padding-top: 12px; font-size: 16px; }
+    .plan-total-row.total { border-top: 2px solid ${COLORS.textPrimary}; margin-top: 8px; padding-top: 12px; font-size: 16px; }
     .plan-total-value { font-weight: 600; }
-    .plan-total-value.priority { color: #f59e0b; }
-    .plan-total-value.growth { color: #059669; }
+    .plan-total-value.priority { color: ${COLORS.warning}; }
+    .plan-total-value.growth { color: ${COLORS.successDark}; }
 
     /* Appendix */
     .appendix {
       margin-top: 40px;
       padding-top: 30px;
-      border-top: 2px solid #e5e7eb;
+      border-top: 2px solid ${COLORS.borderLight};
     }
     .appendix-section { margin-bottom: 25px; }
     .appendix-table { font-size: 12px; }
@@ -1264,8 +1264,8 @@ function getReportCSS() {
     .footer {
       margin-top: 40px;
       padding-top: 20px;
-      border-top: 1px solid #e5e7eb;
-      color: #9ca3af;
+      border-top: 1px solid ${COLORS.borderLight};
+      color: ${COLORS.textSecondary};
       font-size: 12px;
       text-align: center;
     }

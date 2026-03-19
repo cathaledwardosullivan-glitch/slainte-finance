@@ -76,7 +76,7 @@ const GroupInfoItem = ({ group }) => {
         <ChevronDown style={{
           width: '14px',
           height: '14px',
-          color: COLORS.mediumGray,
+          color: COLORS.textSecondary,
           transition: 'transform 0.15s',
           transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)'
         }} />
@@ -85,7 +85,7 @@ const GroupInfoItem = ({ group }) => {
         <div style={{
           padding: '0.25rem 0.625rem 0.5rem',
           fontSize: '0.75rem',
-          color: COLORS.mediumGray,
+          color: COLORS.textSecondary,
           lineHeight: 1.4
         }}>
           {group.desc}
@@ -718,7 +718,7 @@ export default function OnboardingTransactionUpload({ onComplete, onSkip, onBack
             backgroundColor: COLORS.white,
             borderRadius: '0.75rem',
             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-            border: `1px solid ${COLORS.lightGray}`,
+            border: `1px solid ${COLORS.borderLight}`,
             overflow: 'hidden',
             display: 'flex',
             flexDirection: 'column'
@@ -764,7 +764,7 @@ export default function OnboardingTransactionUpload({ onComplete, onSkip, onBack
                   width: '32px',
                   height: '32px',
                   borderRadius: '50%',
-                  backgroundColor: COLORS.backgroundGray,
+                  backgroundColor: COLORS.bgPage,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -773,7 +773,7 @@ export default function OnboardingTransactionUpload({ onComplete, onSkip, onBack
                   <MessageCircle style={{ width: '16px', height: '16px', color: COLORS.slainteBlue }} />
                 </div>
                 <div style={{
-                  backgroundColor: COLORS.backgroundGray,
+                  backgroundColor: COLORS.bgPage,
                   padding: '0.875rem 1rem',
                   borderRadius: '12px',
                   maxWidth: '85%'
@@ -781,7 +781,7 @@ export default function OnboardingTransactionUpload({ onComplete, onSkip, onBack
                   <div style={{
                     fontSize: '1.125rem',
                     fontWeight: 600,
-                    color: COLORS.darkGray
+                    color: COLORS.textPrimary
                   }}>
                     Let's review your bank transactions together.
                   </div>
@@ -792,14 +792,14 @@ export default function OnboardingTransactionUpload({ onComplete, onSkip, onBack
               <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
                 <div style={{ width: '32px', flexShrink: 0 }} />
                 <div style={{
-                  backgroundColor: COLORS.backgroundGray,
+                  backgroundColor: COLORS.bgPage,
                   padding: '0.875rem 1rem',
                   borderRadius: '12px',
                   maxWidth: '85%'
                 }}>
                   <div style={{
                     fontSize: '0.9375rem',
-                    color: COLORS.darkGray,
+                    color: COLORS.textPrimary,
                     lineHeight: 1.5
                   }}>
                     I've sorted them broadly into Income, Expenditure, and Non-Business. Now we'll assign each to a Group. Click any Group below to see what belongs there:
@@ -815,7 +815,7 @@ export default function OnboardingTransactionUpload({ onComplete, onSkip, onBack
                   padding: '0.5rem',
                   borderRadius: '12px',
                   maxWidth: '85%',
-                  border: `1px solid ${COLORS.lightGray}`,
+                  border: `1px solid ${COLORS.borderLight}`,
                   width: '100%'
                 }}>
                   {[
@@ -846,7 +846,7 @@ export default function OnboardingTransactionUpload({ onComplete, onSkip, onBack
                 }}>
                   <div style={{
                     fontSize: '0.875rem',
-                    color: COLORS.darkGray,
+                    color: COLORS.textPrimary,
                     lineHeight: 1.5
                   }}>
                     I'll sort most transactions automatically. For the rest, I'll ask you to confirm or correct. The more you guide me now, the better I get over time.
@@ -858,7 +858,7 @@ export default function OnboardingTransactionUpload({ onComplete, onSkip, onBack
             {/* Bottom navigation */}
             <div style={{
               padding: '1rem',
-              borderTop: `1px solid ${COLORS.lightGray}`,
+              borderTop: `1px solid ${COLORS.borderLight}`,
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center'
@@ -875,8 +875,8 @@ export default function OnboardingTransactionUpload({ onComplete, onSkip, onBack
                     fontSize: '0.875rem',
                     fontWeight: 500,
                     cursor: 'pointer',
-                    border: `1px solid ${COLORS.lightGray}`,
-                    color: COLORS.mediumGray,
+                    border: `1px solid ${COLORS.borderLight}`,
+                    color: COLORS.textSecondary,
                     backgroundColor: 'transparent'
                   }}
                 >
@@ -895,8 +895,8 @@ export default function OnboardingTransactionUpload({ onComplete, onSkip, onBack
                   fontSize: '0.875rem',
                   fontWeight: 500,
                   cursor: 'pointer',
-                  border: `1px solid ${COLORS.lightGray}`,
-                  color: COLORS.mediumGray,
+                  border: `1px solid ${COLORS.borderLight}`,
+                  color: COLORS.textSecondary,
                   backgroundColor: 'transparent',
                   marginLeft: onBack ? '0' : 'auto'
                 }}
@@ -928,7 +928,7 @@ export default function OnboardingTransactionUpload({ onComplete, onSkip, onBack
               <h3 style={{
                 fontSize: '1.5rem',
                 fontWeight: 700,
-                color: COLORS.darkGray,
+                color: COLORS.textPrimary,
                 marginBottom: '0.5rem',
                 textAlign: 'center'
               }}>
@@ -981,10 +981,10 @@ export default function OnboardingTransactionUpload({ onComplete, onSkip, onBack
                       <step.icon style={{ width: '1.25rem', height: '1.25rem', color: COLORS.slainteBlue }} />
                     </div>
                     <div>
-                      <div style={{ fontWeight: 600, fontSize: '1rem', color: COLORS.darkGray }}>
+                      <div style={{ fontWeight: 600, fontSize: '1rem', color: COLORS.textPrimary }}>
                         {i + 1}. {step.label}
                       </div>
-                      <div style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>
+                      <div style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>
                         {step.desc}
                       </div>
                     </div>
@@ -1039,7 +1039,7 @@ export default function OnboardingTransactionUpload({ onComplete, onSkip, onBack
             backgroundColor: COLORS.white,
             borderRadius: '0.75rem',
             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-            border: `1px solid ${COLORS.lightGray}`,
+            border: `1px solid ${COLORS.borderLight}`,
             overflow: 'hidden',
             display: 'flex',
             flexDirection: 'column'
@@ -1086,7 +1086,7 @@ export default function OnboardingTransactionUpload({ onComplete, onSkip, onBack
                     width: '32px',
                     height: '32px',
                     borderRadius: '50%',
-                    backgroundColor: COLORS.backgroundGray,
+                    backgroundColor: COLORS.bgPage,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -1095,7 +1095,7 @@ export default function OnboardingTransactionUpload({ onComplete, onSkip, onBack
                     <MessageCircle style={{ width: '16px', height: '16px', color: COLORS.slainteBlue }} />
                   </div>
                   <div style={{
-                    backgroundColor: COLORS.backgroundGray,
+                    backgroundColor: COLORS.bgPage,
                     padding: '0.875rem 1rem',
                     borderRadius: '12px',
                     maxWidth: '85%'
@@ -1103,7 +1103,7 @@ export default function OnboardingTransactionUpload({ onComplete, onSkip, onBack
                     <div style={{
                       fontSize: '1.125rem',
                       fontWeight: 600,
-                      color: COLORS.darkGray
+                      color: COLORS.textPrimary
                     }}>
                       {greeting}
                     </div>
@@ -1116,14 +1116,14 @@ export default function OnboardingTransactionUpload({ onComplete, onSkip, onBack
                 <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
                   <div style={{ width: '32px', flexShrink: 0 }} />
                   <div style={{
-                    backgroundColor: COLORS.backgroundGray,
+                    backgroundColor: COLORS.bgPage,
                     padding: '0.875rem 1rem',
                     borderRadius: '12px',
                     maxWidth: '85%'
                   }}>
                     <div style={{
                       fontSize: '0.9375rem',
-                      color: COLORS.darkGray,
+                      color: COLORS.textPrimary,
                       lineHeight: 1.5
                     }}>
                       {message}
@@ -1145,7 +1145,7 @@ export default function OnboardingTransactionUpload({ onComplete, onSkip, onBack
                   }}>
                     <div style={{
                       fontSize: '0.875rem',
-                      color: COLORS.darkGray,
+                      color: COLORS.textPrimary,
                       lineHeight: 1.5
                     }}>
                       {tip}
@@ -1169,7 +1169,7 @@ export default function OnboardingTransactionUpload({ onComplete, onSkip, onBack
                       display: 'flex',
                       alignItems: 'center',
                       gap: '0.5rem',
-                      color: COLORS.darkGray,
+                      color: COLORS.textPrimary,
                       fontSize: '0.9375rem'
                     }}>
                       <Loader style={{
@@ -1197,12 +1197,12 @@ export default function OnboardingTransactionUpload({ onComplete, onSkip, onBack
                   }}>
                     <div style={{
                       fontSize: '0.9375rem',
-                      color: COLORS.darkGray,
+                      color: COLORS.textPrimary,
                       marginBottom: '0.25rem'
                     }}>
                       <strong>Wave {currentWaveNumber} of {totalWaves}</strong>
                     </div>
-                    <div style={{ fontSize: '0.8125rem', color: COLORS.mediumGray }}>
+                    <div style={{ fontSize: '0.8125rem', color: COLORS.textSecondary }}>
                       {currentWaveNumber === 1
                         ? "I'll learn from how you categorize these first transactions to improve accuracy for the rest."
                         : `Using patterns from ${processedCorpus.length} reviewed transactions to improve suggestions.`}
@@ -1215,7 +1215,7 @@ export default function OnboardingTransactionUpload({ onComplete, onSkip, onBack
             {/* Navigation options */}
             <div style={{
               padding: '1rem',
-              borderTop: `1px solid ${COLORS.lightGray}`,
+              borderTop: `1px solid ${COLORS.borderLight}`,
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center'
@@ -1232,8 +1232,8 @@ export default function OnboardingTransactionUpload({ onComplete, onSkip, onBack
                     fontSize: '0.875rem',
                     fontWeight: 500,
                     cursor: 'pointer',
-                    border: `1px solid ${COLORS.lightGray}`,
-                    color: COLORS.mediumGray,
+                    border: `1px solid ${COLORS.borderLight}`,
+                    color: COLORS.textSecondary,
                     backgroundColor: 'transparent'
                   }}
                 >
@@ -1252,8 +1252,8 @@ export default function OnboardingTransactionUpload({ onComplete, onSkip, onBack
                   fontSize: '0.875rem',
                   fontWeight: 500,
                   cursor: 'pointer',
-                  border: `1px solid ${COLORS.lightGray}`,
-                  color: COLORS.mediumGray,
+                  border: `1px solid ${COLORS.borderLight}`,
+                  color: COLORS.textSecondary,
                   backgroundColor: 'transparent',
                   marginLeft: onBack ? '0' : 'auto'
                 }}
@@ -1287,14 +1287,14 @@ export default function OnboardingTransactionUpload({ onComplete, onSkip, onBack
               <h3 style={{
                 fontSize: '1.5rem',
                 fontWeight: 700,
-                color: COLORS.darkGray,
+                color: COLORS.textPrimary,
                 marginBottom: '0.5rem'
               }}>
                 Upload Bank Statements
               </h3>
               <p style={{
                 fontSize: '1rem',
-                color: COLORS.mediumGray,
+                color: COLORS.textSecondary,
                 marginBottom: '1.5rem'
               }}>
                 Select one or more bank statement files
@@ -1329,11 +1329,11 @@ export default function OnboardingTransactionUpload({ onComplete, onSkip, onBack
                 }}
                 >
                   <Building2 style={{ margin: '0 auto 0.75rem', height: '2.5rem', width: '2.5rem', color: COLORS.incomeColor }} />
-                  <h4 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.25rem', color: COLORS.darkGray }}>Bank Statement PDFs</h4>
-                  <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray }}>
+                  <h4 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.25rem', color: COLORS.textPrimary }}>Bank Statement PDFs</h4>
+                  <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary }}>
                     Multiple files supported
                   </p>
-                  <p style={{ fontSize: '0.6875rem', color: COLORS.mediumGray, marginTop: '0.5rem', fontStyle: 'italic' }}>
+                  <p style={{ fontSize: '0.6875rem', color: COLORS.textSecondary, marginTop: '0.5rem', fontStyle: 'italic' }}>
                     Bank of Ireland supported
                   </p>
                 </div>
@@ -1365,8 +1365,8 @@ export default function OnboardingTransactionUpload({ onComplete, onSkip, onBack
                 }}
                 >
                   <FileSpreadsheet style={{ margin: '0 auto 0.75rem', height: '2.5rem', width: '2.5rem', color: COLORS.slainteBlue }} />
-                  <h4 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.25rem', color: COLORS.darkGray }}>CSV Exports</h4>
-                  <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray }}>
+                  <h4 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.25rem', color: COLORS.textPrimary }}>CSV Exports</h4>
+                  <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary }}>
                     From online banking
                   </p>
                 </div>
@@ -1384,7 +1384,7 @@ export default function OnboardingTransactionUpload({ onComplete, onSkip, onBack
                     borderTopColor: 'transparent',
                     margin: '0 auto'
                   }}></div>
-                  <p style={{ fontSize: '0.875rem', color: COLORS.darkGray, marginTop: '0.5rem' }}>
+                  <p style={{ fontSize: '0.875rem', color: COLORS.textPrimary, marginTop: '0.5rem' }}>
                     Processing your files...
                   </p>
                 </div>
@@ -1402,7 +1402,7 @@ export default function OnboardingTransactionUpload({ onComplete, onSkip, onBack
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          backgroundColor: COLORS.overlayDark,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -1426,22 +1426,22 @@ export default function OnboardingTransactionUpload({ onComplete, onSkip, onBack
               }}>
                 <AlertTriangle style={{ width: '1.5rem', height: '1.5rem', color: COLORS.highlightYellow }} />
               </div>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: COLORS.darkGray, margin: 0 }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: COLORS.textPrimary, margin: 0 }}>
                 Duplicate Transactions Detected
               </h3>
             </div>
 
             <div style={{
-              backgroundColor: COLORS.backgroundGray,
+              backgroundColor: COLORS.bgPage,
               borderRadius: '0.5rem',
               padding: '1rem',
               marginBottom: '1rem'
             }}>
-              <p style={{ fontSize: '0.875rem', color: COLORS.darkGray, margin: 0 }}>
+              <p style={{ fontSize: '0.875rem', color: COLORS.textPrimary, margin: 0 }}>
                 <strong>{duplicateInfo.duplicateCount}</strong> of {duplicateInfo.totalCount} transactions appear to already exist.
               </p>
               {duplicateInfo.uniqueCount > 0 && (
-                <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray, margin: '0.5rem 0 0 0' }}>
+                <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary, margin: '0.5rem 0 0 0' }}>
                   {duplicateInfo.uniqueCount} new transactions can be added.
                 </p>
               )}
@@ -1471,8 +1471,8 @@ export default function OnboardingTransactionUpload({ onComplete, onSkip, onBack
                   width: '100%',
                   padding: '0.75rem 1rem',
                   backgroundColor: 'transparent',
-                  color: COLORS.darkGray,
-                  border: `1px solid ${COLORS.lightGray}`,
+                  color: COLORS.textPrimary,
+                  border: `1px solid ${COLORS.borderLight}`,
                   borderRadius: '0.5rem',
                   fontSize: '0.875rem',
                   fontWeight: 500,
@@ -1493,7 +1493,7 @@ export default function OnboardingTransactionUpload({ onComplete, onSkip, onBack
                   width: '100%',
                   padding: '0.75rem 1rem',
                   backgroundColor: 'transparent',
-                  color: COLORS.mediumGray,
+                  color: COLORS.textSecondary,
                   border: 'none',
                   borderRadius: '0.5rem',
                   fontSize: '0.875rem',
@@ -1524,7 +1524,7 @@ export default function OnboardingTransactionUpload({ onComplete, onSkip, onBack
             backgroundColor: COLORS.white,
             borderRadius: '0.75rem',
             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-            border: `1px solid ${COLORS.lightGray}`,
+            border: `1px solid ${COLORS.borderLight}`,
             overflow: 'hidden',
             display: 'flex',
             flexDirection: 'column'
@@ -1565,11 +1565,11 @@ export default function OnboardingTransactionUpload({ onComplete, onSkip, onBack
             }}>
               {/* Contextual message */}
               <div style={{
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 padding: '0.75rem',
                 borderRadius: '10px',
                 fontSize: '0.8125rem',
-                color: COLORS.darkGray,
+                color: COLORS.textPrimary,
                 lineHeight: 1.4
               }}>
                 Review how I've sorted your transactions into groups. Click any group name below to see what belongs there.
@@ -1599,7 +1599,7 @@ export default function OnboardingTransactionUpload({ onComplete, onSkip, onBack
                 borderRadius: '10px',
                 border: `1px solid ${COLORS.highlightYellow}50`,
                 fontSize: '0.75rem',
-                color: COLORS.darkGray,
+                color: COLORS.textPrimary,
                 lineHeight: 1.4
               }}>
                 The more you guide me now, the better I get over time. After a few months, I should sort 95-99% automatically.
@@ -1609,7 +1609,7 @@ export default function OnboardingTransactionUpload({ onComplete, onSkip, onBack
             {/* Bottom navigation */}
             <div style={{
               padding: '0.75rem 1rem',
-              borderTop: `1px solid ${COLORS.lightGray}`,
+              borderTop: `1px solid ${COLORS.borderLight}`,
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center'
@@ -1626,8 +1626,8 @@ export default function OnboardingTransactionUpload({ onComplete, onSkip, onBack
                     fontSize: '0.8125rem',
                     fontWeight: 500,
                     cursor: 'pointer',
-                    border: `1px solid ${COLORS.lightGray}`,
-                    color: COLORS.mediumGray,
+                    border: `1px solid ${COLORS.borderLight}`,
+                    color: COLORS.textSecondary,
                     backgroundColor: 'transparent'
                   }}
                 >
@@ -1646,8 +1646,8 @@ export default function OnboardingTransactionUpload({ onComplete, onSkip, onBack
                   fontSize: '0.8125rem',
                   fontWeight: 500,
                   cursor: 'pointer',
-                  border: `1px solid ${COLORS.lightGray}`,
-                  color: COLORS.mediumGray,
+                  border: `1px solid ${COLORS.borderLight}`,
+                  color: COLORS.textSecondary,
                   backgroundColor: 'transparent',
                   marginLeft: onBack ? '0' : 'auto'
                 }}
@@ -1664,7 +1664,7 @@ export default function OnboardingTransactionUpload({ onComplete, onSkip, onBack
             height: '100%',
             borderRadius: '0.75rem',
             overflow: 'hidden',
-            border: `1px solid ${COLORS.lightGray}`,
+            border: `1px solid ${COLORS.borderLight}`,
             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
           }}>
             <ProcessingFlowPanel

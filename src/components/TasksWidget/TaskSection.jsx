@@ -17,7 +17,7 @@ const TaskSection = ({
   children
 }) => {
   return (
-    <div style={{ borderBottom: `1px solid ${COLORS.lightGray}` }}>
+    <div style={{ borderBottom: `1px solid ${COLORS.borderLight}` }}>
       {/* Section Header */}
       <div
         style={{
@@ -25,7 +25,7 @@ const TaskSection = ({
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '0.75rem 1rem',
-          background: COLORS.backgroundGray
+          background: COLORS.bgPage
         }}
       >
         {/* Left side - Toggle and title */}
@@ -42,9 +42,9 @@ const TaskSection = ({
           }}
         >
           {expanded ? (
-            <ChevronDown style={{ width: '1rem', height: '1rem', color: COLORS.mediumGray }} />
+            <ChevronDown style={{ width: '1rem', height: '1rem', color: COLORS.textSecondary }} />
           ) : (
-            <ChevronRight style={{ width: '1rem', height: '1rem', color: COLORS.mediumGray }} />
+            <ChevronRight style={{ width: '1rem', height: '1rem', color: COLORS.textSecondary }} />
           )}
 
           {Icon && (
@@ -53,20 +53,20 @@ const TaskSection = ({
                 width: '1.5rem',
                 height: '1.5rem',
                 borderRadius: '0.375rem',
-                backgroundColor: color?.bg || COLORS.backgroundGray,
+                backgroundColor: color?.bg || COLORS.bgPage,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
               }}
             >
-              <Icon style={{ width: '0.875rem', height: '0.875rem', color: color?.text || COLORS.mediumGray }} />
+              <Icon style={{ width: '0.875rem', height: '0.875rem', color: color?.text || COLORS.textSecondary }} />
             </div>
           )}
 
           <span style={{
             fontWeight: 600,
             fontSize: '0.875rem',
-            color: COLORS.darkGray
+            color: COLORS.textPrimary
           }}>
             {title}
           </span>
@@ -74,8 +74,8 @@ const TaskSection = ({
           {/* Count badge */}
           <div
             style={{
-              backgroundColor: count > 0 ? (color?.bg || COLORS.backgroundGray) : COLORS.backgroundGray,
-              color: count > 0 ? (color?.text || COLORS.mediumGray) : COLORS.mediumGray,
+              backgroundColor: count > 0 ? (color?.bg || COLORS.bgPage) : COLORS.bgPage,
+              color: count > 0 ? (color?.text || COLORS.textSecondary) : COLORS.textSecondary,
               padding: '0.125rem 0.5rem',
               borderRadius: '9999px',
               fontSize: '0.75rem',

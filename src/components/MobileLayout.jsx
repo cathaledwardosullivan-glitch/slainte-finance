@@ -20,7 +20,10 @@ import {
     Eye,
     X,
     Calendar,
-    Cloud
+    Cloud,
+    Bot,
+    Loader2,
+    RefreshCw
 } from 'lucide-react';
 import {
     LineChart,
@@ -37,6 +40,7 @@ import {
 } from 'recharts';
 import { useAppContext } from '../context/AppContext';
 import { usePracticeProfile } from '../hooks/usePracticeProfile';
+import { useFinnSafe } from '../context/FinnContext';
 import { calculateSummaries } from '../utils/financialCalculations';
 import { getLatestMonthData } from '../utils/paymentCalculations';
 import { parseArtifactResponse } from '../utils/artifactBuilder';
@@ -45,10 +49,12 @@ import { saveTransactions, saveCategoryMapping } from '../utils/storageUtils';
 import * as storage from '../storage/practiceProfileStorage';
 import COLORS from '../utils/colors';
 import { MODELS } from '../data/modelConfig';
+import { getDemoApiKey, setDemoApiKey, getDemoKeyTimeRemaining, clearDemoApiKey, isDemoMode } from '../utils/demoMode';
 import SlainteLogo from './SlainteLogo';
 import SyncManager from './SyncManager';
 
-const MobileLayout = () => {
+const MobileLayout = ({ isOffline = false, mode = 'full', lastSynced = null, onRefresh = null }) => {
+    const isCompanion = mode === 'companion';
     const [currentTab, setCurrentTab] = useState('dashboard');
     const [selectedMetric, setSelectedMetric] = useState(null);
     const [chatMessages, setChatMessages] = useState([]);
@@ -68,13 +74,18 @@ const MobileLayout = () => {
     React.useEffect(() => {
         const loadApiKey = async () => {
             let savedKey = null;
-            // Check Electron storage first
-            if (window.electronAPI?.isElectron) {
-                savedKey = await window.electronAPI.getLocalStorage('claude_api_key');
-            }
-            // Fallback to localStorage
-            if (!savedKey) {
-                savedKey = localStorage.getItem('anthropic_api_key');
+            // In offline demo mode, use TTL-protected demo key
+            if (isOffline || isDemoMode()) {
+                savedKey = getDemoApiKey();
+            } else {
+                // Check Electron storage first
+                if (window.electronAPI?.isElectron) {
+                    savedKey = await window.electronAPI.getLocalStorage('claude_api_key');
+                }
+                // Fallback to localStorage
+                if (!savedKey) {
+                    savedKey = localStorage.getItem('anthropic_api_key');
+                }
             }
             if (savedKey) {
                 setApiKey(savedKey);
@@ -292,22 +303,22 @@ const MobileLayout = () => {
         return (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                 <div style={{ backgroundColor: COLORS.white }} className="rounded-lg w-full max-w-sm max-h-[85vh] overflow-hidden">
-                    <div className="flex items-center justify-between p-4" style={{ borderBottom: `1px solid ${COLORS.lightGray}` }}>
-                        <h2 className="text-lg font-bold" style={{ color: COLORS.darkGray }}>{title}</h2>
-                        <button onClick={onClose} className="p-2 rounded-lg" style={{ backgroundColor: 'transparent' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${COLORS.lightGray}40`} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
+                    <div className="flex items-center justify-between p-4" style={{ borderBottom: `1px solid ${COLORS.borderLight}` }}>
+                        <h2 className="text-lg font-bold" style={{ color: COLORS.textPrimary }}>{title}</h2>
+                        <button onClick={onClose} className="p-2 rounded-lg" style={{ backgroundColor: 'transparent' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${COLORS.borderLight}40`} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
                             <X className="h-5 w-5" />
                         </button>
                     </div>
 
                     <div className="p-4 overflow-y-auto" style={{ maxHeight: 'calc(85vh - 64px)' }}>
-                        <div className="rounded-lg p-4 mb-4" style={{ backgroundColor: COLORS.backgroundGray }}>
+                        <div className="rounded-lg p-4 mb-4" style={{ backgroundColor: COLORS.bgPage }}>
                             <div className="text-center">
-                                <p className="text-sm" style={{ color: COLORS.mediumGray }}>Total {title.split(' ')[0]}</p>
+                                <p className="text-sm" style={{ color: COLORS.textSecondary }}>Total {title.split(' ')[0]}</p>
                                 <p className="text-2xl font-bold" style={{ color: metric === 'income' ? COLORS.incomeColor : metric === 'expenses' ? COLORS.expenseColor : COLORS.slainteBlue }}>
                                     {formatCurrency(totalAmount)}
                                 </p>
                                 {metric === 'profit' && (
-                                    <p className="text-sm mt-1" style={{ color: COLORS.mediumGray }}>
+                                    <p className="text-sm mt-1" style={{ color: COLORS.textSecondary }}>
                                         {summaries.income > 0 ? ((totalAmount / summaries.income) * 100).toFixed(1) : 0}% profit margin
                                     </p>
                                 )}
@@ -337,10 +348,10 @@ const MobileLayout = () => {
                             </div>
                         ) : data.length === 0 ? (
                             <div className="text-center py-8">
-                                <p className="text-sm" style={{ color: COLORS.mediumGray }}>
+                                <p className="text-sm" style={{ color: COLORS.textSecondary }}>
                                     No categorized transactions yet.
                                 </p>
-                                <p className="text-xs mt-2" style={{ color: COLORS.mediumGray }}>
+                                <p className="text-xs mt-2" style={{ color: COLORS.textSecondary }}>
                                     Label your transactions to see breakdown by category.
                                 </p>
                             </div>
@@ -383,12 +394,12 @@ const MobileLayout = () => {
         <div className="p-4 space-y-4 max-w-sm mx-auto">
 
             <div className="flex items-center justify-center space-x-2 mb-2">
-                <label className="text-sm" style={{ color: COLORS.mediumGray }}>Year:</label>
+                <label className="text-sm" style={{ color: COLORS.textSecondary }}>Year:</label>
                 <select
                     value={selectedYear}
                     onChange={(e) => setSelectedYear(parseInt(e.target.value))}
                     className="border rounded px-3 py-1 text-sm"
-                    style={{ borderColor: COLORS.lightGray }}
+                    style={{ borderColor: COLORS.borderLight }}
                 >
                     {getAvailableYears().length > 0 ? (
                         getAvailableYears().map(year => (
@@ -455,42 +466,42 @@ const MobileLayout = () => {
             </div>
            
             {/* Patient Demographics Card - Matching Desktop */}
-            <div className="rounded-lg p-4 shadow-sm" style={{ backgroundColor: COLORS.white, border: `1px solid ${COLORS.lightGray}` }}>
-                <h3 className="font-semibold flex items-center gap-2 mb-3" style={{ color: COLORS.darkGray }}>
+            <div className="rounded-lg p-4 shadow-sm" style={{ backgroundColor: COLORS.white, border: `1px solid ${COLORS.borderLight}` }}>
+                <h3 className="font-semibold flex items-center gap-2 mb-3" style={{ color: COLORS.textPrimary }}>
                     <User className="h-5 w-5" style={{ color: COLORS.slainteBlue }} />
                     Latest Patient Demographics
                 </h3>
                 {latestPaymentData ? (
                     <div className="grid grid-cols-3 gap-3">
                         <div className="p-3 rounded-lg text-center" style={{ backgroundColor: `${COLORS.slainteBlue}15` }}>
-                            <p className="text-lg font-bold" style={{ color: COLORS.darkGray }}>
+                            <p className="text-lg font-bold" style={{ color: COLORS.textPrimary }}>
                                 {latestPaymentData.totalPanelSize?.toLocaleString() || 0}
                             </p>
                             <p className="text-xs font-medium mt-1" style={{ color: COLORS.slainteBlue }}>Total Panel Size</p>
                         </div>
                         <div className="p-3 rounded-lg text-center" style={{ backgroundColor: `${COLORS.slainteBlue}20` }}>
-                            <p className="text-lg font-bold" style={{ color: COLORS.darkGray }}>
+                            <p className="text-lg font-bold" style={{ color: COLORS.textPrimary }}>
                                 {latestPaymentData.totalPatientsOver70?.toLocaleString() || 0}
                             </p>
                             <p className="text-xs font-medium mt-1" style={{ color: COLORS.slainteBlue }}>Patients Over 70</p>
                         </div>
                         <div className="p-3 rounded-lg text-center" style={{ backgroundColor: `${COLORS.highlightYellow}30` }}>
-                            <p className="text-lg font-bold" style={{ color: COLORS.darkGray }}>
+                            <p className="text-lg font-bold" style={{ color: COLORS.textPrimary }}>
                                 {latestPaymentData.totalNursingHome?.toLocaleString() || 0}
                             </p>
-                            <p className="text-xs font-medium mt-1" style={{ color: COLORS.darkGray }}>Nursing Home</p>
+                            <p className="text-xs font-medium mt-1" style={{ color: COLORS.textPrimary }}>Nursing Home</p>
                         </div>
                     </div>
                 ) : (
-                    <div className="text-center py-4 text-sm" style={{ color: COLORS.mediumGray }}>
+                    <div className="text-center py-4 text-sm" style={{ color: COLORS.textSecondary }}>
                         No payment analysis data available. Upload PCRS PDFs to see panel demographics.
                     </div>
                 )}
             </div>
 
             {/* Latest Claims & Leave Data - Matching Desktop */}
-            <div className="rounded-lg p-4 shadow-sm" style={{ backgroundColor: COLORS.white, border: `1px solid ${COLORS.lightGray}` }}>
-                <h3 className="font-semibold flex items-center gap-2 mb-3" style={{ color: COLORS.darkGray }}>
+            <div className="rounded-lg p-4 shadow-sm" style={{ backgroundColor: COLORS.white, border: `1px solid ${COLORS.borderLight}` }}>
+                <h3 className="font-semibold flex items-center gap-2 mb-3" style={{ color: COLORS.textPrimary }}>
                     <Activity className="h-5 w-5" style={{ color: COLORS.slainteBlue }} />
                     Latest Claims & Leave Data
                 </h3>
@@ -498,39 +509,39 @@ const MobileLayout = () => {
                     <div className="grid grid-cols-2 gap-3">
                         <div className="p-3 rounded-lg" style={{ backgroundColor: `${COLORS.slainteBlue}15` }}>
                             <h4 className="text-xs font-semibold mb-1" style={{ color: COLORS.slainteBlue }}>STC Claims</h4>
-                            <p className="text-lg font-bold" style={{ color: COLORS.darkGray }}>
+                            <p className="text-lg font-bold" style={{ color: COLORS.textPrimary }}>
                                 {latestPaymentData.totalSTCClaims?.toLocaleString() || 0}
                             </p>
                         </div>
                         <div className="p-3 rounded-lg" style={{ backgroundColor: `${COLORS.incomeColor}15` }}>
                             <h4 className="text-xs font-semibold mb-1" style={{ color: COLORS.incomeColor }}>STC Claims Paid</h4>
-                            <p className="text-lg font-bold" style={{ color: COLORS.darkGray }}>
+                            <p className="text-lg font-bold" style={{ color: COLORS.textPrimary }}>
                                 {latestPaymentData.totalSTCClaimsPaid?.toLocaleString() || 0}
                             </p>
                         </div>
                         <div className="p-3 rounded-lg" style={{ backgroundColor: `${COLORS.highlightYellow}30` }}>
-                            <h4 className="text-xs font-semibold mb-1" style={{ color: COLORS.darkGray }}>Annual Leave Balance</h4>
-                            <p className="text-lg font-bold" style={{ color: COLORS.darkGray }}>
+                            <h4 className="text-xs font-semibold mb-1" style={{ color: COLORS.textPrimary }}>Annual Leave Balance</h4>
+                            <p className="text-lg font-bold" style={{ color: COLORS.textPrimary }}>
                                 {latestPaymentData.totalAnnualLeaveBalance?.toLocaleString() || 0}
                             </p>
                         </div>
                         <div className="p-3 rounded-lg" style={{ backgroundColor: `${COLORS.expenseColor}15` }}>
                             <h4 className="text-xs font-semibold mb-1" style={{ color: COLORS.expenseColor }}>Study Leave Balance</h4>
-                            <p className="text-lg font-bold" style={{ color: COLORS.darkGray }}>
+                            <p className="text-lg font-bold" style={{ color: COLORS.textPrimary }}>
                                 {latestPaymentData.totalStudyLeaveBalance?.toLocaleString() || 0}
                             </p>
                         </div>
                     </div>
                 ) : (
-                    <div className="text-center py-4 text-sm" style={{ color: COLORS.mediumGray }}>
+                    <div className="text-center py-4 text-sm" style={{ color: COLORS.textSecondary }}>
                         No claims and leave data available.
                     </div>
                 )}
             </div>
 
             {/* Tasks & Reports - Matching Desktop */}
-            <div className="rounded-lg p-4 shadow-sm" style={{ backgroundColor: COLORS.white, border: `1px solid ${COLORS.lightGray}` }}>
-                <h3 className="font-semibold flex items-center gap-2 mb-3" style={{ color: COLORS.darkGray }}>
+            <div className="rounded-lg p-4 shadow-sm" style={{ backgroundColor: COLORS.white, border: `1px solid ${COLORS.borderLight}` }}>
+                <h3 className="font-semibold flex items-center gap-2 mb-3" style={{ color: COLORS.textPrimary }}>
                     <FileText className="h-5 w-5" style={{ color: COLORS.slainteBlue }} />
                     Tasks & Reports
                 </h3>
@@ -562,7 +573,7 @@ const MobileLayout = () => {
                                 <h4 className="text-xs font-semibold mb-1" style={{ color: statusColor }}>
                                     GMS Health Check
                                 </h4>
-                                <p className="text-lg font-bold" style={{ color: COLORS.darkGray }}>
+                                <p className="text-lg font-bold" style={{ color: COLORS.textPrimary }}>
                                     {latestGMSReport ? 'View Report' : 'Desktop Only'}
                                 </p>
                             </div>
@@ -583,9 +594,9 @@ const MobileLayout = () => {
                         });
 
                         const reportDue = shouldGeneratePriorYear && hasDataForYear;
-                        const statusColor = reportDue ? '#9333EA' : COLORS.incomeColor; // Purple or Green
-                        const statusBg = reportDue ? '#9333EA20' : `${COLORS.incomeColor}15`;
-                        const statusBorder = reportDue ? '#9333EA40' : `${COLORS.incomeColor}40`;
+                        const statusColor = reportDue ? COLORS.daraViolet : COLORS.incomeColor; // Purple or Green
+                        const statusBg = reportDue ? `${COLORS.daraViolet}20` : `${COLORS.incomeColor}15`;
+                        const statusBorder = reportDue ? `${COLORS.daraViolet}40` : `${COLORS.incomeColor}40`;
 
                         return (
                             <div
@@ -599,7 +610,7 @@ const MobileLayout = () => {
                                 <h4 className="text-xs font-semibold mb-1" style={{ color: statusColor }}>
                                     P&L Report
                                 </h4>
-                                <p className="text-lg font-bold" style={{ color: COLORS.darkGray }}>
+                                <p className="text-lg font-bold" style={{ color: COLORS.textPrimary }}>
                                     {reportDue ? reportYear : 'Current'}
                                 </p>
                             </div>
@@ -611,8 +622,8 @@ const MobileLayout = () => {
             {/* Demo Data Card */}
             {transactions.length === 0 && (
                 <div className="rounded-lg p-4 mt-4" style={{ backgroundColor: `${COLORS.incomeColor}15`, border: `1px solid ${COLORS.incomeColor}40` }}>
-                    <h3 className="font-semibold mb-2" style={{ color: COLORS.darkGray }}>Get Started</h3>
-                    <p className="text-sm mb-3" style={{ color: COLORS.mediumGray }}>
+                    <h3 className="font-semibold mb-2" style={{ color: COLORS.textPrimary }}>Get Started</h3>
+                    <p className="text-sm mb-3" style={{ color: COLORS.textSecondary }}>
                         Load demo data to explore the app's features
                     </p>
                     <button
@@ -652,20 +663,20 @@ const MobileLayout = () => {
         return (
             <div className="p-4 max-w-sm mx-auto">
                 <div className="mb-4 text-center">
-                    <p className="text-sm" style={{ color: COLORS.mediumGray }}>
+                    <p className="text-sm" style={{ color: COLORS.textSecondary }}>
                         {displayedTransactions.length} of {unidentifiedTransactions.length} transactions
                     </p>
                 </div>
 
                 {/* Sort Filter */}
                 {unidentifiedTransactions.length > 0 && (
-                    <div className="mb-4 flex items-center justify-between rounded-lg p-3" style={{ backgroundColor: COLORS.white, border: `1px solid ${COLORS.lightGray}` }}>
-                        <span className="text-sm" style={{ color: COLORS.mediumGray }}>Sort by date:</span>
+                    <div className="mb-4 flex items-center justify-between rounded-lg p-3" style={{ backgroundColor: COLORS.white, border: `1px solid ${COLORS.borderLight}` }}>
+                        <span className="text-sm" style={{ color: COLORS.textSecondary }}>Sort by date:</span>
                         <select
                             value={sortOrder}
                             onChange={(e) => setSortOrder(e.target.value)}
                             className="text-sm rounded px-3 py-1"
-                            style={{ border: `1px solid ${COLORS.lightGray}` }}
+                            style={{ border: `1px solid ${COLORS.borderLight}` }}
                         >
                             <option value="newest">Newest First</option>
                             <option value="oldest">Oldest First</option>
@@ -676,20 +687,20 @@ const MobileLayout = () => {
                 {unidentifiedTransactions.length === 0 ? (
                     <div className="text-center py-12">
                         <CheckCircle className="h-12 w-12 mx-auto mb-4" style={{ color: COLORS.incomeColor }} />
-                        <h3 className="text-lg font-medium" style={{ color: COLORS.darkGray }}>All caught up!</h3>
-                        <p style={{ color: COLORS.mediumGray }}>No transactions need categorization</p>
+                        <h3 className="text-lg font-medium" style={{ color: COLORS.textPrimary }}>All caught up!</h3>
+                        <p style={{ color: COLORS.textSecondary }}>No transactions need categorization</p>
                     </div>
                 ) : (
                     <>
                         <div className="space-y-4">
                             {displayedTransactions.map((transaction) => (
-                                <div key={transaction.id} className="rounded-lg shadow-sm" style={{ backgroundColor: COLORS.white, border: `1px solid ${COLORS.lightGray}` }}>
-                                    <div className="p-4" style={{ borderBottom: `1px solid ${COLORS.lightGray}` }}>
+                                <div key={transaction.id} className="rounded-lg shadow-sm" style={{ backgroundColor: COLORS.white, border: `1px solid ${COLORS.borderLight}` }}>
+                                    <div className="p-4" style={{ borderBottom: `1px solid ${COLORS.borderLight}` }}>
                                         <div className="space-y-2 mb-3">
                                             <div className="flex justify-between items-start">
                                                 <div className="flex-1 mr-2">
-                                                    <p className="text-xs mb-1" style={{ color: COLORS.mediumGray }}>Details</p>
-                                                    <p className="font-medium text-sm leading-tight" style={{ color: COLORS.darkGray }}>
+                                                    <p className="text-xs mb-1" style={{ color: COLORS.textSecondary }}>Details</p>
+                                                    <p className="font-medium text-sm leading-tight" style={{ color: COLORS.textPrimary }}>
                                                         {transaction.description ||
                                                             transaction.details ||
                                                             transaction.narrative ||
@@ -698,7 +709,7 @@ const MobileLayout = () => {
                                                     </p>
                                                 </div>
                                                 <div className="text-right">
-                                                    <p className="text-xs mb-1" style={{ color: COLORS.mediumGray }}>Amount</p>
+                                                    <p className="text-xs mb-1" style={{ color: COLORS.textSecondary }}>Amount</p>
                                                     {transaction.debit ? (
                                                         <p className="text-lg font-bold" style={{ color: COLORS.expenseColor }}>
                                                             -€{Math.abs(transaction.debit).toLocaleString()}
@@ -716,8 +727,8 @@ const MobileLayout = () => {
                                             </div>
 
                                             <div>
-                                                <p className="text-xs" style={{ color: COLORS.mediumGray }}>Date</p>
-                                                <p className="text-sm" style={{ color: COLORS.darkGray }}>
+                                                <p className="text-xs" style={{ color: COLORS.textSecondary }}>Date</p>
+                                                <p className="text-sm" style={{ color: COLORS.textPrimary }}>
                                                     {new Date(transaction.date).toLocaleDateString('en-IE', {
                                                         day: 'numeric',
                                                         month: 'short',
@@ -731,7 +742,7 @@ const MobileLayout = () => {
                                     <div className="p-4 space-y-3">
                                         <select
                                             className="w-full p-3 rounded-lg text-sm"
-                                            style={{ border: `1px solid ${COLORS.lightGray}` }}
+                                            style={{ border: `1px solid ${COLORS.borderLight}` }}
                                             onChange={(e) => {
                                                 if (e.target.value) {
                                                     // Immediately categorize without AI training prompt (mobile-only)
@@ -767,7 +778,7 @@ const MobileLayout = () => {
                                                 setUnidentifiedTransactions(prev => [...prev.filter(t => t.id !== transaction.id), transaction]);
                                             }}
                                             className="w-full py-2 px-4 rounded-lg text-sm"
-                                            style={{ color: COLORS.mediumGray, border: `1px solid ${COLORS.lightGray}` }}
+                                            style={{ color: COLORS.textSecondary, border: `1px solid ${COLORS.borderLight}` }}
                                         >
                                             Skip for now
                                         </button>
@@ -791,7 +802,7 @@ const MobileLayout = () => {
 
                         {!hasMore && unidentifiedTransactions.length > 10 && (
                             <div className="mt-4 text-center">
-                                <p className="text-sm" style={{ color: COLORS.mediumGray }}>All transactions loaded</p>
+                                <p className="text-sm" style={{ color: COLORS.textSecondary }}>All transactions loaded</p>
                                 <button
                                     onClick={() => setDisplayCount(10)}
                                     className="text-sm underline mt-2"
@@ -834,19 +845,19 @@ const MobileLayout = () => {
             <div className="p-4 max-w-sm mx-auto"  style={{ paddingTop: '1rem' }}>
 
                 {/* Current Year Summary */}
-                <div className="rounded-lg p-4 mb-4" style={{ backgroundColor: COLORS.white, border: `1px solid ${COLORS.lightGray}` }}>
+                <div className="rounded-lg p-4 mb-4" style={{ backgroundColor: COLORS.white, border: `1px solid ${COLORS.borderLight}` }}>
                     <h3 className="font-semibold mb-3">Current Year Summary</h3>
                     <div className="space-y-2">
                         <div className="flex justify-between text-sm">
-                            <span style={{ color: COLORS.mediumGray }}>Total Income</span>
+                            <span style={{ color: COLORS.textSecondary }}>Total Income</span>
                             <span className="font-semibold" style={{ color: COLORS.incomeColor }}>{formatCurrency(summaries.income)}</span>
                         </div>
                         <div className="flex justify-between text-sm">
-                            <span style={{ color: COLORS.mediumGray }}>Total Expenses</span>
+                            <span style={{ color: COLORS.textSecondary }}>Total Expenses</span>
                             <span className="font-semibold" style={{ color: COLORS.expenseColor }}>{formatCurrency(summaries.expenses)}</span>
                         </div>
-                        <div className="flex justify-between text-sm pt-2" style={{ borderTop: `1px solid ${COLORS.lightGray}` }}>
-                            <span className="font-medium" style={{ color: COLORS.darkGray }}>Net Profit</span>
+                        <div className="flex justify-between text-sm pt-2" style={{ borderTop: `1px solid ${COLORS.borderLight}` }}>
+                            <span className="font-medium" style={{ color: COLORS.textPrimary }}>Net Profit</span>
                             <span className="font-bold" style={{ color: COLORS.slainteBlue }}>{formatCurrency(profit)}</span>
                         </div>
                     </div>
@@ -854,13 +865,13 @@ const MobileLayout = () => {
 
                 {/* Saved Reports */}
                 <div className="space-y-3">
-                    <h3 className="font-semibold" style={{ color: COLORS.darkGray }}>Saved Reports</h3>
+                    <h3 className="font-semibold" style={{ color: COLORS.textPrimary }}>Saved Reports</h3>
 
                     {savedReports.length === 0 ? (
-                        <div className="rounded-lg p-6 text-center" style={{ backgroundColor: COLORS.backgroundGray, border: `1px solid ${COLORS.lightGray}` }}>
-                            <FileText className="h-12 w-12 mx-auto mb-2" style={{ color: COLORS.mediumGray }} />
-                            <p className="text-sm" style={{ color: COLORS.mediumGray }}>No saved reports</p>
-                            <p className="text-xs mt-1" style={{ color: COLORS.mediumGray }}>
+                        <div className="rounded-lg p-6 text-center" style={{ backgroundColor: COLORS.bgPage, border: `1px solid ${COLORS.borderLight}` }}>
+                            <FileText className="h-12 w-12 mx-auto mb-2" style={{ color: COLORS.textSecondary }} />
+                            <p className="text-sm" style={{ color: COLORS.textSecondary }}>No saved reports</p>
+                            <p className="text-xs mt-1" style={{ color: COLORS.textSecondary }}>
                                 Generate reports on desktop to view them here
                             </p>
                         </div>
@@ -889,15 +900,15 @@ const MobileLayout = () => {
                                     case 'P&L Report':
                                         badgeStyle = {
                                             backgroundColor: `${COLORS.highlightYellow}40`,
-                                            color: COLORS.darkGray,
+                                            color: COLORS.textPrimary,
                                             border: `1px solid ${COLORS.highlightYellow}`
                                         };
                                         break;
                                     default:
                                         badgeStyle = {
-                                            backgroundColor: COLORS.backgroundGray,
-                                            color: COLORS.mediumGray,
-                                            border: `1px solid ${COLORS.lightGray}`
+                                            backgroundColor: COLORS.bgPage,
+                                            color: COLORS.textSecondary,
+                                            border: `1px solid ${COLORS.borderLight}`
                                         };
                                 }
 
@@ -912,16 +923,16 @@ const MobileLayout = () => {
                             };
 
                             return (
-                                <div key={report.id} className="rounded-lg p-4" style={{ backgroundColor: COLORS.white, border: `1px solid ${COLORS.lightGray}` }}>
+                                <div key={report.id} className="rounded-lg p-4" style={{ backgroundColor: COLORS.white, border: `1px solid ${COLORS.borderLight}` }}>
                                     <div className="flex items-start justify-between mb-3">
                                         <div className="flex-1">
                                             <div className="flex items-center gap-2 mb-1">
-                                                <h4 className="font-medium text-sm" style={{ color: COLORS.darkGray }}>{report.title}</h4>
+                                                <h4 className="font-medium text-sm" style={{ color: COLORS.textPrimary }}>{report.title}</h4>
                                             </div>
                                             <div className="mb-2">
                                                 {getReportBadge()}
                                             </div>
-                                            <p className="text-xs" style={{ color: COLORS.mediumGray }}>
+                                            <p className="text-xs" style={{ color: COLORS.textSecondary }}>
                                                 {new Date(report.generatedDate).toLocaleDateString('en-IE', {
                                                     day: 'numeric',
                                                     month: 'short',
@@ -957,10 +968,10 @@ const MobileLayout = () => {
                                                 window.location.href = `mailto:?subject=${subject}`;
                                             }}
                                             className="flex-1 flex items-center justify-center p-2 rounded"
-                                            style={{ backgroundColor: COLORS.backgroundGray, border: `1px solid ${COLORS.lightGray}` }}
+                                            style={{ backgroundColor: COLORS.bgPage, border: `1px solid ${COLORS.borderLight}` }}
                                         >
-                                            <Mail className="h-4 w-4 mr-1" style={{ color: COLORS.mediumGray }} />
-                                            <span className="text-sm font-medium" style={{ color: COLORS.darkGray }}>Email</span>
+                                            <Mail className="h-4 w-4 mr-1" style={{ color: COLORS.textSecondary }} />
+                                            <span className="text-sm font-medium" style={{ color: COLORS.textPrimary }}>Email</span>
                                         </button>
                                     </div>
                                 </div>
@@ -1058,51 +1069,74 @@ ${practiceContext}
                     { role: "user", content: chatInput }
                 ];
 
-                // Check if running on Netlify or production (no API server available)
-                const isProduction = window.location.hostname.includes('netlify.app') ||
-                                   window.location.hostname.includes('vercel.app') ||
-                                   window.location.protocol === 'https:';
+                let claudeResponse;
 
-                if (isProduction) {
-                    throw new Error('Chat is only available when running locally. Please use the desktop app for AI chat features.');
-                }
-
-                // Use current host for API calls (works on mobile and desktop locally)
-                const apiHost = window.location.hostname;
-                const apiUrl = `http://${apiHost}:3001/api/chat`;
-
-                // Get authentication token - use Electron token if available, otherwise partner token
-                let authToken;
-                if (window.electronAPI?.isElectron) {
-                    authToken = await window.electronAPI.getInternalToken();
-                } else {
-                    authToken = localStorage.getItem('partner_token');
-                    if (!authToken) {
-                        throw new Error('Authentication required. Please log in.');
+                if (isOffline || isDemoMode()) {
+                    // Offline demo mode: call Claude API directly with client-side key
+                    const demoKey = getDemoApiKey();
+                    if (!demoKey) {
+                        throw new Error('Demo API key has expired. Please re-enter it.');
                     }
-                }
 
-                const response = await fetch(apiUrl, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${authToken}`
-                    },
-                    body: JSON.stringify({
-                        message: JSON.stringify({
+                    const response = await fetch('https://api.anthropic.com/v1/messages', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-api-key': demoKey,
+                            'anthropic-version': '2023-06-01',
+                            'anthropic-dangerous-direct-browser-access': 'true'
+                        },
+                        body: JSON.stringify({
                             model: MODELS.STANDARD,
                             max_tokens: 1500,
                             messages: messages
                         })
-                    })
-                });
+                    });
 
-                if (!response.ok) {
-                    throw new Error('Failed to get response from API server');
+                    if (!response.ok) {
+                        const errData = await response.json().catch(() => ({}));
+                        throw new Error(errData?.error?.message || `API error: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    claudeResponse = data.content[0].text;
+                } else {
+                    // Online LAN mode: proxy through Express server
+                    const apiHost = window.location.hostname;
+                    const apiUrl = `http://${apiHost}:3001/api/chat`;
+
+                    let authToken;
+                    if (window.electronAPI?.isElectron) {
+                        authToken = await window.electronAPI.getInternalToken();
+                    } else {
+                        authToken = localStorage.getItem('partner_token');
+                        if (!authToken) {
+                            throw new Error('Authentication required. Please log in.');
+                        }
+                    }
+
+                    const response = await fetch(apiUrl, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${authToken}`
+                        },
+                        body: JSON.stringify({
+                            message: JSON.stringify({
+                                model: MODELS.STANDARD,
+                                max_tokens: 1500,
+                                messages: messages
+                            })
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to get response from API server');
+                    }
+
+                    const data = await response.json();
+                    claudeResponse = data.content[0].text;
                 }
-
-                const data = await response.json();
-                const claudeResponse = data.content[0].text;
 
                 // Remove loading message
                 setChatMessages(prev => prev.filter(msg => !msg.isLoading));
@@ -1161,11 +1195,11 @@ ${practiceContext}
             <div className="flex flex-col h-[calc(100vh-110px)] max-w-sm mx-auto">
                 {/* Header */}
                 {!apiKey && (
-                    <div className="p-3 text-center" style={{ borderBottom: `1px solid ${COLORS.lightGray}`, backgroundColor: COLORS.white }}>
+                    <div className="p-3 text-center" style={{ borderBottom: `1px solid ${COLORS.borderLight}`, backgroundColor: COLORS.white }}>
                         <button
                             onClick={() => setShowApiKeyInput(true)}
                             className="text-xs px-3 py-2 rounded"
-                            style={{ backgroundColor: COLORS.highlightYellow, color: COLORS.darkGray }}
+                            style={{ backgroundColor: COLORS.highlightYellow, color: COLORS.textPrimary }}
                         >
                             Set API Key to Chat with Finn
                         </button>
@@ -1173,10 +1207,10 @@ ${practiceContext}
                 )}
 
                 {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ backgroundColor: COLORS.backgroundGray }}>
+                <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ backgroundColor: COLORS.bgPage }}>
                     {chatMessages.length === 0 && (
                         <div className="text-center py-8">
-                            <p className="text-sm mb-4" style={{ color: COLORS.mediumGray }}>
+                            <p className="text-sm mb-4" style={{ color: COLORS.textSecondary }}>
                                 Hi! I'm Finn, your AI financial advisor. Ask me anything about your practice finances.
                             </p>
                         </div>
@@ -1189,10 +1223,10 @@ ${practiceContext}
                                 style={message.type === 'user'
                                     ? { backgroundColor: COLORS.slainteBlue, color: COLORS.white }
                                     : message.isLoading
-                                    ? { backgroundColor: `${COLORS.highlightYellow}20`, border: `1px solid ${COLORS.highlightYellow}`, color: COLORS.darkGray }
+                                    ? { backgroundColor: `${COLORS.highlightYellow}20`, border: `1px solid ${COLORS.highlightYellow}`, color: COLORS.textPrimary }
                                     : message.isError
-                                    ? { backgroundColor: `${COLORS.expenseColor}20`, border: `1px solid ${COLORS.expenseColor}`, color: COLORS.darkGray }
-                                    : { backgroundColor: COLORS.white, color: COLORS.darkGray, border: `1px solid ${COLORS.lightGray}` }
+                                    ? { backgroundColor: `${COLORS.expenseColor}20`, border: `1px solid ${COLORS.expenseColor}`, color: COLORS.textPrimary }
+                                    : { backgroundColor: COLORS.white, color: COLORS.textPrimary, border: `1px solid ${COLORS.borderLight}` }
                                 }
                             >
                                 <p className="text-sm whitespace-pre-wrap">{message.content}</p>
@@ -1217,7 +1251,7 @@ ${practiceContext}
                 </div>
 
                 {/* Input */}
-                <div className="p-4" style={{ backgroundColor: COLORS.white, borderTop: `1px solid ${COLORS.lightGray}` }}>
+                <div className="p-4" style={{ backgroundColor: COLORS.white, borderTop: `1px solid ${COLORS.borderLight}` }}>
                     <div className="flex space-x-3">
                         <input
                             ref={inputRef}
@@ -1228,7 +1262,7 @@ ${practiceContext}
                             placeholder="Ask about your finances..."
                             disabled={isLoadingChat}
                             className="flex-1 p-3 rounded-lg text-sm"
-                            style={{ border: `1px solid ${COLORS.lightGray}` }}
+                            style={{ border: `1px solid ${COLORS.borderLight}` }}
                             autoComplete="off"
                         />
                         <button
@@ -1248,7 +1282,7 @@ ${practiceContext}
                                 onClick={() => setChatInput(question)}
                                 disabled={isLoadingChat}
                                 className="text-xs px-3 py-1 rounded-full disabled:opacity-50"
-                                style={{ backgroundColor: COLORS.backgroundGray, color: COLORS.darkGray }}
+                                style={{ backgroundColor: COLORS.bgPage, color: COLORS.textPrimary }}
                             >
                                 {question}
                             </button>
@@ -1260,30 +1294,39 @@ ${practiceContext}
                 {showApiKeyInput && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                         <div className="rounded-lg w-full max-w-sm p-6" style={{ backgroundColor: COLORS.white }}>
-                            <h3 className="text-lg font-bold mb-3" style={{ color: COLORS.darkGray }}>License Key Required</h3>
-                            <p className="text-sm mb-4" style={{ color: COLORS.mediumGray }}>
-                                Enter your Sláinte License Key to chat with Finn
+                            <h3 className="text-lg font-bold mb-3" style={{ color: COLORS.textPrimary }}>
+                                {(isOffline || isDemoMode()) ? 'Demo API Key' : 'License Key Required'}
+                            </h3>
+                            <p className="text-sm mb-4" style={{ color: COLORS.textSecondary }}>
+                                {(isOffline || isDemoMode())
+                                    ? 'Enter an API key to chat with Finn. It will auto-expire in 7 days.'
+                                    : 'Enter your Sláinte License Key to chat with Finn'
+                                }
                             </p>
                             <input
                                 type="password"
                                 value={apiKey}
                                 onChange={(e) => setApiKey(e.target.value)}
-                                placeholder="Enter your license key"
+                                placeholder={(isOffline || isDemoMode()) ? 'sk-ant-...' : 'Enter your license key'}
                                 className="w-full p-3 rounded mb-4 text-sm"
-                                style={{ border: `1px solid ${COLORS.lightGray}` }}
+                                style={{ border: `1px solid ${COLORS.borderLight}` }}
                             />
                             <div className="flex space-x-3">
                                 <button
                                     onClick={() => setShowApiKeyInput(false)}
                                     className="flex-1 py-2 px-4 rounded font-medium"
-                                    style={{ backgroundColor: COLORS.lightGray, color: COLORS.darkGray }}
+                                    style={{ backgroundColor: COLORS.borderLight, color: COLORS.textPrimary }}
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={() => {
                                         if (apiKey.trim()) {
-                                            localStorage.setItem('anthropic_api_key', apiKey);
+                                            if (isOffline || isDemoMode()) {
+                                                setDemoApiKey(apiKey);
+                                            } else {
+                                                localStorage.setItem('anthropic_api_key', apiKey);
+                                            }
                                             setShowApiKeyInput(false);
                                         }
                                     }}
@@ -1406,20 +1449,20 @@ ${practiceContext}
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
                 <div className="bg-white rounded-lg w-full max-w-sm max-h-[90vh] overflow-hidden flex flex-col my-auto">
                     {/* Header */}
-                    <div className="p-4 border-b flex items-center justify-between flex-shrink-0" style={{ borderBottom: `1px solid ${COLORS.lightGray}` }}>
+                    <div className="p-4 border-b flex items-center justify-between flex-shrink-0" style={{ borderBottom: `1px solid ${COLORS.borderLight}` }}>
                         <div>
-                            <h3 className="font-bold text-base" style={{ color: COLORS.darkGray }}>{artifact.title}</h3>
-                            <p className="text-xs mt-1" style={{ color: COLORS.mediumGray }}>
+                            <h3 className="font-bold text-base" style={{ color: COLORS.textPrimary }}>{artifact.title}</h3>
+                            <p className="text-xs mt-1" style={{ color: COLORS.textSecondary }}>
                                 {new Date(artifact.created_at).toLocaleDateString('en-IE')}
                             </p>
                         </div>
-                        <button onClick={onClose} className="p-2 rounded" style={{ backgroundColor: COLORS.lightGray }}>
+                        <button onClick={onClose} className="p-2 rounded" style={{ backgroundColor: COLORS.borderLight }}>
                             <X className="h-5 w-5" />
                         </button>
                     </div>
 
                     {/* Actions */}
-                    <div className="p-3 border-b flex gap-2 flex-shrink-0" style={{ borderBottom: `1px solid ${COLORS.lightGray}` }}>
+                    <div className="p-3 border-b flex gap-2 flex-shrink-0" style={{ borderBottom: `1px solid ${COLORS.borderLight}` }}>
                         <button
                             onClick={handleSave}
                             className="flex-1 px-3 py-2 rounded text-xs font-medium"
@@ -1431,7 +1474,7 @@ ${practiceContext}
                         <button
                             onClick={handleView}
                             className="flex-1 px-3 py-2 rounded text-xs font-medium"
-                            style={{ backgroundColor: COLORS.backgroundGray, color: COLORS.darkGray, border: `1px solid ${COLORS.lightGray}` }}
+                            style={{ backgroundColor: COLORS.bgPage, color: COLORS.textPrimary, border: `1px solid ${COLORS.borderLight}` }}
                         >
                             <Eye className="h-4 w-4 inline mr-1" />
                             View/Print
@@ -1439,7 +1482,7 @@ ${practiceContext}
                     </div>
 
                     {/* Content */}
-                    <div className="p-4 overflow-y-auto flex-1 text-sm" style={{ color: COLORS.darkGray }}>
+                    <div className="p-4 overflow-y-auto flex-1 text-sm" style={{ color: COLORS.textPrimary }}>
                         <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(artifact.content) }} />
                     </div>
                 </div>
@@ -1449,15 +1492,15 @@ ${practiceContext}
 
     // 5. MOBILE DATA VISUALISATION
     const MobileDataVisualisation = () => {
-        const CHART_COLORS = [COLORS.slainteBlue, COLORS.incomeColor, COLORS.highlightYellow, COLORS.expenseColor, '#8884D8', '#82CA9D'];
+        const CHART_COLORS = [COLORS.slainteBlue, COLORS.incomeColor, COLORS.highlightYellow, COLORS.expenseColor, COLORS.chartViolet, COLORS.success];
 
         if (transactions.length === 0) {
             return (
                 <div className="p-4 max-w-sm mx-auto">
                     <div className="text-center py-12">
-                        <TrendingUp className="h-16 w-16 mx-auto mb-4" style={{ color: COLORS.mediumGray }} />
-                        <h3 className="text-lg font-medium mb-2" style={{ color: COLORS.darkGray }}>No Data Available</h3>
-                        <p className="text-sm" style={{ color: COLORS.mediumGray }}>
+                        <TrendingUp className="h-16 w-16 mx-auto mb-4" style={{ color: COLORS.textSecondary }} />
+                        <h3 className="text-lg font-medium mb-2" style={{ color: COLORS.textPrimary }}>No Data Available</h3>
+                        <p className="text-sm" style={{ color: COLORS.textSecondary }}>
                             Upload transaction data to see visualizations
                         </p>
                     </div>
@@ -1477,12 +1520,12 @@ ${practiceContext}
             <div className="p-4 space-y-4 max-w-sm mx-auto">
                 {/* Year Selector */}
                 <div className="flex items-center justify-center space-x-2 mb-2">
-                    <Calendar className="h-4 w-4" style={{ color: COLORS.mediumGray }} />
+                    <Calendar className="h-4 w-4" style={{ color: COLORS.textSecondary }} />
                     <select
                         value={selectedYear}
                         onChange={(e) => setSelectedYear(parseInt(e.target.value))}
                         className="border rounded px-3 py-1 text-sm"
-                        style={{ borderColor: COLORS.lightGray }}
+                        style={{ borderColor: COLORS.borderLight }}
                     >
                         {getAvailableYears().length > 0 ? (
                             getAvailableYears().map(year => (
@@ -1496,22 +1539,22 @@ ${practiceContext}
 
                 {/* Monthly Trends Line Chart */}
                 {summaries.monthlyTrends && summaries.monthlyTrends.length > 0 && (
-                    <div className="rounded-lg p-4 shadow-sm" style={{ backgroundColor: COLORS.white, border: `1px solid ${COLORS.lightGray}` }}>
+                    <div className="rounded-lg p-4 shadow-sm" style={{ backgroundColor: COLORS.white, border: `1px solid ${COLORS.borderLight}` }}>
                         <h3 className="font-semibold mb-3 flex items-center gap-2" style={{ color: COLORS.slainteBlue }}>
                             <TrendingUp className="h-5 w-5" />
                             Monthly Trends
                         </h3>
                         <ResponsiveContainer width="100%" height={200}>
                             <LineChart data={summaries.monthlyTrends}>
-                                <CartesianGrid strokeDasharray="3 3" stroke={COLORS.lightGray} />
+                                <CartesianGrid strokeDasharray="3 3" stroke={COLORS.borderLight} />
                                 <XAxis
                                     dataKey="month"
                                     tick={{ fontSize: 10 }}
-                                    stroke={COLORS.mediumGray}
+                                    stroke={COLORS.textSecondary}
                                 />
                                 <YAxis
                                     tick={{ fontSize: 10 }}
-                                    stroke={COLORS.mediumGray}
+                                    stroke={COLORS.textSecondary}
                                 />
                                 <Tooltip
                                     formatter={(value) => `€${value.toLocaleString()}`}
@@ -1541,7 +1584,7 @@ ${practiceContext}
 
                 {/* Income Breakdown Pie Chart */}
                 {incomeData.length > 0 && (
-                    <div className="rounded-lg p-4 shadow-sm" style={{ backgroundColor: COLORS.white, border: `1px solid ${COLORS.lightGray}` }}>
+                    <div className="rounded-lg p-4 shadow-sm" style={{ backgroundColor: COLORS.white, border: `1px solid ${COLORS.borderLight}` }}>
                         <h3 className="font-semibold mb-3" style={{ color: COLORS.incomeColor }}>
                             Top Income Categories
                         </h3>
@@ -1552,7 +1595,7 @@ ${practiceContext}
                                     cx="50%"
                                     cy="50%"
                                     outerRadius={60}
-                                    fill="#8884d8"
+                                    fill={COLORS.chartViolet}
                                     dataKey="amount"
                                     nameKey="category"
                                 >
@@ -1575,7 +1618,7 @@ ${practiceContext}
                                             className="w-3 h-3 rounded-full"
                                             style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
                                         />
-                                        <span style={{ color: COLORS.darkGray }}>{cat.category}</span>
+                                        <span style={{ color: COLORS.textPrimary }}>{cat.category}</span>
                                     </div>
                                     <span className="font-semibold" style={{ color: COLORS.incomeColor }}>
                                         {formatCurrency(cat.amount)}
@@ -1588,7 +1631,7 @@ ${practiceContext}
 
                 {/* Expense Breakdown Pie Chart */}
                 {expenseData.length > 0 && (
-                    <div className="rounded-lg p-4 shadow-sm" style={{ backgroundColor: COLORS.white, border: `1px solid ${COLORS.lightGray}` }}>
+                    <div className="rounded-lg p-4 shadow-sm" style={{ backgroundColor: COLORS.white, border: `1px solid ${COLORS.borderLight}` }}>
                         <h3 className="font-semibold mb-3" style={{ color: COLORS.expenseColor }}>
                             Top Expense Categories
                         </h3>
@@ -1599,7 +1642,7 @@ ${practiceContext}
                                     cx="50%"
                                     cy="50%"
                                     outerRadius={60}
-                                    fill="#8884d8"
+                                    fill={COLORS.chartViolet}
                                     dataKey="amount"
                                     nameKey="category"
                                 >
@@ -1622,7 +1665,7 @@ ${practiceContext}
                                             className="w-3 h-3 rounded-full"
                                             style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
                                         />
-                                        <span style={{ color: COLORS.darkGray }}>{cat.category}</span>
+                                        <span style={{ color: COLORS.textPrimary }}>{cat.category}</span>
                                     </div>
                                     <span className="font-semibold" style={{ color: COLORS.expenseColor }}>
                                         {formatCurrency(cat.amount)}
@@ -1640,19 +1683,19 @@ ${practiceContext}
                     </h3>
                     <div className="grid grid-cols-3 gap-2 text-center">
                         <div>
-                            <p className="text-xs" style={{ color: COLORS.mediumGray }}>Income</p>
+                            <p className="text-xs" style={{ color: COLORS.textSecondary }}>Income</p>
                             <p className="text-sm font-bold" style={{ color: COLORS.incomeColor }}>
                                 {formatCurrency(summaries.income)}
                             </p>
                         </div>
                         <div>
-                            <p className="text-xs" style={{ color: COLORS.mediumGray }}>Expenses</p>
+                            <p className="text-xs" style={{ color: COLORS.textSecondary }}>Expenses</p>
                             <p className="text-sm font-bold" style={{ color: COLORS.expenseColor }}>
                                 {formatCurrency(summaries.expenses)}
                             </p>
                         </div>
                         <div>
-                            <p className="text-xs" style={{ color: COLORS.mediumGray }}>Profit</p>
+                            <p className="text-xs" style={{ color: COLORS.textSecondary }}>Profit</p>
                             <p className="text-sm font-bold" style={{ color: COLORS.slainteBlue }}>
                                 {formatCurrency(profit)}
                             </p>
@@ -1663,19 +1706,199 @@ ${practiceContext}
         );
     };
 
-    // Bottom Navigation - 5 TABS
+    // COMPANION FINN CHAT — uses the full agentic Finn via FinnContext
+    const CompanionFinnChat = () => {
+        const finn = useFinnSafe();
+        const messagesEndRef = React.useRef(null);
+        const inputRef = React.useRef(null);
+        const [input, setInput] = React.useState('');
+
+        // Auto-scroll to bottom on new messages
+        React.useEffect(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }, [finn?.messages]);
+
+        // Focus input when not loading
+        React.useEffect(() => {
+            if (inputRef.current && !finn?.isLoading) {
+                inputRef.current.focus();
+            }
+        }, [finn?.isLoading]);
+
+        if (!finn) {
+            return (
+                <div className="flex items-center justify-center h-[calc(100vh-110px)]">
+                    <p className="text-sm" style={{ color: COLORS.textSecondary }}>Finn is not available.</p>
+                </div>
+            );
+        }
+
+        const { messages, isLoading, sendMessage, backgroundTask, TASK_STATUS } = finn;
+
+        const handleSend = () => {
+            if (!input.trim() || isLoading) return;
+            sendMessage(input.trim());
+            setInput('');
+        };
+
+        const isGeneratingReport = backgroundTask?.status === TASK_STATUS?.IN_PROGRESS;
+
+        return (
+            <div className="flex flex-col h-[calc(100vh-110px)] max-w-lg mx-auto">
+                {/* Report generation banner */}
+                {isGeneratingReport && (
+                    <div className="px-4 py-2 flex items-center gap-2 text-xs" style={{ backgroundColor: `${COLORS.slainteBlue}10`, borderBottom: `1px solid ${COLORS.borderLight}` }}>
+                        <Loader2 className="h-3 w-3 animate-spin" style={{ color: COLORS.slainteBlue }} />
+                        <span style={{ color: COLORS.slainteBlue }}>Generating report...</span>
+                    </div>
+                )}
+
+                {/* Messages area */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-3" style={{ backgroundColor: COLORS.bgPage }}>
+                    {messages.length === 0 && (
+                        <div className="text-center py-8">
+                            <Bot className="h-10 w-10 mx-auto mb-3" style={{ color: COLORS.slainteBlue }} />
+                            <p className="text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
+                                Hi! I'm Finn
+                            </p>
+                            <p className="text-xs" style={{ color: COLORS.textSecondary }}>
+                                Your AI financial advisor. Ask me anything about your practice finances.
+                            </p>
+                        </div>
+                    )}
+
+                    {messages.map((message, index) => {
+                        const isUser = message.type === 'user';
+                        const isError = message.isError;
+
+                        return (
+                            <div
+                                key={message.id || index}
+                                style={{
+                                    display: 'flex',
+                                    justifyContent: isUser ? 'flex-end' : 'flex-start',
+                                }}
+                            >
+                                <div
+                                    className="max-w-[85%] px-3 py-2 rounded-lg text-sm"
+                                    style={{
+                                        backgroundColor: isUser
+                                            ? COLORS.slainteBlue
+                                            : isError
+                                                ? `${COLORS.expenseColor}15`
+                                                : COLORS.white,
+                                        color: isUser ? COLORS.white : COLORS.textPrimary,
+                                        border: isUser ? 'none' : isError
+                                            ? `1px solid ${COLORS.expenseColor}40`
+                                            : `1px solid ${COLORS.borderLight}`,
+                                        lineHeight: '1.5',
+                                        whiteSpace: 'pre-wrap'
+                                    }}
+                                >
+                                    {message.content}
+
+                                    {/* Tool action indicators */}
+                                    {message.toolActions?.length > 0 && (
+                                        <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                                            {message.toolActions.map((action, i) => (
+                                                <div key={i} style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '0.375rem',
+                                                    padding: '0.25rem 0.5rem',
+                                                    borderRadius: '0.375rem',
+                                                    backgroundColor: `${COLORS.slainteBlue}10`,
+                                                    fontSize: '0.7rem',
+                                                    color: COLORS.textSecondary
+                                                }}>
+                                                    <Activity size={10} style={{ color: COLORS.slainteBlue }} />
+                                                    <span>{action.description}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    })}
+
+                    {/* Loading indicator */}
+                    {isLoading && (
+                        <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                            <div className="px-3 py-2 rounded-lg" style={{ backgroundColor: COLORS.white, border: `1px solid ${COLORS.borderLight}` }}>
+                                <div className="flex items-center gap-2">
+                                    <Loader2 className="h-4 w-4 animate-spin" style={{ color: COLORS.slainteBlue }} />
+                                    <span className="text-sm" style={{ color: COLORS.textSecondary }}>Finn is thinking...</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <div ref={messagesEndRef} />
+                </div>
+
+                {/* Input area */}
+                <div className="p-3" style={{ backgroundColor: COLORS.white, borderTop: `1px solid ${COLORS.borderLight}` }}>
+                    <div className="flex space-x-2">
+                        <input
+                            ref={inputRef}
+                            type="text"
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && !isLoading && handleSend()}
+                            placeholder="Ask Finn about your finances..."
+                            disabled={isLoading}
+                            className="flex-1 p-3 rounded-lg text-sm"
+                            style={{ border: `1px solid ${COLORS.borderLight}` }}
+                            autoComplete="off"
+                        />
+                        <button
+                            onClick={handleSend}
+                            disabled={isLoading || !input.trim()}
+                            className="p-3 rounded-lg disabled:opacity-50"
+                            style={{ backgroundColor: COLORS.slainteBlue, color: COLORS.white }}
+                        >
+                            <Send className="h-5 w-5" />
+                        </button>
+                    </div>
+
+                    {/* Quick suggestions */}
+                    {messages.length === 0 && (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                            {['How is my practice doing?', 'Top expenses this year?', 'Income breakdown?', 'Any concerns?'].map((q) => (
+                                <button
+                                    key={q}
+                                    onClick={() => { setInput(q); }}
+                                    className="text-xs px-3 py-1.5 rounded-full"
+                                    style={{ backgroundColor: COLORS.bgPage, color: COLORS.textPrimary }}
+                                >
+                                    {q}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    };
+
+    // Bottom Navigation
     const BottomNav = () => {
-        const tabs = [
+        const allTabs = [
             { id: 'dashboard', icon: BarChart3, label: 'Dashboard' },
             { id: 'charts', icon: TrendingUp, label: 'Charts' },
             { id: 'label', icon: Tag, label: 'Label', badge: unidentifiedTransactions.length },
             { id: 'reports', icon: FileText, label: 'Reports' },
             { id: 'sync', icon: Cloud, label: 'Sync' },
-            { id: 'chat', icon: MessageCircle, label: 'Chat' }
+            { id: 'chat', icon: isCompanion ? Bot : MessageCircle, label: isCompanion ? 'Finn' : 'Chat' }
         ];
 
+        // Companion mode: only show Dashboard, Charts, Reports, Finn
+        const companionTabIds = ['dashboard', 'charts', 'reports', 'chat'];
+        const tabs = isCompanion ? allTabs.filter(t => companionTabIds.includes(t.id)) : allTabs;
+
         return (
-            <div className="px-4 py-2 fixed bottom-0 left-0 right-0 z-40" style={{ backgroundColor: COLORS.white, borderTop: `1px solid ${COLORS.lightGray}` }}>
+            <div className="px-4 py-2 fixed bottom-0 left-0 right-0 z-40" style={{ backgroundColor: COLORS.white, borderTop: `1px solid ${COLORS.borderLight}` }}>
                 <div className="flex justify-around max-w-sm mx-auto">
                     {tabs.map((tab) => (
                         <button
@@ -1684,7 +1907,7 @@ ${practiceContext}
                             className="flex flex-col items-center py-2 px-2 rounded-lg transition-colors"
                             style={currentTab === tab.id
                                 ? { color: COLORS.slainteBlue, backgroundColor: `${COLORS.slainteBlue}15` }
-                                : { color: COLORS.mediumGray }
+                                : { color: COLORS.textSecondary }
                             }
                         >
                             <div className="relative">
@@ -1739,7 +1962,7 @@ ${practiceContext}
         return (
             <div className="fixed inset-0 bg-white z-50 flex flex-col">
                 {/* Header with back button */}
-                <div className="flex items-center p-4 shadow-sm" style={{ borderBottom: `1px solid ${COLORS.lightGray}` }}>
+                <div className="flex items-center p-4 shadow-sm" style={{ borderBottom: `1px solid ${COLORS.borderLight}` }}>
                     <button
                         onClick={onClose}
                         className="p-2 rounded-lg mr-3"
@@ -1748,8 +1971,8 @@ ${practiceContext}
                         <ArrowDown className="h-5 w-5 transform rotate-90" />
                     </button>
                     <div className="flex-1">
-                        <h2 className="text-lg font-bold" style={{ color: COLORS.darkGray }}>GMS Health Check</h2>
-                        <p className="text-xs" style={{ color: COLORS.mediumGray }}>
+                        <h2 className="text-lg font-bold" style={{ color: COLORS.textPrimary }}>GMS Health Check</h2>
+                        <p className="text-xs" style={{ color: COLORS.textSecondary }}>
                             {new Date(report.generatedDate).toLocaleDateString('en-IE', {
                                 day: 'numeric',
                                 month: 'short',
@@ -1777,17 +2000,17 @@ ${practiceContext}
                             margin-top: 1.5rem;
                             margin-bottom: 0.75rem;
                             padding-bottom: 0.5rem;
-                            border-bottom: 1px solid ${COLORS.lightGray};
+                            border-bottom: 1px solid ${COLORS.borderLight};
                         }
                         .gms-report-content h3 {
-                            color: ${COLORS.darkGray};
+                            color: ${COLORS.textPrimary};
                             font-size: 1.1rem;
                             font-weight: 600;
                             margin-top: 1rem;
                             margin-bottom: 0.5rem;
                         }
                         .gms-report-content p {
-                            color: ${COLORS.darkGray};
+                            color: ${COLORS.textPrimary};
                             font-size: 0.95rem;
                             line-height: 1.6;
                             margin-bottom: 0.75rem;
@@ -1797,7 +2020,7 @@ ${practiceContext}
                             margin-bottom: 1rem;
                         }
                         .gms-report-content li {
-                            color: ${COLORS.darkGray};
+                            color: ${COLORS.textPrimary};
                             font-size: 0.95rem;
                             line-height: 1.6;
                             margin-bottom: 0.5rem;
@@ -1826,12 +2049,12 @@ ${practiceContext}
                             padding: 0.5rem;
                             text-align: left;
                             font-weight: 600;
-                            border: 1px solid ${COLORS.lightGray};
+                            border: 1px solid ${COLORS.borderLight};
                         }
                         .gms-report-content td {
                             padding: 0.5rem;
-                            border: 1px solid ${COLORS.lightGray};
-                            color: ${COLORS.darkGray};
+                            border: 1px solid ${COLORS.borderLight};
+                            color: ${COLORS.textPrimary};
                         }
                         .gms-report-content .alert {
                             background-color: ${COLORS.highlightYellow}30;
@@ -1866,10 +2089,10 @@ ${practiceContext}
                             margin: 1rem 0;
                         }
                         .gms-report-content .card {
-                            border: 1px solid ${COLORS.lightGray};
+                            border: 1px solid ${COLORS.borderLight};
                             border-radius: 8px;
                             padding: 1rem;
-                            background: ${COLORS.backgroundGray};
+                            background: ${COLORS.bgPage};
                         }
                         .gms-report-content strong {
                             color: ${COLORS.slainteBlue};
@@ -1895,16 +2118,36 @@ ${practiceContext}
         );
     };
 
+    // Format time ago for last synced
+    const formatTimeAgo = (timestamp) => {
+        if (!timestamp) return null;
+        const mins = Math.floor((Date.now() - timestamp) / 60000);
+        if (mins < 1) return 'Just now';
+        if (mins < 60) return `${mins}m ago`;
+        const hrs = Math.floor(mins / 60);
+        if (hrs < 24) return `${hrs}h ago`;
+        return `${Math.floor(hrs / 24)}d ago`;
+    };
+
     // Mobile Header Component with compact logo
     const MobileHeader = () => (
         <div
             className="fixed top-0 left-0 right-0 z-30 shadow-sm"
             style={{
                 backgroundColor: COLORS.white,
-                borderBottom: `1px solid ${COLORS.lightGray}`
+                borderBottom: `1px solid ${COLORS.borderLight}`
             }}
         >
-            <div className="flex items-center justify-center py-1 px-4">
+            <div className="flex items-center justify-between py-1 px-4">
+                {/* Left spacer for centering (or sync info in companion mode) */}
+                <div className="w-16 flex items-center">
+                    {isCompanion && lastSynced && (
+                        <span className="text-[9px]" style={{ color: COLORS.textSecondary }}>
+                            {formatTimeAgo(lastSynced)}
+                        </span>
+                    )}
+                </div>
+
                 {/* Compact mobile logo - 40% shorter banner */}
                 <svg
                     width="120"
@@ -1923,9 +2166,9 @@ ${practiceContext}
                         fontWeight="700"
                         letterSpacing="-1"
                     >
-                        <tspan fill={COLORS.darkGray}>sl</tspan>
+                        <tspan fill={COLORS.textPrimary}>sl</tspan>
                         <tspan fill={COLORS.slainteBlue}>[Ai]</tspan>
-                        <tspan fill={COLORS.darkGray}>nte</tspan>
+                        <tspan fill={COLORS.textPrimary}>nte</tspan>
                     </text>
 
                     {/* Finance subtitle - positioned lower */}
@@ -1940,6 +2183,20 @@ ${practiceContext}
                         Finance
                     </text>
                 </svg>
+
+                {/* Right: refresh button in companion mode */}
+                <div className="w-16 flex items-center justify-end">
+                    {isCompanion && onRefresh && (
+                        <button
+                            onClick={onRefresh}
+                            className="p-1 rounded"
+                            style={{ color: COLORS.textSecondary }}
+                            title="Refresh data"
+                        >
+                            <RefreshCw className="h-4 w-4" />
+                        </button>
+                    )}
+                </div>
             </div>
         </div>
     );
@@ -1949,14 +2206,22 @@ ${practiceContext}
         <div className="bg-gray-50 min-h-screen relative">
             <MobileHeader />
 
+            {/* Demo mode banner */}
+            {(isOffline || isDemoMode()) && (
+                <div className="fixed top-10 left-0 right-0 z-40 px-3 py-1.5 text-center text-xs font-medium"
+                     style={{ backgroundColor: COLORS.highlightYellow, color: COLORS.textPrimary }}>
+                    Offline Demo {getDemoApiKey() ? `\u00B7 API key expires in ${getDemoKeyTimeRemaining()}` : '\u00B7 Set API key for Finn chat'}
+                </div>
+            )}
+
             {/* Main content area with padding for fixed header and bottom nav */}
-            <div className="pt-10 pb-20">
+            <div className={(isOffline || isDemoMode()) ? "pt-16 pb-20" : "pt-10 pb-20"}>
                 {currentTab === 'dashboard' && <MobileDashboard />}
                 {currentTab === 'charts' && <MobileDataVisualisation />}
-                {currentTab === 'label' && <MobileTransactionLabeling />}
+                {!isCompanion && currentTab === 'label' && <MobileTransactionLabeling />}
                 {currentTab === 'reports' && <MobileReports />}
-                {currentTab === 'sync' && <SyncManager />}
-                {currentTab === 'chat' && <MobileChat />}
+                {!isCompanion && currentTab === 'sync' && <SyncManager />}
+                {currentTab === 'chat' && (isCompanion ? <CompanionFinnChat /> : <MobileChat />)}
             </div>
 
             {/* Detail Modal */}

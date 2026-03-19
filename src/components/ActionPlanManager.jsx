@@ -135,10 +135,10 @@ export default function ActionPlanManager({
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'completed': return '#059669';
-      case 'in_progress': return '#F59E0B';
-      case 'pending': return '#6B7280';
-      default: return '#6B7280';
+      case 'completed': return COLORS.successDark;
+      case 'in_progress': return COLORS.warning;
+      case 'pending': return COLORS.textMuted;
+      default: return COLORS.textMuted;
     }
   };
 
@@ -190,19 +190,19 @@ export default function ActionPlanManager({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
       <div
         className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col"
-        style={{ border: `1px solid ${COLORS.lightGray}` }}
+        style={{ border: `1px solid ${COLORS.borderLight}` }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: COLORS.lightGray }}>
+        <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: COLORS.borderLight }}>
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg" style={{ backgroundColor: COLORS.slainteBlue + '20' }}>
               <Target className="h-6 w-6" style={{ color: COLORS.slainteBlue }} />
             </div>
             <div>
-              <h2 className="text-xl font-bold" style={{ color: COLORS.darkGray }}>
+              <h2 className="text-xl font-bold" style={{ color: COLORS.textPrimary }}>
                 Action Plan
               </h2>
-              <p className="text-sm" style={{ color: COLORS.mediumGray }}>
+              <p className="text-sm" style={{ color: COLORS.textSecondary }}>
                 Track and manage your health check recommendations
               </p>
             </div>
@@ -211,36 +211,36 @@ export default function ActionPlanManager({
             onClick={onClose}
             className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
           >
-            <X className="h-5 w-5" style={{ color: COLORS.mediumGray }} />
+            <X className="h-5 w-5" style={{ color: COLORS.textSecondary }} />
           </button>
         </div>
 
         {/* Summary Stats */}
-        <div className="grid grid-cols-4 gap-4 p-4 border-b" style={{ borderColor: COLORS.lightGray, backgroundColor: COLORS.backgroundGray }}>
+        <div className="grid grid-cols-4 gap-4 p-4 border-b" style={{ borderColor: COLORS.borderLight, backgroundColor: COLORS.bgPage }}>
           <div className="text-center">
             <p className="text-2xl font-bold" style={{ color: COLORS.slainteBlue }}>{stats.total}</p>
-            <p className="text-xs" style={{ color: COLORS.mediumGray }}>Total Actions</p>
+            <p className="text-xs" style={{ color: COLORS.textSecondary }}>Total Actions</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold" style={{ color: '#F59E0B' }}>{stats.inProgress}</p>
-            <p className="text-xs" style={{ color: COLORS.mediumGray }}>In Progress</p>
+            <p className="text-2xl font-bold" style={{ color: COLORS.warning }}>{stats.inProgress}</p>
+            <p className="text-xs" style={{ color: COLORS.textSecondary }}>In Progress</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold" style={{ color: '#059669' }}>{stats.completed}</p>
-            <p className="text-xs" style={{ color: COLORS.mediumGray }}>Completed</p>
+            <p className="text-2xl font-bold" style={{ color: COLORS.successDark }}>{stats.completed}</p>
+            <p className="text-xs" style={{ color: COLORS.textSecondary }}>Completed</p>
           </div>
           <div className="text-center">
             <p className="text-2xl font-bold" style={{ color: COLORS.incomeColor }}>
               {formatCurrency(stats.completedPotential)}
             </p>
-            <p className="text-xs" style={{ color: COLORS.mediumGray }}>
+            <p className="text-xs" style={{ color: COLORS.textSecondary }}>
               of {formatCurrency(stats.totalPotential)} recovered
             </p>
           </div>
         </div>
 
         {/* Filter & Add Buttons */}
-        <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: COLORS.lightGray }}>
+        <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: COLORS.borderLight }}>
           <div className="flex gap-2">
             {['all', 'pending', 'in_progress', 'completed'].map(status => (
               <button
@@ -250,8 +250,8 @@ export default function ActionPlanManager({
                   filter === status ? 'text-white' : ''
                 }`}
                 style={{
-                  backgroundColor: filter === status ? COLORS.slainteBlue : COLORS.backgroundGray,
-                  color: filter === status ? 'white' : COLORS.mediumGray
+                  backgroundColor: filter === status ? COLORS.slainteBlue : COLORS.bgPage,
+                  color: filter === status ? 'white' : COLORS.textSecondary
                 }}
               >
                 {status === 'all' ? 'All' :
@@ -274,8 +274,8 @@ export default function ActionPlanManager({
 
         {/* Add from Recommendations Panel */}
         {showAddFromRecommendation && (
-          <div className="p-4 border-b" style={{ borderColor: COLORS.lightGray, backgroundColor: '#F0F9FF' }}>
-            <h3 className="font-semibold mb-3" style={{ color: COLORS.darkGray }}>
+          <div className="p-4 border-b" style={{ borderColor: COLORS.borderLight, backgroundColor: COLORS.slainteBlueLight }}>
+            <h3 className="font-semibold mb-3" style={{ color: COLORS.textPrimary }}>
               Select Recommendations to Add:
             </h3>
             <div className="space-y-2 max-h-48 overflow-y-auto">
@@ -283,18 +283,18 @@ export default function ActionPlanManager({
                 <div
                   key={rec.id}
                   className="flex items-center justify-between p-3 bg-white rounded-lg border"
-                  style={{ borderColor: COLORS.lightGray }}
+                  style={{ borderColor: COLORS.borderLight }}
                 >
                   <div className="flex items-center gap-3">
                     <div
                       className="w-2 h-2 rounded-full"
-                      style={{ backgroundColor: rec.type === 'priority' ? '#DC2626' : '#059669' }}
+                      style={{ backgroundColor: rec.type === 'priority' ? COLORS.error : COLORS.successDark }}
                     />
                     <div>
-                      <p className="font-medium text-sm" style={{ color: COLORS.darkGray }}>
+                      <p className="font-medium text-sm" style={{ color: COLORS.textPrimary }}>
                         {rec.title}
                       </p>
-                      <p className="text-xs" style={{ color: COLORS.mediumGray }}>
+                      <p className="text-xs" style={{ color: COLORS.textSecondary }}>
                         {rec.category} • {rec.actions?.length || 0} action items • {formatCurrency(rec.potential)}
                       </p>
                     </div>
@@ -318,11 +318,11 @@ export default function ActionPlanManager({
         <div className="flex-1 overflow-y-auto p-4">
           {sortedActions.length === 0 ? (
             <div className="text-center py-12">
-              <Target className="h-12 w-12 mx-auto mb-4" style={{ color: COLORS.lightGray }} />
-              <p className="font-medium" style={{ color: COLORS.mediumGray }}>
+              <Target className="h-12 w-12 mx-auto mb-4" style={{ color: COLORS.borderLight }} />
+              <p className="font-medium" style={{ color: COLORS.textSecondary }}>
                 {filter === 'all' ? 'No action items yet' : `No ${filter.replace('_', ' ')} actions`}
               </p>
-              <p className="text-sm mt-1" style={{ color: COLORS.lightGray }}>
+              <p className="text-sm mt-1" style={{ color: COLORS.borderLight }}>
                 {filter === 'all' && 'Add recommendations from your health check to get started'}
               </p>
             </div>
@@ -351,8 +351,8 @@ export default function ActionPlanManager({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between p-4 border-t" style={{ borderColor: COLORS.lightGray }}>
-          <p className="text-sm" style={{ color: COLORS.mediumGray }}>
+        <div className="flex items-center justify-between p-4 border-t" style={{ borderColor: COLORS.borderLight }}>
+          <p className="text-sm" style={{ color: COLORS.textSecondary }}>
             {actions.length} action{actions.length !== 1 ? 's' : ''} total
           </p>
           <button
@@ -409,7 +409,7 @@ function ActionCard({
   return (
     <div
       className={`border rounded-lg overflow-hidden transition-all ${isOverdue ? 'border-red-300' : ''}`}
-      style={{ borderColor: isOverdue ? '#FCA5A5' : COLORS.lightGray }}
+      style={{ borderColor: isOverdue ? COLORS.errorLight : COLORS.borderLight }}
     >
       {/* Header */}
       <button
@@ -419,7 +419,7 @@ function ActionCard({
         <div className="flex items-start gap-3 flex-1 text-left">
           <div
             className="flex items-center justify-center w-8 h-8 rounded-full text-white flex-shrink-0"
-            style={{ backgroundColor: action.type === 'priority' ? '#DC2626' : '#059669' }}
+            style={{ backgroundColor: action.type === 'priority' ? COLORS.error : COLORS.successDark }}
           >
             {action.type === 'priority' ? (
               <AlertCircle className="h-4 w-4" />
@@ -429,7 +429,7 @@ function ActionCard({
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <h4 className="font-medium truncate" style={{ color: COLORS.darkGray }}>
+              <h4 className="font-medium truncate" style={{ color: COLORS.textPrimary }}>
                 {action.title}
               </h4>
               {isOverdue && (
@@ -438,7 +438,7 @@ function ActionCard({
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-3 mt-1 text-sm" style={{ color: COLORS.mediumGray }}>
+            <div className="flex items-center gap-3 mt-1 text-sm" style={{ color: COLORS.textSecondary }}>
               <span>{action.category}</span>
               <span>•</span>
               <span className="flex items-center gap-1" style={{ color: getStatusColor(action.status) }}>
@@ -469,34 +469,34 @@ function ActionCard({
             <p className="font-bold" style={{ color: COLORS.incomeColor }}>
               {formatCurrency(action.potentialValue)}
             </p>
-            <p className="text-xs" style={{ color: COLORS.mediumGray }}>
+            <p className="text-xs" style={{ color: COLORS.textSecondary }}>
               {action.effort} effort
             </p>
           </div>
           {isExpanded ? (
-            <ChevronUp className="h-5 w-5 flex-shrink-0 ml-2" style={{ color: COLORS.mediumGray }} />
+            <ChevronUp className="h-5 w-5 flex-shrink-0 ml-2" style={{ color: COLORS.textSecondary }} />
           ) : (
-            <ChevronDown className="h-5 w-5 flex-shrink-0 ml-2" style={{ color: COLORS.mediumGray }} />
+            <ChevronDown className="h-5 w-5 flex-shrink-0 ml-2" style={{ color: COLORS.textSecondary }} />
           )}
         </div>
       </button>
 
       {/* Expanded Content */}
       {isExpanded && (
-        <div className="px-4 pb-4 border-t" style={{ borderColor: COLORS.lightGray, backgroundColor: COLORS.backgroundGray }}>
+        <div className="px-4 pb-4 border-t" style={{ borderColor: COLORS.borderLight, backgroundColor: COLORS.bgPage }}>
           {isEditing ? (
             /* Edit Form */
             <div className="pt-4 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                  <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                     Assigned To
                   </label>
                   <select
                     value={editForm.assignedTo}
                     onChange={(e) => setEditForm({ ...editForm, assignedTo: e.target.value })}
                     className="w-full px-3 py-2 border rounded-lg text-sm"
-                    style={{ borderColor: COLORS.lightGray }}
+                    style={{ borderColor: COLORS.borderLight }}
                   >
                     <option value="">Unassigned</option>
                     {staffList.map((staff, idx) => (
@@ -507,7 +507,7 @@ function ActionCard({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                  <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                     Due Date
                   </label>
                   <input
@@ -515,13 +515,13 @@ function ActionCard({
                     value={editForm.dueDate}
                     onChange={(e) => setEditForm({ ...editForm, dueDate: e.target.value })}
                     className="w-full px-3 py-2 border rounded-lg text-sm"
-                    style={{ borderColor: COLORS.lightGray }}
+                    style={{ borderColor: COLORS.borderLight }}
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                   Status
                 </label>
                 <div className="flex gap-2">
@@ -531,8 +531,8 @@ function ActionCard({
                       onClick={() => setEditForm({ ...editForm, status })}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2`}
                       style={{
-                        backgroundColor: editForm.status === status ? getStatusColor(status) : COLORS.backgroundGray,
-                        color: editForm.status === status ? 'white' : COLORS.mediumGray
+                        backgroundColor: editForm.status === status ? getStatusColor(status) : COLORS.bgPage,
+                        color: editForm.status === status ? 'white' : COLORS.textSecondary
                       }}
                     >
                       {status === 'pending' && <Clock className="h-4 w-4" />}
@@ -545,7 +545,7 @@ function ActionCard({
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                   Notes
                 </label>
                 <textarea
@@ -554,7 +554,7 @@ function ActionCard({
                   placeholder="Add notes about this action..."
                   rows={3}
                   className="w-full px-3 py-2 border rounded-lg text-sm resize-none"
-                  style={{ borderColor: COLORS.lightGray }}
+                  style={{ borderColor: COLORS.borderLight }}
                 />
               </div>
 
@@ -566,7 +566,7 @@ function ActionCard({
                   onChange={(e) => setEditForm({ ...editForm, showOnDashboard: e.target.checked })}
                   className="rounded"
                 />
-                <label htmlFor={`dashboard-${action.id}`} className="text-sm" style={{ color: COLORS.mediumGray }}>
+                <label htmlFor={`dashboard-${action.id}`} className="text-sm" style={{ color: COLORS.textSecondary }}>
                   Show reminder on dashboard
                 </label>
               </div>
@@ -575,7 +575,7 @@ function ActionCard({
                 <button
                   onClick={onCancelEdit}
                   className="px-4 py-2 rounded-lg text-sm font-medium border"
-                  style={{ borderColor: COLORS.lightGray, color: COLORS.mediumGray }}
+                  style={{ borderColor: COLORS.borderLight, color: COLORS.textSecondary }}
                 >
                   Cancel
                 </button>
@@ -593,22 +593,22 @@ function ActionCard({
             /* View Mode */
             <div className="pt-4">
               {action.description && (
-                <p className="text-sm mb-4 p-3 bg-white rounded border" style={{ borderColor: COLORS.lightGray, color: COLORS.mediumGray }}>
+                <p className="text-sm mb-4 p-3 bg-white rounded border" style={{ borderColor: COLORS.borderLight, color: COLORS.textSecondary }}>
                   {action.description}
                 </p>
               )}
 
               {action.notes && (
                 <div className="mb-4">
-                  <p className="text-xs font-medium mb-1" style={{ color: COLORS.darkGray }}>Notes:</p>
-                  <p className="text-sm p-3 bg-white rounded border" style={{ borderColor: COLORS.lightGray, color: COLORS.mediumGray }}>
+                  <p className="text-xs font-medium mb-1" style={{ color: COLORS.textPrimary }}>Notes:</p>
+                  <p className="text-sm p-3 bg-white rounded border" style={{ borderColor: COLORS.borderLight, color: COLORS.textSecondary }}>
                     {action.notes}
                   </p>
                 </div>
               )}
 
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4 text-sm" style={{ color: COLORS.mediumGray }}>
+                <div className="flex items-center gap-4 text-sm" style={{ color: COLORS.textSecondary }}>
                   <span>Created: {formatDate(action.createdDate)}</span>
                   {action.completedDate && (
                     <span className="text-green-600">
@@ -626,7 +626,7 @@ function ActionCard({
                   <button
                     onClick={onEdit}
                     className="px-3 py-1.5 rounded text-sm font-medium flex items-center gap-1 border"
-                    style={{ borderColor: COLORS.lightGray, color: COLORS.slainteBlue }}
+                    style={{ borderColor: COLORS.borderLight, color: COLORS.slainteBlue }}
                   >
                     <Edit3 className="h-3 w-3" />
                     Edit

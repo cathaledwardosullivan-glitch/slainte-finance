@@ -122,6 +122,9 @@ export default function StaffProfileForm({
     other: ''
   });
 
+  // Panel numbers per partner (keyed by name)
+  const [panelNumbers, setPanelNumbers] = useState({});
+
   // Track which field is focused for Finn's tips
   const [focusedField, setFocusedField] = useState(null);
 
@@ -144,6 +147,12 @@ export default function StaffProfileForm({
       }
       if (initialProfile.gps?.partners?.length > 0) {
         newFormData.partners = initialProfile.gps.partners.map(p => p.name).join(', ');
+        // Load existing panel numbers
+        const existingPanelNums = {};
+        initialProfile.gps.partners.forEach(p => {
+          if (p.name && p.panelNumber) existingPanelNums[p.name] = p.panelNumber;
+        });
+        if (Object.keys(existingPanelNums).length > 0) setPanelNumbers(existingPanelNums);
       }
       if (initialProfile.gps?.salaried?.length > 0) {
         newFormData.salaried = initialProfile.gps.salaried.map(g => g.name).join(', ');
@@ -223,7 +232,10 @@ export default function StaffProfileForm({
         ehrSystem: formData.ehrSystem
       },
       gps: {
-        partners: parseNames(formData.partners).map(name => ({ name })),
+        partners: parseNames(formData.partners).map(name => ({
+          name,
+          ...(panelNumbers[name] ? { panelNumber: panelNumbers[name] } : {})
+        })),
         salaried: parseNames(formData.salaried).map(name => ({ name }))
       },
       staff: [],
@@ -309,7 +321,7 @@ export default function StaffProfileForm({
           backgroundColor: COLORS.white,
           borderRadius: '16px',
           boxShadow: '0 4px 24px rgba(0, 0, 0, 0.08)',
-          border: `1px solid ${COLORS.lightGray}`,
+          border: `1px solid ${COLORS.borderLight}`,
           padding: '1.25rem',
           flex: '0 0 auto'
         }}>
@@ -334,8 +346,8 @@ export default function StaffProfileForm({
               F
             </div>
             <div>
-              <div style={{ fontWeight: 600, color: COLORS.darkGray }}>Finn</div>
-              <div style={{ fontSize: '0.75rem', color: COLORS.mediumGray }}>Your Guide</div>
+              <div style={{ fontWeight: 600, color: COLORS.textPrimary }}>Finn</div>
+              <div style={{ fontSize: '0.75rem', color: COLORS.textSecondary }}>Your Guide</div>
             </div>
           </div>
 
@@ -344,7 +356,7 @@ export default function StaffProfileForm({
             backgroundColor: `${COLORS.slainteBlue}08`,
             borderRadius: '10px',
             fontSize: '0.9375rem',
-            color: COLORS.darkGray,
+            color: COLORS.textPrimary,
             lineHeight: 1.6
           }}>
             {getCurrentTip() || (
@@ -362,13 +374,13 @@ export default function StaffProfileForm({
           backgroundColor: COLORS.white,
           borderRadius: '16px',
           boxShadow: '0 4px 24px rgba(0, 0, 0, 0.08)',
-          border: `1px solid ${COLORS.lightGray}`,
+          border: `1px solid ${COLORS.borderLight}`,
           padding: '1.25rem'
         }}>
           <h3 style={{
             fontSize: '0.875rem',
             fontWeight: 600,
-            color: COLORS.mediumGray,
+            color: COLORS.textSecondary,
             marginBottom: '1rem',
             textTransform: 'uppercase',
             letterSpacing: '0.5px'
@@ -391,10 +403,10 @@ export default function StaffProfileForm({
                   width: '16px',
                   height: '16px',
                   borderRadius: '50%',
-                  border: `2px solid ${COLORS.lightGray}`
+                  border: `2px solid ${COLORS.borderLight}`
                 }} />
               )}
-              <span style={{ color: formData.practiceName.trim() ? COLORS.darkGray : COLORS.mediumGray }}>
+              <span style={{ color: formData.practiceName.trim() ? COLORS.textPrimary : COLORS.textSecondary }}>
                 Practice name
               </span>
             </div>
@@ -413,10 +425,10 @@ export default function StaffProfileForm({
                   width: '16px',
                   height: '16px',
                   borderRadius: '50%',
-                  border: `2px solid ${COLORS.lightGray}`
+                  border: `2px solid ${COLORS.borderLight}`
                 }} />
               )}
-              <span style={{ color: formData.location.trim() ? COLORS.darkGray : COLORS.mediumGray }}>
+              <span style={{ color: formData.location.trim() ? COLORS.textPrimary : COLORS.textSecondary }}>
                 Location
               </span>
             </div>
@@ -435,10 +447,10 @@ export default function StaffProfileForm({
                   width: '16px',
                   height: '16px',
                   borderRadius: '50%',
-                  border: `2px solid ${COLORS.lightGray}`
+                  border: `2px solid ${COLORS.borderLight}`
                 }} />
               )}
-              <span style={{ color: parseNames(formData.partners).length > 0 ? COLORS.darkGray : COLORS.mediumGray }}>
+              <span style={{ color: parseNames(formData.partners).length > 0 ? COLORS.textPrimary : COLORS.textSecondary }}>
                 GP Partners ({parseNames(formData.partners).length})
               </span>
             </div>
@@ -451,10 +463,10 @@ export default function StaffProfileForm({
               fontSize: '0.875rem',
               marginTop: '0.5rem',
               paddingTop: '0.75rem',
-              borderTop: `1px solid ${COLORS.lightGray}`
+              borderTop: `1px solid ${COLORS.borderLight}`
             }}>
               <Users style={{ width: '16px', height: '16px', color: COLORS.slainteBlue }} />
-              <span style={{ color: COLORS.darkGray }}>
+              <span style={{ color: COLORS.textPrimary }}>
                 {getStaffCount()} staff member{getStaffCount() !== 1 ? 's' : ''} total
               </span>
             </div>
@@ -468,7 +480,7 @@ export default function StaffProfileForm({
         backgroundColor: COLORS.white,
         borderRadius: '16px',
         boxShadow: '0 4px 24px rgba(0, 0, 0, 0.08)',
-        border: `1px solid ${COLORS.lightGray}`,
+        border: `1px solid ${COLORS.borderLight}`,
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column'
@@ -476,8 +488,8 @@ export default function StaffProfileForm({
         {/* Header */}
         <div style={{
           padding: '1.25rem 1.5rem',
-          borderBottom: `1px solid ${COLORS.lightGray}`,
-          backgroundColor: COLORS.backgroundGray
+          borderBottom: `1px solid ${COLORS.borderLight}`,
+          backgroundColor: COLORS.bgPage
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <div style={{
@@ -495,14 +507,14 @@ export default function StaffProfileForm({
               <h2 style={{
                 fontSize: '1.25rem',
                 fontWeight: 600,
-                color: COLORS.darkGray,
+                color: COLORS.textPrimary,
                 margin: 0
               }}>
                 Practice Profile
               </h2>
               <p style={{
                 fontSize: '0.875rem',
-                color: COLORS.mediumGray,
+                color: COLORS.textSecondary,
                 margin: 0
               }}>
                 Enter your practice and staff details
@@ -530,7 +542,7 @@ export default function StaffProfileForm({
               marginBottom: '1.5rem'
             }}>
               <Loader style={{ width: '16px', height: '16px', color: COLORS.slainteBlue, animation: 'spin 1s linear infinite', flexShrink: 0 }} />
-              <span style={{ fontSize: '0.8125rem', color: COLORS.darkGray }}>
+              <span style={{ fontSize: '0.8125rem', color: COLORS.textPrimary }}>
                 Still analysing your website... Fields will auto-populate when ready. You can fill in details manually in the meantime.
               </span>
               <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
@@ -542,7 +554,7 @@ export default function StaffProfileForm({
             <h3 style={{
               fontSize: '0.875rem',
               fontWeight: 600,
-              color: COLORS.mediumGray,
+              color: COLORS.textSecondary,
               textTransform: 'uppercase',
               letterSpacing: '0.5px',
               marginBottom: '1rem'
@@ -558,7 +570,7 @@ export default function StaffProfileForm({
                 gap: '0.5rem',
                 fontSize: '0.875rem',
                 fontWeight: 500,
-                color: COLORS.darkGray,
+                color: COLORS.textPrimary,
                 marginBottom: '0.375rem'
               }}>
                 <Building2 style={{ width: '14px', height: '14px', color: COLORS.slainteBlue }} />
@@ -575,7 +587,7 @@ export default function StaffProfileForm({
                   width: '100%',
                   padding: '0.75rem 1rem',
                   fontSize: '1rem',
-                  border: `2px solid ${errors.practiceName ? COLORS.expenseColor : COLORS.lightGray}`,
+                  border: `2px solid ${errors.practiceName ? COLORS.expenseColor : COLORS.borderLight}`,
                   borderRadius: '8px',
                   outline: 'none',
                   transition: 'border-color 0.2s'
@@ -604,7 +616,7 @@ export default function StaffProfileForm({
                 gap: '0.5rem',
                 fontSize: '0.875rem',
                 fontWeight: 500,
-                color: COLORS.darkGray,
+                color: COLORS.textPrimary,
                 marginBottom: '0.375rem'
               }}>
                 <MapPin style={{ width: '14px', height: '14px', color: COLORS.slainteBlue }} />
@@ -621,7 +633,7 @@ export default function StaffProfileForm({
                   width: '100%',
                   padding: '0.75rem 1rem',
                   fontSize: '1rem',
-                  border: `2px solid ${errors.location ? COLORS.expenseColor : COLORS.lightGray}`,
+                  border: `2px solid ${errors.location ? COLORS.expenseColor : COLORS.borderLight}`,
                   borderRadius: '8px',
                   outline: 'none',
                   transition: 'border-color 0.2s'
@@ -650,7 +662,7 @@ export default function StaffProfileForm({
                 gap: '0.5rem',
                 fontSize: '0.875rem',
                 fontWeight: 500,
-                color: COLORS.darkGray,
+                color: COLORS.textPrimary,
                 marginBottom: '0.375rem'
               }}>
                 <Monitor style={{ width: '14px', height: '14px', color: COLORS.slainteBlue }} />
@@ -665,7 +677,7 @@ export default function StaffProfileForm({
                   width: '100%',
                   padding: '0.75rem 1rem',
                   fontSize: '1rem',
-                  border: `2px solid ${COLORS.lightGray}`,
+                  border: `2px solid ${COLORS.borderLight}`,
                   borderRadius: '8px',
                   outline: 'none',
                   transition: 'border-color 0.2s',
@@ -685,7 +697,7 @@ export default function StaffProfileForm({
             <h3 style={{
               fontSize: '0.875rem',
               fontWeight: 600,
-              color: COLORS.mediumGray,
+              color: COLORS.textSecondary,
               textTransform: 'uppercase',
               letterSpacing: '0.5px',
               marginBottom: '1rem'
@@ -711,7 +723,7 @@ export default function StaffProfileForm({
                       gap: '0.5rem',
                       fontSize: '0.875rem',
                       fontWeight: 500,
-                      color: COLORS.darkGray,
+                      color: COLORS.textPrimary,
                       marginBottom: '0.375rem'
                     }}>
                       <Icon style={{ width: '14px', height: '14px', color: COLORS.slainteBlue }} />
@@ -729,7 +741,7 @@ export default function StaffProfileForm({
                         width: '100%',
                         padding: '0.625rem 0.875rem',
                         fontSize: '0.9375rem',
-                        border: `2px solid ${hasError ? COLORS.expenseColor : COLORS.lightGray}`,
+                        border: `2px solid ${hasError ? COLORS.expenseColor : COLORS.borderLight}`,
                         borderRadius: '8px',
                         outline: 'none',
                         transition: 'border-color 0.2s'
@@ -748,6 +760,36 @@ export default function StaffProfileForm({
                         {errors[role.key]}
                       </p>
                     )}
+
+                    {/* Panel number fields for GP partners */}
+                    {role.key === 'partners' && parseNames(formData.partners).length > 0 && (
+                      <div style={{ marginTop: '0.5rem' }}>
+                        <p style={{ fontSize: '0.7rem', color: COLORS.textSecondary, marginBottom: '0.375rem' }}>
+                          GMS Panel Numbers (optional — auto-filled when PCRS statements are uploaded)
+                        </p>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                          {parseNames(formData.partners).map(name => (
+                            <div key={name} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <span style={{ fontSize: '0.8rem', color: COLORS.textSecondary, minWidth: '120px' }}>{name}</span>
+                              <input
+                                type="text"
+                                value={panelNumbers[name] || ''}
+                                onChange={(e) => setPanelNumbers(prev => ({ ...prev, [name]: e.target.value.replace(/\D/g, '').slice(0, 6) }))}
+                                placeholder="e.g. 60265"
+                                style={{
+                                  width: '100px',
+                                  padding: '0.25rem 0.5rem',
+                                  fontSize: '0.8rem',
+                                  border: `1px solid ${COLORS.borderLight}`,
+                                  borderRadius: '4px',
+                                  outline: 'none'
+                                }}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -755,7 +797,7 @@ export default function StaffProfileForm({
 
             <p style={{
               fontSize: '0.75rem',
-              color: COLORS.mediumGray,
+              color: COLORS.textSecondary,
               marginTop: '1rem',
               fontStyle: 'italic'
             }}>
@@ -767,7 +809,7 @@ export default function StaffProfileForm({
         {/* Footer with buttons */}
         <div style={{
           padding: '1rem 1.5rem',
-          borderTop: `1px solid ${COLORS.lightGray}`,
+          borderTop: `1px solid ${COLORS.borderLight}`,
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -779,9 +821,9 @@ export default function StaffProfileForm({
               padding: '0.75rem 1.5rem',
               fontSize: '0.9375rem',
               fontWeight: 500,
-              color: COLORS.darkGray,
+              color: COLORS.textPrimary,
               backgroundColor: COLORS.white,
-              border: `2px solid ${COLORS.lightGray}`,
+              border: `2px solid ${COLORS.borderLight}`,
               borderRadius: '8px',
               cursor: 'pointer'
             }}

@@ -9,6 +9,21 @@ import {
 } from '../../utils/artifactBuilder';
 import COLORS from '../../utils/colors';
 
+/** Strip currency symbols from d3-format strings to prevent vega-embed errors */
+const sanitiseFormatStrings = (obj) => {
+  if (obj == null || typeof obj !== 'object') return obj;
+  if (Array.isArray(obj)) return obj.map(sanitiseFormatStrings);
+  const out = {};
+  for (const [key, val] of Object.entries(obj)) {
+    if (key === 'format' && typeof val === 'string') {
+      out[key] = val.replace(/^[€$£¥₹]+/, '');
+    } else {
+      out[key] = sanitiseFormatStrings(val);
+    }
+  }
+  return out;
+};
+
 // Lazy mermaid initialization - only load when needed
 let mermaidInstance = null;
 let mermaidInitialized = false;
@@ -31,12 +46,12 @@ async function getMermaid() {
             curve: 'basis'
           },
           themeVariables: {
-            primaryColor: '#2563eb',
-            primaryTextColor: '#1f2937',
-            primaryBorderColor: '#3b82f6',
-            lineColor: '#6b7280',
-            secondaryColor: '#eff6ff',
-            tertiaryColor: '#f3f4f6'
+            primaryColor: COLORS.slainteBlue,
+            primaryTextColor: COLORS.textPrimary,
+            primaryBorderColor: COLORS.slainteBlue,
+            lineColor: COLORS.textMuted,
+            secondaryColor: COLORS.slainteBlueLight,
+            tertiaryColor: COLORS.bgHover
           }
         });
         mermaidInitialized = true;
@@ -136,7 +151,7 @@ export function ArtifactViewer({ artifact, onClose }) {
           // Parse the Vega-Lite spec
           let spec;
           try {
-            spec = JSON.parse(artifact.content);
+            spec = sanitiseFormatStrings(JSON.parse(artifact.content));
           } catch (parseError) {
             setVegaError('Invalid chart specification: ' + parseError.message);
             setVegaLoading(false);
@@ -202,11 +217,11 @@ export function ArtifactViewer({ artifact, onClose }) {
             margin: 40px auto;
             padding: 20px;
             line-height: 1.6;
-            color: #333;
+            color: ${COLORS.textPrimary};
           }
-          h1 { color: #1e40af; border-bottom: 3px solid #1e40af; padding-bottom: 10px; }
-          h2 { color: #2563eb; margin-top: 30px; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px; }
-          h3 { color: #3b82f6; margin-top: 20px; }
+          h1 { color: ${COLORS.infoText}; border-bottom: 3px solid ${COLORS.infoText}; padding-bottom: 10px; }
+          h2 { color: ${COLORS.slainteBlue}; margin-top: 30px; border-bottom: 1px solid ${COLORS.borderLight}; padding-bottom: 8px; }
+          h3 { color: ${COLORS.slainteBlue}; margin-top: 20px; }
           table.artifact-table {
             width: 100%;
             border-collapse: collapse;
@@ -214,22 +229,22 @@ export function ArtifactViewer({ artifact, onClose }) {
           }
           table.artifact-table th,
           table.artifact-table td {
-            border: 1px solid #ddd;
+            border: 1px solid ${COLORS.borderLight};
             padding: 12px;
             text-align: left;
           }
           table.artifact-table th {
-            background-color: #f3f4f6;
+            background-color: ${COLORS.bgHover};
             font-weight: 600;
           }
           ul { margin-left: 20px; }
           li { margin: 8px 0; }
           .meta {
-            color: #6b7280;
+            color: ${COLORS.textMuted};
             font-size: 14px;
             margin-top: 40px;
             padding-top: 20px;
-            border-top: 1px solid #e5e7eb;
+            border-top: 1px solid ${COLORS.borderLight};
           }
           @media print {
             body { margin: 0; padding: 20px; }
@@ -281,7 +296,7 @@ export function ArtifactViewer({ artifact, onClose }) {
     <div style={{
       position: 'fixed',
       inset: 0,
-      backgroundColor: 'rgba(0,0,0,0.5)',
+      backgroundColor: COLORS.overlayDark,
       zIndex: 50,
       display: 'flex',
       alignItems: 'center',
@@ -301,7 +316,7 @@ export function ArtifactViewer({ artifact, onClose }) {
         {/* Header */}
         <div style={{
           padding: '1.5rem',
-          borderBottom: `1px solid ${COLORS.lightGray}`,
+          borderBottom: `1px solid ${COLORS.borderLight}`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between'
@@ -315,10 +330,10 @@ export function ArtifactViewer({ artifact, onClose }) {
               <FileText style={{ height: '1.5rem', width: '1.5rem', color: COLORS.slainteBlue }} />
             )}
             <div>
-              <h3 style={{ fontWeight: 700, fontSize: '1.125rem', color: COLORS.darkGray }}>
+              <h3 style={{ fontWeight: 700, fontSize: '1.125rem', color: COLORS.textPrimary }}>
                 {artifact.title}
               </h3>
-              <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>
+              <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>
                 {isMermaid ? 'Diagram' : isVega ? 'Chart' : 'Report'} • Created: {new Date(artifact.created_at).toLocaleString()}
               </p>
             </div>
@@ -333,7 +348,7 @@ export function ArtifactViewer({ artifact, onClose }) {
               cursor: 'pointer',
               transition: 'background-color 0.2s'
             }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.lightGray}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.borderLight}
             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
           >
             <X style={{ height: '1.25rem', width: '1.25rem' }} />
@@ -343,7 +358,7 @@ export function ArtifactViewer({ artifact, onClose }) {
         {/* Actions */}
         <div style={{
           padding: '0.75rem 1.5rem',
-          borderBottom: `1px solid ${COLORS.lightGray}`,
+          borderBottom: `1px solid ${COLORS.borderLight}`,
           display: 'flex',
           gap: '0.5rem'
         }}>
@@ -351,8 +366,8 @@ export function ArtifactViewer({ artifact, onClose }) {
             onClick={handleSaveToReports}
             style={{
               padding: '0.5rem 1rem',
-              backgroundColor: saved ? '#10b98120' : `${COLORS.slainteBlue}20`,
-              color: saved ? '#10b981' : COLORS.slainteBlue,
+              backgroundColor: saved ? `${COLORS.success}20` : `${COLORS.slainteBlue}20`,
+              color: saved ? COLORS.success : COLORS.slainteBlue,
               borderRadius: '0.5rem',
               border: 'none',
               display: 'flex',
@@ -377,8 +392,8 @@ export function ArtifactViewer({ artifact, onClose }) {
             onClick={handlePrint}
             style={{
               padding: '0.5rem 1rem',
-              backgroundColor: `${COLORS.mediumGray}20`,
-              color: COLORS.darkGray,
+              backgroundColor: `${COLORS.textSecondary}20`,
+              color: COLORS.textPrimary,
               borderRadius: '0.5rem',
               border: 'none',
               display: 'flex',
@@ -388,8 +403,8 @@ export function ArtifactViewer({ artifact, onClose }) {
               fontWeight: 500,
               cursor: 'pointer'
             }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${COLORS.mediumGray}30`}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = `${COLORS.mediumGray}20`}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${COLORS.textSecondary}30`}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = `${COLORS.textSecondary}20`}
           >
             <Printer style={{ height: '1rem', width: '1rem' }} />
             Print / PDF
@@ -399,8 +414,8 @@ export function ArtifactViewer({ artifact, onClose }) {
             onClick={handleDownload}
             style={{
               padding: '0.5rem 1rem',
-              backgroundColor: `${COLORS.mediumGray}20`,
-              color: COLORS.darkGray,
+              backgroundColor: `${COLORS.textSecondary}20`,
+              color: COLORS.textPrimary,
               borderRadius: '0.5rem',
               border: 'none',
               display: 'flex',
@@ -410,8 +425,8 @@ export function ArtifactViewer({ artifact, onClose }) {
               fontWeight: 500,
               cursor: 'pointer'
             }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${COLORS.mediumGray}30`}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = `${COLORS.mediumGray}20`}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${COLORS.textSecondary}30`}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = `${COLORS.textSecondary}20`}
           >
             <Download style={{ height: '1rem', width: '1rem' }} />
             Download
@@ -421,8 +436,8 @@ export function ArtifactViewer({ artifact, onClose }) {
             onClick={handleCopy}
             style={{
               padding: '0.5rem 1rem',
-              backgroundColor: COLORS.backgroundGray,
-              color: COLORS.darkGray,
+              backgroundColor: COLORS.bgPage,
+              color: COLORS.textPrimary,
               borderRadius: '0.5rem',
               border: 'none',
               display: 'flex',
@@ -432,8 +447,8 @@ export function ArtifactViewer({ artifact, onClose }) {
               fontWeight: 500,
               cursor: 'pointer'
             }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.lightGray}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.backgroundGray}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.borderLight}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.bgPage}
           >
             <Copy style={{ height: '1rem', width: '1rem' }} />
             {copied ? 'Copied!' : 'Copy'}
@@ -464,24 +479,24 @@ export function ArtifactViewer({ artifact, onClose }) {
               ) : mermaidError ? (
                 <div style={{
                   padding: '2rem',
-                  backgroundColor: '#fef2f2',
+                  backgroundColor: COLORS.errorLighter,
                   borderRadius: '0.5rem',
-                  border: '1px solid #fecaca'
+                  border: `1px solid ${COLORS.errorLight}`
                 }}>
-                  <p style={{ color: '#dc2626', fontWeight: 600, marginBottom: '0.5rem' }}>
+                  <p style={{ color: COLORS.error, fontWeight: 600, marginBottom: '0.5rem' }}>
                     Failed to render diagram
                   </p>
-                  <p style={{ color: '#7f1d1d', fontSize: '0.875rem' }}>
+                  <p style={{ color: COLORS.errorText, fontSize: '0.875rem' }}>
                     {mermaidError}
                   </p>
                   <details style={{ marginTop: '1rem', textAlign: 'left' }}>
-                    <summary style={{ cursor: 'pointer', color: COLORS.mediumGray, fontSize: '0.875rem' }}>
+                    <summary style={{ cursor: 'pointer', color: COLORS.textSecondary, fontSize: '0.875rem' }}>
                       View raw diagram code
                     </summary>
                     <pre style={{
                       marginTop: '0.5rem',
                       padding: '1rem',
-                      backgroundColor: COLORS.backgroundGray,
+                      backgroundColor: COLORS.bgPage,
                       borderRadius: '0.25rem',
                       overflow: 'auto',
                       fontSize: '0.75rem',
@@ -492,7 +507,7 @@ export function ArtifactViewer({ artifact, onClose }) {
                   </details>
                 </div>
               ) : (
-                <div style={{ padding: '2rem', color: COLORS.mediumGray }}>
+                <div style={{ padding: '2rem', color: COLORS.textSecondary }}>
                   <div className="animate-pulse">Rendering diagram...</div>
                 </div>
               )}
@@ -501,30 +516,30 @@ export function ArtifactViewer({ artifact, onClose }) {
             // Vega-Lite chart rendering
             <div className="vega-container" style={{ textAlign: 'center' }}>
               {vegaLoading ? (
-                <div style={{ padding: '2rem', color: COLORS.mediumGray }}>
+                <div style={{ padding: '2rem', color: COLORS.textSecondary }}>
                   <div className="animate-pulse">Rendering chart...</div>
                 </div>
               ) : vegaError ? (
                 <div style={{
                   padding: '2rem',
-                  backgroundColor: '#fef2f2',
+                  backgroundColor: COLORS.errorLighter,
                   borderRadius: '0.5rem',
-                  border: '1px solid #fecaca'
+                  border: `1px solid ${COLORS.errorLight}`
                 }}>
-                  <p style={{ color: '#dc2626', fontWeight: 600, marginBottom: '0.5rem' }}>
+                  <p style={{ color: COLORS.error, fontWeight: 600, marginBottom: '0.5rem' }}>
                     Failed to render chart
                   </p>
-                  <p style={{ color: '#7f1d1d', fontSize: '0.875rem' }}>
+                  <p style={{ color: COLORS.errorText, fontSize: '0.875rem' }}>
                     {vegaError}
                   </p>
                   <details style={{ marginTop: '1rem', textAlign: 'left' }}>
-                    <summary style={{ cursor: 'pointer', color: COLORS.mediumGray, fontSize: '0.875rem' }}>
+                    <summary style={{ cursor: 'pointer', color: COLORS.textSecondary, fontSize: '0.875rem' }}>
                       View chart specification
                     </summary>
                     <pre style={{
                       marginTop: '0.5rem',
                       padding: '1rem',
-                      backgroundColor: COLORS.backgroundGray,
+                      backgroundColor: COLORS.bgPage,
                       borderRadius: '0.25rem',
                       overflow: 'auto',
                       fontSize: '0.75rem',
@@ -561,7 +576,7 @@ export function ArtifactViewer({ artifact, onClose }) {
       <style>{`
         .artifact-content {
           line-height: 1.7;
-          color: ${COLORS.darkGray};
+          color: ${COLORS.textPrimary};
         }
         .artifact-content h1 {
           color: ${COLORS.slainteBlue};
@@ -584,7 +599,7 @@ export function ArtifactViewer({ artifact, onClose }) {
         }
         .artifact-content p {
           margin-bottom: 16px;
-          color: ${COLORS.darkGray};
+          color: ${COLORS.textPrimary};
         }
         .artifact-content ul {
           margin-left: 24px;
@@ -592,10 +607,10 @@ export function ArtifactViewer({ artifact, onClose }) {
         }
         .artifact-content li {
           margin: 8px 0;
-          color: ${COLORS.darkGray};
+          color: ${COLORS.textPrimary};
         }
         .artifact-content strong {
-          color: ${COLORS.darkGray};
+          color: ${COLORS.textPrimary};
           font-weight: 600;
         }
         .artifact-content table.artifact-table {
@@ -606,17 +621,17 @@ export function ArtifactViewer({ artifact, onClose }) {
         }
         .artifact-content table.artifact-table th,
         .artifact-content table.artifact-table td {
-          border: 1px solid ${COLORS.lightGray};
+          border: 1px solid ${COLORS.borderLight};
           padding: 12px;
           text-align: left;
         }
         .artifact-content table.artifact-table th {
-          background-color: ${COLORS.backgroundGray};
+          background-color: ${COLORS.bgPage};
           font-weight: 600;
-          color: ${COLORS.darkGray};
+          color: ${COLORS.textPrimary};
         }
         .artifact-content table.artifact-table tr:hover {
-          background-color: ${COLORS.backgroundGray};
+          background-color: ${COLORS.bgPage};
         }
       `}</style>
     </div>
@@ -685,8 +700,8 @@ export function InlineArtifact({ artifact, onExpand }) {
             <FileText style={{ height: '1.25rem', width: '1.25rem', color: COLORS.slainteBlue }} />
           )}
           <div>
-            <p style={{ fontWeight: 600, color: COLORS.darkGray }}>{artifact.title}</p>
-            <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>
+            <p style={{ fontWeight: 600, color: COLORS.textPrimary }}>{artifact.title}</p>
+            <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>
               Click to view full {isMermaid ? 'diagram' : isVega ? 'chart' : 'report'}
             </p>
           </div>
@@ -713,7 +728,7 @@ export function InlineArtifact({ artifact, onExpand }) {
         borderRadius: '0.25rem',
         padding: '0.75rem',
         fontSize: '0.875rem',
-        color: COLORS.darkGray,
+        color: COLORS.textPrimary,
         maxHeight: '10rem',
         overflow: 'hidden',
         position: 'relative'
@@ -734,7 +749,7 @@ export function InlineArtifact({ artifact, onExpand }) {
             alignItems: 'center',
             justifyContent: 'center',
             padding: '1rem',
-            color: COLORS.mediumGray
+            color: COLORS.textSecondary
           }}>
             <BarChart3 style={{ height: '2rem', width: '2rem', marginBottom: '0.5rem', color: COLORS.slainteBlue }} />
             <span style={{ fontSize: '0.75rem' }}>Interactive Chart</span>
@@ -774,7 +789,7 @@ export function InlineArtifact({ artifact, onExpand }) {
           fontWeight: 500,
           cursor: 'pointer'
         }}
-        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1e40af'}
+        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.infoText}
         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.slainteBlue}
       >
         View Full {isMermaid ? 'Diagram' : isVega ? 'Chart' : 'Report'}

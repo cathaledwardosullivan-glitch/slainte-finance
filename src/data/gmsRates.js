@@ -4,6 +4,7 @@
 //
 // IMPORTANT: Capitation rates are QUARTERLY payments per patient
 // Annual capitation = quarterly rate × 4
+import COLORS from '../utils/colors';
 
 const gmsRates = {
   // Version tracking
@@ -439,16 +440,16 @@ const gmsRates = {
 
     // Categories for grouping in analysis
     categories: {
-      procedures: { name: 'Clinical Procedures', color: '#3B82F6' },
-      diagnostics: { name: 'Diagnostics', color: '#8B5CF6' },
-      contraception: { name: 'Contraception/LARC', color: '#EC4899' },
-      respiratory: { name: 'Respiratory', color: '#10B981' },
-      paediatric: { name: 'Paediatric (Under 8)', color: '#F59E0B' },
-      cdm: { name: 'Chronic Disease Management', color: '#EF4444' },
-      ocf: { name: 'Opportunistic Case Finding', color: '#F97316' },
-      pp: { name: 'Practice Programme', color: '#14B8A6' },
-      vaccines: { name: 'Vaccinations', color: '#06B6D4' },
-      admin: { name: 'Administrative', color: '#6B7280' }
+      procedures: { name: 'Clinical Procedures', color: COLORS.slainteBlue },
+      diagnostics: { name: 'Diagnostics', color: COLORS.chartViolet },
+      contraception: { name: 'Contraception/LARC', color: COLORS.chartPink },
+      respiratory: { name: 'Respiratory', color: COLORS.success },
+      paediatric: { name: 'Paediatric (Under 8)', color: COLORS.warning },
+      cdm: { name: 'Chronic Disease Management', color: COLORS.error },
+      ocf: { name: 'Opportunistic Case Finding', color: COLORS.warning },
+      pp: { name: 'Practice Programme', color: COLORS.incomeColor },
+      vaccines: { name: 'Vaccinations', color: COLORS.slainteBlue },
+      admin: { name: 'Administrative', color: COLORS.textMuted }
     },
 
     // National benchmark data from PCRS annual reports
@@ -528,9 +529,11 @@ const gmsRates = {
       Z:  { ratePerThousand: 0.03,  basis: 'PCRS 2018: 61 national claims (under 6 only pre-2023)' },
 
       // === Free Contraception Scheme (estimated — no per-code national data, scheme from 2022) ===
+      // Note: CF/CG/CH flat rates are fallbacks only — when stcDemographics are available,
+      // demographic-derived targets are used instead (see healthCheckCalculations.js)
       CF: { ratePerThousand: 30,    basis: 'Estimated — ~245K women accessing scheme nationally (2024)' },
-      CG: { ratePerThousand: 8,     basis: 'Estimated — ~3% of eligible women choosing implant' },
-      CH: { ratePerThousand: 12,    basis: 'Estimated — ~5% of eligible women choosing coil' }
+      CG: { ratePerThousand: 4.6,   basis: 'UK OHID 2022/23: 14 per 1,000 eligible women × ~33% GMS panel share' },
+      CH: { ratePerThousand: 9.9,   basis: 'UK OHID 2022/23: 30 per 1,000 eligible women × ~33% GMS panel share' }
     }
   }
 };

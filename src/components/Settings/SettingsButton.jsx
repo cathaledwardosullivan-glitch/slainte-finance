@@ -20,7 +20,7 @@ const SettingsButton = ({ onClick }) => {
         width: '56px',
         height: '56px',
         borderRadius: '50%',
-        backgroundColor: COLORS.mediumGray,
+        backgroundColor: COLORS.textSecondary,
         color: COLORS.white,
         border: 'none',
         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
@@ -31,11 +31,11 @@ const SettingsButton = ({ onClick }) => {
         transition: 'all 0.2s ease'
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.backgroundColor = COLORS.darkGray;
+        e.currentTarget.style.backgroundColor = COLORS.textPrimary;
         e.currentTarget.style.transform = 'scale(1.05)';
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.backgroundColor = COLORS.mediumGray;
+        e.currentTarget.style.backgroundColor = COLORS.textSecondary;
         e.currentTarget.style.transform = 'scale(1)';
       }}
     >

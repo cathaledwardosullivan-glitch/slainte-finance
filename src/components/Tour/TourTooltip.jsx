@@ -125,7 +125,7 @@ const TourTooltip = () => {
             margin: 0,
             fontSize: '22px',
             fontWeight: '600',
-            color: COLORS.darkGray,
+            color: COLORS.textPrimary,
           }}
         >
           {currentStepData.title}

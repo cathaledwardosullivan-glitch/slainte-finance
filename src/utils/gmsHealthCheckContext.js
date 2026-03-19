@@ -2,6 +2,8 @@
  * GMS Health Check Context Builder
  * Builds comprehensive context for AI analysis and Finn follow-up questions
  */
+import { formatAreaReference } from '../data/gmsReferenceData';
+import { generateRecommendations } from './healthCheckCalculations';
 
 /**
  * Build a comprehensive context string from health check analysis results
@@ -362,8 +364,220 @@ export function buildCondensedSummary(analysisResults, practiceProfile, recommen
   };
 }
 
+/**
+ * Build area-specific context for Finn Q&A within a single GMS area.
+ * Includes the area's reference data (rates, rules, calculation method)
+ * plus the actual analysis results for that area.
+ *
+ * @param {string} areaId - The area ID (leave, practiceSupport, etc.)
+ * @param {Object} analysis - Per-area analysis { actual, potential, findings, breakdown }
+ * @param {Object} readiness - Per-area readiness { status, canAnalyze, missingData }
+ * @param {Object} recommendations - Per-area recommendations array
+ * @returns {string} Context string for Finn Q&A
+ */
+export function buildAreaSpecificContext(areaId, analysis, readiness, recommendations) {
+  const sections = [];
+
+  // Reference data for this area (rates, rules, calculation methods)
+  const reference = formatAreaReference(areaId);
+  if (reference) {
+    sections.push('=== REFERENCE: GMS RULES & RATES ===');
+    sections.push(reference);
+  }
+
+  // Area analysis results
+  sections.push('\n=== ANALYSIS RESULTS FOR THIS AREA ===');
+
+  if (!analysis) {
+    sections.push('No analysis available yet.');
+    if (readiness?.missingData?.length > 0) {
+      sections.push('Missing data:');
+      readiness.missingData.forEach(m => sections.push(`  - ${m}`));
+    }
+    return sections.join('\n');
+  }
+
+  const formatCurrency = (v) => new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(v || 0);
+
+  sections.push(`Data confidence: ${readiness?.status === 'ready' ? 'High (actual data)' : readiness?.status === 'partial' ? 'Medium (estimated)' : 'Low (no data)'}`);
+  sections.push(`Current income: ${formatCurrency(analysis.actual)}`);
+  sections.push(`Potential income: ${formatCurrency(analysis.potential)}`);
+  sections.push(`Opportunity gap: ${formatCurrency(Math.max(0, (analysis.potential || 0) - (analysis.actual || 0)))}`);
+
+  // Findings
+  if (analysis.findings?.length > 0) {
+    sections.push('\nFindings:');
+    analysis.findings.forEach(f => {
+      const prefix = f.type === 'issue' ? '[ISSUE]' : f.type === 'opportunity' ? '[OPPORTUNITY]' : '[OK]';
+      sections.push(`  ${prefix} ${f.message}${f.value > 0 ? ` (${formatCurrency(f.value)})` : ''}`);
+    });
+  }
+
+  // Recommendations
+  if (recommendations?.length > 0) {
+    sections.push('\nRecommendations:');
+    recommendations.forEach((rec, i) => {
+      sections.push(`${i + 1}. ${rec.title} — ${formatCurrency(rec.potential)} (${rec.effort || 'N/A'} effort)`);
+      if (rec.summary) sections.push(`   ${rec.summary}`);
+      if (rec.actions?.length > 0) {
+        rec.actions.forEach(a => {
+          sections.push(`   - ${a.action}${a.value > 0 ? ` (${formatCurrency(a.value)})` : ''}`);
+        });
+      }
+    });
+  }
+
+  if (readiness?.missingData?.length > 0) {
+    sections.push('\nMissing data for full analysis:');
+    readiness.missingData.forEach(m => sections.push(`  - ${m}`));
+  }
+
+  return sections.join('\n');
+}
+
+/**
+ * Build a metrics summary for the lookup_gms_metrics tool.
+ * Returns a text block suitable for tool output.
+ *
+ * @param {string} areaId - 'summary' for all areas, or a specific area ID
+ * @param {Object} analysisResults - Results from analyzeGMSIncome()
+ * @param {string} detailLevel - 'headline' or 'detailed'
+ * @param {Object} practiceProfile - Practice profile data
+ * @param {Object} healthCheckData - Health check form data
+ * @returns {string} Formatted text for tool response
+ */
+export function buildAreaMetricsSummary(areaId, analysisResults, detailLevel, practiceProfile, healthCheckData) {
+  if (!analysisResults) {
+    return 'No GMS Health Check data available. The user needs to upload PCRS monthly payment PDFs first.';
+  }
+
+  const fmt = (v) => new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(v || 0);
+
+  const actual = analysisResults.actualIncome || {};
+  const potential = analysisResults.potentialIncome || {};
+  const breakdowns = analysisResults.potentialBreakdowns || {};
+
+  const leaveActual = breakdowns.leaveDetails?.actualTotal ||
+    (breakdowns.leaveDetails?.actualStudyLeave || 0) + (breakdowns.leaveDetails?.actualAnnualLeave || 0);
+
+  const AREA_KEYS = {
+    leave: { actualKey: null, potentialKey: 'leavePayments', label: 'Leave Payments', customActual: leaveActual },
+    practiceSupport: { actualKey: 'practiceSupport', potentialKey: 'practiceSupport', label: 'Practice Support' },
+    capitation: { actualKey: 'capitation', potentialKey: 'capitation', label: 'Capitation' },
+    cervicalCheck: { actualKey: 'cervicalCheck', potentialKey: 'cervicalCheck', label: 'Cervical Screening' },
+    stc: { actualKey: 'stc', potentialKey: 'stc', label: 'Special Type Consultations' },
+    cdm: { actualKey: null, potentialKey: 'cdm', label: 'Chronic Disease Management', customActual: (actual.diseaseManagement || 0) + (actual.cdmFromSTC || 0) }
+  };
+
+  if (areaId === 'summary') {
+    const lines = ['=== GMS HEALTH CHECK SUMMARY ==='];
+    let totalActual = 0;
+    let totalPotential = 0;
+
+    for (const [id, cfg] of Object.entries(AREA_KEYS)) {
+      const a = cfg.customActual !== undefined ? cfg.customActual : (actual[cfg.actualKey] || 0);
+      const p = potential[cfg.potentialKey] || 0;
+      const opp = Math.max(0, p - a);
+      totalActual += a;
+      totalPotential += p;
+      lines.push(`${cfg.label}: actual ${fmt(a)}, potential ${fmt(p)}, opportunity ${fmt(opp)}`);
+    }
+
+    lines.push('');
+    lines.push(`TOTAL: actual ${fmt(totalActual)}, potential ${fmt(totalPotential)}, opportunity ${fmt(totalPotential - totalActual)}`);
+
+    if (detailLevel === 'detailed') {
+      // Add recommendations summary
+      try {
+        const recs = generateRecommendations(analysisResults, practiceProfile, healthCheckData);
+        if (recs.priorityRecommendations?.length > 0) {
+          lines.push('', 'PRIORITY RECOMMENDATIONS:');
+          recs.priorityRecommendations.forEach((r, i) => {
+            lines.push(`${i + 1}. ${r.title} — ${fmt(r.potential)} (${r.effort} effort)`);
+          });
+        }
+        if (recs.growthOpportunities?.length > 0) {
+          lines.push('', 'GROWTH OPPORTUNITIES:');
+          recs.growthOpportunities.forEach((r, i) => {
+            lines.push(`${i + 1}. ${r.title} — ${fmt(r.potential)} (${r.effort} effort)`);
+          });
+        }
+      } catch { /* ignore */ }
+    }
+
+    return lines.join('\n');
+  }
+
+  // Single area
+  const cfg = AREA_KEYS[areaId];
+  if (!cfg) return `Unknown area: ${areaId}`;
+
+  const a = cfg.customActual !== undefined ? cfg.customActual : (actual[cfg.actualKey] || 0);
+  const p = potential[cfg.potentialKey] || 0;
+  const opp = Math.max(0, p - a);
+
+  const lines = [
+    `=== ${cfg.label.toUpperCase()} ===`,
+    `Current income: ${fmt(a)}`,
+    `Potential income: ${fmt(p)}`,
+    `Opportunity gap: ${fmt(opp)}`
+  ];
+
+  if (detailLevel === 'detailed') {
+    // Add area-specific details
+    if (areaId === 'leave' && breakdowns.leaveDetails) {
+      const ld = breakdowns.leaveDetails;
+      lines.push('', 'Details:');
+      if (ld.studyLeaveUnclaimedDays > 0) lines.push(`  Study leave: ${ld.studyLeaveUnclaimedDays} days unclaimed (${fmt(ld.studyLeaveUnclaimedValue)})`);
+      if (ld.annualLeaveUnclaimedDays > 0) lines.push(`  Annual leave: ${ld.annualLeaveUnclaimedDays} days unclaimed (${fmt(ld.annualLeaveUnclaimedValue)})`);
+    }
+
+    if (areaId === 'practiceSupport' && breakdowns.issues?.length > 0) {
+      lines.push('', 'Issues found:');
+      breakdowns.issues.forEach(i => lines.push(`  - ${i.message} (${fmt(i.annualLoss || i.potentialGain)})`));
+    }
+
+    if (areaId === 'capitation' && breakdowns.capitationAnalysis?.registrationChecks) {
+      const gaps = breakdowns.capitationAnalysis.registrationChecks.filter(c => c.gap > 0);
+      if (gaps.length > 0) {
+        lines.push('', 'Registration gaps:');
+        gaps.forEach(g => lines.push(`  - ${g.ageGroup}: ${g.gap} unregistered patients (${fmt(g.gapValue)})`));
+      }
+    }
+
+    if (areaId === 'cervicalCheck' && breakdowns.cervicalScreeningAnalysis) {
+      const ca = breakdowns.cervicalScreeningAnalysis;
+      if (ca.smearsZeroPayment > 0) lines.push(``, `Zero-payment smears: ${ca.smearsZeroPayment} (${fmt(ca.lostIncome)})`);
+    }
+
+    if (areaId === 'stc' && breakdowns.stcAnalysis?.opportunities?.length > 0) {
+      lines.push('', 'Top STC opportunities:');
+      breakdowns.stcAnalysis.opportunities.slice(0, 5).forEach(o =>
+        lines.push(`  - ${o.code} (${o.name}): current ${o.currentClaims}, expected ~${o.expectedClaims} (${fmt(o.potentialValue)})`)
+      );
+    }
+
+    if (areaId === 'cdm' && breakdowns.cdmAnalysis?.growthPotential?.breakdown) {
+      lines.push('', 'CDM enrolment gaps:');
+      breakdowns.cdmAnalysis.growthPotential.breakdown.forEach(item =>
+        lines.push(`  - ${item.category}: ${item.gap} unenrolled patients (${fmt(item.potentialValue)})`)
+      );
+    }
+
+    // Add reference data
+    const ref = formatAreaReference(areaId);
+    if (ref) {
+      lines.push('', ref);
+    }
+  }
+
+  return lines.join('\n');
+}
+
 export default {
   buildInteractiveGMSContext,
   buildFinnFollowUpContext,
-  buildCondensedSummary
+  buildCondensedSummary,
+  buildAreaSpecificContext,
+  buildAreaMetricsSummary
 };

@@ -36,7 +36,7 @@ export default function StructureExplanation({ practiceName, onContinue, onBack 
         <h2 style={{
           fontSize: '1.75rem',
           fontWeight: 700,
-          color: COLORS.darkGray,
+          color: COLORS.textPrimary,
           marginBottom: '1rem'
         }}>
           Let me show you how Sláinte Finance organizes your financial information
@@ -44,7 +44,7 @@ export default function StructureExplanation({ practiceName, onContinue, onBack 
 
         <p style={{
           fontSize: '1rem',
-          color: COLORS.mediumGray,
+          color: COLORS.textSecondary,
           maxWidth: '700px',
           marginLeft: 'auto',
           marginRight: 'auto',
@@ -57,7 +57,7 @@ export default function StructureExplanation({ practiceName, onContinue, onBack 
 
       {/* Organizational Chart */}
       <div style={{
-        backgroundColor: COLORS.backgroundGray,
+        backgroundColor: COLORS.bgPage,
         borderRadius: '16px',
         padding: '2rem',
         marginBottom: '2rem',
@@ -107,14 +107,14 @@ export default function StructureExplanation({ practiceName, onContinue, onBack 
             <div style={{
               fontSize: '1.25rem',
               fontWeight: 600,
-              color: COLORS.darkGray,
+              color: COLORS.textPrimary,
               marginBottom: '0.5rem'
             }}>
               INCOME
             </div>
             <div style={{
               fontSize: '0.875rem',
-              color: COLORS.mediumGray,
+              color: COLORS.textSecondary,
               lineHeight: 1.4
             }}>
               Money coming IN
@@ -140,14 +140,14 @@ export default function StructureExplanation({ practiceName, onContinue, onBack 
             <div style={{
               fontSize: '1.25rem',
               fontWeight: 600,
-              color: COLORS.darkGray,
+              color: COLORS.textPrimary,
               marginBottom: '0.5rem'
             }}>
               EXPENDITURE
             </div>
             <div style={{
               fontSize: '0.875rem',
-              color: COLORS.mediumGray,
+              color: COLORS.textSecondary,
               lineHeight: 1.4
             }}>
               Money going OUT
@@ -173,14 +173,14 @@ export default function StructureExplanation({ practiceName, onContinue, onBack 
             <div style={{
               fontSize: '1.25rem',
               fontWeight: 600,
-              color: COLORS.darkGray,
+              color: COLORS.textPrimary,
               marginBottom: '0.5rem'
             }}>
               DRAWINGS
             </div>
             <div style={{
               fontSize: '0.875rem',
-              color: COLORS.mediumGray,
+              color: COLORS.textSecondary,
               lineHeight: 1.4
             }}>
               Money going OUT
@@ -203,7 +203,7 @@ export default function StructureExplanation({ practiceName, onContinue, onBack 
             <h3 style={{
               fontSize: '1.125rem',
               fontWeight: 600,
-              color: COLORS.darkGray,
+              color: COLORS.textPrimary,
               marginBottom: '1rem',
               textAlign: 'center'
             }}>
@@ -227,7 +227,7 @@ export default function StructureExplanation({ practiceName, onContinue, onBack 
               <div
                 key={idx}
                 style={{
-                  backgroundColor: COLORS.backgroundGray,
+                  backgroundColor: COLORS.bgPage,
                   borderRadius: '8px',
                   padding: '1rem',
                   display: 'flex',
@@ -242,14 +242,14 @@ export default function StructureExplanation({ practiceName, onContinue, onBack 
                   <div style={{
                     fontSize: '0.9375rem',
                     fontWeight: 600,
-                    color: COLORS.darkGray,
+                    color: COLORS.textPrimary,
                     marginBottom: '0.25rem'
                   }}>
                     {category.title}
                   </div>
                   <div style={{
                     fontSize: '0.8125rem',
-                    color: COLORS.mediumGray,
+                    color: COLORS.textSecondary,
                     lineHeight: 1.3
                   }}>
                     {category.desc}
@@ -273,7 +273,7 @@ export default function StructureExplanation({ practiceName, onContinue, onBack 
         }}>
           <p style={{
             fontSize: '1rem',
-            color: COLORS.darkGray,
+            color: COLORS.textPrimary,
             lineHeight: 1.5,
             margin: 0,
             opacity: revealStage >= 2 ? 1 : 0,
@@ -300,7 +300,7 @@ export default function StructureExplanation({ practiceName, onContinue, onBack 
           <>
             <p style={{
               fontSize: '1rem',
-              color: COLORS.mediumGray,
+              color: COLORS.textSecondary,
               marginBottom: '1.5rem'
             }}>
               Click below to learn more...
@@ -338,7 +338,7 @@ export default function StructureExplanation({ practiceName, onContinue, onBack 
           <>
             <p style={{
               fontSize: '1.125rem',
-              color: COLORS.darkGray,
+              color: COLORS.textPrimary,
               fontWeight: 600,
               marginBottom: '1.5rem'
             }}>
@@ -353,9 +353,9 @@ export default function StructureExplanation({ practiceName, onContinue, onBack 
                     padding: '0.875rem 1.5rem',
                     fontSize: '1rem',
                     fontWeight: 500,
-                    color: COLORS.darkGray,
+                    color: COLORS.textPrimary,
                     backgroundColor: COLORS.white,
-                    border: `2px solid ${COLORS.lightGray}`,
+                    border: `2px solid ${COLORS.borderLight}`,
                     borderRadius: '8px',
                     cursor: 'pointer',
                     display: 'inline-flex',
@@ -364,10 +364,10 @@ export default function StructureExplanation({ practiceName, onContinue, onBack 
                     transition: 'all 0.2s'
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = COLORS.mediumGray;
+                    e.currentTarget.style.borderColor = COLORS.textSecondary;
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = COLORS.lightGray;
+                    e.currentTarget.style.borderColor = COLORS.borderLight;
                   }}
                 >
                   <ArrowLeft style={{ width: '18px', height: '18px' }} />

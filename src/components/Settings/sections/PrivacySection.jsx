@@ -70,7 +70,7 @@ const PrivacySection = () => {
             )}
             <div>
               <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 600 }}>Local Only Mode</h3>
-              <p style={{ margin: 0, fontSize: '0.85rem', color: COLORS.darkGray }}>
+              <p style={{ margin: 0, fontSize: '0.85rem', color: COLORS.textPrimary }}>
                 {localOnlyMode ? 'Active — no external connections' : 'Off — AI features enabled'}
               </p>
             </div>
@@ -85,7 +85,7 @@ const PrivacySection = () => {
               borderRadius: '14px',
               border: 'none',
               cursor: 'pointer',
-              backgroundColor: localOnlyMode ? COLORS.incomeColor : COLORS.lightGray,
+              backgroundColor: localOnlyMode ? COLORS.incomeColor : COLORS.borderLight,
               position: 'relative',
               transition: 'background-color 0.2s'
             }}
@@ -116,13 +116,13 @@ const PrivacySection = () => {
             <p style={{ margin: '0 0 0.75rem', fontSize: '0.9rem', fontWeight: 500 }}>
               Enabling Local Only Mode will disable:
             </p>
-            <ul style={{ margin: '0 0 0.75rem', paddingLeft: '1.25rem', fontSize: '0.85rem', color: COLORS.darkGray }}>
+            <ul style={{ margin: '0 0 0.75rem', paddingLeft: '1.25rem', fontSize: '0.85rem', color: COLORS.textPrimary }}>
               <li>Finn chat and AI-generated reports</li>
               <li>AI-assisted transaction categorisation</li>
               <li>Website analysis during setup</li>
               <li>Automated PCRS statement downloads</li>
             </ul>
-            <p style={{ margin: '0 0 0.75rem', fontSize: '0.85rem', color: COLORS.darkGray }}>
+            <p style={{ margin: '0 0 0.75rem', fontSize: '0.85rem', color: COLORS.textPrimary }}>
               All other features continue to work. You can re-enable AI features at any time.
             </p>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -146,7 +146,7 @@ const PrivacySection = () => {
                 style={{
                   padding: '0.4rem 1rem',
                   borderRadius: '0.25rem',
-                  border: `1px solid ${COLORS.lightGray}`,
+                  border: `1px solid ${COLORS.borderLight}`,
                   backgroundColor: COLORS.white,
                   cursor: 'pointer',
                   fontSize: '0.85rem'
@@ -180,15 +180,15 @@ const PrivacySection = () => {
       <div style={{
         padding: '1.25rem',
         borderRadius: '0.5rem',
-        border: `1px solid ${COLORS.lightGray}`,
+        border: `1px solid ${COLORS.borderLight}`,
         backgroundColor: 'rgba(74, 144, 226, 0.02)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <AlertTriangle size={22} color={errorReporting ? COLORS.slainteBlue : COLORS.mediumGray} />
+            <AlertTriangle size={22} color={errorReporting ? COLORS.slainteBlue : COLORS.textSecondary} />
             <div>
               <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>Automatic Error Reports</h3>
-              <p style={{ margin: '0.15rem 0 0', fontSize: '0.8rem', color: COLORS.darkGray }}>
+              <p style={{ margin: '0.15rem 0 0', fontSize: '0.8rem', color: COLORS.textPrimary }}>
                 {errorReporting
                   ? 'Anonymous error reports help us improve the app'
                   : 'Error reporting is disabled'}
@@ -203,7 +203,7 @@ const PrivacySection = () => {
               borderRadius: '14px',
               border: 'none',
               cursor: 'pointer',
-              backgroundColor: errorReporting ? COLORS.slainteBlue : COLORS.lightGray,
+              backgroundColor: errorReporting ? COLORS.slainteBlue : COLORS.borderLight,
               position: 'relative',
               transition: 'background-color 0.2s'
             }}
@@ -224,7 +224,7 @@ const PrivacySection = () => {
         <p style={{
           margin: '0.75rem 0 0',
           fontSize: '0.8rem',
-          color: COLORS.mediumGray,
+          color: COLORS.textSecondary,
           lineHeight: 1.5
         }}>
           When enabled, crash reports and error details are sent automatically to help us fix issues faster.
@@ -235,7 +235,7 @@ const PrivacySection = () => {
       {/* What Finn Knows — Expandable */}
       {!localOnlyMode && (
         <div style={{
-          border: `1px solid ${COLORS.lightGray}`,
+          border: `1px solid ${COLORS.borderLight}`,
           borderRadius: '0.5rem',
           overflow: 'hidden'
         }}>
@@ -259,15 +259,15 @@ const PrivacySection = () => {
           </button>
 
           {showDataDetails && (
-            <div style={{ padding: '0 1rem 1rem', fontSize: '0.85rem', color: COLORS.darkGray }}>
+            <div style={{ padding: '0 1rem 1rem', fontSize: '0.85rem', color: COLORS.textPrimary }}>
               <p style={{ margin: '0 0 0.75rem', fontWeight: 500 }}>When you use Finn or AI features:</p>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
                 <thead>
                   <tr>
-                    <th style={{ textAlign: 'left', padding: '0.4rem 0.5rem', borderBottom: `1px solid ${COLORS.lightGray}`, color: COLORS.slainteBlue }}>
+                    <th style={{ textAlign: 'left', padding: '0.4rem 0.5rem', borderBottom: `1px solid ${COLORS.borderLight}`, color: COLORS.slainteBlue }}>
                       Sent securely
                     </th>
-                    <th style={{ textAlign: 'left', padding: '0.4rem 0.5rem', borderBottom: `1px solid ${COLORS.lightGray}`, color: COLORS.incomeColor }}>
+                    <th style={{ textAlign: 'left', padding: '0.4rem 0.5rem', borderBottom: `1px solid ${COLORS.borderLight}`, color: COLORS.incomeColor }}>
                       Never sent
                     </th>
                   </tr>
@@ -282,8 +282,8 @@ const PrivacySection = () => {
                     ['Monthly trends', 'Passwords or API keys']
                   ].map(([sent, never], i) => (
                     <tr key={i}>
-                      <td style={{ padding: '0.3rem 0.5rem', borderBottom: `1px solid ${COLORS.veryLightGray || '#f0f0f0'}` }}>{sent}</td>
-                      <td style={{ padding: '0.3rem 0.5rem', borderBottom: `1px solid ${COLORS.veryLightGray || '#f0f0f0'}` }}>{never}</td>
+                      <td style={{ padding: '0.3rem 0.5rem', borderBottom: `1px solid ${COLORS.bgHover}` }}>{sent}</td>
+                      <td style={{ padding: '0.3rem 0.5rem', borderBottom: `1px solid ${COLORS.bgHover}` }}>{never}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -298,7 +298,7 @@ const PrivacySection = () => {
 
       {/* Data Management */}
       <div style={{
-        border: `1px solid ${COLORS.lightGray}`,
+        border: `1px solid ${COLORS.borderLight}`,
         borderRadius: '0.5rem',
         padding: '1rem'
       }}>
@@ -309,7 +309,7 @@ const PrivacySection = () => {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
               <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>Finn Chat History</span>
-              <p style={{ margin: '0.15rem 0 0', fontSize: '0.8rem', color: COLORS.darkGray }}>
+              <p style={{ margin: '0.15rem 0 0', fontSize: '0.8rem', color: COLORS.textPrimary }}>
                 Delete all conversations with Finn
               </p>
             </div>
@@ -338,7 +338,7 @@ const PrivacySection = () => {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
               <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>Terms of Service</span>
-              <p style={{ margin: '0.15rem 0 0', fontSize: '0.8rem', color: COLORS.darkGray }}>
+              <p style={{ margin: '0.15rem 0 0', fontSize: '0.8rem', color: COLORS.textPrimary }}>
                 Review the full terms document
               </p>
             </div>
@@ -366,7 +366,7 @@ const PrivacySection = () => {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
               <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>Privacy Policy</span>
-              <p style={{ margin: '0.15rem 0 0', fontSize: '0.8rem', color: COLORS.darkGray }}>
+              <p style={{ margin: '0.15rem 0 0', fontSize: '0.8rem', color: COLORS.textPrimary }}>
                 Review how your data is handled
               </p>
             </div>
@@ -402,7 +402,7 @@ const PrivacySection = () => {
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            backgroundColor: COLORS.overlayDark,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -424,7 +424,7 @@ const PrivacySection = () => {
           >
             <div style={{
               padding: '1rem 1.25rem',
-              borderBottom: `1px solid ${COLORS.lightGray}`,
+              borderBottom: `1px solid ${COLORS.borderLight}`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between'
@@ -445,7 +445,7 @@ const PrivacySection = () => {
                   alignItems: 'center'
                 }}
               >
-                <X size={20} color={COLORS.mediumGray} />
+                <X size={20} color={COLORS.textSecondary} />
               </button>
             </div>
             <div style={{
@@ -454,7 +454,7 @@ const PrivacySection = () => {
               padding: '1.25rem',
               fontSize: '0.8125rem',
               lineHeight: 1.7,
-              color: COLORS.darkGray,
+              color: COLORS.textPrimary,
               whiteSpace: 'pre-wrap',
               fontFamily: 'system-ui, -apple-system, sans-serif'
             }}>
@@ -474,7 +474,7 @@ const PrivacySection = () => {
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            backgroundColor: COLORS.overlayDark,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -496,7 +496,7 @@ const PrivacySection = () => {
           >
             <div style={{
               padding: '1rem 1.25rem',
-              borderBottom: `1px solid ${COLORS.lightGray}`,
+              borderBottom: `1px solid ${COLORS.borderLight}`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between'
@@ -517,7 +517,7 @@ const PrivacySection = () => {
                   alignItems: 'center'
                 }}
               >
-                <X size={20} color={COLORS.mediumGray} />
+                <X size={20} color={COLORS.textSecondary} />
               </button>
             </div>
             <div style={{
@@ -526,7 +526,7 @@ const PrivacySection = () => {
               padding: '1.25rem',
               fontSize: '0.8125rem',
               lineHeight: 1.7,
-              color: COLORS.darkGray,
+              color: COLORS.textPrimary,
               whiteSpace: 'pre-wrap',
               fontFamily: 'system-ui, -apple-system, sans-serif'
             }}>

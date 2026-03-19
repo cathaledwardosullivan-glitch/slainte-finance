@@ -4,17 +4,13 @@ import { AREAS } from './useAreaReadiness';
 import { getActionItems } from '../../storage/practiceProfileStorage';
 
 const STATUS_COLORS = {
-  ready: COLORS.incomeColor,      // #4ECDC4 turquoise
-  partial: COLORS.highlightYellow, // #FFD23C yellow
-  'no-data': COLORS.lightGray     // #E0E0E0 grey
+  ready: COLORS.success,           // #10B981 green — complete/ready
+  partial: COLORS.highlightYellow, // #FFD23C yellow — partial data
+  'no-data': COLORS.borderLight     // #E0E0E0 grey
 };
 
-// SVG gradient fills for richer arc appearance (flat STATUS_COLORS kept for HTML legend)
-const STATUS_FILLS = {
-  ready: 'url(#grad-ready)',
-  partial: 'url(#grad-partial)',
-  'no-data': 'url(#grad-nodata)'
-};
+// Use flat colors consistent with the rest of the app (no gradients)
+const STATUS_FILLS = STATUS_COLORS;
 
 function polarToCartesian(cx, cy, r, angleDeg) {
   const rad = ((angleDeg - 90) * Math.PI) / 180;
@@ -74,7 +70,7 @@ const AREA_ARC = (DATA_SPAN - (AREAS.length - 1) * AREA_GAP) / AREAS.length;
  *   Bottom: Analysis        (6 area segments, analysis-status colours)
  *   Left:   Tasks           (per-task segments, priority colours)
  */
-const CircularWorkflow = ({ readiness, summary, onAreaClick, financialSummary, perAreaFinancials }) => {
+const CircularWorkflow = ({ readiness, summary, onAreaClick, financialSummary, perAreaFinancials, impactSummary }) => {
   const [hoverInfo, setHoverInfo] = useState(null);
   const [taskRefreshKey, setTaskRefreshKey] = useState(0);
 
@@ -121,7 +117,7 @@ const CircularWorkflow = ({ readiness, summary, onAreaClick, financialSummary, p
       start: TASKS_START + i * (segArc + gap),
       end: TASKS_START + i * (segArc + gap) + segArc,
       fillStatus: task.isCompleted ? 'ready' : 'partial',
-      opacity: 0.85,
+      opacity: 1,
       task
     }));
   }, [allTasks]);
@@ -131,6 +127,7 @@ const CircularWorkflow = ({ readiness, summary, onAreaClick, financialSummary, p
   const hasAnalysis = summary.analyzableCount > 0;
   const unclaimed = financialSummary?.unclaimed || 0;
   const growth = financialSummary?.growth || 0;
+  const recovered = (impactSummary?.totalCombined || 0);
 
   // Clicking a task segment opens the Tasks widget, expands GMS section, and highlights the task
   const handleTaskClick = (taskId) => {
@@ -155,11 +152,11 @@ const CircularWorkflow = ({ readiness, summary, onAreaClick, financialSummary, p
   const renderTaskTooltip = () => {
     if (!hoverInfo || hoverInfo.type !== 'task' || !hoverInfo.task) return null;
     const task = hoverInfo.task;
-    const statusColor = task.isCompleted ? COLORS.incomeColor : '#B8960A';
+    const statusColor = task.isCompleted ? COLORS.incomeColor : COLORS.warningDark;
     const statusLabel = task.isCompleted ? 'Completed' : (task.isHigh ? 'High priority' : 'Standard');
     return (
       <div style={{ ...tooltipBoxStyle, textAlign: 'right' }}>
-        <span style={{ fontWeight: 600, color: COLORS.darkGray }}>{task.title}</span>
+        <span style={{ fontWeight: 600, color: COLORS.textPrimary }}>{task.title}</span>
         <span style={{ fontSize: '0.75rem', color: statusColor, fontWeight: 500 }}>
           {statusLabel}
         </span>
@@ -174,12 +171,12 @@ const CircularWorkflow = ({ readiness, summary, onAreaClick, financialSummary, p
     const dataAge = readiness[hoverInfo.areaId]?.dataAge;
     return (
       <div style={{ ...tooltipBoxStyle, textAlign: 'left' }}>
-        <span style={{ fontWeight: 600, color: COLORS.darkGray }}>{area?.description}</span>
+        <span style={{ fontWeight: 600, color: COLORS.textPrimary }}>{area?.description}</span>
         <span style={{ fontSize: '0.75rem', color: STATUS_COLORS[status], fontWeight: 500 }}>
           {status === 'ready' ? 'Data complete' : status === 'partial' ? 'Partial data' : 'No data yet'}
         </span>
         {dataAge?.isStale && (
-          <span style={{ fontSize: '0.7rem', color: '#D97706', fontWeight: 500 }}>
+          <span style={{ fontSize: '0.7rem', color: COLORS.warningDark, fontWeight: 500 }}>
             Data may be stale ({Math.floor(dataAge.daysOld / 30)}+ months old)
           </span>
         )}
@@ -205,7 +202,7 @@ const CircularWorkflow = ({ readiness, summary, onAreaClick, financialSummary, p
 
     return (
       <div style={{ ...analysisTooltipStyle, textAlign: 'center' }}>
-        <span style={{ fontWeight: 600, color: COLORS.darkGray }}>{area?.description}</span>
+        <span style={{ fontWeight: 600, color: COLORS.textPrimary }}>{area?.description}</span>
         {canAnalyze && hasFinancials ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
             {areaUnclaimed > 0 && (
@@ -220,7 +217,7 @@ const CircularWorkflow = ({ readiness, summary, onAreaClick, financialSummary, p
             )}
           </div>
         ) : (
-          <span style={{ fontSize: '0.75rem', color: canAnalyze ? COLORS.slainteBlue : COLORS.mediumGray, fontWeight: 500 }}>
+          <span style={{ fontSize: '0.75rem', color: canAnalyze ? COLORS.slainteBlue : COLORS.textSecondary, fontWeight: 500 }}>
             {canAnalyze ? 'Click to view analysis' : 'Needs more data'}
           </span>
         )}
@@ -241,7 +238,7 @@ const CircularWorkflow = ({ readiness, summary, onAreaClick, financialSummary, p
       }}>
         {/* Left annotation: Action Plan */}
         <div style={{ paddingTop: '1.5rem', textAlign: 'right', width: '90px', flexShrink: 0, flexGrow: 0, position: 'relative' }}>
-          <div style={{ fontSize: '0.8rem', fontWeight: 700, color: COLORS.darkGray, lineHeight: 1.3, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: '0.8rem', fontWeight: 700, color: COLORS.textPrimary, lineHeight: 1.3, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
             Action<br />Plan
           </div>
           <div style={{
@@ -266,13 +263,13 @@ const CircularWorkflow = ({ readiness, summary, onAreaClick, financialSummary, p
             <span style={{
               fontSize: '0.8rem',
               fontWeight: 600,
-              color: allTasks.length === 0 ? COLORS.mediumGray
+              color: allTasks.length === 0 ? COLORS.textSecondary
                 : completedCount === allTasks.length ? COLORS.incomeColor
-                : '#B8960A'
+                : COLORS.warningDark
             }}>
               {completedCount}/{allTasks.length}
             </span>
-            <span style={{ fontSize: '0.7rem', color: COLORS.mediumGray }}>done</span>
+            <span style={{ fontSize: '0.7rem', color: COLORS.textSecondary }}>done</span>
           </div>
           {/* Task hover tooltip - absolutely positioned so it overflows left without shifting layout */}
           <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: '0.5rem', zIndex: 10 }}>
@@ -282,21 +279,6 @@ const CircularWorkflow = ({ readiness, summary, onAreaClick, financialSummary, p
 
         {/* Centre: SVG Donut */}
         <svg viewBox="0 0 400 400" width="500" height="500" style={{ flexShrink: 0, display: 'block' }}>
-          <defs>
-            <radialGradient id="grad-ready" cx="50%" cy="50%" r="50%">
-              <stop offset="60%" stopColor="#4ECDC4" />
-              <stop offset="100%" stopColor="#3BB8B0" />
-            </radialGradient>
-            <radialGradient id="grad-partial" cx="50%" cy="50%" r="50%">
-              <stop offset="60%" stopColor="#FFD23C" />
-              <stop offset="100%" stopColor="#F0C030" />
-            </radialGradient>
-            <radialGradient id="grad-nodata" cx="50%" cy="50%" r="50%">
-              <stop offset="60%" stopColor="#E0E0E0" />
-              <stop offset="100%" stopColor="#D0D0D0" />
-            </radialGradient>
-          </defs>
-
           {/* ═══ DATA COLLECTION ═══ right arc, 5°–115° */}
           {AREAS.map((area, i) => {
             const segStart = DATA_START + i * (AREA_ARC + AREA_GAP);
@@ -316,9 +298,8 @@ const CircularWorkflow = ({ readiness, summary, onAreaClick, financialSummary, p
                 <path
                   d={describeArc(cx, cy, outerR, innerR, segStart, segEnd)}
                   fill={STATUS_FILLS[status]}
-                  stroke={isHovered ? COLORS.darkGray : COLORS.white}
+                  stroke={isHovered ? COLORS.textPrimary : COLORS.white}
                   strokeWidth={isHovered ? 2.5 : 1.5}
-                  opacity={isHovered ? 1 : 0.85}
                   style={{ transition: 'all 0.2s ease', transform: isHovered ? 'scale(1.03)' : 'scale(1)', transformOrigin: `${cx}px ${cy}px` }}
                 />
                 <text
@@ -328,7 +309,7 @@ const CircularWorkflow = ({ readiness, summary, onAreaClick, financialSummary, p
                   dominantBaseline="middle"
                   fontSize="9"
                   fontWeight={isHovered ? 700 : 500}
-                  fill={COLORS.darkGray}
+                  fill={COLORS.textPrimary}
                 >
                   {area.shortLabel}
                 </text>
@@ -340,7 +321,7 @@ const CircularWorkflow = ({ readiness, summary, onAreaClick, financialSummary, p
                       cx={dotPos.x}
                       cy={dotPos.y}
                       r="3.5"
-                      fill="#F59E0B"
+                      fill={COLORS.warning}
                       stroke={COLORS.white}
                       strokeWidth="1"
                     />
@@ -376,9 +357,9 @@ const CircularWorkflow = ({ readiness, summary, onAreaClick, financialSummary, p
                 <path
                   d={describeArc(cx, cy, outerR, innerR, segStart, segEnd)}
                   fill={STATUS_FILLS[fillStatus]}
-                  stroke={isHovered ? COLORS.darkGray : COLORS.white}
+                  stroke={isHovered ? COLORS.textPrimary : COLORS.white}
                   strokeWidth={isHovered ? 2.5 : 1.5}
-                  opacity={isHovered ? 1 : (canAnalyze ? 0.85 : 0.35)}
+                  opacity={canAnalyze ? 1 : 0.35}
                   style={{ transition: 'all 0.2s ease', transform: isHovered ? 'scale(1.03)' : 'scale(1)', transformOrigin: `${cx}px ${cy}px` }}
                 />
                 <text
@@ -388,7 +369,7 @@ const CircularWorkflow = ({ readiness, summary, onAreaClick, financialSummary, p
                   dominantBaseline="middle"
                   fontSize="8"
                   fontWeight={isHovered ? 600 : 400}
-                  fill={COLORS.mediumGray}
+                  fill={COLORS.textSecondary}
                 >
                   {area.shortLabel}
                 </text>
@@ -411,9 +392,9 @@ const CircularWorkflow = ({ readiness, summary, onAreaClick, financialSummary, p
                 <path
                   d={describeArc(cx, cy, outerR, innerR, seg.start, seg.end)}
                   fill={STATUS_FILLS[seg.fillStatus]}
-                  stroke={isHovered ? COLORS.darkGray : COLORS.white}
+                  stroke={isHovered ? COLORS.textPrimary : COLORS.white}
                   strokeWidth={isHovered ? 2.5 : 1.5}
-                  opacity={isHovered ? 1 : seg.opacity}
+                  opacity={seg.opacity}
                   style={{ transition: 'all 0.2s ease', transform: isHovered ? 'scale(1.03)' : 'scale(1)', transformOrigin: `${cx}px ${cy}px` }}
                 />
               </g>
@@ -435,7 +416,7 @@ const CircularWorkflow = ({ readiness, summary, onAreaClick, financialSummary, p
                 <path
                   d="M -4 -5 L 4 0 L -4 5"
                   fill="none"
-                  stroke={COLORS.mediumGray}
+                  stroke={COLORS.textSecondary}
                   strokeWidth="1.8"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -445,35 +426,53 @@ const CircularWorkflow = ({ readiness, summary, onAreaClick, financialSummary, p
           })}
 
           {/* ═══ CENTRE CONTENT ═══ inside the donut */}
-          {hasAnalysis && (unclaimed > 0 || growth > 0) ? (
-            <foreignObject x={cx - 70} y={cy - 45} width="140" height="90">
+          {hasAnalysis && (unclaimed > 0 || growth > 0 || recovered > 0) ? (
+            <foreignObject x={cx - 70} y={cy - 55} width="140" height="110">
               <div xmlns="http://www.w3.org/1999/xhtml" style={{
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
                 height: '100%',
-                gap: '0.25rem',
+                gap: '0.2rem',
                 textAlign: 'center'
               }}>
                 {unclaimed > 0 && (
                   <div>
-                    <div style={{ fontSize: '0.65rem', color: COLORS.mediumGray, lineHeight: 1.2 }}>Unclaimed</div>
-                    <div style={{ fontSize: '1.1rem', fontWeight: 700, color: COLORS.expenseColor, lineHeight: 1.2 }}>
+                    <div style={{ fontSize: '0.6rem', color: COLORS.textSecondary, lineHeight: 1.2 }}>Unclaimed</div>
+                    <div style={{ fontSize: '1rem', fontWeight: 700, color: COLORS.expenseColor, lineHeight: 1.2 }}>
                       {'\u20AC'}{Math.round(unclaimed).toLocaleString()}
                     </div>
                   </div>
                 )}
-                {unclaimed > 0 && growth > 0 && (
-                  <div style={{ width: '40px', borderBottom: `1px solid ${COLORS.lightGray}` }} />
+                {unclaimed > 0 && (growth > 0 || recovered > 0) && (
+                  <div style={{ width: '40px', borderBottom: `1px solid ${COLORS.borderLight}` }} />
                 )}
                 {growth > 0 && (
                   <div>
-                    <div style={{ fontSize: '0.65rem', color: COLORS.mediumGray, lineHeight: 1.2 }}>Growth</div>
-                    <div style={{ fontSize: '1.1rem', fontWeight: 700, color: COLORS.incomeColor, lineHeight: 1.2 }}>
+                    <div style={{ fontSize: '0.6rem', color: COLORS.textSecondary, lineHeight: 1.2 }}>Growth</div>
+                    <div style={{ fontSize: '1rem', fontWeight: 700, color: COLORS.incomeColor, lineHeight: 1.2 }}>
                       {'\u20AC'}{Math.round(growth).toLocaleString()}
                     </div>
                   </div>
+                )}
+                {recovered > 0 && (
+                  <>
+                    {(unclaimed > 0 || growth > 0) && (
+                      <div style={{ width: '40px', borderBottom: `1px solid ${COLORS.borderLight}` }} />
+                    )}
+                    <div>
+                      <div style={{ fontSize: '0.6rem', color: COLORS.textSecondary, lineHeight: 1.2 }}>Recovered</div>
+                      <div style={{ fontSize: '1rem', fontWeight: 700, color: '#2ECC71', lineHeight: 1.2 }}>
+                        {'\u20AC'}{Math.round(recovered).toLocaleString()}
+                      </div>
+                      {impactSummary?.totalVerified > 0 && impactSummary?.totalProjected > 0 && (
+                        <div style={{ fontSize: '0.5rem', color: COLORS.textSecondary, lineHeight: 1.1 }}>
+                          {'\u20AC'}{impactSummary.totalVerified.toLocaleString()} verified
+                        </div>
+                      )}
+                    </div>
+                  </>
                 )}
               </div>
             </foreignObject>
@@ -497,7 +496,7 @@ const CircularWorkflow = ({ readiness, summary, onAreaClick, financialSummary, p
                 </div>
                 <div style={{
                   fontSize: '0.65rem',
-                  color: COLORS.mediumGray,
+                  color: COLORS.textSecondary,
                   marginTop: '0.2rem',
                   lineHeight: 1.2
                 }}>
@@ -510,7 +509,7 @@ const CircularWorkflow = ({ readiness, summary, onAreaClick, financialSummary, p
 
         {/* Right annotation: Data Collection */}
         <div style={{ paddingTop: '1.5rem', textAlign: 'left', width: '90px', flexShrink: 0, flexGrow: 0, position: 'relative' }}>
-          <div style={{ fontSize: '0.8rem', fontWeight: 700, color: COLORS.darkGray, lineHeight: 1.3, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: '0.8rem', fontWeight: 700, color: COLORS.textPrimary, lineHeight: 1.3, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
             Data<br />Collection
           </div>
           <div style={{
@@ -535,7 +534,7 @@ const CircularWorkflow = ({ readiness, summary, onAreaClick, financialSummary, p
             }}>
               {summary.readyCount}/{summary.totalAreas}
             </span>
-            <span style={{ fontSize: '0.7rem', color: COLORS.mediumGray }}>complete</span>
+            <span style={{ fontSize: '0.7rem', color: COLORS.textSecondary }}>complete</span>
           </div>
           {/* Data hover tooltip - absolutely positioned so it overflows right without shifting layout */}
           <div style={{ position: 'absolute', left: 0, top: '100%', marginTop: '0.5rem', zIndex: 10 }}>
@@ -549,7 +548,7 @@ const CircularWorkflow = ({ readiness, summary, onAreaClick, financialSummary, p
         {/* Analysis label (centred via flex) */}
         <div style={{ flex: 1 }} />
         <div style={{ textAlign: 'center', position: 'relative' }}>
-          <div style={{ fontSize: '0.8rem', fontWeight: 700, color: COLORS.darkGray, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Analysis</div>
+          <div style={{ fontSize: '0.8rem', fontWeight: 700, color: COLORS.textPrimary, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Analysis</div>
           <div style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -576,11 +575,11 @@ const CircularWorkflow = ({ readiness, summary, onAreaClick, financialSummary, p
                 ? COLORS.incomeColor
                 : summary.analyzableCount > 0
                   ? COLORS.slainteBlue
-                  : COLORS.mediumGray
+                  : COLORS.textSecondary
             }}>
               {summary.analyzableCount}/{summary.totalAreas}
             </span>
-            <span style={{ fontSize: '0.7rem', color: COLORS.mediumGray }}>analysed</span>
+            <span style={{ fontSize: '0.7rem', color: COLORS.textSecondary }}>analysed</span>
           </div>
           {/* Analysis hover tooltip — absolutely positioned to avoid layout shift */}
           <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', top: '100%', marginTop: '0.5rem', zIndex: 10 }}>
@@ -590,7 +589,7 @@ const CircularWorkflow = ({ readiness, summary, onAreaClick, financialSummary, p
 
         {/* Legend — right-aligned, same height as Analysis */}
         <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', paddingTop: '0.15rem' }}>
-          <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.75rem', color: COLORS.mediumGray }}>
+          <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.75rem', color: COLORS.textSecondary }}>
             {[
               { color: STATUS_COLORS.ready, label: 'Ready' },
               { color: STATUS_COLORS.partial, label: 'Partial' },

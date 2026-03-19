@@ -8,11 +8,11 @@ import COLORS from '../../utils/colors';
 
 // Yellow/gold color scheme for Tasks widget
 const TASKS_COLORS = {
-  primary: '#E6A700',      // Darker gold for better contrast
-  primaryDark: '#CC9400',  // Hover state
-  headerText: '#333333',   // Dark text on yellow background
+  primary: COLORS.warning,      // Darker gold for better contrast
+  primaryDark: COLORS.warningDark,  // Hover state
+  headerText: COLORS.textPrimary,   // Dark text on yellow background
   pillBg: COLORS.highlightYellow,  // Use the standard yellow
-  pillText: '#333333'      // Dark text on pill
+  pillText: COLORS.textPrimary      // Dark text on pill
 };
 
 /**
@@ -31,28 +31,43 @@ const TasksWidget = () => {
 
   const [showFinancialTasksModal, setShowFinancialTasksModal] = useState(false);
   const [showGMSTasksModal, setShowGMSTasksModal] = useState(false);
+  const [editTaskId, setEditTaskId] = useState(null);
 
   const handleTasksChanged = () => {
     refreshTasks();
   };
 
-  // Listen for tour events
+  // Listen for tour events and Finn task modal events
   useEffect(() => {
     const handleOpenWidget = () => openWidget();
     const handleCloseWidget = () => closeWidget();
     const handleOpenManageTasks = () => setShowFinancialTasksModal(true);
     const handleCloseManageTasks = () => setShowFinancialTasksModal(false);
 
+    // Finn-triggered modal opens (with optional editTaskId)
+    const handleOpenFinancialModal = (e) => {
+      setEditTaskId(e.detail?.editTaskId || null);
+      setShowFinancialTasksModal(true);
+    };
+    const handleOpenGMSModal = (e) => {
+      setEditTaskId(e.detail?.editTaskId || null);
+      setShowGMSTasksModal(true);
+    };
+
     window.addEventListener('tour:openTasksWidget', handleOpenWidget);
     window.addEventListener('tour:closeTasksWidget', handleCloseWidget);
     window.addEventListener('tour:openManageTasksModal', handleOpenManageTasks);
     window.addEventListener('tour:closeManageTasksModal', handleCloseManageTasks);
+    window.addEventListener('tasks:openFinancialModal', handleOpenFinancialModal);
+    window.addEventListener('tasks:openGMSModal', handleOpenGMSModal);
 
     return () => {
       window.removeEventListener('tour:openTasksWidget', handleOpenWidget);
       window.removeEventListener('tour:closeTasksWidget', handleCloseWidget);
       window.removeEventListener('tour:openManageTasksModal', handleOpenManageTasks);
       window.removeEventListener('tour:closeManageTasksModal', handleCloseManageTasks);
+      window.removeEventListener('tasks:openFinancialModal', handleOpenFinancialModal);
+      window.removeEventListener('tasks:openGMSModal', handleOpenGMSModal);
     };
   }, [openWidget, closeWidget]);
 
@@ -150,7 +165,7 @@ const TasksWidget = () => {
           backgroundColor: COLORS.white,
           borderRadius: '0.75rem',
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-          border: `1px solid ${COLORS.lightGray}`,
+          border: `1px solid ${COLORS.borderLight}`,
           width: 'min(400px, calc(100vw - 3rem))',
           maxHeight: 'calc(100vh - 7rem)',
           display: 'flex',
@@ -235,15 +250,17 @@ const TasksWidget = () => {
       {/* Financial Tasks Modal */}
       <FinancialTasksModal
         isOpen={showFinancialTasksModal}
-        onClose={() => setShowFinancialTasksModal(false)}
+        onClose={() => { setShowFinancialTasksModal(false); setEditTaskId(null); }}
         onTasksChanged={handleTasksChanged}
+        autoEditTaskId={editTaskId}
       />
 
       {/* GMS Tasks Modal */}
       <GMSTasksModal
         isOpen={showGMSTasksModal}
-        onClose={() => setShowGMSTasksModal(false)}
+        onClose={() => { setShowGMSTasksModal(false); setEditTaskId(null); }}
         onTasksChanged={handleTasksChanged}
+        autoEditTaskId={editTaskId}
       />
     </>
   );

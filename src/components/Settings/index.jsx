@@ -69,7 +69,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: COLORS.overlayDark,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -99,11 +99,11 @@ const SettingsModal = ({ isOpen, onClose }) => {
             alignItems: 'center',
             justifyContent: 'space-between',
             padding: '1rem 1.5rem',
-            borderBottom: `1px solid ${COLORS.lightGray}`,
+            borderBottom: `1px solid ${COLORS.borderLight}`,
             flexShrink: 0
           }}
         >
-          <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600, color: COLORS.darkGray }}>
+          <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600, color: COLORS.textPrimary }}>
             Settings
           </h2>
           <button
@@ -118,10 +118,10 @@ const SettingsModal = ({ isOpen, onClose }) => {
               alignItems: 'center',
               justifyContent: 'center'
             }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.backgroundGray}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.bgPage}
             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
           >
-            <X style={{ width: '1.25rem', height: '1.25rem', color: COLORS.mediumGray }} />
+            <X style={{ width: '1.25rem', height: '1.25rem', color: COLORS.textSecondary }} />
           </button>
         </div>
 
@@ -131,10 +131,10 @@ const SettingsModal = ({ isOpen, onClose }) => {
           <nav
             style={{
               width: '200px',
-              borderRight: `1px solid ${COLORS.lightGray}`,
+              borderRight: `1px solid ${COLORS.borderLight}`,
               padding: '1rem 0',
               flexShrink: 0,
-              backgroundColor: COLORS.backgroundGray
+              backgroundColor: COLORS.bgPage
             }}
           >
             {sections.map((section) => {
@@ -155,7 +155,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
                     border: 'none',
                     background: isActive ? COLORS.white : 'transparent',
                     cursor: 'pointer',
-                    color: isActive ? COLORS.slainteBlue : COLORS.darkGray,
+                    color: isActive ? COLORS.slainteBlue : COLORS.textPrimary,
                     fontWeight: isActive ? 600 : 400,
                     fontSize: '0.9375rem',
                     textAlign: 'left',

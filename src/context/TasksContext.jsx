@@ -73,8 +73,16 @@ export const TasksProvider = ({ children }) => {
   useEffect(() => {
     const handleOpenAndHighlight = (e) => {
       const taskId = e.detail?.taskId;
+      const expandSection = e.detail?.expandSection;
       setIsOpen(true);
-      setGmsExpanded(true);
+      // Expand the relevant section (default to GMS for backwards compatibility)
+      if (expandSection === 'financial') {
+        setFinancialExpanded(true);
+      } else if (expandSection === 'gms') {
+        setGmsExpanded(true);
+      } else {
+        setGmsExpanded(true);
+      }
       if (taskId) {
         setHighlightedTaskId(taskId);
         // Clear highlight after 2 seconds

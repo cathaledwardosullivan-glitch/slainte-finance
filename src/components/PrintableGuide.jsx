@@ -357,8 +357,8 @@ const PrintableGuide = ({ onClose }) => {
               fontWeight: 500,
               cursor: 'pointer',
               background: 'white',
-              color: COLORS.darkGray,
-              border: '1px solid #e5e7eb',
+              color: COLORS.textPrimary,
+              border: `1px solid ${COLORS.borderLight}`,
             }}
           >
             <X size={18} />
@@ -391,19 +391,19 @@ const PrintableGuide = ({ onClose }) => {
           }}>Sláinte Finance</h1>
           <p style={{
             fontSize: '20px',
-            color: '#6b7280',
+            color: COLORS.textMuted,
             margin: 0,
           }}>User Guide</p>
           <p style={{
             fontSize: '14px',
-            color: '#6b7280',
+            color: COLORS.textMuted,
             marginTop: '16px',
           }}>Version 2.0 • {new Date().toLocaleDateString('en-IE', { month: 'long', year: 'numeric' })}</p>
         </div>
 
         {/* Table of Contents */}
         <div className="toc" style={{
-          background: '#f8f9fa',
+          background: COLORS.bgPage,
           padding: '24px 32px',
           borderRadius: '8px',
           marginBottom: '40px',
@@ -411,7 +411,7 @@ const PrintableGuide = ({ onClose }) => {
           <h2 style={{
             fontSize: '20px',
             margin: '0 0 16px 0',
-            color: '#374151',
+            color: COLORS.textPrimary,
           }}>Contents</h2>
           <ul style={{
             listStyle: 'none',
@@ -424,7 +424,7 @@ const PrintableGuide = ({ onClose }) => {
               <li key={idx} style={{
                 padding: '4px 0',
                 fontSize: '15px',
-                color: '#374151',
+                color: COLORS.textPrimary,
               }}>
                 <span style={{
                   color: COLORS.slainteBlue,
@@ -462,7 +462,7 @@ const PrintableGuide = ({ onClose }) => {
                 }}>{section.name}</h2>
               </div>
               <div className="section-content" style={{
-                border: '1px solid #e5e7eb',
+                border: `1px solid ${COLORS.borderLight}`,
                 borderTop: 'none',
                 borderRadius: '0 0 8px 8px',
                 padding: '24px',
@@ -476,7 +476,7 @@ const PrintableGuide = ({ onClose }) => {
                     <div key={step.id} className="step" style={{
                       marginBottom: stepIdx < section.steps.length - 1 ? '32px' : 0,
                       paddingBottom: stepIdx < section.steps.length - 1 ? '32px' : 0,
-                      borderBottom: stepIdx < section.steps.length - 1 ? '1px solid #e5e7eb' : 'none',
+                      borderBottom: stepIdx < section.steps.length - 1 ? `1px solid ${COLORS.borderLight}` : 'none',
                     }}>
                       <div className="step-header" style={{
                         display: 'flex',
@@ -500,7 +500,7 @@ const PrintableGuide = ({ onClose }) => {
                         <h3 className="step-title" style={{
                           fontSize: '20px',
                           fontWeight: 600,
-                          color: '#374151',
+                          color: COLORS.textPrimary,
                           margin: 0,
                         }}>{step.title}</h3>
                       </div>
@@ -508,9 +508,9 @@ const PrintableGuide = ({ onClose }) => {
                       {/* Screenshot or Placeholder */}
                       <div className="screenshot-container" style={{
                         margin: '16px 0',
-                        border: '2px solid #e5e7eb',
+                        border: `2px solid ${COLORS.borderLight}`,
                         borderRadius: '8px',
-                        background: '#f8fafc',
+                        background: COLORS.bgPage,
                         overflow: 'hidden',
                       }}>
                         {hasError ? (
@@ -522,7 +522,7 @@ const PrintableGuide = ({ onClose }) => {
                             justifyContent: 'center',
                             padding: '32px',
                             textAlign: 'center',
-                            color: '#94a3b8',
+                            color: COLORS.textSecondary,
                           }}>
                             <Camera size={48} />
                             <p className="screenshot-placeholder-text" style={{
@@ -568,7 +568,7 @@ const PrintableGuide = ({ onClose }) => {
                           Cara explains
                         </div>
                         <p className="cara-text" style={{
-                          color: '#374151',
+                          color: COLORS.textPrimary,
                           fontSize: '15px',
                           margin: 0,
                           fontStyle: 'italic',
@@ -586,9 +586,9 @@ const PrintableGuide = ({ onClose }) => {
         <div className="guide-footer" style={{
           textAlign: 'center',
           padding: '32px',
-          borderTop: '1px solid #e5e7eb',
+          borderTop: `1px solid ${COLORS.borderLight}`,
           marginTop: '32px',
-          color: '#6b7280',
+          color: COLORS.textMuted,
           fontSize: '14px',
         }}>
           <p style={{ margin: '0 0 8px 0' }}>Sláinte Finance • Empowering Irish GPs with Financial Clarity</p>

@@ -437,10 +437,10 @@ export default function PersonalTaxReturnForm() {
         <div className="bg-white rounded-lg shadow p-6">
             {/* Header */}
             <div className="mb-6">
-                <h2 className="text-2xl font-semibold mb-2" style={{ color: COLORS.darkGray }}>
+                <h2 className="text-2xl font-semibold mb-2" style={{ color: COLORS.textPrimary }}>
                     Personal Tax Return Information Form
                 </h2>
-                <p className="text-sm mb-4" style={{ color: COLORS.mediumGray }}>
+                <p className="text-sm mb-4" style={{ color: COLORS.textSecondary }}>
                     Comprehensive tax information checklist for self-employed GPs in Ireland
                 </p>
 
@@ -462,14 +462,14 @@ export default function PersonalTaxReturnForm() {
             {/* Controls */}
             <div className="mb-6 flex flex-wrap gap-4">
                 <div className="flex-1 min-w-[200px]">
-                    <label className="block text-sm font-medium mb-2" style={{ color: COLORS.darkGray }}>
+                    <label className="block text-sm font-medium mb-2" style={{ color: COLORS.textPrimary }}>
                         Tax Year
                     </label>
                     <select
                         value={selectedYear}
                         onChange={(e) => setSelectedYear(parseInt(e.target.value))}
                         className="w-full border rounded px-3 py-2"
-                        style={{ borderColor: COLORS.lightGray }}
+                        style={{ borderColor: COLORS.borderLight }}
                     >
                         {[2024, 2023, 2022, 2021, 2020].map(year => (
                             <option key={year} value={year}>{year}</option>
@@ -515,27 +515,27 @@ export default function PersonalTaxReturnForm() {
             )}
 
             {/* Summary Card */}
-            <div className="mb-6 p-4 rounded-lg" style={{ backgroundColor: COLORS.backgroundGray }}>
-                <h3 className="font-semibold mb-3" style={{ color: COLORS.darkGray }}>Summary</h3>
+            <div className="mb-6 p-4 rounded-lg" style={{ backgroundColor: COLORS.bgPage }}>
+                <h3 className="font-semibold mb-3" style={{ color: COLORS.textPrimary }}>Summary</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
-                        <p className="text-xs" style={{ color: COLORS.mediumGray }}>Total Income</p>
+                        <p className="text-xs" style={{ color: COLORS.textSecondary }}>Total Income</p>
                         <p className="text-lg font-bold" style={{ color: COLORS.incomeColor }}>
                             {formatCurrency(totals.totalIncome)}
                         </p>
                     </div>
                     <div>
-                        <p className="text-xs" style={{ color: COLORS.mediumGray }}>Total Expenses</p>
+                        <p className="text-xs" style={{ color: COLORS.textSecondary }}>Total Expenses</p>
                         <p className="text-lg font-bold" style={{ color: COLORS.expenseColor }}>
                             {formatCurrency(totals.totalBusinessExpenses)}
                         </p>
                     </div>
                     <div className="col-span-2">
-                        <p className="text-xs" style={{ color: COLORS.mediumGray }}>Net Relevant Earnings (NRE)</p>
+                        <p className="text-xs" style={{ color: COLORS.textSecondary }}>Net Relevant Earnings (NRE)</p>
                         <p className="text-xl font-bold" style={{ color: COLORS.slainteBlue }}>
                             {formatCurrency(totals.netRelevantEarnings)}
                         </p>
-                        <p className="text-xs mt-1" style={{ color: COLORS.mediumGray }}>
+                        <p className="text-xs mt-1" style={{ color: COLORS.textSecondary }}>
                             (Used for pension contribution calculations)
                         </p>
                     </div>
@@ -545,7 +545,7 @@ export default function PersonalTaxReturnForm() {
             {/* Form Sections - Collapsible */}
             <div className="space-y-4">
                 {/* Part 1: Personal & Business Details */}
-                <div className="border rounded-lg" style={{ borderColor: COLORS.lightGray }}>
+                <div className="border rounded-lg" style={{ borderColor: COLORS.borderLight }}>
                     <button
                         onClick={() => toggleSection('part1')}
                         className="w-full p-4 flex items-center justify-between hover:bg-gray-50"
@@ -553,10 +553,10 @@ export default function PersonalTaxReturnForm() {
                         <div className="flex items-center gap-3">
                             <span className="text-lg">{expandedSections.part1 ? '▼' : '▶'}</span>
                             <div className="text-left">
-                                <h3 className="font-semibold" style={{ color: COLORS.darkGray }}>
+                                <h3 className="font-semibold" style={{ color: COLORS.textPrimary }}>
                                     Part 1: Personal & Business Details
                                 </h3>
-                                <p className="text-xs" style={{ color: COLORS.mediumGray }}>
+                                <p className="text-xs" style={{ color: COLORS.textSecondary }}>
                                     Your personal and practice information
                                 </p>
                             </div>
@@ -564,10 +564,10 @@ export default function PersonalTaxReturnForm() {
                     </button>
 
                     {expandedSections.part1 && (
-                        <div className="p-4 border-t" style={{ borderColor: COLORS.lightGray }}>
+                        <div className="p-4 border-t" style={{ borderColor: COLORS.borderLight }}>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                         Full Name
                                     </label>
                                     <input
@@ -575,13 +575,13 @@ export default function PersonalTaxReturnForm() {
                                         value={formData.fullName}
                                         onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
                                         className="w-full border rounded px-3 py-2"
-                                        style={{ borderColor: COLORS.lightGray }}
+                                        style={{ borderColor: COLORS.borderLight }}
                                         placeholder="Dr. John Smith"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                         PPSN
                                     </label>
                                     <input
@@ -589,13 +589,13 @@ export default function PersonalTaxReturnForm() {
                                         value={formData.ppsn}
                                         onChange={(e) => setFormData(prev => ({ ...prev, ppsn: e.target.value }))}
                                         className="w-full border rounded px-3 py-2"
-                                        style={{ borderColor: COLORS.lightGray }}
+                                        style={{ borderColor: COLORS.borderLight }}
                                         placeholder="1234567AB"
                                     />
                                 </div>
 
                                 <div className="md:col-span-2">
-                                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                         Address
                                     </label>
                                     <input
@@ -603,13 +603,13 @@ export default function PersonalTaxReturnForm() {
                                         value={formData.address}
                                         onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
                                         className="w-full border rounded px-3 py-2"
-                                        style={{ borderColor: COLORS.lightGray }}
+                                        style={{ borderColor: COLORS.borderLight }}
                                         placeholder="123 Main Street, Dublin, D01 ABC1"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                         Spouse's/Civil Partner's Name (if applicable)
                                     </label>
                                     <input
@@ -617,12 +617,12 @@ export default function PersonalTaxReturnForm() {
                                         value={formData.spouseName}
                                         onChange={(e) => setFormData(prev => ({ ...prev, spouseName: e.target.value }))}
                                         className="w-full border rounded px-3 py-2"
-                                        style={{ borderColor: COLORS.lightGray }}
+                                        style={{ borderColor: COLORS.borderLight }}
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                         Spouse's/Civil Partner's PPSN (if applicable)
                                     </label>
                                     <input
@@ -630,12 +630,12 @@ export default function PersonalTaxReturnForm() {
                                         value={formData.spousePpsn}
                                         onChange={(e) => setFormData(prev => ({ ...prev, spousePpsn: e.target.value }))}
                                         className="w-full border rounded px-3 py-2"
-                                        style={{ borderColor: COLORS.lightGray }}
+                                        style={{ borderColor: COLORS.borderLight }}
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                         Business/Practice Name
                                     </label>
                                     <input
@@ -643,13 +643,13 @@ export default function PersonalTaxReturnForm() {
                                         value={formData.businessName}
                                         onChange={(e) => setFormData(prev => ({ ...prev, businessName: e.target.value }))}
                                         className="w-full border rounded px-3 py-2"
-                                        style={{ borderColor: COLORS.lightGray }}
+                                        style={{ borderColor: COLORS.borderLight }}
                                         placeholder="Smith Medical Practice"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                         Business/Practice Address
                                     </label>
                                     <input
@@ -657,12 +657,12 @@ export default function PersonalTaxReturnForm() {
                                         value={formData.businessAddress}
                                         onChange={(e) => setFormData(prev => ({ ...prev, businessAddress: e.target.value }))}
                                         className="w-full border rounded px-3 py-2"
-                                        style={{ borderColor: COLORS.lightGray }}
+                                        style={{ borderColor: COLORS.borderLight }}
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                         Revenue Tax Registration Number
                                     </label>
                                     <input
@@ -670,12 +670,12 @@ export default function PersonalTaxReturnForm() {
                                         value={formData.taxRegistrationNumber}
                                         onChange={(e) => setFormData(prev => ({ ...prev, taxRegistrationNumber: e.target.value }))}
                                         className="w-full border rounded px-3 py-2"
-                                        style={{ borderColor: COLORS.lightGray }}
+                                        style={{ borderColor: COLORS.borderLight }}
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                         VAT Number (if registered)
                                     </label>
                                     <input
@@ -683,7 +683,7 @@ export default function PersonalTaxReturnForm() {
                                         value={formData.vatNumber}
                                         onChange={(e) => setFormData(prev => ({ ...prev, vatNumber: e.target.value }))}
                                         className="w-full border rounded px-3 py-2"
-                                        style={{ borderColor: COLORS.lightGray }}
+                                        style={{ borderColor: COLORS.borderLight }}
                                         placeholder="Most medical services are VAT exempt"
                                     />
                                 </div>
@@ -693,7 +693,7 @@ export default function PersonalTaxReturnForm() {
                 </div>
 
                 {/* Part 2: Income/Revenue */}
-                <div className="border rounded-lg" style={{ borderColor: COLORS.lightGray }}>
+                <div className="border rounded-lg" style={{ borderColor: COLORS.borderLight }}>
                     <button
                         onClick={() => toggleSection('part2')}
                         className="w-full p-4 flex items-center justify-between hover:bg-gray-50"
@@ -701,30 +701,30 @@ export default function PersonalTaxReturnForm() {
                         <div className="flex items-center gap-3">
                             <span className="text-lg">{expandedSections.part2 ? '▼' : '▶'}</span>
                             <div className="text-left flex-1">
-                                <h3 className="font-semibold" style={{ color: COLORS.darkGray }}>
+                                <h3 className="font-semibold" style={{ color: COLORS.textPrimary }}>
                                     Part 2: Income / Revenue
                                 </h3>
-                                <p className="text-xs" style={{ color: COLORS.mediumGray }}>
+                                <p className="text-xs" style={{ color: COLORS.textSecondary }}>
                                     All income sources • Total: {formatCurrency(totals.totalIncome)}
                                 </p>
                             </div>
                         </div>
                         {autoPopulated && (
-                            <span className="text-xs px-2 py-1 rounded mr-2" style={{ backgroundColor: '#E8F5E9', color: COLORS.incomeColor }}>
+                            <span className="text-xs px-2 py-1 rounded mr-2" style={{ backgroundColor: COLORS.incomeColorLight, color: COLORS.incomeColor }}>
                                 Auto-populated
                             </span>
                         )}
                     </button>
 
                     {expandedSections.part2 && (
-                        <div className="p-4 border-t" style={{ borderColor: COLORS.lightGray }}>
+                        <div className="p-4 border-t" style={{ borderColor: COLORS.borderLight }}>
                             <div className="space-y-6">
                                 {/* Professional Income */}
                                 <div>
                                     <h4 className="font-semibold mb-3" style={{ color: COLORS.slainteBlue }}>Professional Income</h4>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 Private Patient Fees
                                             </label>
                                             <input
@@ -732,13 +732,13 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.privatePatientFees || ''}
                                                 onChange={(e) => handleFieldChange('privatePatientFees', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 VHI Healthcare
                                             </label>
                                             <input
@@ -746,13 +746,13 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.vhiIncome || ''}
                                                 onChange={(e) => handleFieldChange('vhiIncome', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 Laya Healthcare
                                             </label>
                                             <input
@@ -760,13 +760,13 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.layaIncome || ''}
                                                 onChange={(e) => handleFieldChange('layaIncome', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 Irish Life Health
                                             </label>
                                             <input
@@ -774,13 +774,13 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.irishLifeHealthIncome || ''}
                                                 onChange={(e) => handleFieldChange('irishLifeHealthIncome', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 Other Health Insurers
                                             </label>
                                             <input
@@ -788,13 +788,13 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.otherInsurersIncome || ''}
                                                 onChange={(e) => handleFieldChange('otherInsurersIncome', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 GMS / HSE Payments
                                             </label>
                                             <input
@@ -802,13 +802,13 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.gmsHseIncome || ''}
                                                 onChange={(e) => handleFieldChange('gmsHseIncome', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 Medico-legal Reports
                                             </label>
                                             <input
@@ -816,13 +816,13 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.medicoLegalIncome || ''}
                                                 onChange={(e) => handleFieldChange('medicoLegalIncome', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 Lecturing or Teaching Fees
                                             </label>
                                             <input
@@ -830,13 +830,13 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.lecturingIncome || ''}
                                                 onChange={(e) => handleFieldChange('lecturingIncome', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 Sessional Work (non-PAYE)
                                             </label>
                                             <input
@@ -844,13 +844,13 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.sessionalIncome || ''}
                                                 onChange={(e) => handleFieldChange('sessionalIncome', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 Other Professional Income
                                             </label>
                                             <input
@@ -858,13 +858,13 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.otherProfessionalIncome || ''}
                                                 onChange={(e) => handleFieldChange('otherProfessionalIncome', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
                                     </div>
 
-                                    <div className="mt-3 p-3 rounded" style={{ backgroundColor: '#E8F5E9' }}>
+                                    <div className="mt-3 p-3 rounded" style={{ backgroundColor: COLORS.incomeColorLight }}>
                                         <div className="flex justify-between items-center">
                                             <span className="font-semibold" style={{ color: COLORS.incomeColor }}>
                                                 Total Professional Income:
@@ -881,7 +881,7 @@ export default function PersonalTaxReturnForm() {
                                     <h4 className="font-semibold mb-3" style={{ color: COLORS.slainteBlue }}>Other Non-Medical Income</h4>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 Rental Income
                                             </label>
                                             <input
@@ -889,13 +889,13 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.rentalIncome || ''}
                                                 onChange={(e) => handleFieldChange('rentalIncome', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 Dividends from Shares
                                             </label>
                                             <input
@@ -903,13 +903,13 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.dividendIncome || ''}
                                                 onChange={(e) => handleFieldChange('dividendIncome', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 Deposit Interest (note if DIRT already deducted)
                                             </label>
                                             <input
@@ -917,7 +917,7 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.depositInterest || ''}
                                                 onChange={(e) => handleFieldChange('depositInterest', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
@@ -927,12 +927,12 @@ export default function PersonalTaxReturnForm() {
                                 {/* PAYE Income */}
                                 <div>
                                     <h4 className="font-semibold mb-3" style={{ color: COLORS.slainteBlue }}>PAYE Income (if applicable)</h4>
-                                    <p className="text-xs mb-3" style={{ color: COLORS.mediumGray }}>
+                                    <p className="text-xs mb-3" style={{ color: COLORS.textSecondary }}>
                                         If you also have a salaried position, enter the details from your P60
                                     </p>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 Gross Pay from Employment
                                             </label>
                                             <input
@@ -940,13 +940,13 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.payeGrossPay || ''}
                                                 onChange={(e) => handleFieldChange('payeGrossPay', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 PAYE Tax Paid
                                             </label>
                                             <input
@@ -954,13 +954,13 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.payeTaxPaid || ''}
                                                 onChange={(e) => handleFieldChange('payeTaxPaid', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 USC Paid
                                             </label>
                                             <input
@@ -968,13 +968,13 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.payeUscPaid || ''}
                                                 onChange={(e) => handleFieldChange('payeUscPaid', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 PRSI Paid
                                             </label>
                                             <input
@@ -982,7 +982,7 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.payePrsiPaid || ''}
                                                 onChange={(e) => handleFieldChange('payePrsiPaid', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
@@ -994,7 +994,7 @@ export default function PersonalTaxReturnForm() {
                 </div>
 
                 {/* Part 3: Allowable Business Expenses */}
-                <div className="border rounded-lg" style={{ borderColor: COLORS.lightGray }}>
+                <div className="border rounded-lg" style={{ borderColor: COLORS.borderLight }}>
                     <button
                         onClick={() => toggleSection('part3')}
                         className="w-full p-4 flex items-center justify-between hover:bg-gray-50"
@@ -1002,30 +1002,30 @@ export default function PersonalTaxReturnForm() {
                         <div className="flex items-center gap-3">
                             <span className="text-lg">{expandedSections.part3 ? '▼' : '▶'}</span>
                             <div className="text-left flex-1">
-                                <h3 className="font-semibold" style={{ color: COLORS.darkGray }}>
+                                <h3 className="font-semibold" style={{ color: COLORS.textPrimary }}>
                                     Part 3: Allowable Business Expenses
                                 </h3>
-                                <p className="text-xs" style={{ color: COLORS.mediumGray }}>
+                                <p className="text-xs" style={{ color: COLORS.textSecondary }}>
                                     Costs incurred wholly and exclusively for your practice • Total: {formatCurrency(totals.totalBusinessExpenses)}
                                 </p>
                             </div>
                         </div>
                         {autoPopulated && (
-                            <span className="text-xs px-2 py-1 rounded mr-2" style={{ backgroundColor: '#FFEBEE', color: COLORS.expenseColor }}>
+                            <span className="text-xs px-2 py-1 rounded mr-2" style={{ backgroundColor: COLORS.errorLighter, color: COLORS.expenseColor }}>
                                 Auto-populated
                             </span>
                         )}
                     </button>
 
                     {expandedSections.part3 && (
-                        <div className="p-4 border-t" style={{ borderColor: COLORS.lightGray }}>
+                        <div className="p-4 border-t" style={{ borderColor: COLORS.borderLight }}>
                             <div className="space-y-6">
                                 {/* Professional Fees & Subscriptions */}
                                 <div>
                                     <h4 className="font-semibold mb-3" style={{ color: COLORS.slainteBlue }}>Professional Fees & Subscriptions</h4>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 Medical Council Registration Fee
                                             </label>
                                             <input
@@ -1033,13 +1033,13 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.medicalCouncilFee || ''}
                                                 onChange={(e) => handleFieldChange('medicalCouncilFee', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 Medical Indemnity/Defence Insurance
                                             </label>
                                             <input
@@ -1047,13 +1047,13 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.indemnityInsurance || ''}
                                                 onChange={(e) => handleFieldChange('indemnityInsurance', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 Professional Subscriptions (ICGP, RCPI, etc.)
                                             </label>
                                             <input
@@ -1061,13 +1061,13 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.professionalSubscriptions || ''}
                                                 onChange={(e) => handleFieldChange('professionalSubscriptions', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 Medical Journals Subscriptions
                                             </label>
                                             <input
@@ -1075,7 +1075,7 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.medicalJournals || ''}
                                                 onChange={(e) => handleFieldChange('medicalJournals', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
@@ -1087,7 +1087,7 @@ export default function PersonalTaxReturnForm() {
                                     <h4 className="font-semibold mb-3" style={{ color: COLORS.slainteBlue }}>Clinic & Operational Costs</h4>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 Clinic Rent (or proportion of mortgage interest)
                                             </label>
                                             <input
@@ -1095,13 +1095,13 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.clinicRent || ''}
                                                 onChange={(e) => handleFieldChange('clinicRent', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 Business Rates
                                             </label>
                                             <input
@@ -1109,13 +1109,13 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.businessRates || ''}
                                                 onChange={(e) => handleFieldChange('businessRates', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 Light & Heat
                                             </label>
                                             <input
@@ -1123,13 +1123,13 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.lightHeat || ''}
                                                 onChange={(e) => handleFieldChange('lightHeat', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 Telephone & Internet
                                             </label>
                                             <input
@@ -1137,13 +1137,13 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.telephoneInternet || ''}
                                                 onChange={(e) => handleFieldChange('telephoneInternet', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 Clinic Insurance (Public liability, contents)
                                             </label>
                                             <input
@@ -1151,13 +1151,13 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.clinicInsurance || ''}
                                                 onChange={(e) => handleFieldChange('clinicInsurance', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 Repairs & Maintenance (premises/equipment)
                                             </label>
                                             <input
@@ -1165,7 +1165,7 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.repairsMaintenance || ''}
                                                 onChange={(e) => handleFieldChange('repairsMaintenance', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
@@ -1177,7 +1177,7 @@ export default function PersonalTaxReturnForm() {
                                     <h4 className="font-semibold mb-3" style={{ color: COLORS.slainteBlue }}>Staff Costs</h4>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 Gross Salaries (receptionist, nurse, etc.)
                                             </label>
                                             <input
@@ -1185,13 +1185,13 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.staffSalaries || ''}
                                                 onChange={(e) => handleFieldChange('staffSalaries', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 Employer's PRSI Contributions
                                             </label>
                                             <input
@@ -1199,7 +1199,7 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.employerPrsi || ''}
                                                 onChange={(e) => handleFieldChange('employerPrsi', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
@@ -1211,7 +1211,7 @@ export default function PersonalTaxReturnForm() {
                                     <h4 className="font-semibold mb-3" style={{ color: COLORS.slainteBlue }}>Medical & Office Supplies</h4>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 Medical Supplies & Consumables
                                             </label>
                                             <input
@@ -1219,13 +1219,13 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.medicalSupplies || ''}
                                                 onChange={(e) => handleFieldChange('medicalSupplies', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 Stationery, Postage & Printing
                                             </label>
                                             <input
@@ -1233,7 +1233,7 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.stationeryPostage || ''}
                                                 onChange={(e) => handleFieldChange('stationeryPostage', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
@@ -1243,13 +1243,13 @@ export default function PersonalTaxReturnForm() {
                                 {/* Motor & Travel Expenses */}
                                 <div>
                                     <h4 className="font-semibold mb-3" style={{ color: COLORS.slainteBlue }}>Motor & Travel Expenses (Business Use Only)</h4>
-                                    <p className="text-xs mb-3" style={{ color: COLORS.mediumGray }}>
+                                    <p className="text-xs mb-3" style={{ color: COLORS.textSecondary }}>
                                         You need to separate business use from private use. Keep a logbook.
                                     </p>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 Total Business Mileage (km)
                                             </label>
                                             <input
@@ -1257,13 +1257,13 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.businessMileage || ''}
                                                 onChange={(e) => setFormData(prev => ({ ...prev, businessMileage: parseFloat(e.target.value) || 0 }))}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="0"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 Total Overall Mileage (km)
                                             </label>
                                             <input
@@ -1271,7 +1271,7 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.totalMileage || ''}
                                                 onChange={(e) => setFormData(prev => ({ ...prev, totalMileage: parseFloat(e.target.value) || 0 }))}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="0"
                                             />
                                         </div>
@@ -1279,7 +1279,7 @@ export default function PersonalTaxReturnForm() {
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 Fuel
                                             </label>
                                             <input
@@ -1287,13 +1287,13 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.motorFuel || ''}
                                                 onChange={(e) => handleFieldChange('motorFuel', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 Insurance
                                             </label>
                                             <input
@@ -1301,13 +1301,13 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.motorInsurance || ''}
                                                 onChange={(e) => handleFieldChange('motorInsurance', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 Motor Tax
                                             </label>
                                             <input
@@ -1315,13 +1315,13 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.motorTax || ''}
                                                 onChange={(e) => handleFieldChange('motorTax', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 NCT
                                             </label>
                                             <input
@@ -1329,13 +1329,13 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.nct || ''}
                                                 onChange={(e) => handleFieldChange('nct', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 Repairs, Servicing, Tyres
                                             </label>
                                             <input
@@ -1343,7 +1343,7 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.motorRepairs || ''}
                                                 onChange={(e) => handleFieldChange('motorRepairs', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
@@ -1364,7 +1364,7 @@ export default function PersonalTaxReturnForm() {
                                     <h4 className="font-semibold mb-3" style={{ color: COLORS.slainteBlue }}>Continuing Professional Development (CPD)</h4>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 Course and Conference Fees
                                             </label>
                                             <input
@@ -1372,13 +1372,13 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.cpdCourses || ''}
                                                 onChange={(e) => handleFieldChange('cpdCourses', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 Related Travel and Accommodation
                                             </label>
                                             <input
@@ -1386,7 +1386,7 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.cpdTravel || ''}
                                                 onChange={(e) => handleFieldChange('cpdTravel', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
@@ -1398,7 +1398,7 @@ export default function PersonalTaxReturnForm() {
                                     <h4 className="font-semibold mb-3" style={{ color: COLORS.slainteBlue }}>Financial & Administrative</h4>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 Accountancy & Legal Fees
                                             </label>
                                             <input
@@ -1406,13 +1406,13 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.accountancyFees || ''}
                                                 onChange={(e) => handleFieldChange('accountancyFees', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 Business Bank Charges and Interest
                                             </label>
                                             <input
@@ -1420,13 +1420,13 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.bankCharges || ''}
                                                 onChange={(e) => handleFieldChange('bankCharges', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                            <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                                 Software Subscriptions (patient management, etc.)
                                             </label>
                                             <input
@@ -1434,7 +1434,7 @@ export default function PersonalTaxReturnForm() {
                                                 value={formData.softwareSubscriptions || ''}
                                                 onChange={(e) => handleFieldChange('softwareSubscriptions', e.target.value)}
                                                 className="w-full border rounded px-3 py-2"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </div>
@@ -1442,7 +1442,7 @@ export default function PersonalTaxReturnForm() {
                                 </div>
 
                                 {/* Total */}
-                                <div className="mt-3 p-3 rounded" style={{ backgroundColor: '#FFEBEE' }}>
+                                <div className="mt-3 p-3 rounded" style={{ backgroundColor: COLORS.errorLighter }}>
                                     <div className="flex justify-between items-center">
                                         <span className="font-semibold" style={{ color: COLORS.expenseColor }}>
                                             Total Business Expenses:
@@ -1458,7 +1458,7 @@ export default function PersonalTaxReturnForm() {
                 </div>
 
                 {/* Part 4: Capital Allowances */}
-                <div className="border rounded-lg" style={{ borderColor: COLORS.lightGray }}>
+                <div className="border rounded-lg" style={{ borderColor: COLORS.borderLight }}>
                     <button
                         onClick={() => toggleSection('part4')}
                         className="w-full p-4 flex items-center justify-between hover:bg-gray-50"
@@ -1466,10 +1466,10 @@ export default function PersonalTaxReturnForm() {
                         <div className="flex items-center gap-3">
                             <span className="text-lg">{expandedSections.part4 ? '▼' : '▶'}</span>
                             <div className="text-left flex-1">
-                                <h3 className="font-semibold" style={{ color: COLORS.darkGray }}>
+                                <h3 className="font-semibold" style={{ color: COLORS.textPrimary }}>
                                     Part 4: Capital Allowances
                                 </h3>
-                                <p className="text-xs" style={{ color: COLORS.mediumGray }}>
+                                <p className="text-xs" style={{ color: COLORS.textSecondary }}>
                                     Assets purchased for the business (12.5% annual relief over 8 years)
                                 </p>
                             </div>
@@ -1477,13 +1477,13 @@ export default function PersonalTaxReturnForm() {
                     </button>
 
                     {expandedSections.part4 && (
-                        <div className="p-4 border-t" style={{ borderColor: COLORS.lightGray }}>
-                            <p className="text-sm mb-4" style={{ color: COLORS.mediumGray }}>
+                        <div className="p-4 border-t" style={{ borderColor: COLORS.borderLight }}>
+                            <p className="text-sm mb-4" style={{ color: COLORS.textSecondary }}>
                                 This is for significant items you bought for the business that will last for several years (e.g., medical equipment, computers, office furniture). Tax relief is usually claimed at 12.5% per year over 8 years.
                             </p>
 
                             <div className="mb-4">
-                                <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                     Total Depreciation/Capital Allowance for {selectedYear}
                                 </label>
                                 <input
@@ -1491,10 +1491,10 @@ export default function PersonalTaxReturnForm() {
                                     value={formData.depreciationExpense || ''}
                                     onChange={(e) => handleFieldChange('depreciationExpense', e.target.value)}
                                     className="w-full border rounded px-3 py-2"
-                                    style={{ borderColor: COLORS.lightGray }}
+                                    style={{ borderColor: COLORS.borderLight }}
                                     placeholder="€0.00"
                                 />
-                                <p className="text-xs mt-1" style={{ color: COLORS.mediumGray }}>
+                                <p className="text-xs mt-1" style={{ color: COLORS.textSecondary }}>
                                     Enter the total capital allowance claimed for this year from all assets
                                 </p>
                             </div>
@@ -1509,7 +1509,7 @@ export default function PersonalTaxReturnForm() {
                             </button>
 
                             <div className="mt-4 p-3 rounded bg-blue-50">
-                                <p className="text-xs" style={{ color: COLORS.darkGray }}>
+                                <p className="text-xs" style={{ color: COLORS.textPrimary }}>
                                     <strong>Note:</strong> Keep receipts for all capital assets purchased. Your accountant will calculate the exact allowances based on purchase dates and asset types.
                                 </p>
                             </div>
@@ -1518,7 +1518,7 @@ export default function PersonalTaxReturnForm() {
                 </div>
 
                 {/* Part 5: Tax Credits, Reliefs & Payments on Account */}
-                <div className="border rounded-lg" style={{ borderColor: COLORS.lightGray }}>
+                <div className="border rounded-lg" style={{ borderColor: COLORS.borderLight }}>
                     <button
                         onClick={() => toggleSection('part5')}
                         className="w-full p-4 flex items-center justify-between hover:bg-gray-50"
@@ -1526,10 +1526,10 @@ export default function PersonalTaxReturnForm() {
                         <div className="flex items-center gap-3">
                             <span className="text-lg">{expandedSections.part5 ? '▼' : '▶'}</span>
                             <div className="text-left flex-1">
-                                <h3 className="font-semibold" style={{ color: COLORS.darkGray }}>
+                                <h3 className="font-semibold" style={{ color: COLORS.textPrimary }}>
                                     Part 5: Tax Credits, Reliefs & Payments on Account
                                 </h3>
-                                <p className="text-xs" style={{ color: COLORS.mediumGray }}>
+                                <p className="text-xs" style={{ color: COLORS.textSecondary }}>
                                     Additional reliefs and tax already paid
                                 </p>
                             </div>
@@ -1537,10 +1537,10 @@ export default function PersonalTaxReturnForm() {
                     </button>
 
                     {expandedSections.part5 && (
-                        <div className="p-4 border-t" style={{ borderColor: COLORS.lightGray }}>
+                        <div className="p-4 border-t" style={{ borderColor: COLORS.borderLight }}>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                         Pension Contributions
                                     </label>
                                     <input
@@ -1548,16 +1548,16 @@ export default function PersonalTaxReturnForm() {
                                         value={formData.pensionContributions || ''}
                                         onChange={(e) => handleFieldChange('pensionContributions', e.target.value)}
                                         className="w-full border rounded px-3 py-2"
-                                        style={{ borderColor: COLORS.lightGray }}
+                                        style={{ borderColor: COLORS.borderLight }}
                                         placeholder="€0.00"
                                     />
-                                    <p className="text-xs mt-1" style={{ color: COLORS.mediumGray }}>
+                                    <p className="text-xs mt-1" style={{ color: COLORS.textSecondary }}>
                                         Total paid into PRSA or Retirement Annuity Contract (RAC)
                                     </p>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                         Personal Medical Expenses
                                     </label>
                                     <input
@@ -1565,16 +1565,16 @@ export default function PersonalTaxReturnForm() {
                                         value={formData.medicalExpenses || ''}
                                         onChange={(e) => handleFieldChange('medicalExpenses', e.target.value)}
                                         className="w-full border rounded px-3 py-2"
-                                        style={{ borderColor: COLORS.lightGray }}
+                                        style={{ borderColor: COLORS.borderLight }}
                                         placeholder="€0.00"
                                     />
-                                    <p className="text-xs mt-1" style={{ color: COLORS.mediumGray }}>
+                                    <p className="text-xs mt-1" style={{ color: COLORS.textSecondary }}>
                                         Your own or your family's qualifying health expenses (not reimbursed)
                                     </p>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                         Charitable Donations
                                     </label>
                                     <input
@@ -1582,16 +1582,16 @@ export default function PersonalTaxReturnForm() {
                                         value={formData.charitableDonations || ''}
                                         onChange={(e) => handleFieldChange('charitableDonations', e.target.value)}
                                         className="w-full border rounded px-3 py-2"
-                                        style={{ borderColor: COLORS.lightGray }}
+                                        style={{ borderColor: COLORS.borderLight }}
                                         placeholder="€0.00"
                                     />
-                                    <p className="text-xs mt-1" style={{ color: COLORS.mediumGray }}>
+                                    <p className="text-xs mt-1" style={{ color: COLORS.textSecondary }}>
                                         Donations to approved charities (if over €250)
                                     </p>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                                         Preliminary Tax Paid
                                     </label>
                                     <input
@@ -1599,10 +1599,10 @@ export default function PersonalTaxReturnForm() {
                                         value={formData.preliminaryTaxPaid || ''}
                                         onChange={(e) => handleFieldChange('preliminaryTaxPaid', e.target.value)}
                                         className="w-full border rounded px-3 py-2"
-                                        style={{ borderColor: COLORS.lightGray }}
+                                        style={{ borderColor: COLORS.borderLight }}
                                         placeholder="€0.00"
                                     />
-                                    <p className="text-xs mt-1" style={{ color: COLORS.mediumGray }}>
+                                    <p className="text-xs mt-1" style={{ color: COLORS.textSecondary }}>
                                         Amount of preliminary tax already paid for this tax year
                                     </p>
                                 </div>

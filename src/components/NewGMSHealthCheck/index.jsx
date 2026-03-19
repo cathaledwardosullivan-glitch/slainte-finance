@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useContext } from 'react';
-import { Printer, Upload, CheckCircle, RefreshCw } from 'lucide-react';
+import { Printer, Upload, CheckCircle, RefreshCw, TrendingUp } from 'lucide-react';
 import COLORS from '../../utils/colors';
 import { useAppContext } from '../../context/AppContext';
 import { usePracticeProfile } from '../../hooks/usePracticeProfile';
@@ -16,12 +16,23 @@ import {
   analyzeSTCOpportunities,
   analyzeCDMFromSTCDetails,
   generateRecommendations,
-  analyzeGMSIncome
+  analyzeGMSIncome,
+  extractSnapshotMetrics,
+  calculateImpactSummary
 } from '../../utils/healthCheckCalculations';
+import { compareSnapshots } from '../../utils/impactComparisonEngine';
 import { useAreaReadiness, AREAS } from './useAreaReadiness';
-import { getActionItems, saveActionItems } from '../../storage/practiceProfileStorage';
+import {
+  getActionItems,
+  saveActionItems,
+  addSnapshot,
+  getLatestSnapshot,
+  getSavingsLedger,
+  getSnapshots
+} from '../../storage/practiceProfileStorage';
 import CircularWorkflow from './CircularWorkflow';
 import AreaDetailView from './AreaDetailView';
+import ImpactPanel from './ImpactPanel';
 
 /**
  * Map area IDs to recommendation categories for filtering
@@ -218,6 +229,7 @@ const NewGMSHealthCheck = () => {
   const [csvResult, setCsvResult] = useState(null);
   const [showCycleDropdown, setShowCycleDropdown] = useState(false);
   const [cycleProcessing, setCycleProcessing] = useState(false);
+  const [showImpactPanel, setShowImpactPanel] = useState(false);
 
   const healthCheckData = profile?.healthCheckData || {};
   const isSocrates = profile?.practiceDetails?.ehrSystem === 'socrates';
@@ -245,6 +257,37 @@ const NewGMSHealthCheck = () => {
       return null;
     }
   }, [paymentAnalysisData, profile, healthCheckData, aggregatedData]);
+
+  // Mark health check as complete once analysis can run, so Finn and other
+  // context builders know results are available (they gate on healthCheckComplete).
+  React.useEffect(() => {
+    if (analysisResults && !healthCheckData.healthCheckComplete) {
+      updateProfile({ healthCheckData: { ...healthCheckData, healthCheckComplete: true } });
+    }
+  }, [analysisResults, healthCheckData, updateProfile]);
+
+  // --- Impact Tracking ---
+  const [impactRefreshKey, setImpactRefreshKey] = useState(0);
+
+  // Listen for impact:refresh events (fired when tasks complete or cycle starts)
+  React.useEffect(() => {
+    const handler = () => setImpactRefreshKey(k => k + 1);
+    window.addEventListener('impact:refresh', handler);
+    return () => window.removeEventListener('impact:refresh', handler);
+  }, []);
+
+  // Impact summary from savings ledger
+  const impactSummary = useMemo(() => {
+    return calculateImpactSummary(getSavingsLedger());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [impactRefreshKey]);
+
+  // Compare current analysis against previous cycle snapshot
+  const sectorComparisons = useMemo(() => {
+    const latest = getLatestSnapshot();
+    if (!latest || !analysisResults) return null;
+    return compareSnapshots(latest, analysisResults);
+  }, [analysisResults]);
 
   // Map recommendation IDs to area IDs for per-area financial breakdown
   const REC_AREA_MAP = {
@@ -670,10 +713,28 @@ const NewGMSHealthCheck = () => {
     : summary.analyzableCount >= 4 ? 'warming'
     : 'dormant';
 
-  // Soft reset: mark data as stale + archive completed tasks
+  // Soft reset: snapshot current state, mark data as stale, archive completed tasks
   const handleStartNewCycle = useCallback(() => {
     setCycleProcessing(true);
     try {
+      // 0. Snapshot current analysis before resetting (for impact tracking)
+      if (analysisResults) {
+        const sectorMetrics = extractSnapshotMetrics(analysisResults);
+        const allItems = getActionItems() || [];
+        const completedGMS = allItems.filter(t => t.status === 'completed' && t.recommendationId);
+        addSnapshot({
+          sectorMetrics,
+          totalUnclaimed: analysisResults.totalUnclaimed || 0,
+          totalActual: analysisResults.totalActual || 0,
+          totalPotential: analysisResults.totalPotential || 0,
+          tasksAtSnapshot: {
+            total: allItems.filter(t => t.recommendationId).length,
+            completed: completedGMS.length,
+            projectedSavings: completedGMS.reduce((sum, t) => sum + (t.potentialValue || 0), 0),
+          },
+        });
+      }
+
       // 1. Set all timestamps to 365 days ago to trigger staleness indicators
       const staleDate = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString();
       const updatedTimestamps = {};
@@ -693,6 +754,7 @@ const NewGMSHealthCheck = () => {
       const remaining = allItems.filter(t => !(t.status === 'completed' && t.recommendationId));
       saveActionItems(remaining);
       window.dispatchEvent(new Event('tasks:refresh'));
+      window.dispatchEvent(new Event('impact:refresh'));
 
       setShowCycleDropdown(false);
       setCsvResult(null);
@@ -700,16 +762,28 @@ const NewGMSHealthCheck = () => {
       console.error('Failed to start new cycle:', err);
     }
     setCycleProcessing(false);
-  }, [healthCheckData, handleUpdate]);
+  }, [healthCheckData, handleUpdate, analysisResults]);
 
   // --- Render ---
+
+  // Impact panel view
+  if (showImpactPanel) {
+    return (
+      <ImpactPanel
+        impactSummary={impactSummary}
+        sectorComparisons={sectorComparisons}
+        snapshots={getSnapshots()}
+        onClose={() => setShowImpactPanel(false)}
+      />
+    );
+  }
 
   // Detail view for a selected area
   if (selectedArea) {
     const { areaId: selAreaId, source } = selectedArea;
     const areaAnalysis = readiness[selAreaId]?.canAnalyze ? getAreaAnalysis(selAreaId) : null;
     return (
-      <div style={{ backgroundColor: COLORS.backgroundGray, minHeight: '100%' }}>
+      <div style={{ backgroundColor: COLORS.bgPage, minHeight: '100%' }}>
         <AreaDetailView
           areaId={selAreaId}
           source={source}
@@ -729,7 +803,7 @@ const NewGMSHealthCheck = () => {
   // Overview with circular workflow
   return (
     <div style={{
-      backgroundColor: COLORS.backgroundGray,
+      backgroundColor: COLORS.bgPage,
       minHeight: '100%',
       padding: '0.625rem 1.5rem'
     }}>
@@ -743,8 +817,8 @@ const NewGMSHealthCheck = () => {
           padding: '1.5rem 1rem 1.25rem',
           position: 'relative'
         }}>
-          {/* Print Report — top-left corner */}
-          <div style={{ position: 'absolute', top: '0.75rem', left: '0.75rem', zIndex: 5 }}>
+          {/* Print Report + Impact — top-left corner */}
+          <div style={{ position: 'absolute', top: '0.75rem', left: '0.75rem', zIndex: 5, display: 'flex', gap: '0.4rem' }}>
             <button
               onClick={handlePrintReport}
               disabled={!canPrint}
@@ -756,9 +830,9 @@ const NewGMSHealthCheck = () => {
                 padding: '0.3rem 0.7rem',
                 borderRadius: '9999px',
                 border: '1px solid',
-                borderColor: canPrint ? COLORS.slainteBlue : '#d1d5db',
+                borderColor: canPrint ? COLORS.slainteBlue : COLORS.borderDark,
                 background: canPrint ? COLORS.slainteBlue : 'transparent',
-                color: canPrint ? 'white' : '#9ca3af',
+                color: canPrint ? 'white' : COLORS.textSecondary,
                 fontSize: '0.78rem',
                 fontWeight: 600,
                 cursor: canPrint ? 'pointer' : 'not-allowed',
@@ -767,6 +841,31 @@ const NewGMSHealthCheck = () => {
             >
               <Printer size={13} />
               Print Report
+            </button>
+            <button
+              onClick={() => setShowImpactPanel(true)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.3rem',
+                padding: '0.3rem 0.7rem',
+                borderRadius: '9999px',
+                border: '1px solid',
+                borderColor: impactSummary?.totalCombined > 0 ? '#2ECC71' : COLORS.borderDark,
+                background: impactSummary?.totalCombined > 0 ? 'rgba(46, 204, 113, 0.1)' : 'transparent',
+                color: impactSummary?.totalCombined > 0 ? '#2ECC71' : COLORS.textSecondary,
+                fontSize: '0.78rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              <TrendingUp size={13} />
+              Impact
+              {impactSummary?.totalCombined > 0 && (
+                <span style={{ fontSize: '0.7rem' }}>
+                  {'\u20AC'}{impactSummary.totalCombined.toLocaleString()}
+                </span>
+              )}
             </button>
           </div>
 
@@ -793,12 +892,12 @@ const NewGMSHealthCheck = () => {
                 } : cycleState === 'warming' ? {
                   backgroundColor: 'rgba(255, 210, 60, 0.12)',
                   borderColor: 'rgba(255, 210, 60, 0.5)',
-                  color: '#B8960A',
+                  color: COLORS.warningDark,
                   animation: 'none'
                 } : {
                   backgroundColor: 'transparent',
-                  borderColor: COLORS.lightGray,
-                  color: COLORS.mediumGray,
+                  borderColor: COLORS.borderLight,
+                  color: COLORS.textSecondary,
                   opacity: 0.5
                 })
               }}
@@ -818,16 +917,24 @@ const NewGMSHealthCheck = () => {
                 backgroundColor: COLORS.white,
                 borderRadius: '0.5rem',
                 boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
-                border: `1px solid ${COLORS.lightGray}`,
+                border: `1px solid ${COLORS.borderLight}`,
                 padding: '1rem',
                 zIndex: 20
               }}>
-                <div style={{ fontSize: '0.9rem', fontWeight: 700, color: COLORS.darkGray, marginBottom: '0.5rem' }}>
+                <div style={{ fontSize: '0.9rem', fontWeight: 700, color: COLORS.textPrimary, marginBottom: '0.5rem' }}>
                   Start a new cycle
                 </div>
-                <div style={{ fontSize: '0.75rem', color: COLORS.mediumGray, lineHeight: 1.5, marginBottom: '0.75rem' }}>
-                  This will mark current data as stale and archive completed tasks, so you can re-verify and refresh your data.
+                <div style={{ fontSize: '0.75rem', color: COLORS.textSecondary, lineHeight: 1.5, marginBottom: '0.75rem' }}>
+                  This will save your current analysis as a baseline for tracking improvements, mark data as stale, and archive completed tasks.
                 </div>
+                {analysisResults && (
+                  <div style={{
+                    fontSize: '0.7rem', color: '#2ECC71', lineHeight: 1.4, marginBottom: '0.75rem',
+                    padding: '0.4rem 0.5rem', backgroundColor: 'rgba(46, 204, 113, 0.08)', borderRadius: '0.25rem'
+                  }}>
+                    A snapshot of your current analysis will be saved. When you upload new data, we'll compare it against this baseline to verify improvements.
+                  </div>
+                )}
 
                 {/* Socrates CSV upload (optional) */}
                 {isSocrates && (
@@ -837,8 +944,8 @@ const NewGMSHealthCheck = () => {
                     gap: '0.4rem',
                     padding: '0.5rem 0.6rem',
                     borderRadius: '0.375rem',
-                    border: `1px dashed ${COLORS.lightGray}`,
-                    backgroundColor: COLORS.backgroundGray,
+                    border: `1px dashed ${COLORS.borderLight}`,
+                    backgroundColor: COLORS.bgPage,
                     cursor: 'pointer',
                     marginBottom: '0.75rem',
                     transition: 'border-color 0.15s ease'
@@ -846,10 +953,10 @@ const NewGMSHealthCheck = () => {
                     <input type="file" accept=".csv" onChange={handleCSVUpload} style={{ display: 'none' }} />
                     <Upload size={14} color={COLORS.slainteBlue} />
                     <div>
-                      <div style={{ fontSize: '0.78rem', fontWeight: 500, color: COLORS.darkGray }}>
+                      <div style={{ fontSize: '0.78rem', fontWeight: 500, color: COLORS.textPrimary }}>
                         {csvProcessing ? 'Processing...' : 'Upload new Socrates CSV'}
                       </div>
-                      <div style={{ fontSize: '0.68rem', color: COLORS.mediumGray }}>Optional — refresh demographics</div>
+                      <div style={{ fontSize: '0.68rem', color: COLORS.textSecondary }}>Optional — refresh demographics</div>
                     </div>
                   </label>
                 )}
@@ -859,7 +966,7 @@ const NewGMSHealthCheck = () => {
                   <div style={{
                     marginBottom: '0.5rem',
                     fontSize: '0.75rem',
-                    color: csvResult.success ? '#16A34A' : '#991B1B'
+                    color: csvResult.success ? COLORS.success : COLORS.errorText
                   }}>
                     {csvResult.success
                       ? <><CheckCircle size={12} style={{ verticalAlign: 'middle', marginRight: '0.25rem' }} />CSV loaded</>
@@ -875,9 +982,9 @@ const NewGMSHealthCheck = () => {
                     style={{
                       padding: '0.35rem 0.75rem',
                       borderRadius: '0.25rem',
-                      border: `1px solid ${COLORS.lightGray}`,
+                      border: `1px solid ${COLORS.borderLight}`,
                       backgroundColor: 'transparent',
-                      color: COLORS.mediumGray,
+                      color: COLORS.textSecondary,
                       fontSize: '0.78rem',
                       cursor: 'pointer'
                     }}
@@ -911,6 +1018,7 @@ const NewGMSHealthCheck = () => {
             onAreaClick={(areaId, source) => setSelectedArea({ areaId, source: source || 'data' })}
             financialSummary={financialSummary}
             perAreaFinancials={perAreaFinancials}
+            impactSummary={impactSummary}
           />
 
         </div>

@@ -42,7 +42,7 @@ const WaveProgressBar = ({ currentWave, totalWaves, waveProgress, totalProgress 
       justifyContent: 'space-between',
       marginBottom: '4px',
       fontSize: '13px',
-      color: '#666'
+      color: COLORS.textMuted
     }}>
       <span>Wave {currentWave} of {totalWaves}</span>
       <span>{Math.round(totalProgress)}%</span>
@@ -51,7 +51,7 @@ const WaveProgressBar = ({ currentWave, totalWaves, waveProgress, totalProgress 
     {/* Overall progress */}
     <div style={{
       height: '8px',
-      backgroundColor: '#E0E0E0',
+      backgroundColor: COLORS.borderLight,
       borderRadius: '4px',
       overflow: 'hidden',
       marginBottom: '8px'
@@ -71,7 +71,7 @@ const WaveProgressBar = ({ currentWave, totalWaves, waveProgress, totalProgress 
         display: 'flex',
         gap: '16px',
         fontSize: '12px',
-        color: '#888'
+        color: COLORS.textSecondary
       }}>
         <span>Auto: {waveProgress.auto || 0}</span>
         <span>Needs Review: {(waveProgress.aiAssist || 0) + (waveProgress.review || 0)}</span>
@@ -97,7 +97,7 @@ const FinnMessage = ({ message, isProcessing }) => (
     alignItems: 'flex-start',
     gap: '12px',
     padding: '16px',
-    backgroundColor: '#F5F8FF',
+    backgroundColor: COLORS.slainteBlueLight,
     borderRadius: '12px',
     marginBottom: '16px'
   }}>
@@ -119,13 +119,13 @@ const FinnMessage = ({ message, isProcessing }) => (
     <div style={{ flex: 1 }}>
       <div style={{
         fontWeight: '500',
-        color: '#333',
+        color: COLORS.textPrimary,
         marginBottom: '4px'
       }}>
         Finn
       </div>
       <div style={{
-        color: '#666',
+        color: COLORS.textMuted,
         fontSize: '14px',
         lineHeight: 1.5
       }}>
@@ -203,14 +203,14 @@ const CohortSummary = ({ stats }) => {
           </div>
           <div style={{
             fontSize: '12px',
-            color: '#666',
+            color: COLORS.textMuted,
             marginTop: '4px'
           }}>
             {cohort.label}
           </div>
           <div style={{
             fontSize: '11px',
-            color: '#999',
+            color: COLORS.textSecondary,
             marginTop: '2px'
           }}>
             ({cohort.percent.toFixed(1)}%)
@@ -412,7 +412,7 @@ const OnboardingProcessingFlowInner = ({
               onClick={onCancel}
               style={{
                 padding: '10px 20px',
-                border: '1px solid #ddd',
+                border: `1px solid ${COLORS.borderLight}`,
                 borderRadius: '6px',
                 backgroundColor: 'white',
                 cursor: 'pointer'
@@ -443,7 +443,7 @@ const OnboardingProcessingFlowInner = ({
               onClick={handleCancel}
               style={{
                 padding: '10px 20px',
-                border: '1px solid #ddd',
+                border: `1px solid ${COLORS.borderLight}`,
                 borderRadius: '6px',
                 backgroundColor: 'white',
                 cursor: 'pointer'
@@ -474,7 +474,7 @@ const OnboardingProcessingFlowInner = ({
               onClick={onCancel}
               style={{
                 padding: '10px 20px',
-                border: '1px solid #ddd',
+                border: `1px solid ${COLORS.borderLight}`,
                 borderRadius: '6px',
                 backgroundColor: 'white',
                 cursor: 'pointer'
@@ -505,13 +505,13 @@ const OnboardingProcessingFlowInner = ({
         <div style={{
           marginTop: '24px',
           padding: '16px',
-          backgroundColor: '#f9f9f9',
+          backgroundColor: COLORS.bgPage,
           borderRadius: '8px'
         }}>
           <div style={{
             fontSize: '13px',
             fontWeight: '500',
-            color: '#666',
+            color: COLORS.textMuted,
             marginBottom: '12px'
           }}>
             Wave Processing Improvement
@@ -527,10 +527,10 @@ const OnboardingProcessingFlowInner = ({
                   padding: '8px 12px',
                   backgroundColor: 'white',
                   borderRadius: '6px',
-                  border: '1px solid #ddd',
+                  border: `1px solid ${COLORS.borderLight}`,
                   textAlign: 'center'
                 }}>
-                  <div style={{ fontSize: '12px', color: '#999' }}>
+                  <div style={{ fontSize: '12px', color: COLORS.textSecondary }}>
                     Wave {wave.waveNumber}
                   </div>
                   <div style={{
@@ -540,12 +540,12 @@ const OnboardingProcessingFlowInner = ({
                   }}>
                     {((wave.stats.auto / wave.transactionCount) * 100).toFixed(0)}%
                   </div>
-                  <div style={{ fontSize: '11px', color: '#999' }}>
+                  <div style={{ fontSize: '11px', color: COLORS.textSecondary }}>
                     auto
                   </div>
                 </div>
                 {idx < waveDetails.length - 1 && (
-                  <div style={{ color: '#ccc', fontSize: '18px' }}>→</div>
+                  <div style={{ color: COLORS.borderDark, fontSize: '18px' }}>→</div>
                 )}
               </React.Fragment>
             ))}

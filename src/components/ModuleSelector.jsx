@@ -41,11 +41,11 @@ const ModuleSelector = ({ onNavigate }) => {
                 onClick={() => setIsOpen(!isOpen)}
                 className="flex items-center space-x-2 px-4 py-2 text-sm border rounded-lg transition-colors"
                 style={{
-                    color: COLORS.mediumGray,
-                    borderColor: COLORS.lightGray,
+                    color: COLORS.textSecondary,
+                    borderColor: COLORS.borderLight,
                     backgroundColor: COLORS.white
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.backgroundGray}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.bgPage}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.white}
             >
                 <span>Modules</span>
@@ -57,7 +57,7 @@ const ModuleSelector = ({ onNavigate }) => {
                     className="absolute right-0 mt-2 w-48 rounded-lg shadow-lg border z-50"
                     style={{
                         backgroundColor: COLORS.white,
-                        borderColor: COLORS.lightGray
+                        borderColor: COLORS.borderLight
                     }}
                 >
                     <div className="py-1">
@@ -68,12 +68,12 @@ const ModuleSelector = ({ onNavigate }) => {
                                     }`}
                                 style={{
                                     backgroundColor: module.active ? COLORS.slainteBlue : 'transparent',
-                                    color: module.active ? COLORS.white : module.comingSoon ? COLORS.lightGray : COLORS.darkGray
+                                    color: module.active ? COLORS.white : module.comingSoon ? COLORS.borderLight : COLORS.textPrimary
                                 }}
                                 onClick={() => handleModuleClick(module)}
                                 onMouseEnter={(e) => {
                                     if (!module.active && !module.comingSoon) {
-                                        e.currentTarget.style.backgroundColor = COLORS.backgroundGray;
+                                        e.currentTarget.style.backgroundColor = COLORS.bgPage;
                                     }
                                 }}
                                 onMouseLeave={(e) => {
@@ -88,8 +88,8 @@ const ModuleSelector = ({ onNavigate }) => {
                                         <span
                                             className="text-xs px-2 py-0.5 rounded"
                                             style={{
-                                                backgroundColor: COLORS.lightGray,
-                                                color: COLORS.mediumGray
+                                                backgroundColor: COLORS.borderLight,
+                                                color: COLORS.textSecondary
                                             }}
                                         >
                                             Soon

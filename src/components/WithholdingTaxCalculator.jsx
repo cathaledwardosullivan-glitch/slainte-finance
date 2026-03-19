@@ -146,7 +146,7 @@ export default function WithholdingTaxCalculator({ onCalculate, partnerProfitSha
     if (availablePartners.length === 0) {
         return (
             <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-xl font-semibold mb-4" style={{ color: COLORS.darkGray }}>
+                <h3 className="text-xl font-semibold mb-4" style={{ color: COLORS.textPrimary }}>
                     Withholding Tax Calculator
                 </h3>
                 <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
@@ -167,10 +167,10 @@ export default function WithholdingTaxCalculator({ onCalculate, partnerProfitSha
     return (
         <div className="bg-white rounded-lg shadow p-6">
             <div className="mb-6">
-                <h3 className="text-xl font-semibold mb-2" style={{ color: COLORS.darkGray }}>
+                <h3 className="text-xl font-semibold mb-2" style={{ color: COLORS.textPrimary }}>
                     Withholding Tax Calculator
                 </h3>
-                <p className="text-sm" style={{ color: COLORS.mediumGray }}>
+                <p className="text-sm" style={{ color: COLORS.textSecondary }}>
                     Calculate withholding tax from State Contracts and GMS payments for {selectedYear}
                 </p>
             </div>
@@ -179,7 +179,7 @@ export default function WithholdingTaxCalculator({ onCalculate, partnerProfitSha
             <div className="mb-6 p-4 rounded-lg" style={{ backgroundColor: `${COLORS.slainteBlue}15` }}>
                 <div className="flex items-start gap-2">
                     <Info className="h-5 w-5 flex-shrink-0 mt-0.5" style={{ color: COLORS.slainteBlue }} />
-                    <div className="text-sm" style={{ color: COLORS.darkGray }}>
+                    <div className="text-sm" style={{ color: COLORS.textPrimary }}>
                         <p className="font-medium mb-2">How This Works:</p>
                         <ul className="space-y-1 ml-4">
                             <li>• <strong>State Contract Income:</strong> Net income received (before grossing up). Tax is calculated at the specified rate (typically 25%).</li>
@@ -197,8 +197,8 @@ export default function WithholdingTaxCalculator({ onCalculate, partnerProfitSha
                     const data = partnerTax[partner];
 
                     return (
-                        <div key={partner} className="border rounded-lg p-4" style={{ borderColor: COLORS.lightGray }}>
-                            <h4 className="font-semibold mb-4" style={{ color: COLORS.darkGray }}>
+                        <div key={partner} className="border rounded-lg p-4" style={{ borderColor: COLORS.borderLight }}>
+                            <h4 className="font-semibold mb-4" style={{ color: COLORS.textPrimary }}>
                                 {partner}
                             </h4>
 
@@ -210,7 +210,7 @@ export default function WithholdingTaxCalculator({ onCalculate, partnerProfitSha
                                     </h5>
 
                                     <div>
-                                        <label className="block text-xs mb-1" style={{ color: COLORS.mediumGray }}>
+                                        <label className="block text-xs mb-1" style={{ color: COLORS.textSecondary }}>
                                             Net Income Received
                                         </label>
                                         <input
@@ -218,13 +218,13 @@ export default function WithholdingTaxCalculator({ onCalculate, partnerProfitSha
                                             value={data?.stateContractIncome || ''}
                                             onChange={(e) => updatePartnerField(partner, 'stateContractIncome', e.target.value)}
                                             className="w-full border rounded px-3 py-2"
-                                            style={{ borderColor: COLORS.lightGray }}
+                                            style={{ borderColor: COLORS.borderLight }}
                                             placeholder="€0.00"
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="block text-xs mb-1" style={{ color: COLORS.mediumGray }}>
+                                        <label className="block text-xs mb-1" style={{ color: COLORS.textSecondary }}>
                                             Withholding Tax Rate (%)
                                         </label>
                                         <input
@@ -232,14 +232,14 @@ export default function WithholdingTaxCalculator({ onCalculate, partnerProfitSha
                                             value={data?.stateContractRate || ''}
                                             onChange={(e) => updatePartnerField(partner, 'stateContractRate', e.target.value)}
                                             className="w-full border rounded px-3 py-2"
-                                            style={{ borderColor: COLORS.lightGray }}
+                                            style={{ borderColor: COLORS.borderLight }}
                                             placeholder="25"
                                             step="0.1"
                                         />
                                     </div>
 
                                     <div className="p-3 rounded" style={{ backgroundColor: `${COLORS.expenseColor}15` }}>
-                                        <p className="text-xs mb-1" style={{ color: COLORS.mediumGray }}>
+                                        <p className="text-xs mb-1" style={{ color: COLORS.textSecondary }}>
                                             Calculated Withholding Tax:
                                         </p>
                                         <p className="text-sm font-semibold" style={{ color: COLORS.expenseColor }}>
@@ -255,7 +255,7 @@ export default function WithholdingTaxCalculator({ onCalculate, partnerProfitSha
                                     </h5>
 
                                     <div>
-                                        <label className="block text-xs mb-1" style={{ color: COLORS.mediumGray }}>
+                                        <label className="block text-xs mb-1" style={{ color: COLORS.textSecondary }}>
                                             Withholding Tax (from PCRS)
                                         </label>
                                         <input
@@ -263,16 +263,16 @@ export default function WithholdingTaxCalculator({ onCalculate, partnerProfitSha
                                             value={data?.gmsWithholdingTax || ''}
                                             onChange={(e) => updatePartnerField(partner, 'gmsWithholdingTax', e.target.value)}
                                             className="w-full border rounded px-3 py-2"
-                                            style={{ borderColor: COLORS.lightGray }}
+                                            style={{ borderColor: COLORS.borderLight }}
                                             placeholder="€0.00"
                                         />
-                                        <p className="text-xs mt-1" style={{ color: COLORS.mediumGray }}>
+                                        <p className="text-xs mt-1" style={{ color: COLORS.textSecondary }}>
                                             Enter total from annual PCRS statement
                                         </p>
                                     </div>
 
                                     <div className="p-3 rounded" style={{ backgroundColor: `${COLORS.expenseColor}15` }}>
-                                        <p className="text-xs mb-1" style={{ color: COLORS.mediumGray }}>
+                                        <p className="text-xs mb-1" style={{ color: COLORS.textSecondary }}>
                                             GMS Withholding Tax:
                                         </p>
                                         <p className="text-sm font-semibold" style={{ color: COLORS.expenseColor }}>
@@ -283,9 +283,9 @@ export default function WithholdingTaxCalculator({ onCalculate, partnerProfitSha
                             </div>
 
                             {/* Partner Total */}
-                            <div className="mt-4 p-4 rounded-lg" style={{ backgroundColor: COLORS.backgroundGray }}>
+                            <div className="mt-4 p-4 rounded-lg" style={{ backgroundColor: COLORS.bgPage }}>
                                 <div className="flex justify-between items-center">
-                                    <span className="font-semibold" style={{ color: COLORS.darkGray }}>
+                                    <span className="font-semibold" style={{ color: COLORS.textPrimary }}>
                                         Total Withholding Tax for {partner}:
                                     </span>
                                     <span className="text-xl font-bold" style={{ color: COLORS.expenseColor }}>
@@ -306,25 +306,25 @@ export default function WithholdingTaxCalculator({ onCalculate, partnerProfitSha
 
                 <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                        <span style={{ color: COLORS.darkGray }}>Total State Contract Income (Net):</span>
-                        <span className="font-medium" style={{ color: COLORS.darkGray }}>
+                        <span style={{ color: COLORS.textPrimary }}>Total State Contract Income (Net):</span>
+                        <span className="font-medium" style={{ color: COLORS.textPrimary }}>
                             {formatCurrency(practiceTotals.totalStateContractIncome)}
                         </span>
                     </div>
                     <div className="flex justify-between">
-                        <span style={{ color: COLORS.darkGray }}>Total State Contract Tax:</span>
+                        <span style={{ color: COLORS.textPrimary }}>Total State Contract Tax:</span>
                         <span className="font-medium" style={{ color: COLORS.expenseColor }}>
                             {formatCurrency(practiceTotals.totalStateContractTax)}
                         </span>
                     </div>
                     <div className="flex justify-between">
-                        <span style={{ color: COLORS.darkGray }}>Total GMS Withholding Tax:</span>
+                        <span style={{ color: COLORS.textPrimary }}>Total GMS Withholding Tax:</span>
                         <span className="font-medium" style={{ color: COLORS.expenseColor }}>
                             {formatCurrency(practiceTotals.totalGmsTax)}
                         </span>
                     </div>
-                    <div className="flex justify-between pt-2 border-t" style={{ borderColor: COLORS.lightGray }}>
-                        <span className="font-bold" style={{ color: COLORS.darkGray }}>TOTAL WITHHOLDING TAX:</span>
+                    <div className="flex justify-between pt-2 border-t" style={{ borderColor: COLORS.borderLight }}>
+                        <span className="font-bold" style={{ color: COLORS.textPrimary }}>TOTAL WITHHOLDING TAX:</span>
                         <span className="text-lg font-bold" style={{ color: COLORS.expenseColor }}>
                             {formatCurrency(practiceTotals.grandTotal)}
                         </span>

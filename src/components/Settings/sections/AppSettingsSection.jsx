@@ -157,27 +157,27 @@ const AppSettingsSection = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       {/* System Status */}
-      <div style={{ backgroundColor: COLORS.white, padding: '1.5rem', borderRadius: '0.5rem', border: `1px solid ${COLORS.lightGray}` }}>
+      <div style={{ backgroundColor: COLORS.white, padding: '1.5rem', borderRadius: '0.5rem', border: `1px solid ${COLORS.borderLight}` }}>
         <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <h3 style={{ fontSize: '1.125rem', fontWeight: 600, display: 'flex', alignItems: 'center', color: COLORS.darkGray }}>
+          <h3 style={{ fontSize: '1.125rem', fontWeight: 600, display: 'flex', alignItems: 'center', color: COLORS.textPrimary }}>
             <Settings style={{ height: '1.25rem', width: '1.25rem', marginRight: '0.5rem' }} />
             System Status
           </h3>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             {unidentifiedTransactions.length === 0 ? (
               <>
-                <div style={{ width: '0.5rem', height: '0.5rem', backgroundColor: '#22C55E', borderRadius: '9999px' }}></div>
-                <span style={{ fontSize: '0.875rem', color: '#16A34A', fontWeight: 500 }}>Excellent - All transactions categorized</span>
+                <div style={{ width: '0.5rem', height: '0.5rem', backgroundColor: COLORS.success, borderRadius: '9999px' }}></div>
+                <span style={{ fontSize: '0.875rem', color: COLORS.successDark, fontWeight: 500 }}>Excellent - All transactions categorized</span>
               </>
             ) : unidentifiedTransactions.length < transactions.length * 0.1 ? (
               <>
-                <div style={{ width: '0.5rem', height: '0.5rem', backgroundColor: '#EAB308', borderRadius: '9999px' }}></div>
-                <span style={{ fontSize: '0.875rem', color: '#CA8A04', fontWeight: 500 }}>Good - {((transactions.length / (transactions.length + unidentifiedTransactions.length)) * 100).toFixed(1)}% categorized</span>
+                <div style={{ width: '0.5rem', height: '0.5rem', backgroundColor: COLORS.warning, borderRadius: '9999px' }}></div>
+                <span style={{ fontSize: '0.875rem', color: COLORS.warningDark, fontWeight: 500 }}>Good - {((transactions.length / (transactions.length + unidentifiedTransactions.length)) * 100).toFixed(1)}% categorized</span>
               </>
             ) : (
               <>
-                <div style={{ width: '0.5rem', height: '0.5rem', backgroundColor: '#EF4444', borderRadius: '9999px' }}></div>
-                <span style={{ fontSize: '0.875rem', color: '#DC2626', fontWeight: 500 }}>Needs attention - Many unidentified transactions</span>
+                <div style={{ width: '0.5rem', height: '0.5rem', backgroundColor: COLORS.error, borderRadius: '9999px' }}></div>
+                <span style={{ fontSize: '0.875rem', color: COLORS.error, fontWeight: 500 }}>Needs attention - Many unidentified transactions</span>
               </>
             )}
           </div>
@@ -185,26 +185,26 @@ const AppSettingsSection = () => {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
           {/* Total Transactions */}
-          <div style={{ backgroundColor: '#F0FDF4', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #BBF7D0' }}>
+          <div style={{ backgroundColor: COLORS.successLight, padding: '1rem', borderRadius: '0.5rem', border: `1px solid ${COLORS.successLighter}` }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <p style={{ fontSize: '0.875rem', color: '#16A34A' }}>Total Transactions</p>
-                <p style={{ fontSize: '1.5rem', fontWeight: 700, color: '#15803D' }}>{transactions.length}</p>
-                <p style={{ fontSize: '0.75rem', color: '#16A34A', marginTop: '0.25rem' }}>Successfully categorized</p>
+                <p style={{ fontSize: '0.875rem', color: COLORS.successDark }}>Total Transactions</p>
+                <p style={{ fontSize: '1.5rem', fontWeight: 700, color: COLORS.successText }}>{transactions.length}</p>
+                <p style={{ fontSize: '0.75rem', color: COLORS.successDark, marginTop: '0.25rem' }}>Successfully categorized</p>
               </div>
-              <CheckCircle style={{ height: '2rem', width: '2rem', color: '#16A34A' }} />
+              <CheckCircle style={{ height: '2rem', width: '2rem', color: COLORS.successDark }} />
             </div>
           </div>
 
           {/* Unidentified */}
-          <div style={{ backgroundColor: '#FEFCE8', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #FEF08A' }}>
+          <div style={{ backgroundColor: COLORS.warningLighter, padding: '1rem', borderRadius: '0.5rem', border: `1px solid ${COLORS.warningLight}` }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <p style={{ fontSize: '0.875rem', color: '#CA8A04' }}>Unidentified</p>
-                <p style={{ fontSize: '1.5rem', fontWeight: 700, color: '#A16207' }}>{unidentifiedTransactions.length}</p>
-                <p style={{ fontSize: '0.75rem', color: '#CA8A04', marginTop: '0.25rem' }}>Require manual review</p>
+                <p style={{ fontSize: '0.875rem', color: COLORS.warningDark }}>Unidentified</p>
+                <p style={{ fontSize: '1.5rem', fontWeight: 700, color: COLORS.warningText }}>{unidentifiedTransactions.length}</p>
+                <p style={{ fontSize: '0.75rem', color: COLORS.warningDark, marginTop: '0.25rem' }}>Require manual review</p>
               </div>
-              <AlertCircle style={{ height: '2rem', width: '2rem', color: '#CA8A04' }} />
+              <AlertCircle style={{ height: '2rem', width: '2rem', color: COLORS.warningDark }} />
             </div>
           </div>
 
@@ -215,8 +215,8 @@ const AppSettingsSection = () => {
             style={{
               padding: '1rem',
               borderRadius: '0.5rem',
-              border: refinementCheck.shouldShow ? '1px solid #BFDBFE' : '1px solid #E5E7EB',
-              backgroundColor: refinementCheck.shouldShow ? '#EFF6FF' : '#F9FAFB',
+              border: refinementCheck.shouldShow ? `1px solid ${COLORS.infoLighter}` : `1px solid ${COLORS.borderLight}`,
+              backgroundColor: refinementCheck.shouldShow ? COLORS.slainteBlueLight : COLORS.bgPage,
               cursor: refinementCheck.shouldShow ? 'pointer' : 'not-allowed',
               textAlign: 'left',
               transition: 'background-color 0.2s'
@@ -224,17 +224,17 @@ const AppSettingsSection = () => {
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <p style={{ fontSize: '0.875rem', color: refinementCheck.shouldShow ? '#2563EB' : '#6B7280' }}>
+                <p style={{ fontSize: '0.875rem', color: refinementCheck.shouldShow ? COLORS.slainteBlue : COLORS.textMuted }}>
                   Partially Classified
                 </p>
-                <p style={{ fontSize: '1.5rem', fontWeight: 700, color: refinementCheck.shouldShow ? '#1D4ED8' : '#374151' }}>
+                <p style={{ fontSize: '1.5rem', fontWeight: 700, color: refinementCheck.shouldShow ? COLORS.infoText : COLORS.textPrimary }}>
                   {refinementCheck.count}
                 </p>
-                <p style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: refinementCheck.shouldShow ? '#2563EB' : '#6B7280' }}>
+                <p style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: refinementCheck.shouldShow ? COLORS.slainteBlue : COLORS.textMuted }}>
                   {refinementCheck.shouldShow ? `${refinementCheck.percentage}% - Click to refine` : 'All specific'}
                 </p>
               </div>
-              <Layers style={{ height: '2rem', width: '2rem', color: refinementCheck.shouldShow ? '#2563EB' : '#9CA3AF' }} />
+              <Layers style={{ height: '2rem', width: '2rem', color: refinementCheck.shouldShow ? COLORS.slainteBlue : COLORS.textSecondary }} />
             </div>
           </button>
 
@@ -242,25 +242,25 @@ const AppSettingsSection = () => {
           <div style={{
             padding: '1rem',
             borderRadius: '0.5rem',
-            border: dataFreshness.isStale ? '1px solid #FED7AA' : '1px solid #BFDBFE',
-            backgroundColor: dataFreshness.isStale ? '#FFF7ED' : '#EFF6FF'
+            border: dataFreshness.isStale ? `1px solid ${COLORS.warningLight}` : `1px solid ${COLORS.infoLighter}`,
+            backgroundColor: dataFreshness.isStale ? COLORS.warningLighter : COLORS.slainteBlueLight
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <p style={{ fontSize: '0.875rem', color: dataFreshness.isStale ? '#EA580C' : '#2563EB' }}>
+                <p style={{ fontSize: '0.875rem', color: dataFreshness.isStale ? COLORS.warningDark : COLORS.slainteBlue }}>
                   Data Freshness
                 </p>
-                <p style={{ fontSize: '1.5rem', fontWeight: 700, color: dataFreshness.isStale ? '#C2410C' : '#1D4ED8' }}>
+                <p style={{ fontSize: '1.5rem', fontWeight: 700, color: dataFreshness.isStale ? COLORS.warningText : COLORS.infoText }}>
                   {dataFreshness.latestTransaction ? `${dataFreshness.daysSinceLatest}d` : 'N/A'}
                 </p>
-                <p style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: dataFreshness.isStale ? '#EA580C' : '#2563EB' }}>
+                <p style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: dataFreshness.isStale ? COLORS.warningDark : COLORS.slainteBlue }}>
                   {dataFreshness.isStale ? 'Upload needed' : 'Up to date'}
                 </p>
               </div>
               {dataFreshness.isStale ? (
-                <Upload style={{ height: '2rem', width: '2rem', color: '#EA580C' }} />
+                <Upload style={{ height: '2rem', width: '2rem', color: COLORS.warningDark }} />
               ) : (
-                <CheckCircle style={{ height: '2rem', width: '2rem', color: '#2563EB' }} />
+                <CheckCircle style={{ height: '2rem', width: '2rem', color: COLORS.slainteBlue }} />
               )}
             </div>
           </div>
@@ -268,19 +268,19 @@ const AppSettingsSection = () => {
 
         {/* P&L Report Status */}
         {plReportStatus.reportDue && (
-          <div style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: '#FAF5FF', borderRadius: '0.5rem', border: '1px solid #E9D5FF' }}>
+          <div style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: COLORS.accentPurpleLight, borderRadius: '0.5rem', border: `1px solid ${COLORS.accentPurple}40` }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#7C3AED' }}>
+              <span style={{ fontSize: '0.875rem', fontWeight: 500, color: COLORS.daraViolet }}>
                 P&L Report for {plReportStatus.reportYear} is ready to generate
               </span>
-              <FileText style={{ height: '1.25rem', width: '1.25rem', color: '#7C3AED' }} />
+              <FileText style={{ height: '1.25rem', width: '1.25rem', color: COLORS.daraViolet }} />
             </div>
           </div>
         )}
       </div>
 
       {/* Practice Profile Section */}
-      <div style={{ backgroundColor: COLORS.white, padding: '1.5rem', borderRadius: '0.5rem', border: `1px solid ${COLORS.lightGray}` }}>
+      <div style={{ backgroundColor: COLORS.white, padding: '1.5rem', borderRadius: '0.5rem', border: `1px solid ${COLORS.borderLight}` }}>
         <button
           onClick={() => setShowPracticeProfileViewer(!showPracticeProfileViewer)}
           style={{
@@ -295,7 +295,7 @@ const AppSettingsSection = () => {
             padding: 0
           }}
         >
-          <h3 style={{ fontSize: '1.125rem', fontWeight: 600, display: 'flex', alignItems: 'center', color: COLORS.darkGray }}>
+          <h3 style={{ fontSize: '1.125rem', fontWeight: 600, display: 'flex', alignItems: 'center', color: COLORS.textPrimary }}>
             <Building2 style={{ height: '1.25rem', width: '1.25rem', marginRight: '0.5rem', color: COLORS.slainteBlue }} />
             Practice Profile
           </h3>
@@ -320,32 +320,32 @@ const AppSettingsSection = () => {
         {showPracticeProfileViewer && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {/* Practice Details */}
-            <div style={{ padding: '1rem', borderRadius: '0.5rem', backgroundColor: COLORS.backgroundGray }}>
-              <h4 style={{ fontWeight: 600, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: COLORS.darkGray }}>
+            <div style={{ padding: '1rem', borderRadius: '0.5rem', backgroundColor: COLORS.bgPage }}>
+              <h4 style={{ fontWeight: 600, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: COLORS.textPrimary }}>
                 <Building2 style={{ height: '1rem', width: '1rem' }} />
                 Practice Details
               </h4>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem' }}>
                 <div>
-                  <span style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>Practice Name:</span>
-                  <p style={{ fontWeight: 500, color: COLORS.darkGray }}>
-                    {profile?.practiceDetails?.practiceName || <em style={{ color: '#9CA3AF' }}>Not set</em>}
+                  <span style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>Practice Name:</span>
+                  <p style={{ fontWeight: 500, color: COLORS.textPrimary }}>
+                    {profile?.practiceDetails?.practiceName || <em style={{ color: COLORS.textSecondary }}>Not set</em>}
                   </p>
                 </div>
                 <div>
-                  <span style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>Location:</span>
-                  <p style={{ fontWeight: 500, color: COLORS.darkGray }}>
+                  <span style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>Location:</span>
+                  <p style={{ fontWeight: 500, color: COLORS.textPrimary }}>
                     {(() => {
                       if (profile?.practiceDetails?.locations?.length > 0) {
                         return profile.practiceDetails.locations.join(', ');
                       }
-                      return profile?.practiceDetails?.location || <em style={{ color: '#9CA3AF' }}>Not set</em>;
+                      return profile?.practiceDetails?.location || <em style={{ color: COLORS.textSecondary }}>Not set</em>;
                     })()}
                   </p>
                 </div>
                 <div>
-                  <span style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>Number of GPs:</span>
-                  <p style={{ fontWeight: 500, color: COLORS.darkGray }}>
+                  <span style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>Number of GPs:</span>
+                  <p style={{ fontWeight: 500, color: COLORS.textPrimary }}>
                     {(() => {
                       const partners = profile?.gps?.partners?.length || 0;
                       const salaried = profile?.gps?.salaried?.length || 0;
@@ -353,18 +353,18 @@ const AppSettingsSection = () => {
                       if (total > 0) {
                         return `${total} (${partners} partner${partners !== 1 ? 's' : ''}, ${salaried} salaried)`;
                       }
-                      return profile?.practiceDetails?.numberOfGPs ?? <em style={{ color: '#9CA3AF' }}>Not set</em>;
+                      return profile?.practiceDetails?.numberOfGPs ?? <em style={{ color: COLORS.textSecondary }}>Not set</em>;
                     })()}
                   </p>
                 </div>
                 <div>
-                  <span style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>Practice Type:</span>
-                  <p style={{ fontWeight: 500, color: COLORS.darkGray }}>
+                  <span style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>Practice Type:</span>
+                  <p style={{ fontWeight: 500, color: COLORS.textPrimary }}>
                     {(() => {
                       const partners = profile?.gps?.partners?.length || 0;
                       if (partners > 1) return 'Partnership';
                       if (partners === 1) return 'Single-Handed';
-                      return profile?.practiceDetails?.practiceType || <em style={{ color: '#9CA3AF' }}>Not set</em>;
+                      return profile?.practiceDetails?.practiceType || <em style={{ color: COLORS.textSecondary }}>Not set</em>;
                     })()}
                   </p>
                 </div>
@@ -373,16 +373,16 @@ const AppSettingsSection = () => {
 
             {/* GP Partners */}
             {profile?.gps?.partners && profile.gps.partners.length > 0 && (
-              <div style={{ padding: '1rem', borderRadius: '0.5rem', backgroundColor: COLORS.backgroundGray }}>
-                <h4 style={{ fontWeight: 600, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: COLORS.darkGray }}>
+              <div style={{ padding: '1rem', borderRadius: '0.5rem', backgroundColor: COLORS.bgPage }}>
+                <h4 style={{ fontWeight: 600, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: COLORS.textPrimary }}>
                   <UserCog style={{ height: '1rem', width: '1rem' }} />
                   GP Partners ({profile.gps.partners.length})
                 </h4>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.5rem' }}>
                   {profile.gps.partners.map((partner, idx) => (
-                    <div key={idx} style={{ padding: '0.5rem', borderRadius: '0.25rem', backgroundColor: COLORS.white, border: `1px solid ${COLORS.lightGray}` }}>
-                      <p style={{ fontWeight: 500, color: COLORS.darkGray }}>{partner.name || `Partner ${idx + 1}`}</p>
-                      {partner.profitShare && <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray }}>{partner.profitShare}% profit share</p>}
+                    <div key={idx} style={{ padding: '0.5rem', borderRadius: '0.25rem', backgroundColor: COLORS.white, border: `1px solid ${COLORS.borderLight}` }}>
+                      <p style={{ fontWeight: 500, color: COLORS.textPrimary }}>{partner.name || `Partner ${idx + 1}`}</p>
+                      {partner.profitShare && <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary }}>{partner.profitShare}% profit share</p>}
                     </div>
                   ))}
                 </div>
@@ -391,16 +391,16 @@ const AppSettingsSection = () => {
 
             {/* Salaried GPs */}
             {profile?.gps?.salaried && profile.gps.salaried.length > 0 && (
-              <div style={{ padding: '1rem', borderRadius: '0.5rem', backgroundColor: COLORS.backgroundGray }}>
-                <h4 style={{ fontWeight: 600, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: COLORS.darkGray }}>
+              <div style={{ padding: '1rem', borderRadius: '0.5rem', backgroundColor: COLORS.bgPage }}>
+                <h4 style={{ fontWeight: 600, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: COLORS.textPrimary }}>
                   <UserCog style={{ height: '1rem', width: '1rem' }} />
                   Salaried GPs ({profile.gps.salaried.length})
                 </h4>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.5rem' }}>
                   {profile.gps.salaried.map((gp, idx) => (
-                    <div key={idx} style={{ padding: '0.5rem', borderRadius: '0.25rem', backgroundColor: COLORS.white, border: `1px solid ${COLORS.lightGray}` }}>
-                      <p style={{ fontWeight: 500, color: COLORS.darkGray }}>{gp.name || `Salaried GP ${idx + 1}`}</p>
-                      <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray }}>Salaried GP</p>
+                    <div key={idx} style={{ padding: '0.5rem', borderRadius: '0.25rem', backgroundColor: COLORS.white, border: `1px solid ${COLORS.borderLight}` }}>
+                      <p style={{ fontWeight: 500, color: COLORS.textPrimary }}>{gp.name || `Salaried GP ${idx + 1}`}</p>
+                      <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary }}>Salaried GP</p>
                     </div>
                   ))}
                 </div>
@@ -409,17 +409,17 @@ const AppSettingsSection = () => {
 
             {/* Staff Members */}
             {profile?.staff && profile.staff.length > 0 && (
-              <div style={{ padding: '1rem', borderRadius: '0.5rem', backgroundColor: COLORS.backgroundGray }}>
-                <h4 style={{ fontWeight: 600, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: COLORS.darkGray }}>
+              <div style={{ padding: '1rem', borderRadius: '0.5rem', backgroundColor: COLORS.bgPage }}>
+                <h4 style={{ fontWeight: 600, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: COLORS.textPrimary }}>
                   <UserCog style={{ height: '1rem', width: '1rem' }} />
                   Staff Members ({profile.staff.length})
                 </h4>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.5rem' }}>
                   {profile.staff.map((staff, idx) => (
-                    <div key={idx} style={{ padding: '0.5rem', borderRadius: '0.25rem', backgroundColor: COLORS.white, border: `1px solid ${COLORS.lightGray}` }}>
-                      <p style={{ fontWeight: 500, color: COLORS.darkGray }}>{staff.name || `Staff ${idx + 1}`}</p>
+                    <div key={idx} style={{ padding: '0.5rem', borderRadius: '0.25rem', backgroundColor: COLORS.white, border: `1px solid ${COLORS.borderLight}` }}>
+                      <p style={{ fontWeight: 500, color: COLORS.textPrimary }}>{staff.name || `Staff ${idx + 1}`}</p>
                       {staff.role && (
-                        <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, textTransform: 'capitalize' }}>
+                        <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, textTransform: 'capitalize' }}>
                           {staff.role.replace(/_/g, ' ')}
                         </p>
                       )}
@@ -431,28 +431,28 @@ const AppSettingsSection = () => {
 
             {/* GMS Contract Info */}
             {(profile?.gmsContract?.panelSize || profile?.gmsContract?.gmsIncomePercentage) && (
-              <div style={{ padding: '1rem', borderRadius: '0.5rem', backgroundColor: COLORS.backgroundGray }}>
-                <h4 style={{ fontWeight: 600, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: COLORS.darkGray }}>
+              <div style={{ padding: '1rem', borderRadius: '0.5rem', backgroundColor: COLORS.bgPage }}>
+                <h4 style={{ fontWeight: 600, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: COLORS.textPrimary }}>
                   <Activity style={{ height: '1rem', width: '1rem' }} />
                   GMS Contract
                 </h4>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.75rem' }}>
                   {profile.gmsContract.panelSize && (
                     <div>
-                      <span style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>Panel Size:</span>
-                      <p style={{ fontWeight: 500, color: COLORS.darkGray }}>{profile.gmsContract.panelSize.toLocaleString()} patients</p>
+                      <span style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>Panel Size:</span>
+                      <p style={{ fontWeight: 500, color: COLORS.textPrimary }}>{profile.gmsContract.panelSize.toLocaleString()} patients</p>
                     </div>
                   )}
                   {profile.gmsContract.averageCapitationRate && (
                     <div>
-                      <span style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>Avg Capitation Rate:</span>
-                      <p style={{ fontWeight: 500, color: COLORS.darkGray }}>€{profile.gmsContract.averageCapitationRate}/patient/year</p>
+                      <span style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>Avg Capitation Rate:</span>
+                      <p style={{ fontWeight: 500, color: COLORS.textPrimary }}>€{profile.gmsContract.averageCapitationRate}/patient/year</p>
                     </div>
                   )}
                   {profile.gmsContract.gmsIncomePercentage && (
                     <div>
-                      <span style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>GMS % of Income:</span>
-                      <p style={{ fontWeight: 500, color: COLORS.darkGray }}>{profile.gmsContract.gmsIncomePercentage}%</p>
+                      <span style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>GMS % of Income:</span>
+                      <p style={{ fontWeight: 500, color: COLORS.textPrimary }}>{profile.gmsContract.gmsIncomePercentage}%</p>
                     </div>
                   )}
                 </div>
@@ -460,17 +460,17 @@ const AppSettingsSection = () => {
             )}
 
             {/* Metadata & Edit Button */}
-            <div style={{ padding: '1rem', borderRadius: '0.5rem', border: `2px dashed ${COLORS.lightGray}` }}>
+            <div style={{ padding: '1rem', borderRadius: '0.5rem', border: `2px dashed ${COLORS.borderLight}` }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
-                  <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>
+                  <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>
                     Setup Status:{' '}
-                    <span style={{ fontWeight: 500, color: profile?.metadata?.setupComplete ? '#16A34A' : '#CA8A04' }}>
+                    <span style={{ fontWeight: 500, color: profile?.metadata?.setupComplete ? COLORS.successDark : COLORS.warningDark }}>
                       {profile?.metadata?.setupComplete ? '✓ Complete' : '⏳ In Progress'}
                     </span>
                   </p>
                   {profile?.metadata?.lastUpdated && (
-                    <p style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: COLORS.mediumGray }}>
+                    <p style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: COLORS.textSecondary }}>
                       Last updated: {new Date(profile.metadata.lastUpdated).toLocaleDateString('en-IE', {
                         day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
                       })}
@@ -499,7 +499,7 @@ const AppSettingsSection = () => {
       </div>
 
       {/* App Updates Section */}
-      <div style={{ backgroundColor: COLORS.white, padding: '1.5rem', borderRadius: '0.5rem', border: `1px solid ${COLORS.lightGray}` }}>
+      <div style={{ backgroundColor: COLORS.white, padding: '1.5rem', borderRadius: '0.5rem', border: `1px solid ${COLORS.borderLight}` }}>
         <button
           onClick={() => setShowAppUpdates(!showAppUpdates)}
           style={{
@@ -514,7 +514,7 @@ const AppSettingsSection = () => {
             padding: 0
           }}
         >
-          <h3 style={{ fontSize: '1.125rem', fontWeight: 600, display: 'flex', alignItems: 'center', color: COLORS.darkGray }}>
+          <h3 style={{ fontSize: '1.125rem', fontWeight: 600, display: 'flex', alignItems: 'center', color: COLORS.textPrimary }}>
             <Download style={{ height: '1.25rem', width: '1.25rem', marginRight: '0.5rem', color: COLORS.slainteBlue }} />
             App Updates
           </h3>
@@ -532,22 +532,22 @@ const AppSettingsSection = () => {
         {showAppUpdates && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {/* Current Version */}
-            <div style={{ padding: '1rem', border: `1px solid ${COLORS.lightGray}`, borderRadius: '0.5rem', backgroundColor: COLORS.backgroundGray }}>
+            <div style={{ padding: '1rem', border: `1px solid ${COLORS.borderLight}`, borderRadius: '0.5rem', backgroundColor: COLORS.bgPage }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
-                  <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>Current Version</p>
-                  <p style={{ fontSize: '1.25rem', fontWeight: 600, color: COLORS.darkGray }}>
+                  <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>Current Version</p>
+                  <p style={{ fontSize: '1.25rem', fontWeight: 600, color: COLORS.textPrimary }}>
                     {appVersion || 'Loading...'}
                   </p>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>Status</p>
+                  <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>Status</p>
                   <p style={{
                     fontWeight: 500,
                     color: updateStatus === 'ready' ? COLORS.incomeColor :
                            updateStatus === 'available' ? COLORS.highlightYellow :
                            updateStatus === 'error' ? COLORS.expenseColor :
-                           COLORS.darkGray
+                           COLORS.textPrimary
                   }}>
                     {updateStatus === 'idle' && 'Up to date'}
                     {updateStatus === 'checking' && 'Checking...'}
@@ -562,7 +562,7 @@ const AppSettingsSection = () => {
               {/* Download Progress Bar */}
               {updateStatus === 'downloading' && (
                 <div style={{ marginTop: '0.75rem' }}>
-                  <div style={{ height: '0.5rem', backgroundColor: '#E5E7EB', borderRadius: '9999px', overflow: 'hidden' }}>
+                  <div style={{ height: '0.5rem', backgroundColor: COLORS.borderLight, borderRadius: '9999px', overflow: 'hidden' }}>
                     <div
                       style={{
                         width: `${downloadProgress}%`,
@@ -657,7 +657,7 @@ const AppSettingsSection = () => {
             </div>
 
             {/* Update Note */}
-            <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray }}>
+            <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary }}>
               Updates are downloaded automatically when available. Your data is preserved during updates.
             </p>
           </div>

@@ -18,31 +18,31 @@ const formatCurrency = (value) => new Intl.NumberFormat('en-IE', {
 const cardStyle = {
   padding: '1rem',
   borderRadius: '0.5rem',
-  border: `1px solid ${COLORS.lightGray}`,
-  backgroundColor: '#FFFFFF'
+  border: `1px solid ${COLORS.borderLight}`,
+  backgroundColor: COLORS.white
 };
 
 const tableStyle = { width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' };
-const thBase = { padding: '0.5rem', border: `1px solid ${COLORS.lightGray}` };
-const tdBase = { padding: '0.5rem', border: `1px solid ${COLORS.lightGray}` };
-const headerRow = { backgroundColor: COLORS.backgroundGray };
+const thBase = { padding: '0.5rem', border: `1px solid ${COLORS.borderLight}` };
+const tdBase = { padding: '0.5rem', border: `1px solid ${COLORS.borderLight}` };
+const headerRow = { backgroundColor: COLORS.bgPage };
 
 const sectionHeading = (icon, text) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
     {icon}
-    <h5 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 600, color: COLORS.darkGray }}>{text}</h5>
+    <h5 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 600, color: COLORS.textPrimary }}>{text}</h5>
   </div>
 );
 
 const statusBadge = (status, text) => {
   const colors = {
-    ok: { bg: '#D1FAE5', color: '#065F46' },
-    gap: { bg: '#FEE2E2', color: '#991B1B' },
-    review: { bg: '#FEF3C7', color: '#92400E' },
-    opportunity: { bg: '#D1FAE5', color: '#065F46' },
+    ok: { bg: COLORS.successLighter, color: COLORS.successText },
+    gap: { bg: COLORS.errorLight, color: COLORS.errorText },
+    review: { bg: COLORS.warningLight, color: COLORS.warningText },
+    opportunity: { bg: COLORS.successLighter, color: COLORS.successText },
     info: { bg: `${COLORS.slainteBlue}15`, color: COLORS.slainteBlue },
-    paid: { bg: '#D1FAE5', color: '#065F46' },
-    nopay: { bg: '#FEE2E2', color: '#991B1B' }
+    paid: { bg: COLORS.successLighter, color: COLORS.successText },
+    nopay: { bg: COLORS.errorLight, color: COLORS.errorText }
   };
   const c = colors[status] || colors.info;
   return (
@@ -65,7 +65,9 @@ const statusBadge = (status, text) => {
 // 1. STC BREAKDOWN
 // ═══════════════════════════════════════════════════════════════════════
 export const STCBreakdown = ({ stcAnalysis }) => {
-  const [showZeroClaims, setShowZeroClaims] = useState(false);
+  const [showAllCodes, setShowAllCodes] = useState(false);
+  const [showTargetInfo, setShowTargetInfo] = useState(false);
+  const [showDormantCodes, setShowDormantCodes] = useState(false);
 
   if (!stcAnalysis) return null;
 
@@ -79,6 +81,31 @@ export const STCBreakdown = ({ stcAnalysis }) => {
     .filter(code => code.actualCount === 0 && !['cdm', 'ocf', 'pp'].includes(code.category))
     .sort((a, b) => a.code.localeCompare(b.code));
 
+  // Top 3 by claims (strengths)
+  const topByClaims = activeCodes.slice(0, 3);
+
+  // Top 3 by negative difference in value (biggest gaps)
+  const topByGap = activeCodes
+    .filter(c => c.expectedAnnual && c.expectedAnnual > 0)
+    .map(c => ({ ...c, gapValue: (c.actualCount - c.expectedAnnual) * c.fee }))
+    .sort((a, b) => a.gapValue - b.gapValue)
+    .filter(c => c.gapValue < 0)
+    .slice(0, 3);
+
+  // Codes with benchmarks (for the "How are targets calculated?" section)
+  const codesWithBenchmarks = Object.values(currentActivity)
+    .filter(c => c.benchmarkBasis && !['cdm', 'ocf', 'pp'].includes(c.category))
+    .sort((a, b) => a.code.localeCompare(b.code));
+
+  // All codes below target (active under-claimers + zero-claim codes with a target), sorted by potential value
+  const allBelowTarget = Object.values(currentActivity)
+    .filter(c => !['cdm', 'ocf', 'pp'].includes(c.category) && c.expectedAnnual && c.expectedAnnual > 0 && c.actualCount < c.expectedAnnual)
+    .map(c => ({ ...c, gap: c.actualCount - c.expectedAnnual, potentialValue: (c.expectedAnnual - c.actualCount) * c.fee }))
+    .sort((a, b) => b.potentialValue - a.potentialValue);
+
+  // Zero-claim codes with no benchmark (dormant/unquantifiable)
+  const dormantCodes = zeroClaimCodes.filter(c => !c.expectedAnnual);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       {/* Activity by Service Code table */}
@@ -88,70 +115,125 @@ export const STCBreakdown = ({ stcAnalysis }) => {
             <CheckCircle style={{ width: '1rem', height: '1rem', color: COLORS.incomeColor }} />,
             'STC Activity by Service Code (PCRS Data)'
           )}
-          <div style={{ overflowX: 'auto' }}>
-            <table style={tableStyle}>
-              <thead>
-                <tr style={headerRow}>
-                  <th style={{ ...thBase, textAlign: 'left' }}>Code</th>
-                  <th style={{ ...thBase, textAlign: 'left' }}>Service</th>
-                  <th style={{ ...thBase, textAlign: 'center' }}>Claims</th>
-                  <th style={{ ...thBase, textAlign: 'center' }}>Target</th>
-                  <th style={{ ...thBase, textAlign: 'right' }}>Fee</th>
-                  <th style={{ ...thBase, textAlign: 'right' }}>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {activeCodes.map((codeData, idx) => {
-                  const target = codeData.expectedAnnual;
-                  const atOrAboveTarget = target && codeData.actualCount >= target;
-                  return (
-                    <tr key={idx}>
-                      <td style={{ ...tdBase, fontFamily: 'monospace', fontWeight: 600, color: COLORS.slainteBlue }}>{codeData.code}</td>
-                      <td style={{ ...tdBase, fontSize: '0.875rem' }}>{codeData.name}</td>
-                      <td style={{ ...tdBase, textAlign: 'center', fontWeight: 500 }}>{codeData.actualCount}</td>
-                      <td style={{
-                        ...tdBase,
-                        textAlign: 'center',
-                        fontSize: '0.8rem',
-                        color: target ? (atOrAboveTarget ? '#059669' : '#D97706') : COLORS.mediumGray
-                      }}>
-                        {target ? `~${target}` : '\u2014'}
-                      </td>
-                      <td style={{ ...tdBase, textAlign: 'right', color: COLORS.mediumGray }}>{formatCurrency(codeData.fee)}</td>
-                      <td style={{ ...tdBase, textAlign: 'right', fontWeight: 500, color: COLORS.incomeColor }}>{formatCurrency(codeData.actualTotal)}</td>
-                    </tr>
-                  );
-                })}
-                {/* Total row */}
-                <tr style={headerRow}>
-                  <td colSpan={2} style={{ ...tdBase, fontWeight: 700 }}>Total STC</td>
-                  <td style={{ ...tdBase, textAlign: 'center', fontWeight: 700 }}>{totalClaims}</td>
-                  <td style={tdBase}></td>
-                  <td style={tdBase}></td>
-                  <td style={{ ...tdBase, textAlign: 'right', fontWeight: 700, color: COLORS.incomeColor }}>{formatCurrency(totalValue)}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
 
-          {/* Panel size reference */}
-          {stcAnalysis.panelSize > 0 && (
-            <p style={{ margin: '0.5rem 0 0', fontSize: '0.75rem', color: COLORS.mediumGray }}>
-              Based on panel size of {stcAnalysis.panelSize.toLocaleString()} GMS patients
-            </p>
+          {/* Summary line */}
+          <p style={{ margin: '0 0 0.75rem', fontSize: '0.85rem', color: COLORS.textPrimary }}>
+            <strong>{totalClaims}</strong> claims across <strong>{activeCodes.length}</strong> codes totalling <strong style={{ color: COLORS.incomeColor }}>{formatCurrency(totalValue)}</strong>
+          </p>
+
+          {/* Top Performers */}
+          {topByClaims.length > 0 && (
+            <div style={{ marginBottom: '0.75rem' }}>
+              <p style={{ margin: '0 0 0.375rem', fontSize: '0.8rem', fontWeight: 600, color: COLORS.textPrimary }}>Most Active</p>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={tableStyle}>
+                  <thead>
+                    <tr style={headerRow}>
+                      <th style={{ ...thBase, textAlign: 'left' }} rowSpan={2}>Code</th>
+                      <th style={{ ...thBase, textAlign: 'left' }} rowSpan={2}>Service</th>
+                      <th style={{ ...thBase, textAlign: 'right' }} rowSpan={2}>Fee</th>
+                      <th style={{ ...thBase, textAlign: 'center', borderBottom: 'none', paddingBottom: 0 }} colSpan={2}>Claims</th>
+                      <th style={{ ...thBase, textAlign: 'center', borderBottom: 'none', paddingBottom: 0 }} colSpan={2}>Target</th>
+                      <th style={{ ...thBase, textAlign: 'center', borderBottom: 'none', paddingBottom: 0 }} colSpan={2}>Difference</th>
+                    </tr>
+                    <tr style={headerRow}>
+                      <th style={{ ...thBase, textAlign: 'right', fontSize: '0.7rem', fontWeight: 400, paddingTop: 0 }}>#</th>
+                      <th style={{ ...thBase, textAlign: 'right', fontSize: '0.7rem', fontWeight: 400, paddingTop: 0 }}>Value</th>
+                      <th style={{ ...thBase, textAlign: 'right', fontSize: '0.7rem', fontWeight: 400, paddingTop: 0 }}>#</th>
+                      <th style={{ ...thBase, textAlign: 'right', fontSize: '0.7rem', fontWeight: 400, paddingTop: 0 }}>Value</th>
+                      <th style={{ ...thBase, textAlign: 'right', fontSize: '0.7rem', fontWeight: 400, paddingTop: 0 }}>#</th>
+                      <th style={{ ...thBase, textAlign: 'right', fontSize: '0.7rem', fontWeight: 400, paddingTop: 0 }}>Value</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {topByClaims.map((codeData, idx) => {
+                      const target = codeData.expectedAnnual;
+                      const gap = target ? codeData.actualCount - target : null;
+                      const gapValue = gap !== null ? gap * codeData.fee : null;
+                      const diffColor = gap === null ? COLORS.textSecondary : gap >= 0 ? COLORS.successDark : COLORS.warningDark;
+                      return (
+                        <tr key={idx}>
+                          <td style={{ ...tdBase, fontFamily: 'monospace', fontWeight: 600, color: COLORS.slainteBlue }}>{codeData.code}</td>
+                          <td style={{ ...tdBase, fontSize: '0.875rem' }}>{codeData.name}</td>
+                          <td style={{ ...tdBase, textAlign: 'right', color: COLORS.textSecondary }}>{formatCurrency(codeData.fee)}</td>
+                          <td style={{ ...tdBase, textAlign: 'right', fontWeight: 500 }}>{codeData.actualCount}</td>
+                          <td style={{ ...tdBase, textAlign: 'right', color: COLORS.textSecondary }}>{formatCurrency(codeData.actualTotal)}</td>
+                          <td style={{ ...tdBase, textAlign: 'right' }}>{target ? `~${target}` : '\u2014'}</td>
+                          <td style={{ ...tdBase, textAlign: 'right', color: COLORS.textSecondary }}>{target ? formatCurrency(target * codeData.fee) : ''}</td>
+                          <td style={{ ...tdBase, textAlign: 'right', fontWeight: 500, color: diffColor }}>
+                            {gap !== null ? `${gap > 0 ? '+' : ''}${gap}` : '\u2014'}
+                          </td>
+                          <td style={{ ...tdBase, textAlign: 'right', color: diffColor }}>
+                            {gapValue !== null ? `${gapValue > 0 ? '+' : ''}${formatCurrency(gapValue)}` : ''}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           )}
 
-          {/* Zero-claim codes (collapsible) */}
-          {zeroClaimCodes.length > 0 && (
+          {/* Biggest Gaps */}
+          {topByGap.length > 0 && (
+            <div style={{ marginBottom: '0.75rem' }}>
+              <p style={{ margin: '0 0 0.375rem', fontSize: '0.8rem', fontWeight: 600, color: COLORS.textPrimary }}>Biggest Gaps</p>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={tableStyle}>
+                  <thead>
+                    <tr style={headerRow}>
+                      <th style={{ ...thBase, textAlign: 'left' }} rowSpan={2}>Code</th>
+                      <th style={{ ...thBase, textAlign: 'left' }} rowSpan={2}>Service</th>
+                      <th style={{ ...thBase, textAlign: 'right' }} rowSpan={2}>Fee</th>
+                      <th style={{ ...thBase, textAlign: 'center', borderBottom: 'none', paddingBottom: 0 }} colSpan={2}>Claims</th>
+                      <th style={{ ...thBase, textAlign: 'center', borderBottom: 'none', paddingBottom: 0 }} colSpan={2}>Target</th>
+                      <th style={{ ...thBase, textAlign: 'center', borderBottom: 'none', paddingBottom: 0 }} colSpan={2}>Difference</th>
+                    </tr>
+                    <tr style={headerRow}>
+                      <th style={{ ...thBase, textAlign: 'right', fontSize: '0.7rem', fontWeight: 400, paddingTop: 0 }}>#</th>
+                      <th style={{ ...thBase, textAlign: 'right', fontSize: '0.7rem', fontWeight: 400, paddingTop: 0 }}>Value</th>
+                      <th style={{ ...thBase, textAlign: 'right', fontSize: '0.7rem', fontWeight: 400, paddingTop: 0 }}>#</th>
+                      <th style={{ ...thBase, textAlign: 'right', fontSize: '0.7rem', fontWeight: 400, paddingTop: 0 }}>Value</th>
+                      <th style={{ ...thBase, textAlign: 'right', fontSize: '0.7rem', fontWeight: 400, paddingTop: 0 }}>#</th>
+                      <th style={{ ...thBase, textAlign: 'right', fontSize: '0.7rem', fontWeight: 400, paddingTop: 0 }}>Value</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {topByGap.map((codeData, idx) => {
+                      const target = codeData.expectedAnnual;
+                      const gap = codeData.actualCount - target;
+                      const gapValue = gap * codeData.fee;
+                      return (
+                        <tr key={idx}>
+                          <td style={{ ...tdBase, fontFamily: 'monospace', fontWeight: 600, color: COLORS.slainteBlue }}>{codeData.code}</td>
+                          <td style={{ ...tdBase, fontSize: '0.875rem' }}>{codeData.name}</td>
+                          <td style={{ ...tdBase, textAlign: 'right', color: COLORS.textSecondary }}>{formatCurrency(codeData.fee)}</td>
+                          <td style={{ ...tdBase, textAlign: 'right', fontWeight: 500 }}>{codeData.actualCount}</td>
+                          <td style={{ ...tdBase, textAlign: 'right', color: COLORS.textSecondary }}>{formatCurrency(codeData.actualTotal)}</td>
+                          <td style={{ ...tdBase, textAlign: 'right' }}>~{target}</td>
+                          <td style={{ ...tdBase, textAlign: 'right', color: COLORS.textSecondary }}>{formatCurrency(target * codeData.fee)}</td>
+                          <td style={{ ...tdBase, textAlign: 'right', fontWeight: 500, color: COLORS.warningDark }}>{gap}</td>
+                          <td style={{ ...tdBase, textAlign: 'right', color: COLORS.warningDark }}>{formatCurrency(gapValue)}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Show All Codes (collapsible) */}
+          {activeCodes.length > 3 && (
             <div style={{
-              marginTop: '0.75rem',
+              marginBottom: '0.75rem',
               borderRadius: '0.25rem',
-              backgroundColor: '#FEF3C7',
-              borderLeft: '4px solid #F59E0B',
+              border: `1px solid ${COLORS.borderLight}`,
               overflow: 'hidden'
             }}>
               <button
-                onClick={() => setShowZeroClaims(!showZeroClaims)}
+                onClick={() => setShowAllCodes(!showAllCodes)}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -164,23 +246,138 @@ export const STCBreakdown = ({ stcAnalysis }) => {
                   textAlign: 'left'
                 }}
               >
-                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#92400E' }}>
-                  {zeroClaimCodes.length} STC categories with 0 claims
+                <span style={{ fontSize: '0.8rem', fontWeight: 600, color: COLORS.textPrimary }}>
+                  Show all {activeCodes.length} active codes
                 </span>
                 <ChevronDown size={14} style={{
-                  color: '#92400E',
+                  color: COLORS.textSecondary,
                   transition: 'transform 0.2s',
-                  transform: showZeroClaims ? 'rotate(180deg)' : 'none'
+                  transform: showAllCodes ? 'rotate(180deg)' : 'none'
                 }} />
               </button>
-              {showZeroClaims && (
-                <div style={{ padding: '0 0.75rem 0.6rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                  {zeroClaimCodes.map((code, idx) => (
-                    <p key={idx} style={{ margin: 0, fontSize: '0.75rem', color: '#78350F' }}>
-                      <span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{code.code}</span>: {code.name}
-                      <span style={{ color: '#92400E' }}> ({'\u20AC'}{code.fee})</span>
-                    </p>
-                  ))}
+              {showAllCodes && (
+                <div style={{ padding: '0 0.75rem 0.75rem', overflowX: 'auto' }}>
+                  <table style={tableStyle}>
+                    <thead>
+                      <tr style={headerRow}>
+                        <th style={{ ...thBase, textAlign: 'left' }} rowSpan={2}>Code</th>
+                        <th style={{ ...thBase, textAlign: 'left' }} rowSpan={2}>Service</th>
+                        <th style={{ ...thBase, textAlign: 'right' }} rowSpan={2}>Fee</th>
+                        <th style={{ ...thBase, textAlign: 'center', borderBottom: 'none', paddingBottom: 0 }} colSpan={2}>Claims</th>
+                        <th style={{ ...thBase, textAlign: 'center', borderBottom: 'none', paddingBottom: 0 }} colSpan={2}>Target</th>
+                        <th style={{ ...thBase, textAlign: 'center', borderBottom: 'none', paddingBottom: 0 }} colSpan={2}>Difference</th>
+                      </tr>
+                      <tr style={headerRow}>
+                        <th style={{ ...thBase, textAlign: 'right', fontSize: '0.7rem', fontWeight: 400, paddingTop: 0 }}>#</th>
+                        <th style={{ ...thBase, textAlign: 'right', fontSize: '0.7rem', fontWeight: 400, paddingTop: 0 }}>Value</th>
+                        <th style={{ ...thBase, textAlign: 'right', fontSize: '0.7rem', fontWeight: 400, paddingTop: 0 }}>#</th>
+                        <th style={{ ...thBase, textAlign: 'right', fontSize: '0.7rem', fontWeight: 400, paddingTop: 0 }}>Value</th>
+                        <th style={{ ...thBase, textAlign: 'right', fontSize: '0.7rem', fontWeight: 400, paddingTop: 0 }}>#</th>
+                        <th style={{ ...thBase, textAlign: 'right', fontSize: '0.7rem', fontWeight: 400, paddingTop: 0 }}>Value</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {activeCodes.map((codeData, idx) => {
+                        const target = codeData.expectedAnnual;
+                        const gap = target ? codeData.actualCount - target : null;
+                        const gapValue = gap !== null ? gap * codeData.fee : null;
+                        const diffColor = gap === null ? COLORS.textSecondary : gap >= 0 ? COLORS.successDark : COLORS.warningDark;
+                        return (
+                          <tr key={idx}>
+                            <td style={{ ...tdBase, fontFamily: 'monospace', fontWeight: 600, color: COLORS.slainteBlue }}>{codeData.code}</td>
+                            <td style={{ ...tdBase, fontSize: '0.875rem' }}>{codeData.name}</td>
+                            <td style={{ ...tdBase, textAlign: 'right', color: COLORS.textSecondary }}>{formatCurrency(codeData.fee)}</td>
+                            <td style={{ ...tdBase, textAlign: 'right', fontWeight: 500 }}>{codeData.actualCount}</td>
+                            <td style={{ ...tdBase, textAlign: 'right', color: COLORS.textSecondary }}>{formatCurrency(codeData.actualTotal)}</td>
+                            <td style={{ ...tdBase, textAlign: 'right' }}>{target ? `~${target}` : '\u2014'}</td>
+                            <td style={{ ...tdBase, textAlign: 'right', color: COLORS.textSecondary }}>{target ? formatCurrency(target * codeData.fee) : ''}</td>
+                            <td style={{ ...tdBase, textAlign: 'right', fontWeight: 500, color: diffColor }}>
+                              {gap !== null ? `${gap > 0 ? '+' : ''}${gap}` : '\u2014'}
+                            </td>
+                            <td style={{ ...tdBase, textAlign: 'right', color: diffColor }}>
+                              {gapValue !== null ? `${gapValue > 0 ? '+' : ''}${formatCurrency(gapValue)}` : ''}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                      {/* Total row */}
+                      <tr style={headerRow}>
+                        <td colSpan={3} style={{ ...tdBase, fontWeight: 700 }}>Total STC</td>
+                        <td style={{ ...tdBase, textAlign: 'right', fontWeight: 700 }}>{totalClaims}</td>
+                        <td style={{ ...tdBase, textAlign: 'right', fontWeight: 700 }}>{formatCurrency(totalValue)}</td>
+                        <td colSpan={2} style={tdBase}></td>
+                        <td colSpan={2} style={tdBase}></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Panel size reference */}
+          {stcAnalysis.panelSize > 0 && (
+            <p style={{ margin: '0 0 0.5rem', fontSize: '0.75rem', color: COLORS.textSecondary }}>
+              Based on panel size of {stcAnalysis.panelSize.toLocaleString()} GMS patients
+            </p>
+          )}
+
+          {/* How are targets calculated? (collapsible) */}
+          {codesWithBenchmarks.length > 0 && (
+            <div style={{
+              borderRadius: '0.25rem',
+              border: `1px solid ${COLORS.borderLight}`,
+              overflow: 'hidden'
+            }}>
+              <button
+                onClick={() => setShowTargetInfo(!showTargetInfo)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  width: '100%',
+                  padding: '0.6rem 0.75rem',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  textAlign: 'left'
+                }}
+              >
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.8rem', fontWeight: 600, color: COLORS.textPrimary }}>
+                  <Info size={14} style={{ color: COLORS.slainteBlue }} />
+                  How are targets calculated?
+                </span>
+                <ChevronDown size={14} style={{
+                  color: COLORS.textSecondary,
+                  transition: 'transform 0.2s',
+                  transform: showTargetInfo ? 'rotate(180deg)' : 'none'
+                }} />
+              </button>
+              {showTargetInfo && (
+                <div style={{ padding: '0 0.75rem 0.75rem' }}>
+                  <p style={{ margin: '0 0 0.5rem', fontSize: '0.75rem', color: COLORS.textSecondary }}>
+                    Targets are estimated from national PCRS claims data scaled to your panel size.
+                    Contraception targets use your practice's demographic data where available.
+                    The tilde (~) indicates these are estimates, not contractual targets.
+                  </p>
+                  <table style={{ ...tableStyle, fontSize: '0.8rem' }}>
+                    <thead>
+                      <tr style={headerRow}>
+                        <th style={{ ...thBase, textAlign: 'left', padding: '0.375rem' }}>Code</th>
+                        <th style={{ ...thBase, textAlign: 'right', padding: '0.375rem' }}>Target</th>
+                        <th style={{ ...thBase, textAlign: 'left', padding: '0.375rem' }}>Basis</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {codesWithBenchmarks.map((c, idx) => (
+                        <tr key={idx}>
+                          <td style={{ ...tdBase, fontFamily: 'monospace', fontWeight: 600, color: COLORS.slainteBlue, padding: '0.375rem' }}>{c.code}</td>
+                          <td style={{ ...tdBase, textAlign: 'right', padding: '0.375rem' }}>{c.expectedAnnual ? `~${c.expectedAnnual}` : '\u2014'}</td>
+                          <td style={{ ...tdBase, fontSize: '0.75rem', color: COLORS.textSecondary, padding: '0.375rem' }}>{c.benchmarkBasis}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>
@@ -189,162 +386,119 @@ export const STCBreakdown = ({ stcAnalysis }) => {
       ) : (
         <div style={{ ...cardStyle, textAlign: 'center', padding: '1.5rem' }}>
           {stcAnalysis.hasTotalOnly && stcAnalysis.totalSTCPayment > 0 && (
-            <div style={{ marginBottom: '1rem', padding: '1rem', borderRadius: '0.5rem', backgroundColor: COLORS.backgroundGray }}>
-              <p style={{ margin: 0, fontSize: '0.875rem', color: COLORS.darkGray }}>
+            <div style={{ marginBottom: '1rem', padding: '1rem', borderRadius: '0.5rem', backgroundColor: COLORS.bgPage }}>
+              <p style={{ margin: 0, fontSize: '0.875rem', color: COLORS.textPrimary }}>
                 Your PCRS data shows <strong style={{ color: COLORS.incomeColor }}>{formatCurrency(stcAnalysis.totalSTCPayment)}</strong> in STC income
               </p>
             </div>
           )}
-          <AlertCircle style={{ width: '2rem', height: '2rem', margin: '0 auto 0.75rem', color: '#F59E0B' }} />
-          <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500, color: COLORS.darkGray }}>
+          <AlertCircle style={{ width: '2rem', height: '2rem', margin: '0 auto 0.75rem', color: COLORS.warning }} />
+          <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500, color: COLORS.textPrimary }}>
             Detailed STC Analysis Requires Re-Upload
           </p>
-          <p style={{ margin: '0.5rem auto 0', fontSize: '0.75rem', color: COLORS.mediumGray, maxWidth: '28rem' }}>
+          <p style={{ margin: '0.5rem auto 0', fontSize: '0.75rem', color: COLORS.textSecondary, maxWidth: '28rem' }}>
             Your PCRS statements were uploaded before this feature was added. To see detailed STC analysis by service code,
             please go to GMS Panel Analysis, delete your existing statements, and re-upload them.
           </p>
         </div>
       )}
 
-      {/* Growth Opportunities (inline) */}
-      {stcAnalysis.opportunities && stcAnalysis.opportunities.length > 0 && (
+      {/* Growth Opportunities */}
+      {(allBelowTarget.length > 0 || dormantCodes.length > 0) && (
         <div style={cardStyle}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-            <TrendingUp style={{ width: '1rem', height: '1rem', color: '#059669' }} />
-            <h5 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 600, color: COLORS.darkGray }}>Growth Opportunities</h5>
-            <span style={{
-              fontSize: '0.75rem',
-              padding: '0.125rem 0.5rem',
-              borderRadius: '9999px',
-              backgroundColor: '#ECFDF5',
-              color: '#065F46'
-            }}>
-              {stcAnalysis.opportunities.length} opportunities
-            </span>
+            <TrendingUp style={{ width: '1rem', height: '1rem', color: COLORS.successDark }} />
+            <h5 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 600, color: COLORS.textPrimary }}>Growth Opportunities</h5>
           </div>
-          <p style={{ margin: '0 0 0.75rem', fontSize: '0.75rem', color: COLORS.mediumGray }}>
-            Services where your activity is below typical benchmarks for your panel size.
+          <p style={{ margin: '0 0 0.75rem', fontSize: '0.75rem', color: COLORS.textSecondary }}>
+            Top 5 services below target, ranked by potential value.
           </p>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {stcAnalysis.opportunities.slice(0, 8).map((opp, idx) => (
-              <div key={idx} style={{
-                padding: '0.75rem',
-                borderRadius: '0.25rem',
-                border: `1px solid ${opp.serviceOffered === false ? '#FDE68A' : '#A7F3D0'}`,
-                backgroundColor: opp.serviceOffered === false ? '#FFFBEB' : '#ECFDF5'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                      <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500, color: opp.serviceOffered === false ? '#92400E' : '#065F46' }}>
-                        {opp.code}: {opp.name}
-                      </p>
-                      {opp.serviceOffered === true && (
-                        <span style={{
-                          fontSize: '0.65rem', fontWeight: 600, padding: '0.1rem 0.4rem',
-                          borderRadius: '0.25rem', backgroundColor: '#D1FAE5', color: '#065F46'
-                        }}>Under-claimed</span>
-                      )}
-                      {opp.serviceOffered === false && (
-                        <span style={{
-                          fontSize: '0.65rem', fontWeight: 600, padding: '0.1rem 0.4rem',
-                          borderRadius: '0.25rem', backgroundColor: '#FEF3C7', color: '#92400E'
-                        }}>Not currently offered</span>
-                      )}
-                      {opp.benchmarkIsDerived ? (
-                        <span style={{
-                          fontSize: '0.6rem', fontWeight: 500, padding: '0.1rem 0.35rem',
-                          borderRadius: '0.25rem', backgroundColor: '#DBEAFE', color: '#1E40AF'
-                        }}>Practice-specific</span>
-                      ) : (
-                        <span style={{
-                          fontSize: '0.6rem', fontWeight: 500, padding: '0.1rem 0.35rem',
-                          borderRadius: '0.25rem', backgroundColor: '#F3F4F6', color: '#6B7280'
-                        }}>Estimated</span>
-                      )}
-                      {['CF', 'CG', 'CH', 'CI', 'CJ', 'CK'].includes(opp.code) && (
-                        <span style={{
-                          fontSize: '0.6rem', fontWeight: 500, padding: '0.1rem 0.35rem',
-                          borderRadius: '0.25rem', backgroundColor: '#FCE7F3', color: '#9D174D'
-                        }}>Free Scheme 17-35</span>
-                      )}
-                      {['CL', 'CM', 'CN', 'CO', 'CQ'].includes(opp.code) && (
-                        <span style={{
-                          fontSize: '0.6rem', fontWeight: 500, padding: '0.1rem 0.35rem',
-                          borderRadius: '0.25rem', backgroundColor: '#FDE68A', color: '#92400E'
-                        }}>GMS/DVC 36-44</span>
-                      )}
-                    </div>
-                    <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: COLORS.mediumGray }}>
-                      Current: {opp.currentClaims} claims {'\u2022'} Expected: ~{opp.expectedClaims} claims/year
-                      {opp.performance !== null && ` (${opp.performance}% of benchmark)`}
-                    </p>
-                    {opp.benchmarkBasis && (
-                      <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', fontStyle: 'italic', color: COLORS.mediumGray }}>
-                        {opp.benchmarkBasis}
-                      </p>
-                    )}
-                  </div>
-                  <span style={{ fontSize: '0.875rem', fontWeight: 700, whiteSpace: 'nowrap', marginLeft: '0.5rem', color: opp.serviceOffered === false ? '#D97706' : '#059669' }}>
-                    +{formatCurrency(opp.potentialValue)}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
+          {allBelowTarget.length > 0 && (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={tableStyle}>
+                <thead>
+                  <tr style={headerRow}>
+                    <th style={{ ...thBase, textAlign: 'left' }}>Code</th>
+                    <th style={{ ...thBase, textAlign: 'left' }}>Service</th>
+                    <th style={{ ...thBase, textAlign: 'right' }}>Gap</th>
+                    <th style={{ ...thBase, textAlign: 'right' }}>Potential</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {allBelowTarget.slice(0, 5).map((c, idx) => (
+                    <tr key={idx}>
+                      <td style={{ ...tdBase, fontFamily: 'monospace', fontWeight: 600, color: COLORS.slainteBlue }}>{c.code}</td>
+                      <td style={{ ...tdBase, fontSize: '0.875rem' }}>{c.name}</td>
+                      <td style={{ ...tdBase, textAlign: 'right', color: COLORS.warningDark }}>{c.gap}</td>
+                      <td style={{ ...tdBase, textAlign: 'right', fontWeight: 500, color: COLORS.successDark }}>+{formatCurrency(c.potentialValue)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
 
           {/* Total Growth Potential */}
-          {stcAnalysis.totalPotentialValue > 0 && (
+          {allBelowTarget.length > 0 && (
             <div style={{
-              marginTop: '1rem',
+              marginTop: '0.75rem',
               paddingTop: '0.75rem',
-              borderTop: `1px solid ${COLORS.lightGray}`,
+              borderTop: `1px solid ${COLORS.borderLight}`,
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center'
             }}>
-              <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 600, color: COLORS.darkGray }}>Total Growth Potential:</p>
-              <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: '#059669' }}>
-                +{formatCurrency(stcAnalysis.totalPotentialValue)}/year
+              <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 600, color: COLORS.textPrimary }}>Total Growth Potential:</p>
+              <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: COLORS.successDark }}>
+                +{formatCurrency(allBelowTarget.reduce((sum, c) => sum + c.potentialValue, 0))}/year
               </p>
             </div>
           )}
-        </div>
-      )}
 
-      {/* Recommended Actions */}
-      {stcAnalysis.recommendations && stcAnalysis.recommendations.length > 0 && (
-        <div style={cardStyle}>
-          {sectionHeading(
-            <AlertCircle style={{ width: '1rem', height: '1rem', color: '#F59E0B' }} />,
-            'Recommended Actions to Increase STC Income'
-          )}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            {stcAnalysis.recommendations.map((rec, idx) => (
-              <div key={idx} style={{
-                padding: '0.75rem',
-                borderRadius: '0.25rem',
-                borderLeft: '4px solid #F59E0B',
-                backgroundColor: '#FFFBEB'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                  <div>
-                    <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500, color: '#92400E' }}>{rec.title}</p>
-                    <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: COLORS.mediumGray }}>{rec.description}</p>
-                  </div>
-                  <span style={{ fontSize: '0.875rem', fontWeight: 700, whiteSpace: 'nowrap', marginLeft: '0.5rem', color: '#059669' }}>
-                    +{formatCurrency(rec.potentialValue)}
-                  </span>
-                </div>
-                <ul style={{ margin: '0.5rem 0 0', padding: '0 0 0 1rem', fontSize: '0.75rem', color: COLORS.mediumGray }}>
-                  {rec.actions.map((action, aIdx) => (
-                    <li key={aIdx} style={{ marginBottom: '0.25rem' }}>{action}</li>
+          {/* Dormant codes — 0 claims, no benchmark */}
+          {dormantCodes.length > 0 && (
+            <div style={{
+              marginTop: '0.75rem',
+              borderRadius: '0.25rem',
+              border: `1px solid ${COLORS.borderLight}`,
+              overflow: 'hidden'
+            }}>
+              <button
+                onClick={() => setShowDormantCodes(!showDormantCodes)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  width: '100%',
+                  padding: '0.6rem 0.75rem',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  textAlign: 'left'
+                }}
+              >
+                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: COLORS.textSecondary }}>
+                  {dormantCodes.length} services with 0 claims and no benchmark
+                </span>
+                <ChevronDown size={14} style={{
+                  color: COLORS.textSecondary,
+                  transition: 'transform 0.2s',
+                  transform: showDormantCodes ? 'rotate(180deg)' : 'none'
+                }} />
+              </button>
+              {showDormantCodes && (
+                <div style={{ padding: '0 0.75rem 0.6rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  {dormantCodes.map((code, idx) => (
+                    <p key={idx} style={{ margin: 0, fontSize: '0.75rem', color: COLORS.textSecondary }}>
+                      <span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{code.code}</span>: {code.name}
+                      <span style={{ color: COLORS.textMuted }}> ({'\u20AC'}{code.fee})</span>
+                    </p>
                   ))}
-                </ul>
-              </div>
-            ))}
-          </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -353,14 +507,14 @@ export const STCBreakdown = ({ stcAnalysis }) => {
         <div style={{
           padding: '1rem',
           borderRadius: '0.5rem',
-          border: '2px solid #059669',
-          backgroundColor: '#ECFDF5',
+          border: `2px solid ${COLORS.successDark}`,
+          backgroundColor: COLORS.successLight,
           display: 'flex',
           alignItems: 'center',
           gap: '0.5rem'
         }}>
-          <CheckCircle style={{ width: '1.25rem', height: '1.25rem', color: '#059669' }} />
-          <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500, color: '#065F46' }}>
+          <CheckCircle style={{ width: '1.25rem', height: '1.25rem', color: COLORS.successDark }} />
+          <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500, color: COLORS.successText }}>
             Your STC activity is well-aligned with expected benchmarks for your panel size.
           </p>
         </div>
@@ -374,7 +528,7 @@ export const STCBreakdown = ({ stcAnalysis }) => {
 // 2. LEAVE BREAKDOWN
 // ═══════════════════════════════════════════════════════════════════════
 export const LeaveBreakdown = ({ leaveDetails }) => {
-  if (!leaveDetails) return <p style={{ margin: 0, color: COLORS.mediumGray }}>No leave calculation data available.</p>;
+  if (!leaveDetails) return <p style={{ margin: 0, color: COLORS.textSecondary }}>No leave calculation data available.</p>;
 
   const dailyRate = leaveDetails.studyLeavePotential > 0 && leaveDetails.studyLeaveEntitlement > 0
     ? leaveDetails.studyLeavePotential / leaveDetails.studyLeaveEntitlement
@@ -413,13 +567,13 @@ export const LeaveBreakdown = ({ leaveDetails }) => {
         <div style={{
           padding: '0.75rem',
           borderRadius: '0.25rem',
-          backgroundColor: '#FEF3C7',
-          border: '1px solid #F59E0B'
+          backgroundColor: COLORS.warningLight,
+          border: `1px solid ${COLORS.warning}`
         }}>
-          <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500, color: '#92400E' }}>
+          <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500, color: COLORS.warningText }}>
             Study Leave: {leaveDetails.studyLeaveUnclaimedDays} days unclaimed = {formatCurrency(leaveDetails.studyLeaveUnclaimedValue)} potential income
           </p>
-          <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: '#78350F' }}>
+          <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: COLORS.warningText }}>
             Claim study leave by submitting CME certificates.
           </p>
         </div>
@@ -430,20 +584,20 @@ export const LeaveBreakdown = ({ leaveDetails }) => {
         <div style={{
           padding: '0.75rem',
           borderRadius: '0.25rem',
-          backgroundColor: '#DBEAFE',
-          border: '1px solid #3B82F6'
+          backgroundColor: COLORS.infoLighter,
+          border: `1px solid ${COLORS.slainteBlue}`
         }}>
-          <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500, color: '#1E40AF' }}>
+          <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500, color: COLORS.infoText }}>
             Annual Leave: {leaveDetails.annualLeaveUnclaimedDays} days unclaimed = {formatCurrency(leaveDetails.annualLeaveUnclaimedValue)} potential income
           </p>
-          <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: '#1E3A8A' }}>
+          <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: COLORS.infoText }}>
             Claim annual leave via PCRS form submission.
           </p>
         </div>
       )}
 
       {/* Explanation */}
-      <p style={{ margin: 0, fontSize: '0.85rem', color: COLORS.darkGray }}>
+      <p style={{ margin: 0, fontSize: '0.85rem', color: COLORS.textPrimary }}>
         Leave entitlements are calculated based on your GMS panel(s). Each panel is entitled to
         10 study leave days and up to 20 annual leave days per year, at {'\u20AC'}{dailyRate.toFixed(2)} per day.
       </p>
@@ -452,24 +606,24 @@ export const LeaveBreakdown = ({ leaveDetails }) => {
       {rows.length > 0 && (
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
           <thead>
-            <tr style={{ borderBottom: `2px solid ${COLORS.lightGray}` }}>
-              <th style={{ textAlign: 'left', padding: '0.5rem', color: COLORS.mediumGray, fontWeight: 500 }}>Category</th>
-              <th style={{ textAlign: 'right', padding: '0.5rem', color: COLORS.mediumGray, fontWeight: 500 }}>Entitled</th>
-              <th style={{ textAlign: 'right', padding: '0.5rem', color: COLORS.mediumGray, fontWeight: 500 }}>Claimed</th>
-              <th style={{ textAlign: 'right', padding: '0.5rem', color: COLORS.mediumGray, fontWeight: 500 }}>Unclaimed</th>
-              <th style={{ textAlign: 'right', padding: '0.5rem', color: COLORS.mediumGray, fontWeight: 500 }}>Value</th>
+            <tr style={{ borderBottom: `2px solid ${COLORS.borderLight}` }}>
+              <th style={{ textAlign: 'left', padding: '0.5rem', color: COLORS.textSecondary, fontWeight: 500 }}>Category</th>
+              <th style={{ textAlign: 'right', padding: '0.5rem', color: COLORS.textSecondary, fontWeight: 500 }}>Entitled</th>
+              <th style={{ textAlign: 'right', padding: '0.5rem', color: COLORS.textSecondary, fontWeight: 500 }}>Claimed</th>
+              <th style={{ textAlign: 'right', padding: '0.5rem', color: COLORS.textSecondary, fontWeight: 500 }}>Unclaimed</th>
+              <th style={{ textAlign: 'right', padding: '0.5rem', color: COLORS.textSecondary, fontWeight: 500 }}>Value</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row, i) => (
-              <tr key={i} style={{ borderBottom: `1px solid ${COLORS.lightGray}` }}>
-                <td style={{ padding: '0.5rem', color: COLORS.darkGray, fontWeight: 500 }}>{row.category}</td>
-                <td style={{ padding: '0.5rem', textAlign: 'right', color: COLORS.darkGray }}>{row.entitledDays} days</td>
+              <tr key={i} style={{ borderBottom: `1px solid ${COLORS.borderLight}` }}>
+                <td style={{ padding: '0.5rem', color: COLORS.textPrimary, fontWeight: 500 }}>{row.category}</td>
+                <td style={{ padding: '0.5rem', textAlign: 'right', color: COLORS.textPrimary }}>{row.entitledDays} days</td>
                 <td style={{ padding: '0.5rem', textAlign: 'right', color: COLORS.incomeColor }}>{row.claimedDays} days</td>
                 <td style={{
                   padding: '0.5rem',
                   textAlign: 'right',
-                  color: row.unclaimedDays > 0 ? COLORS.expenseColor : COLORS.darkGray,
+                  color: row.unclaimedDays > 0 ? COLORS.expenseColor : COLORS.textPrimary,
                   fontWeight: row.unclaimedDays > 0 ? 600 : 400
                 }}>
                   {row.unclaimedDays} days
@@ -478,7 +632,7 @@ export const LeaveBreakdown = ({ leaveDetails }) => {
                   padding: '0.5rem',
                   textAlign: 'right',
                   fontWeight: 600,
-                  color: row.unclaimedDays > 0 ? COLORS.expenseColor : COLORS.darkGray
+                  color: row.unclaimedDays > 0 ? COLORS.expenseColor : COLORS.textPrimary
                 }}>
                   {row.unclaimedValue > 0 ? `\u20AC${row.unclaimedValue.toLocaleString()}` : '\u2014'}
                 </td>
@@ -486,8 +640,8 @@ export const LeaveBreakdown = ({ leaveDetails }) => {
             ))}
             {/* Total row */}
             {rows.length > 1 && totalUnclaimed > 0 && (
-              <tr style={{ borderTop: `2px solid ${COLORS.lightGray}`, backgroundColor: COLORS.backgroundGray }}>
-                <td colSpan={3} style={{ padding: '0.5rem', fontWeight: 600, color: COLORS.darkGray }}>Total Unclaimed</td>
+              <tr style={{ borderTop: `2px solid ${COLORS.borderLight}`, backgroundColor: COLORS.bgPage }}>
+                <td colSpan={3} style={{ padding: '0.5rem', fontWeight: 600, color: COLORS.textPrimary }}>Total Unclaimed</td>
                 <td style={{ padding: '0.5rem', textAlign: 'right', fontWeight: 600, color: COLORS.expenseColor }}>
                   {(leaveDetails.studyLeaveUnclaimedDays || 0) + (leaveDetails.annualLeaveUnclaimedDays || 0)} days
                 </td>
@@ -501,7 +655,7 @@ export const LeaveBreakdown = ({ leaveDetails }) => {
       )}
 
       {/* Source note */}
-      <p style={{ margin: 0, fontSize: '0.75rem', color: COLORS.mediumGray, fontStyle: 'italic' }}>
+      <p style={{ margin: 0, fontSize: '0.75rem', color: COLORS.textSecondary, fontStyle: 'italic' }}>
         Source: Leave entitlements and balances from your uploaded PCRS statements.
       </p>
     </div>
@@ -552,10 +706,10 @@ const CDMGrowthPotentialTable = ({ growthPotential }) => {
   return (
     <div style={{ ...cardStyle, marginTop: '1rem' }}>
       {sectionHeading(
-        <TrendingUp style={{ width: '1rem', height: '1rem', color: '#16A34A' }} />,
+        <TrendingUp style={{ width: '1rem', height: '1rem', color: COLORS.success }} />,
         'CDM Growth Potential (Based on Disease Registers)'
       )}
-      <p style={{ margin: '0 0 0.75rem', fontSize: '0.75rem', color: COLORS.mediumGray }}>
+      <p style={{ margin: '0 0 0.75rem', fontSize: '0.75rem', color: COLORS.textSecondary }}>
         Estimated additional income based on disease register patients with 75% target uptake rate.
       </p>
 
@@ -581,24 +735,24 @@ const CDMGrowthPotentialTable = ({ growthPotential }) => {
                       {item.category}
                     </span>
                     {item.code && (
-                      <span style={{ marginLeft: '0.375rem', fontSize: '0.75rem', fontFamily: 'monospace', color: COLORS.mediumGray }}>({item.code})</span>
+                      <span style={{ marginLeft: '0.375rem', fontSize: '0.75rem', fontFamily: 'monospace', color: COLORS.textSecondary }}>({item.code})</span>
                     )}
-                    <p style={{ margin: '0.125rem 0 0', fontSize: '0.75rem', color: COLORS.mediumGray }}>{item.description}</p>
+                    <p style={{ margin: '0.125rem 0 0', fontSize: '0.75rem', color: COLORS.textSecondary }}>{item.description}</p>
                   </td>
                   <td style={{ ...tdBase, textAlign: 'center', fontWeight: 500 }}>{item.eligiblePatients}</td>
                   <td style={{ ...tdBase, textAlign: 'center', fontWeight: 500 }}>{item.expectedAnnual}</td>
                   <td style={{ ...tdBase, textAlign: 'center', fontWeight: 500 }}>{item.actualClaims}</td>
-                  <td style={{ ...tdBase, textAlign: 'center', fontWeight: 600, color: item.gap > 0 ? '#DC2626' : '#065F46' }}>{item.gap}</td>
-                  <td style={{ ...tdBase, textAlign: 'right', color: COLORS.mediumGray }}>{formatCurrency(item.avgFee || item.fee)}</td>
-                  <td style={{ ...tdBase, textAlign: 'right', fontWeight: 600, color: item.potentialValue > 0 ? '#16A34A' : COLORS.darkGray }}>
+                  <td style={{ ...tdBase, textAlign: 'center', fontWeight: 600, color: item.gap > 0 ? COLORS.error : COLORS.successText }}>{item.gap}</td>
+                  <td style={{ ...tdBase, textAlign: 'right', color: COLORS.textSecondary }}>{formatCurrency(item.avgFee || item.fee)}</td>
+                  <td style={{ ...tdBase, textAlign: 'right', fontWeight: 600, color: item.potentialValue > 0 ? COLORS.success : COLORS.textPrimary }}>
                     {item.potentialValue > 0 ? `+${formatCurrency(item.potentialValue)}` : formatCurrency(0)}
                   </td>
                 </tr>
                 {/* Conditions sub-row */}
                 {item.conditions && item.conditions.length > 0 && (
                   <tr>
-                    <td colSpan={7} style={{ ...tdBase, padding: '0.25rem 0.5rem', backgroundColor: COLORS.backgroundGray, borderTop: 'none' }}>
-                      <span style={{ fontSize: '0.7rem', color: COLORS.mediumGray }}>
+                    <td colSpan={7} style={{ ...tdBase, padding: '0.25rem 0.5rem', backgroundColor: COLORS.bgPage, borderTop: 'none' }}>
+                      <span style={{ fontSize: '0.7rem', color: COLORS.textSecondary }}>
                         {item.conditions.map(c => `${c.name} (${c.patients})`).join('  \u2022  ')}
                       </span>
                     </td>
@@ -609,7 +763,7 @@ const CDMGrowthPotentialTable = ({ growthPotential }) => {
             {/* Total row */}
             <tr style={headerRow}>
               <td colSpan={6} style={{ ...tdBase, fontWeight: 700 }}>Total CDM Growth Potential</td>
-              <td style={{ ...tdBase, textAlign: 'right', fontWeight: 700, color: '#16A34A' }}>
+              <td style={{ ...tdBase, textAlign: 'right', fontWeight: 700, color: COLORS.success }}>
                 +{formatCurrency(growthPotential.totalValue)}
               </td>
             </tr>
@@ -625,23 +779,23 @@ const CDMGrowthPotentialTable = ({ growthPotential }) => {
             display: 'flex', alignItems: 'center', gap: '0.375rem',
             cursor: 'pointer', userSelect: 'none',
             padding: '0.5rem 0.625rem', borderRadius: '0.375rem',
-            backgroundColor: '#FEF3C7', border: '1px solid #F59E0B'
+            backgroundColor: COLORS.warningLight, border: `1px solid ${COLORS.warning}`
           }}
         >
-          <Info style={{ width: '0.875rem', height: '0.875rem', color: '#92400E', flexShrink: 0 }} />
-          <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#92400E', flex: 1 }}>
+          <Info style={{ width: '0.875rem', height: '0.875rem', color: COLORS.warningText, flexShrink: 0 }} />
+          <span style={{ fontSize: '0.8rem', fontWeight: 600, color: COLORS.warningText, flex: 1 }}>
             TIP: How to close the CDM gap using {ehrName}
           </span>
           {tipExpanded
-            ? <ChevronUp style={{ width: '0.875rem', height: '0.875rem', color: '#92400E', flexShrink: 0 }} />
-            : <ChevronDown style={{ width: '0.875rem', height: '0.875rem', color: '#92400E', flexShrink: 0 }} />
+            ? <ChevronUp style={{ width: '0.875rem', height: '0.875rem', color: COLORS.warningText, flexShrink: 0 }} />
+            : <ChevronDown style={{ width: '0.875rem', height: '0.875rem', color: COLORS.warningText, flexShrink: 0 }} />
           }
         </div>
         {tipExpanded && (
           <div style={{
             padding: '0.75rem', fontSize: '0.8rem', lineHeight: 1.5,
-            color: '#78350F', backgroundColor: '#FFFBEB',
-            border: '1px solid #F59E0B', borderTop: 'none',
+            color: COLORS.warningText, backgroundColor: COLORS.warningLighter,
+            border: `1px solid ${COLORS.warning}`, borderTop: 'none',
             borderRadius: '0 0 0.375rem 0.375rem'
           }}>
             <p style={{ margin: '0 0 0.375rem', fontWeight: 600 }}>1. Identify all eligible patients</p>
@@ -684,10 +838,10 @@ export const CDMBreakdown = ({ cdmAnalysis }) => {
       {cdmAnalysis.hasData && (
         <div style={cardStyle}>
           {sectionHeading(
-            <CheckCircle style={{ width: '1rem', height: '1rem', color: '#EF4444' }} />,
+            <CheckCircle style={{ width: '1rem', height: '1rem', color: COLORS.error }} />,
             'Current CDM Activity'
           )}
-          <p style={{ margin: '0 0 0.75rem', fontSize: '0.75rem', color: COLORS.mediumGray }}>
+          <p style={{ margin: '0 0 0.75rem', fontSize: '0.75rem', color: COLORS.textSecondary }}>
             CDM claims from your PCRS statements (AO/AP/AQ/AR/AS/AT in-surgery and phone reviews, BB Prevention Programme, BC Opportunistic Case Finding, AM Virtual Clinics).
           </p>
           <div style={{ overflowX: 'auto' }}>
@@ -704,15 +858,15 @@ export const CDMBreakdown = ({ cdmAnalysis }) => {
               <tbody>
                 {cdmAnalysis.claims.map((claim, idx) => (
                   <tr key={idx}>
-                    <td style={{ ...tdBase, fontFamily: 'monospace', fontWeight: 600, color: '#EF4444' }}>{claim.code}</td>
+                    <td style={{ ...tdBase, fontFamily: 'monospace', fontWeight: 600, color: COLORS.error }}>{claim.code}</td>
                     <td style={tdBase}>
                       <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>{claim.name}</span>
                       {claim.description && (
-                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.75rem', color: COLORS.mediumGray }}>{claim.description}</p>
+                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.75rem', color: COLORS.textSecondary }}>{claim.description}</p>
                       )}
                     </td>
                     <td style={{ ...tdBase, textAlign: 'center', fontWeight: 500 }}>{claim.count}</td>
-                    <td style={{ ...tdBase, textAlign: 'right', color: COLORS.mediumGray }}>{formatCurrency(claim.fee)}</td>
+                    <td style={{ ...tdBase, textAlign: 'right', color: COLORS.textSecondary }}>{formatCurrency(claim.fee)}</td>
                     <td style={{ ...tdBase, textAlign: 'right', fontWeight: 500, color: COLORS.incomeColor }}>{formatCurrency(claim.total)}</td>
                   </tr>
                 ))}
@@ -738,19 +892,19 @@ export const CDMBreakdown = ({ cdmAnalysis }) => {
               marginTop: '1rem',
               padding: '0.75rem',
               borderRadius: '0.5rem',
-              backgroundColor: '#FEF3C7',
-              border: '1px solid #F59E0B'
+              backgroundColor: COLORS.warningLight,
+              border: `1px solid ${COLORS.warning}`
             }}>
-              <p style={{ margin: 0, fontSize: '0.875rem', color: '#92400E' }}>
+              <p style={{ margin: 0, fontSize: '0.875rem', color: COLORS.warningText }}>
                 <strong>Tip:</strong> Enter your disease register counts in the Data Collection form to calculate CDM growth potential.
               </p>
-              <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: '#78350F' }}>
+              <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: COLORS.warningText }}>
                 <strong>CDM Treatment:</strong> Type 2 Diabetes, Asthma, COPD, Heart Failure, AF, IHD, Stroke/TIA
               </p>
-              <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: '#78350F' }}>
+              <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: COLORS.warningText }}>
                 <strong>Prevention Programme:</strong> Hypertension (18+), Pre-diabetes (45+), QRISK{'\u2265'}20%, GDM/Pre-eclampsia history
               </p>
-              <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: '#78350F' }}>
+              <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: COLORS.warningText }}>
                 <strong>OCF:</strong> Patients 45+ with risk factors (smoker, BMI{'\u2265'}30, dyslipidaemia) not on CDM/PP
               </p>
             </div>
@@ -766,7 +920,7 @@ export const CDMBreakdown = ({ cdmAnalysis }) => {
 // 4. CAPITATION BREAKDOWN
 // ═══════════════════════════════════════════════════════════════════════
 export const CapitationBreakdown = ({ capitationAnalysis }) => {
-  if (!capitationAnalysis) return <p style={{ margin: 0, color: COLORS.mediumGray }}>No capitation analysis data available.</p>;
+  if (!capitationAnalysis) return <p style={{ margin: 0, color: COLORS.textSecondary }}>No capitation analysis data available.</p>;
 
   const checks = capitationAnalysis.registrationChecks || [];
   const age5to8 = capitationAnalysis.age5to8Check;
@@ -807,7 +961,7 @@ export const CapitationBreakdown = ({ capitationAnalysis }) => {
                       ...tdBase,
                       textAlign: 'right',
                       fontWeight: 500,
-                      color: check.potentialValue > 0 ? COLORS.incomeColor : COLORS.mediumGray
+                      color: check.potentialValue > 0 ? COLORS.incomeColor : COLORS.textSecondary
                     }}>
                       {check.potentialValue > 0 ? formatCurrency(check.potentialValue) : '\u2014'}
                     </td>
@@ -822,12 +976,12 @@ export const CapitationBreakdown = ({ capitationAnalysis }) => {
             <div style={{
               marginTop: '1rem',
               paddingTop: '0.75rem',
-              borderTop: `1px solid ${COLORS.lightGray}`,
+              borderTop: `1px solid ${COLORS.borderLight}`,
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center'
             }}>
-              <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 600, color: COLORS.darkGray }}>Total Registration Gap Value:</p>
+              <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 600, color: COLORS.textPrimary }}>Total Registration Gap Value:</p>
               <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: COLORS.incomeColor }}>
                 {formatCurrency(capitationAnalysis.totalPotentialValue)}/year
               </p>
@@ -841,14 +995,14 @@ export const CapitationBreakdown = ({ capitationAnalysis }) => {
         <div style={{
           padding: '0.75rem 1rem',
           borderRadius: '0.375rem',
-          backgroundColor: '#EFF6FF',
+          backgroundColor: COLORS.slainteBlueLight,
           border: '1px solid #BFDBFE',
           display: 'flex',
           alignItems: 'flex-start',
           gap: '0.5rem'
         }}>
           <Info style={{ width: '1rem', height: '1rem', color: COLORS.slainteBlue, flexShrink: 0, marginTop: '1px' }} />
-          <div style={{ fontSize: '0.8rem', color: '#1E40AF', lineHeight: 1.5 }}>
+          <div style={{ fontSize: '0.8rem', color: COLORS.infoText, lineHeight: 1.5 }}>
             <strong>Tip:</strong> Children aged 5{'\u2013'}8 are entitled to a GP Visit Card but PCRS doesn{'\u2019'}t break down this age group separately.
             Consider running an age search in your EHR for patients aged 5{'\u2013'}8 to check their GMS/GP Visit Card status.
           </div>
@@ -881,10 +1035,10 @@ export const CapitationBreakdown = ({ capitationAnalysis }) => {
                   <td style={{ ...tdBase, textAlign: 'center', fontWeight: 600 }}>{panel.weightedPanel?.toLocaleString() || 'N/A'}</td>
                   <td style={{ ...tdBase, textAlign: 'center', fontWeight: 600 }}>{panel.weightedPerGP?.toLocaleString() || 'N/A'}</td>
                 </tr>
-                <tr style={{ backgroundColor: COLORS.backgroundGray }}>
-                  <td style={{ ...tdBase, fontWeight: 600, color: COLORS.mediumGray }}>Target</td>
-                  <td style={{ ...tdBase, textAlign: 'center', color: COLORS.mediumGray }}>{'\u2014'}</td>
-                  <td style={{ ...tdBase, textAlign: 'center', color: COLORS.mediumGray }}>
+                <tr style={{ backgroundColor: COLORS.bgPage }}>
+                  <td style={{ ...tdBase, fontWeight: 600, color: COLORS.textSecondary }}>Target</td>
+                  <td style={{ ...tdBase, textAlign: 'center', color: COLORS.textSecondary }}>{'\u2014'}</td>
+                  <td style={{ ...tdBase, textAlign: 'center', color: COLORS.textSecondary }}>
                     {panel.atSubsidyMax
                       ? <span>{panel.currentPanelSize?.toLocaleString()}</span>
                       : <span>
@@ -897,7 +1051,7 @@ export const CapitationBreakdown = ({ capitationAnalysis }) => {
                         </span>
                     }
                   </td>
-                  <td style={{ ...tdBase, textAlign: 'center', color: COLORS.mediumGray }}>
+                  <td style={{ ...tdBase, textAlign: 'center', color: COLORS.textSecondary }}>
                     {panel.targetWeightedTotal?.toLocaleString()}
                     {!panel.atSubsidyMax && panel.targetWeightedTotal - panel.weightedPanel > 0 && (
                       <span style={{ color: COLORS.incomeColor, fontSize: '0.75rem', marginLeft: '0.35rem' }}>
@@ -908,18 +1062,18 @@ export const CapitationBreakdown = ({ capitationAnalysis }) => {
                   <td style={{ ...tdBase, textAlign: 'center' }}>
                     {panel.atSubsidyMax
                       ? statusBadge('ok', `${panel.fullSubsidyTarget.toLocaleString()}`)
-                      : <span style={{ color: COLORS.mediumGray }}>{panel.fullSubsidyTarget?.toLocaleString()}</span>
+                      : <span style={{ color: COLORS.textSecondary }}>{panel.fullSubsidyTarget?.toLocaleString()}</span>
                     }
                   </td>
                 </tr>
               </tbody>
             </table>
           </div>
-          <p style={{ margin: '0.75rem 0 0', fontSize: '0.85rem', color: COLORS.darkGray, lineHeight: 1.5 }}>
+          <p style={{ margin: '0.75rem 0 0', fontSize: '0.85rem', color: COLORS.textPrimary, lineHeight: 1.5 }}>
             {panel.recommendation}
           </p>
           {panel.note && (
-            <p style={{ margin: '0.35rem 0 0', fontSize: '0.75rem', fontStyle: 'italic', color: COLORS.mediumGray }}>
+            <p style={{ margin: '0.35rem 0 0', fontSize: '0.75rem', fontStyle: 'italic', color: COLORS.textSecondary }}>
               {panel.note}
             </p>
           )}
@@ -927,12 +1081,12 @@ export const CapitationBreakdown = ({ capitationAnalysis }) => {
             <div style={{
               marginTop: '0.75rem',
               paddingTop: '0.75rem',
-              borderTop: `1px solid ${COLORS.lightGray}`,
+              borderTop: `1px solid ${COLORS.borderLight}`,
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center'
             }}>
-              <p style={{ margin: 0, fontSize: '0.85rem', color: COLORS.darkGray }}>
+              <p style={{ margin: 0, fontSize: '0.85rem', color: COLORS.textPrimary }}>
                 Each additional 100 patients could add approximately:
               </p>
               <p style={{ margin: 0, fontSize: '1rem', fontWeight: 600, color: COLORS.incomeColor }}>
@@ -1068,7 +1222,7 @@ const PracticeSupportFullMode = ({
           ...tdBase,
           textAlign: 'right',
           fontWeight: val > 0 ? 600 : 400,
-          color: val > 0 ? COLORS.expenseColor : COLORS.mediumGray,
+          color: val > 0 ? COLORS.expenseColor : COLORS.textSecondary,
           whiteSpace: 'nowrap'
         });
         const rows = [
@@ -1130,17 +1284,17 @@ const PracticeSupportFullMode = ({
                 {/* Total row */}
                 {grandTotal > 0 && (
                   <tfoot>
-                    <tr style={{ borderTop: `2px solid ${COLORS.darkGray}` }}>
+                    <tr style={{ borderTop: `2px solid ${COLORS.textPrimary}` }}>
                       <td colSpan={3} style={{ ...tdBase, fontWeight: 600, padding: '0.5rem 0.375rem' }}>
                         Total Recoverable
                       </td>
-                      <td style={{ ...tdBase, textAlign: 'right', fontWeight: 600, padding: '0.5rem 0.375rem', color: totalUnderpaid > 0 ? COLORS.incomeColor : COLORS.mediumGray }}>
+                      <td style={{ ...tdBase, textAlign: 'right', fontWeight: 600, padding: '0.5rem 0.375rem', color: totalUnderpaid > 0 ? COLORS.incomeColor : COLORS.textSecondary }}>
                         {totalUnderpaid > 0 ? formatCurrency(totalUnderpaid) : '\u2014'}
                       </td>
-                      <td style={{ ...tdBase, textAlign: 'right', fontWeight: 600, padding: '0.5rem 0.375rem', color: totalUnrecognised > 0 ? COLORS.incomeColor : COLORS.mediumGray }}>
+                      <td style={{ ...tdBase, textAlign: 'right', fontWeight: 600, padding: '0.5rem 0.375rem', color: totalUnrecognised > 0 ? COLORS.incomeColor : COLORS.textSecondary }}>
                         {totalUnrecognised > 0 ? formatCurrency(totalUnrecognised) : '\u2014'}
                       </td>
-                      <td style={{ ...tdBase, textAlign: 'right', fontWeight: 600, padding: '0.5rem 0.375rem', color: totalIncrement > 0 ? COLORS.incomeColor : COLORS.mediumGray }}>
+                      <td style={{ ...tdBase, textAlign: 'right', fontWeight: 600, padding: '0.5rem 0.375rem', color: totalIncrement > 0 ? COLORS.incomeColor : COLORS.textSecondary }}>
                         {totalIncrement > 0 ? formatCurrency(totalIncrement) : '\u2014'}
                       </td>
                     </tr>
@@ -1154,12 +1308,12 @@ const PracticeSupportFullMode = ({
               <div style={{
                 marginTop: '0.75rem',
                 paddingTop: '0.75rem',
-                borderTop: `1px solid ${COLORS.lightGray}`,
+                borderTop: `1px solid ${COLORS.borderLight}`,
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center'
               }}>
-                <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 600, color: COLORS.darkGray }}>Total Recoverable Value:</p>
+                <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 600, color: COLORS.textPrimary }}>Total Recoverable Value:</p>
                 <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: COLORS.incomeColor }}>
                   {formatCurrency(grandTotal)}/year
                 </p>
@@ -1186,8 +1340,8 @@ const PracticeSupportFullMode = ({
               textAlign: 'left'
             }}
           >
-            <User style={{ width: '1rem', height: '1rem', color: COLORS.darkGray }} />
-            <h5 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 600, color: COLORS.darkGray, flex: 1 }}>
+            <User style={{ width: '1rem', height: '1rem', color: COLORS.textPrimary }} />
+            <h5 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 600, color: COLORS.textPrimary, flex: 1 }}>
               Staff Subsidy Status per Staff Member
             </h5>
             <span style={{ fontSize: '0.75rem', color: COLORS.slainteBlue, fontWeight: 500 }}>
@@ -1204,7 +1358,7 @@ const PracticeSupportFullMode = ({
 
           {showStaffDetail && (
             <div style={{ marginTop: '0.75rem' }}>
-              <p style={{ margin: '0 0 0.75rem', fontSize: '0.75rem', color: COLORS.mediumGray }}>
+              <p style={{ margin: '0 0 0.75rem', fontSize: '0.75rem', color: COLORS.textSecondary }}>
                 PCRS payments compared against your practice data. PCRS subsidises up to {FULL_TIME_HOURS} hrs/week per staff member.
               </p>
               <div style={{ overflowX: 'auto' }}>
@@ -1248,12 +1402,12 @@ const PracticeSupportFullMode = ({
                           <td style={{ ...tdBase, textAlign: 'center', padding: '0.375rem' }}>{pcrsHours}</td>
                           <td style={{ ...tdBase, textAlign: 'center', padding: '0.375rem' }}>
                             {actualHours !== null ? actualHours : (
-                              <span style={{ color: COLORS.mediumGray }}>{'\u2014'}</span>
+                              <span style={{ color: COLORS.textSecondary }}>{'\u2014'}</span>
                             )}
                           </td>
                           <td style={{ ...tdBase, textAlign: 'center', padding: '0.375rem' }}>
                             {actualHours === null ? (
-                              <span style={{ color: COLORS.mediumGray }}>No data</span>
+                              <span style={{ color: COLORS.textSecondary }}>No data</span>
                             ) : hoursGap > 0 ? (
                               statusBadge('gap', `${hoursGap} unclaimed`)
                             ) : (
@@ -1263,7 +1417,7 @@ const PracticeSupportFullMode = ({
                           <td style={{ ...tdBase, textAlign: 'center', padding: '0.375rem' }}>
                             Pt {displayPoint}
                             {yearsExp !== null && (
-                              <span style={{ color: COLORS.mediumGray, fontSize: '0.7rem' }}> ({yearsExp} yrs)</span>
+                              <span style={{ color: COLORS.textSecondary, fontSize: '0.7rem' }}> ({yearsExp} yrs)</span>
                             )}
                           </td>
                           <td style={{ ...tdBase, textAlign: 'center', padding: '0.375rem' }}>
@@ -1274,7 +1428,7 @@ const PracticeSupportFullMode = ({
                             ) : staffIssue ? (
                               statusBadge('gap', `Should be Pt ${staffIssue.correctIncrement}`)
                             ) : (
-                              <span style={{ color: COLORS.mediumGray }}>No data</span>
+                              <span style={{ color: COLORS.textSecondary }}>No data</span>
                             )}
                           </td>
                         </tr>
@@ -1286,11 +1440,11 @@ const PracticeSupportFullMode = ({
                       const roleLabel = ROLE_LABELS[staff.staffType] || staff.staffType;
                       const hours = parseFloat(staff.actualHoursWorked) || 0;
                       return (
-                        <tr key={`unreg-${idx}`} style={{ backgroundColor: '#FFFBEB' }}>
+                        <tr key={`unreg-${idx}`} style={{ backgroundColor: COLORS.warningLighter }}>
                           <td style={{ ...tdBase, fontWeight: 500, padding: '0.375rem' }}>{name}</td>
                           <td style={{ ...tdBase, textAlign: 'center', padding: '0.375rem' }}>{roleLabel}</td>
                           <td style={{ ...tdBase, textAlign: 'center', padding: '0.375rem' }}>
-                            <span style={{ color: '#DC2626' }}>0</span>
+                            <span style={{ color: COLORS.error }}>0</span>
                           </td>
                           <td style={{ ...tdBase, textAlign: 'center', padding: '0.375rem' }}>{hours}</td>
                           <td style={{ ...tdBase, textAlign: 'center', padding: '0.375rem' }}>
@@ -1326,7 +1480,7 @@ const PracticeSupportFullMode = ({
           }}
         >
           <TrendingUp style={{ width: '1rem', height: '1rem', color: COLORS.slainteBlue }} />
-          <h5 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 600, color: COLORS.darkGray, flex: 1 }}>
+          <h5 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 600, color: COLORS.textPrimary, flex: 1 }}>
             Your Entitlement Explained
           </h5>
           <span style={{ fontSize: '0.75rem', color: COLORS.slainteBlue, fontWeight: 500 }}>
@@ -1343,36 +1497,36 @@ const PracticeSupportFullMode = ({
 
         {showEntitlement && (
           <div style={{ marginTop: '0.75rem' }}>
-            <p style={{ margin: '0 0 0.75rem', fontSize: '0.75rem', color: COLORS.mediumGray }}>
+            <p style={{ margin: '0 0 0.75rem', fontSize: '0.75rem', color: COLORS.textSecondary }}>
               Based on weighted panel of {weightedPanel?.toLocaleString()} with {numGPs} GPs
               {entitlement.subsidyUnits != null && ` (${entitlement.subsidyUnits?.toFixed(2)} subsidy units)`}
             </p>
             <div style={{
               padding: '0.75rem',
               borderRadius: '0.25rem',
-              border: `1px solid ${COLORS.lightGray}`,
-              backgroundColor: COLORS.backgroundGray
+              border: `1px solid ${COLORS.borderLight}`,
+              backgroundColor: COLORS.bgPage
             }}>
               {entitlement.explanation && (
-                <p style={{ margin: '0 0 0.75rem', fontSize: '0.875rem', color: COLORS.darkGray }}>
+                <p style={{ margin: '0 0 0.75rem', fontSize: '0.875rem', color: COLORS.textPrimary }}>
                   {entitlement.explanation}
                 </p>
               )}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
-                <div style={{ padding: '0.75rem', backgroundColor: '#FFFFFF', borderRadius: '0.25rem', border: `1px solid ${COLORS.lightGray}` }}>
-                  <p style={{ margin: '0 0 0.25rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: COLORS.mediumGray }}>Receptionists</p>
+                <div style={{ padding: '0.75rem', backgroundColor: COLORS.white, borderRadius: '0.25rem', border: `1px solid ${COLORS.borderLight}` }}>
+                  <p style={{ margin: '0 0 0.25rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: COLORS.textSecondary }}>Receptionists</p>
                   <p style={{ margin: 0, fontSize: '1.125rem', fontWeight: 700, color: COLORS.slainteBlue }}>{entitlement.totalHours} hours/week</p>
                   {entitlement.receptionists?.maxAnnual > 0 && (
-                    <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: COLORS.mediumGray }}>
+                    <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: COLORS.textSecondary }}>
                       Up to {formatCurrency(entitlement.receptionists.maxAnnual)}/year at max rate
                     </p>
                   )}
                 </div>
-                <div style={{ padding: '0.75rem', backgroundColor: '#FFFFFF', borderRadius: '0.25rem', border: `1px solid ${COLORS.lightGray}` }}>
-                  <p style={{ margin: '0 0 0.25rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: COLORS.mediumGray }}>Nurses / Practice Manager</p>
+                <div style={{ padding: '0.75rem', backgroundColor: COLORS.white, borderRadius: '0.25rem', border: `1px solid ${COLORS.borderLight}` }}>
+                  <p style={{ margin: '0 0 0.25rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: COLORS.textSecondary }}>Nurses / Practice Manager</p>
                   <p style={{ margin: 0, fontSize: '1.125rem', fontWeight: 700, color: COLORS.slainteBlue }}>{entitlement.totalHours} hours/week</p>
                   {entitlement.nursesOrPM?.maxNurseAnnual > 0 && (
-                    <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: COLORS.mediumGray }}>
+                    <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: COLORS.textSecondary }}>
                       Up to {formatCurrency(entitlement.nursesOrPM.maxNurseAnnual)}/year at max rate
                     </p>
                   )}
@@ -1388,14 +1542,14 @@ const PracticeSupportFullMode = ({
         <div style={{
           padding: '1rem',
           borderRadius: '0.5rem',
-          border: '2px solid #059669',
-          backgroundColor: '#ECFDF5',
+          border: `2px solid ${COLORS.successDark}`,
+          backgroundColor: COLORS.successLight,
           display: 'flex',
           alignItems: 'center',
           gap: '0.5rem'
         }}>
-          <CheckCircle style={{ width: '1.25rem', height: '1.25rem', color: '#059669' }} />
-          <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500, color: '#065F46' }}>
+          <CheckCircle style={{ width: '1.25rem', height: '1.25rem', color: COLORS.successDark }} />
+          <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500, color: COLORS.successText }}>
             Your Practice Support subsidies are fully optimised. You are claiming your full entitlement.
           </p>
         </div>
@@ -1474,7 +1628,7 @@ export const PracticeSupportBreakdown = ({ entitlement, current, employed, issue
   const nonPcrsStaff = allKnownStaff.filter(s => !s.fromPCRS && eligibleRoles.includes(s.staffType) && parseFloat(s.actualHoursWorked) > 0);
 
   if (pcrsStaff.length === 0 && nonPcrsStaff.length === 0) {
-    return <p style={{ margin: 0, color: COLORS.mediumGray }}>No practice support analysis data available. Enter staff details and patient demographics to see the full analysis.</p>;
+    return <p style={{ margin: 0, color: COLORS.textSecondary }}>No practice support analysis data available. Enter staff details and patient demographics to see the full analysis.</p>;
   }
 
   // Build increment check issues locally (without panel factor for financial values)
@@ -1506,7 +1660,7 @@ export const PracticeSupportBreakdown = ({ entitlement, current, employed, issue
             <User style={{ width: '1rem', height: '1rem' }} />,
             'Staff Subsidy Status'
           )}
-          <p style={{ margin: '0 0 0.75rem', fontSize: '0.75rem', color: COLORS.mediumGray }}>
+          <p style={{ margin: '0 0 0.75rem', fontSize: '0.75rem', color: COLORS.textSecondary }}>
             PCRS payments compared against your practice data. PCRS subsidises up to {FULL_TIME_HOURS} hrs/week per staff member.
           </p>
           <div style={{ overflowX: 'auto' }}>
@@ -1551,12 +1705,12 @@ export const PracticeSupportBreakdown = ({ entitlement, current, employed, issue
                       <td style={{ ...tdBase, textAlign: 'center', padding: '0.375rem' }}>{pcrsHours}</td>
                       <td style={{ ...tdBase, textAlign: 'center', padding: '0.375rem' }}>
                         {actualHours > 0 ? actualHours : (
-                          <span style={{ color: COLORS.mediumGray }}>{'\u2014'}</span>
+                          <span style={{ color: COLORS.textSecondary }}>{'\u2014'}</span>
                         )}
                       </td>
                       <td style={{ ...tdBase, textAlign: 'center', padding: '0.375rem' }}>
                         {actualHours <= 0 ? (
-                          <span style={{ color: COLORS.mediumGray }}>No data</span>
+                          <span style={{ color: COLORS.textSecondary }}>No data</span>
                         ) : hoursGap > 0 ? (
                           statusBadge('gap', `${hoursGap} unclaimed`)
                         ) : (
@@ -1566,7 +1720,7 @@ export const PracticeSupportBreakdown = ({ entitlement, current, employed, issue
                       <td style={{ ...tdBase, textAlign: 'center', padding: '0.375rem' }}>
                         Pt {displayPoint}
                         {yearsExp !== null && (
-                          <span style={{ color: COLORS.mediumGray, fontSize: '0.7rem' }}> ({yearsExp} yrs)</span>
+                          <span style={{ color: COLORS.textSecondary, fontSize: '0.7rem' }}> ({yearsExp} yrs)</span>
                         )}
                       </td>
                       <td style={{ ...tdBase, textAlign: 'center', padding: '0.375rem' }}>
@@ -1577,7 +1731,7 @@ export const PracticeSupportBreakdown = ({ entitlement, current, employed, issue
                         ) : localIssue ? (
                           statusBadge('gap', `Should be Pt ${localIssue.correctPoint}`)
                         ) : (
-                          <span style={{ color: COLORS.mediumGray }}>No data</span>
+                          <span style={{ color: COLORS.textSecondary }}>No data</span>
                         )}
                       </td>
                     </tr>
@@ -1592,7 +1746,7 @@ export const PracticeSupportBreakdown = ({ entitlement, current, employed, issue
       {/* Increment Point Issues (local checks) */}
       {localIssues.length > 0 && (
         <div style={cardStyle}>
-          <p style={{ margin: '0 0 0.5rem', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: COLORS.mediumGray }}>
+          <p style={{ margin: '0 0 0.5rem', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: COLORS.textSecondary }}>
             Action Required:
           </p>
           {localIssues.map((issue, idx) => (
@@ -1600,11 +1754,11 @@ export const PracticeSupportBreakdown = ({ entitlement, current, employed, issue
               padding: '0.75rem',
               marginBottom: idx < localIssues.length - 1 ? '0.5rem' : 0,
               borderRadius: '0.25rem',
-              borderLeft: '4px solid #DC2626',
-              backgroundColor: '#FEF2F2'
+              borderLeft: `4px solid ${COLORS.error}`,
+              backgroundColor: COLORS.errorLighter
             }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500, color: '#991B1B' }}>
+                <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500, color: COLORS.errorText }}>
                   Wrong Increment Point: {issue.name} is on Point {issue.currentPoint} but should be Point {issue.correctPoint}
                 </p>
                 {issue.rateDiff > 0 && (
@@ -1613,7 +1767,7 @@ export const PracticeSupportBreakdown = ({ entitlement, current, employed, issue
                   </span>
                 )}
               </div>
-              <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: COLORS.mediumGray }}>
+              <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: COLORS.textSecondary }}>
                 Contact PCRS to update increment point. *Value shown is the rate difference before panel factor adjustment.
               </p>
             </div>
@@ -1626,11 +1780,11 @@ export const PracticeSupportBreakdown = ({ entitlement, current, employed, issue
         <div style={{
           padding: '1rem',
           borderRadius: '0.5rem',
-          border: '2px solid #F59E0B',
-          backgroundColor: '#FFFBEB'
+          border: `2px solid ${COLORS.warning}`,
+          backgroundColor: COLORS.warningLighter
         }}>
           {sectionHeading(
-            <AlertCircle style={{ width: '1rem', height: '1rem', color: '#D97706' }} />,
+            <AlertCircle style={{ width: '1rem', height: '1rem', color: COLORS.warningDark }} />,
             'Staff Not Receiving PCRS Subsidy'
           )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -1645,20 +1799,20 @@ export const PracticeSupportBreakdown = ({ entitlement, current, employed, issue
                 <div key={idx} style={{
                   padding: '0.75rem',
                   borderRadius: '0.25rem',
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: COLORS.white,
                   border: '1px solid #FDE68A'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                     <div>
-                      <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500, color: '#92400E' }}>
+                      <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500, color: COLORS.warningText }}>
                         {name} ({roleLabel}, {hours} hrs/week)
                       </p>
-                      <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: COLORS.mediumGray }}>
+                      <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: COLORS.textSecondary }}>
                         Not registered with PCRS for a practice support subsidy
                       </p>
                     </div>
                     {estimatedValue > 0 && (
-                      <span style={{ fontSize: '0.875rem', fontWeight: 700, whiteSpace: 'nowrap', marginLeft: '0.5rem', color: '#D97706' }}>
+                      <span style={{ fontSize: '0.875rem', fontWeight: 700, whiteSpace: 'nowrap', marginLeft: '0.5rem', color: COLORS.warningDark }}>
                         ~{formatCurrency(estimatedValue)}/yr*
                       </span>
                     )}
@@ -1667,16 +1821,16 @@ export const PracticeSupportBreakdown = ({ entitlement, current, employed, issue
               );
             })}
           </div>
-          <p style={{ margin: '0.5rem 0 0', fontSize: '0.75rem', color: '#78350F' }}>
+          <p style={{ margin: '0.5rem 0 0', fontSize: '0.75rem', color: COLORS.warningText }}>
             *Estimated value before panel factor adjustment. Enter patient demographics to see the exact subsidy amount.
           </p>
 
           {/* Capacity Grant mention */}
-          <div style={{ marginTop: '0.75rem', padding: '0.75rem', borderRadius: '0.25rem', backgroundColor: '#FFFFFF', border: '1px solid #FDE68A' }}>
-            <p style={{ margin: '0 0 0.25rem', fontSize: '0.875rem', fontWeight: 500, color: '#065F46' }}>
+          <div style={{ marginTop: '0.75rem', padding: '0.75rem', borderRadius: '0.25rem', backgroundColor: COLORS.white, border: '1px solid #FDE68A' }}>
+            <p style={{ margin: '0 0 0.25rem', fontSize: '0.875rem', fontWeight: 500, color: COLORS.successText }}>
               {'\uD83D\uDCB0'} Capacity Grant: {formatCurrency(15000)} per GP
             </p>
-            <p style={{ margin: 0, fontSize: '0.75rem', color: COLORS.mediumGray }}>
+            <p style={{ margin: 0, fontSize: '0.75rem', color: COLORS.textSecondary }}>
               If these staff were hired or given additional hours after July 2023, they may qualify for the Capacity Grant ({'\u20AC'}15,000 per GP with weighted panel 500+).
             </p>
           </div>
@@ -1687,10 +1841,10 @@ export const PracticeSupportBreakdown = ({ entitlement, current, employed, issue
       <div style={{
         padding: '0.75rem',
         borderRadius: '0.5rem',
-        backgroundColor: '#EFF6FF',
+        backgroundColor: COLORS.slainteBlueLight,
         border: '1px solid #BFDBFE'
       }}>
-        <p style={{ margin: 0, fontSize: '0.875rem', color: '#1E40AF' }}>
+        <p style={{ margin: 0, fontSize: '0.875rem', color: COLORS.infoText }}>
           <strong>Tip:</strong> Enter patient demographics in the Data Collection view to cross-check the PCRS weighted panel and refine entitlement calculations.
         </p>
       </div>
@@ -1737,7 +1891,7 @@ export const CervicalCheckBreakdown = ({ cervicalScreeningAnalysis }) => {
                   <td style={{ ...tdBase, fontWeight: 500 }}>Smears Performed</td>
                   <td style={{ ...tdBase, textAlign: 'center' }}>{data.totalSmearsPerformed}</td>
                   <td style={{ ...tdBase, textAlign: 'center' }}>{statusBadge('info', 'Total Activity')}</td>
-                  <td style={{ ...tdBase, textAlign: 'right', color: COLORS.mediumGray }}>{'\u2014'}</td>
+                  <td style={{ ...tdBase, textAlign: 'right', color: COLORS.textSecondary }}>{'\u2014'}</td>
                 </tr>
                 <tr>
                   <td style={{ ...tdBase, fontWeight: 500 }}>Smears Paid</td>
@@ -1752,7 +1906,7 @@ export const CervicalCheckBreakdown = ({ cervicalScreeningAnalysis }) => {
                     <td style={{ ...tdBase, fontWeight: 500 }}>Zero Payment Smears</td>
                     <td style={{ ...tdBase, textAlign: 'center' }}>{data.smearsZeroPayment}</td>
                     <td style={{ ...tdBase, textAlign: 'center' }}>{statusBadge('nopay', '\u26A0\uFE0F No Payment')}</td>
-                    <td style={{ ...tdBase, textAlign: 'right', fontWeight: 500, color: '#DC2626' }}>
+                    <td style={{ ...tdBase, textAlign: 'right', fontWeight: 500, color: COLORS.error }}>
                       -{formatCurrency(data.lostIncome)}
                     </td>
                   </tr>
@@ -1766,12 +1920,12 @@ export const CervicalCheckBreakdown = ({ cervicalScreeningAnalysis }) => {
             <div style={{
               marginTop: '1rem',
               paddingTop: '0.75rem',
-              borderTop: `1px solid ${COLORS.lightGray}`,
+              borderTop: `1px solid ${COLORS.borderLight}`,
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center'
             }}>
-              <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 600, color: COLORS.darkGray }}>Total Recoverable (Admin Fixes):</p>
+              <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 600, color: COLORS.textPrimary }}>Total Recoverable (Admin Fixes):</p>
               <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: COLORS.incomeColor }}>
                 {formatCurrency(data.lostIncome)}/year
               </p>
@@ -1799,7 +1953,7 @@ export const CervicalCheckBreakdown = ({ cervicalScreeningAnalysis }) => {
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <AlertCircle style={{ width: '1rem', height: '1rem', color: COLORS.slainteBlue }} />
-              <h5 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 600, color: COLORS.darkGray }}>Zero Payment Breakdown</h5>
+              <h5 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 600, color: COLORS.textPrimary }}>Zero Payment Breakdown</h5>
               <span style={{
                 fontSize: '0.75rem',
                 padding: '0.125rem 0.5rem',
@@ -1811,14 +1965,14 @@ export const CervicalCheckBreakdown = ({ cervicalScreeningAnalysis }) => {
               </span>
             </div>
             {zeroPaymentExpanded
-              ? <ChevronUp style={{ width: '1rem', height: '1rem', color: COLORS.mediumGray }} />
-              : <ChevronDown style={{ width: '1rem', height: '1rem', color: COLORS.mediumGray }} />
+              ? <ChevronUp style={{ width: '1rem', height: '1rem', color: COLORS.textSecondary }} />
+              : <ChevronDown style={{ width: '1rem', height: '1rem', color: COLORS.textSecondary }} />
             }
           </button>
 
           {zeroPaymentExpanded && (
             <div style={{ marginTop: '0.75rem' }}>
-              <p style={{ margin: '0 0 0.75rem', fontSize: '0.75rem', color: COLORS.mediumGray }}>
+              <p style={{ margin: '0 0 0.75rem', fontSize: '0.75rem', color: COLORS.textSecondary }}>
                 Understanding why smears were not paid helps prevent future lost income.
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -1826,24 +1980,24 @@ export const CervicalCheckBreakdown = ({ cervicalScreeningAnalysis }) => {
                   <div key={idx} style={{
                     padding: '0.75rem',
                     borderRadius: '0.25rem',
-                    border: `1px solid ${COLORS.lightGray}`,
-                    backgroundColor: COLORS.backgroundGray
+                    border: `1px solid ${COLORS.borderLight}`,
+                    backgroundColor: COLORS.bgPage
                   }}>
                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                      <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500, color: COLORS.darkGray }}>
+                      <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500, color: COLORS.textPrimary }}>
                         {rec.preventable ? '\uD83D\uDD27 ' : '\u2139\uFE0F '}{rec.reason}
                       </p>
                       <span style={{
                         fontSize: '0.75rem',
                         padding: '0.125rem 0.5rem',
                         borderRadius: '9999px',
-                        backgroundColor: rec.preventable ? '#FEE2E2' : `${COLORS.mediumGray}20`,
-                        color: rec.preventable ? '#991B1B' : COLORS.mediumGray
+                        backgroundColor: rec.preventable ? COLORS.errorLight : `${COLORS.textSecondary}20`,
+                        color: rec.preventable ? COLORS.errorText : COLORS.textSecondary
                       }}>
                         {rec.count} smear{rec.count > 1 ? 's' : ''}
                       </span>
                     </div>
-                    <p style={{ margin: 0, fontSize: '0.75rem', color: COLORS.mediumGray }}>{rec.advice}</p>
+                    <p style={{ margin: 0, fontSize: '0.75rem', color: COLORS.textSecondary }}>{rec.advice}</p>
                   </div>
                 ))}
               </div>
@@ -1903,7 +2057,7 @@ export const CervicalCheckBreakdown = ({ cervicalScreeningAnalysis }) => {
               </tfoot>
             </table>
           </div>
-          <p style={{ margin: '0.5rem 0 0', fontSize: '0.75rem', color: COLORS.mediumGray }}>
+          <p style={{ margin: '0.5rem 0 0', fontSize: '0.75rem', color: COLORS.textSecondary }}>
             Rate: {'\u20AC'}{ratePerSmear.toFixed(2)} per smear (HPV primary screening)
           </p>
         </div>
@@ -1914,14 +2068,14 @@ export const CervicalCheckBreakdown = ({ cervicalScreeningAnalysis }) => {
         <div style={{
           padding: '1rem',
           borderRadius: '0.5rem',
-          border: '2px solid #059669',
-          backgroundColor: '#ECFDF5',
+          border: `2px solid ${COLORS.successDark}`,
+          backgroundColor: COLORS.successLight,
           display: 'flex',
           alignItems: 'center',
           gap: '0.5rem'
         }}>
-          <CheckCircle style={{ width: '1.25rem', height: '1.25rem', color: '#059669' }} />
-          <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500, color: '#065F46' }}>
+          <CheckCircle style={{ width: '1.25rem', height: '1.25rem', color: COLORS.successDark }} />
+          <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500, color: COLORS.successText }}>
             Excellent! All smears are being paid. Your cervical screening claims are fully optimised.
           </p>
         </div>

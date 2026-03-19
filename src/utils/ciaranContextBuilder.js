@@ -28,6 +28,7 @@ export function buildCiaranContext(profile) {
         buildTeamSection(profile.gps, profile.staff),
         buildGMSContractSection(profile.gmsContract),
         buildPrivatePatientsSection(profile.privatePatients),
+        buildOperationsSection(profile.operations, profile.privatePatients),
         buildExpensesSection(profile.expenses),
         buildCategoriesSection(profile.categories),
         buildHealthCheckSection(profile.healthCheckData),
@@ -36,7 +37,7 @@ export function buildCiaranContext(profile) {
 
     const context = sections.filter(s => s).join('\n\n');
 
-    return `${buildContextHeader()}\n\n${context}\n\n${buildContextFooter()}`;
+    return `${buildContextHeader()}\n\n<user_data>\n${context}\n</user_data>\n\n${buildContextFooter()}`;
 }
 
 /**
@@ -115,9 +116,10 @@ function buildTeamSection(gps, staff) {
         parts.push('\nGP Partners:');
         gps.partners.forEach((partner, idx) => {
             let partnerInfo = `- ${partner.name || `Partner ${idx + 1}`}`;
-            if (partner.profitShare) {
-                partnerInfo += ` (${partner.profitShare}% profit share)`;
-            }
+            const details = [];
+            if (partner.panelNumber) details.push(`Panel: ${partner.panelNumber}`);
+            if (partner.profitShare) details.push(`${partner.profitShare}% profit share`);
+            if (details.length > 0) partnerInfo += ` (${details.join(', ')})`;
             parts.push(partnerInfo);
         });
     }
@@ -234,6 +236,30 @@ function buildPrivatePatientsSection(privatePatients) {
 }
 
 /**
+ * Build operations section (GP hours, consultation fee, working weeks)
+ */
+function buildOperationsSection(operations, privatePatients) {
+    const parts = [];
+    parts.push('## PRACTICE OPERATIONS');
+
+    const fee = privatePatients?.averageConsultationFee;
+    if (fee) {
+        parts.push(`Private Consultation Fee: €${Number(fee).toFixed(2)}`);
+    }
+    if (operations?.appointmentDuration) {
+        parts.push(`Standard Appointment Duration: ${operations.appointmentDuration} minutes`);
+    }
+    if (operations?.gpClinicalHoursPerWeek) {
+        parts.push(`GP Clinical Hours per Week: ${operations.gpClinicalHoursPerWeek} hours`);
+    }
+    if (operations?.workingWeeksPerYear) {
+        parts.push(`Working Weeks per Year: ${operations.workingWeeksPerYear} weeks`);
+    }
+
+    return parts.length > 1 ? parts.join('\n') : null;
+}
+
+/**
  * Build expenses section
  */
 function buildExpensesSection(expenses) {
@@ -291,10 +317,11 @@ function buildCategoriesSection(categories) {
         });
     }
 
-    // Specific instructions
+    // Specific instructions (user free-text, truncate for safety)
     if (categories.specificInstructions && categories.specificInstructions.trim().length > 0) {
+        const truncated = categories.specificInstructions.trim().substring(0, 1000);
         parts.push('\nSpecific Instructions from Practice Owner:');
-        parts.push(categories.specificInstructions);
+        parts.push(truncated);
     }
 
     return parts.length > 1 ? parts.join('\n') : null;

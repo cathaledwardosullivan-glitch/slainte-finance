@@ -26,18 +26,18 @@ const LegacyToolsSection = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       {/* Info banner */}
-      <div style={{ padding: '1rem', borderRadius: '0.5rem', backgroundColor: '#FEF3C7', border: '1px solid #FCD34D' }}>
-        <p style={{ fontSize: '0.875rem', color: '#92400E' }}>
+      <div style={{ padding: '1rem', borderRadius: '0.5rem', backgroundColor: COLORS.warningLight, border: `1px solid ${COLORS.warning}` }}>
+        <p style={{ fontSize: '0.875rem', color: COLORS.warningText }}>
           <strong>Note:</strong> These tools are from an earlier version of the app. They may be removed in a future update as new features are developed.
         </p>
       </div>
 
       {/* AI Tools */}
-      <div style={{ backgroundColor: COLORS.white, padding: '1.5rem', borderRadius: '0.5rem', border: `1px solid ${COLORS.lightGray}` }}>
-        <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.darkGray, marginBottom: '1rem' }}>
+      <div style={{ backgroundColor: COLORS.white, padding: '1.5rem', borderRadius: '0.5rem', border: `1px solid ${COLORS.borderLight}` }}>
+        <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.textPrimary, marginBottom: '1rem' }}>
           AI Categorization Tools
         </h3>
-        <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray, marginBottom: '1.5rem' }}>
+        <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary, marginBottom: '1.5rem' }}>
           Use AI to help categorize your unidentified transactions.
         </p>
 
@@ -47,7 +47,7 @@ const LegacyToolsSection = () => {
             padding: '1.25rem',
             border: `2px solid ${COLORS.slainteBlue}`,
             borderRadius: '0.5rem',
-            backgroundColor: '#DBEAFE',
+            backgroundColor: COLORS.infoLighter,
             opacity: unidentifiedTransactions.length > 0 ? 1 : 0.6
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
@@ -56,11 +56,11 @@ const LegacyToolsSection = () => {
               </div>
               <h4 style={{ fontWeight: 600, color: COLORS.slainteBlue }}>AI Staff Suggestions</h4>
             </div>
-            <p style={{ fontSize: '0.875rem', color: COLORS.darkGray, marginBottom: '1rem' }}>
+            <p style={{ fontSize: '0.875rem', color: COLORS.textPrimary, marginBottom: '1rem' }}>
               Automatically identify and categorize staff-related payments. Best for detecting salaries, wages, and regular staff expenses.
             </p>
             {unidentifiedTransactions.length === 0 && (
-              <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginBottom: '0.75rem' }}>
+              <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginBottom: '0.75rem' }}>
                 No unidentified transactions to analyze.
               </p>
             )}
@@ -93,20 +93,20 @@ const LegacyToolsSection = () => {
             padding: '1.25rem',
             border: `2px solid ${COLORS.highlightYellow}`,
             borderRadius: '0.5rem',
-            backgroundColor: '#FEF3C7',
+            backgroundColor: COLORS.warningLight,
             opacity: unidentifiedTransactions.length > 0 ? 1 : 0.6
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
               <div style={{ padding: '0.5rem', borderRadius: '0.5rem', backgroundColor: COLORS.white }}>
-                <Activity style={{ height: '1.25rem', width: '1.25rem', color: '#D97706' }} />
+                <Activity style={{ height: '1.25rem', width: '1.25rem', color: COLORS.warningDark }} />
               </div>
-              <h4 style={{ fontWeight: 600, color: COLORS.darkGray }}>AI Expense Patterns</h4>
+              <h4 style={{ fontWeight: 600, color: COLORS.textPrimary }}>AI Expense Patterns</h4>
             </div>
-            <p style={{ fontSize: '0.875rem', color: COLORS.darkGray, marginBottom: '1rem' }}>
+            <p style={{ fontSize: '0.875rem', color: COLORS.textPrimary, marginBottom: '1rem' }}>
               Identify common expense patterns and suggest appropriate categories. Helps with utilities, supplies, and recurring expenses.
             </p>
             {unidentifiedTransactions.length === 0 && (
-              <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginBottom: '0.75rem' }}>
+              <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginBottom: '0.75rem' }}>
                 No unidentified transactions to analyze.
               </p>
             )}
@@ -137,19 +137,19 @@ const LegacyToolsSection = () => {
       </div>
 
       {/* Re-apply Categories */}
-      <div style={{ backgroundColor: COLORS.white, padding: '1.5rem', borderRadius: '0.5rem', border: `1px solid ${COLORS.lightGray}` }}>
-        <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.darkGray, marginBottom: '1rem' }}>
+      <div style={{ backgroundColor: COLORS.white, padding: '1.5rem', borderRadius: '0.5rem', border: `1px solid ${COLORS.borderLight}` }}>
+        <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.textPrimary, marginBottom: '1rem' }}>
           Re-apply Categories
         </h3>
 
-        <div style={{ padding: '1.25rem', border: '2px solid #8B5CF6', borderRadius: '0.5rem', backgroundColor: '#F3E8FF' }}>
+        <div style={{ padding: '1.25rem', border: `2px solid ${COLORS.chartViolet}`, borderRadius: '0.5rem', backgroundColor: COLORS.accentPurpleLight }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
             <div style={{ padding: '0.5rem', borderRadius: '0.5rem', backgroundColor: COLORS.white }}>
-              <RefreshCw style={{ height: '1.25rem', width: '1.25rem', color: '#8B5CF6' }} />
+              <RefreshCw style={{ height: '1.25rem', width: '1.25rem', color: COLORS.chartViolet }} />
             </div>
-            <h4 style={{ fontWeight: 600, color: '#8B5CF6' }}>Re-apply Categories</h4>
+            <h4 style={{ fontWeight: 600, color: COLORS.chartViolet }}>Re-apply Categories</h4>
           </div>
-          <p style={{ fontSize: '0.875rem', color: COLORS.darkGray, marginBottom: '1rem' }}>
+          <p style={{ fontSize: '0.875rem', color: COLORS.textPrimary, marginBottom: '1rem' }}>
             Re-categorize all transactions based on current identifier mappings. Use this after moving identifiers between subcategories.
           </p>
           {recategorizeResult && (
@@ -176,7 +176,7 @@ const LegacyToolsSection = () => {
               borderRadius: '0.375rem',
               fontWeight: 500,
               color: COLORS.white,
-              backgroundColor: '#8B5CF6',
+              backgroundColor: COLORS.chartViolet,
               border: 'none',
               cursor: isRecategorizing ? 'not-allowed' : 'pointer',
               opacity: isRecategorizing ? 0.7 : 1,

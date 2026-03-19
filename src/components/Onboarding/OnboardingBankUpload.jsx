@@ -184,7 +184,7 @@ export default function OnboardingBankUpload({ onComplete, onSkip, onBack }) {
         backgroundColor: COLORS.white,
         borderRadius: '0.75rem',
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-        border: `1px solid ${COLORS.lightGray}`,
+        border: `1px solid ${COLORS.borderLight}`,
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column'
@@ -230,7 +230,7 @@ export default function OnboardingBankUpload({ onComplete, onSkip, onBack }) {
                 width: '32px',
                 height: '32px',
                 borderRadius: '50%',
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -239,7 +239,7 @@ export default function OnboardingBankUpload({ onComplete, onSkip, onBack }) {
                 <MessageCircle style={{ width: '16px', height: '16px', color: COLORS.slainteBlue }} />
               </div>
               <div style={{
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 padding: '0.875rem 1rem',
                 borderRadius: '12px',
                 maxWidth: '85%'
@@ -247,7 +247,7 @@ export default function OnboardingBankUpload({ onComplete, onSkip, onBack }) {
                 <div style={{
                   fontSize: '1.125rem',
                   fontWeight: 600,
-                  color: COLORS.darkGray
+                  color: COLORS.textPrimary
                 }}>
                   {greeting}
                 </div>
@@ -260,14 +260,14 @@ export default function OnboardingBankUpload({ onComplete, onSkip, onBack }) {
             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
               <div style={{ width: '32px', flexShrink: 0 }} />
               <div style={{
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 padding: '0.875rem 1rem',
                 borderRadius: '12px',
                 maxWidth: '85%'
               }}>
                 <div style={{
                   fontSize: '0.9375rem',
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   lineHeight: 1.5
                 }}>
                   {message}
@@ -289,7 +289,7 @@ export default function OnboardingBankUpload({ onComplete, onSkip, onBack }) {
               }}>
                 <div style={{
                   fontSize: '0.875rem',
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   lineHeight: 1.5
                 }}>
                   {tip}
@@ -312,7 +312,7 @@ export default function OnboardingBankUpload({ onComplete, onSkip, onBack }) {
                 gap: '0.75rem'
               }}>
                 <Loader style={{ width: '18px', height: '18px', color: COLORS.slainteBlue, animation: 'spin 1s linear infinite' }} />
-                <div style={{ fontSize: '0.9375rem', color: COLORS.darkGray }}>
+                <div style={{ fontSize: '0.9375rem', color: COLORS.textPrimary }}>
                   Reading your bank statement...
                 </div>
               </div>
@@ -337,11 +337,11 @@ export default function OnboardingBankUpload({ onComplete, onSkip, onBack }) {
                   marginBottom: '0.5rem'
                 }}>
                   <CheckCircle style={{ width: '18px', height: '18px', color: COLORS.incomeColor }} />
-                  <span style={{ fontSize: '1rem', fontWeight: 600, color: COLORS.darkGray }}>
+                  <span style={{ fontSize: '1rem', fontWeight: 600, color: COLORS.textPrimary }}>
                     Found {parseResult.transactions.length} transactions
                   </span>
                 </div>
-                <div style={{ fontSize: '0.875rem', color: COLORS.darkGray }}>
+                <div style={{ fontSize: '0.875rem', color: COLORS.textPrimary }}>
                   {parseResult.bank !== 'unknown' && <span>Bank: {parseResult.bank.toUpperCase()} | </span>}
                   File: {parseResult.fileName}
                 </div>
@@ -394,14 +394,14 @@ export default function OnboardingBankUpload({ onComplete, onSkip, onBack }) {
           <h3 style={{
             fontSize: '1.5rem',
             fontWeight: 700,
-            color: COLORS.darkGray,
+            color: COLORS.textPrimary,
             marginBottom: '0.5rem'
           }}>
             Upload Bank Statement
           </h3>
           <p style={{
             fontSize: '1rem',
-            color: COLORS.mediumGray,
+            color: COLORS.textSecondary,
             marginBottom: '1.5rem'
           }}>
             Select one month's bank statement (PDF or CSV)
@@ -436,8 +436,8 @@ export default function OnboardingBankUpload({ onComplete, onSkip, onBack }) {
               }}
             >
               <Building2 style={{ margin: '0 auto 0.75rem', height: '2.5rem', width: '2.5rem', color: COLORS.incomeColor }} />
-              <h4 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.25rem', color: COLORS.darkGray }}>Bank Statement PDF</h4>
-              <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray }}>
+              <h4 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.25rem', color: COLORS.textPrimary }}>Bank Statement PDF</h4>
+              <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary }}>
                 BOI and AIB supported
               </p>
             </div>
@@ -469,8 +469,8 @@ export default function OnboardingBankUpload({ onComplete, onSkip, onBack }) {
               }}
             >
               <FileSpreadsheet style={{ margin: '0 auto 0.75rem', height: '2.5rem', width: '2.5rem', color: COLORS.slainteBlue }} />
-              <h4 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.25rem', color: COLORS.darkGray }}>CSV Export</h4>
-              <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray }}>
+              <h4 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.25rem', color: COLORS.textPrimary }}>CSV Export</h4>
+              <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary }}>
                 From online banking
               </p>
             </div>
@@ -494,7 +494,7 @@ export default function OnboardingBankUpload({ onComplete, onSkip, onBack }) {
                 borderTopColor: 'transparent',
                 margin: '0 auto'
               }} />
-              <p style={{ fontSize: '0.875rem', color: COLORS.darkGray, marginTop: '0.5rem' }}>
+              <p style={{ fontSize: '0.875rem', color: COLORS.textPrimary, marginTop: '0.5rem' }}>
                 Processing your file...
               </p>
             </div>
@@ -530,11 +530,11 @@ export default function OnboardingBankUpload({ onComplete, onSkip, onBack }) {
         <div style={{
           textAlign: 'center',
           paddingTop: '1rem',
-          borderTop: `1px solid ${COLORS.lightGray}`
+          borderTop: `1px solid ${COLORS.borderLight}`
         }}>
           <p style={{
             fontSize: '0.875rem',
-            color: COLORS.mediumGray,
+            color: COLORS.textSecondary,
             marginBottom: '0.75rem'
           }}>
             Don't have a statement handy?
@@ -551,8 +551,8 @@ export default function OnboardingBankUpload({ onComplete, onSkip, onBack }) {
               fontSize: '0.875rem',
               fontWeight: 500,
               cursor: isProcessing ? 'not-allowed' : 'pointer',
-              border: `1px solid ${COLORS.lightGray}`,
-              color: COLORS.mediumGray,
+              border: `1px solid ${COLORS.borderLight}`,
+              color: COLORS.textSecondary,
               backgroundColor: 'transparent',
               transition: 'all 0.2s'
             }}
@@ -575,7 +575,7 @@ export default function OnboardingBankUpload({ onComplete, onSkip, onBack }) {
                 padding: '0.5rem 1rem',
                 fontSize: '0.875rem',
                 fontWeight: 500,
-                color: COLORS.mediumGray,
+                color: COLORS.textSecondary,
                 backgroundColor: 'transparent',
                 border: 'none',
                 cursor: isProcessing ? 'not-allowed' : 'pointer'

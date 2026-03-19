@@ -215,10 +215,10 @@ export default function PartnerCapitalAccounts() {
         <div className="bg-white rounded-lg shadow p-6">
             {/* Header */}
             <div className="mb-6">
-                <h2 className="text-2xl font-semibold mb-2" style={{ color: COLORS.darkGray }}>
+                <h2 className="text-2xl font-semibold mb-2" style={{ color: COLORS.textPrimary }}>
                     Partner's Capital Accounts
                 </h2>
-                <p className="text-sm mb-4" style={{ color: COLORS.mediumGray }}>
+                <p className="text-sm mb-4" style={{ color: COLORS.textSecondary }}>
                     Allocate practice profit to partners and track capital balances
                 </p>
             </div>
@@ -226,14 +226,14 @@ export default function PartnerCapitalAccounts() {
             {/* Controls */}
             <div className="mb-6 flex flex-wrap gap-4">
                 <div className="flex-1 min-w-[200px]">
-                    <label className="block text-sm font-medium mb-2" style={{ color: COLORS.darkGray }}>
+                    <label className="block text-sm font-medium mb-2" style={{ color: COLORS.textPrimary }}>
                         Tax Year
                     </label>
                     <select
                         value={selectedYear}
                         onChange={(e) => setSelectedYear(parseInt(e.target.value))}
                         className="w-full border rounded px-3 py-2"
-                        style={{ borderColor: COLORS.lightGray }}
+                        style={{ borderColor: COLORS.borderLight }}
                     >
                         {[2024, 2023, 2022, 2021, 2020].map(year => (
                             <option key={year} value={year}>{year}</option>
@@ -242,7 +242,7 @@ export default function PartnerCapitalAccounts() {
                 </div>
 
                 <div className="flex-1 min-w-[200px]">
-                    <label className="block text-sm font-medium mb-2" style={{ color: COLORS.darkGray }}>
+                    <label className="block text-sm font-medium mb-2" style={{ color: COLORS.textPrimary }}>
                         Practice Profit/(Loss) for {selectedYear}
                     </label>
                     <input
@@ -251,18 +251,18 @@ export default function PartnerCapitalAccounts() {
                         onChange={(e) => setPracticeProfitLoss(parseFloat(e.target.value) || 0)}
                         className="w-full border rounded px-3 py-2 font-bold text-lg"
                         style={{
-                            borderColor: COLORS.lightGray,
+                            borderColor: COLORS.borderLight,
                             color: practiceProfitLoss >= 0 ? COLORS.incomeColor : COLORS.expenseColor
                         }}
                         placeholder="€0.00"
                     />
-                    <p className="text-xs mt-1" style={{ color: COLORS.mediumGray }}>
+                    <p className="text-xs mt-1" style={{ color: COLORS.textSecondary }}>
                         Auto-calculated from transactions, or enter manually
                     </p>
                 </div>
 
                 <div className="flex-1 min-w-[200px]">
-                    <label className="block text-sm font-medium mb-2" style={{ color: COLORS.darkGray }}>
+                    <label className="block text-sm font-medium mb-2" style={{ color: COLORS.textPrimary }}>
                         Total Withholding Tax for {selectedYear}
                     </label>
                     <input
@@ -271,12 +271,12 @@ export default function PartnerCapitalAccounts() {
                         onChange={(e) => setTotalWithholdingTax(parseFloat(e.target.value) || 0)}
                         className="w-full border rounded px-3 py-2 font-bold text-lg"
                         style={{
-                            borderColor: COLORS.lightGray,
+                            borderColor: COLORS.borderLight,
                             color: COLORS.expenseColor
                         }}
                         placeholder="€0.00"
                     />
-                    <p className="text-xs mt-1" style={{ color: COLORS.mediumGray }}>
+                    <p className="text-xs mt-1" style={{ color: COLORS.textSecondary }}>
                         Will be allocated per profit share (use calculator below)
                     </p>
                 </div>
@@ -329,7 +329,7 @@ export default function PartnerCapitalAccounts() {
             {/* Partners Table */}
             <div className="mb-6">
                 <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold" style={{ color: COLORS.darkGray }}>
+                    <h3 className="text-lg font-semibold" style={{ color: COLORS.textPrimary }}>
                         Partners
                     </h3>
                     <button
@@ -347,28 +347,28 @@ export default function PartnerCapitalAccounts() {
                 <div className="overflow-x-auto">
                     <table className="w-full border-collapse">
                         <thead>
-                            <tr style={{ backgroundColor: COLORS.backgroundGray }}>
-                                <th className="p-3 text-left text-sm font-semibold" style={{ color: COLORS.darkGray }}>Partner Name</th>
-                                <th className="p-3 text-right text-sm font-semibold" style={{ color: COLORS.darkGray }}>Profit Share %</th>
-                                <th className="p-3 text-right text-sm font-semibold" style={{ color: COLORS.darkGray }}>Opening Balance</th>
-                                <th className="p-3 text-right text-sm font-semibold" style={{ color: COLORS.darkGray }}>Share of Profit</th>
-                                <th className="p-3 text-right text-sm font-semibold" style={{ color: COLORS.darkGray }}>Drawings</th>
-                                <th className="p-3 text-right text-sm font-semibold" style={{ color: COLORS.darkGray }}>Withholding Tax</th>
-                                <th className="p-3 text-right text-sm font-semibold" style={{ color: COLORS.darkGray }}>Closing Balance</th>
-                                <th className="p-3 text-center text-sm font-semibold" style={{ color: COLORS.darkGray }}>Actions</th>
+                            <tr style={{ backgroundColor: COLORS.bgPage }}>
+                                <th className="p-3 text-left text-sm font-semibold" style={{ color: COLORS.textPrimary }}>Partner Name</th>
+                                <th className="p-3 text-right text-sm font-semibold" style={{ color: COLORS.textPrimary }}>Profit Share %</th>
+                                <th className="p-3 text-right text-sm font-semibold" style={{ color: COLORS.textPrimary }}>Opening Balance</th>
+                                <th className="p-3 text-right text-sm font-semibold" style={{ color: COLORS.textPrimary }}>Share of Profit</th>
+                                <th className="p-3 text-right text-sm font-semibold" style={{ color: COLORS.textPrimary }}>Drawings</th>
+                                <th className="p-3 text-right text-sm font-semibold" style={{ color: COLORS.textPrimary }}>Withholding Tax</th>
+                                <th className="p-3 text-right text-sm font-semibold" style={{ color: COLORS.textPrimary }}>Closing Balance</th>
+                                <th className="p-3 text-center text-sm font-semibold" style={{ color: COLORS.textPrimary }}>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {partners.map((partner, index) => {
                                 const allocation = allocations[index];
                                 return (
-                                    <tr key={index} className="border-b" style={{ borderColor: COLORS.lightGray }}>
+                                    <tr key={index} className="border-b" style={{ borderColor: COLORS.borderLight }}>
                                         <td className="p-3">
                                             <select
                                                 value={partner.name}
                                                 onChange={(e) => updatePartner(index, 'name', e.target.value)}
                                                 className="w-full border rounded px-2 py-1"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                             >
                                                 <option value="">-- Select Partner --</option>
                                                 {availablePartners.map((partnerName, i) => (
@@ -382,7 +382,7 @@ export default function PartnerCapitalAccounts() {
                                                 value={partner.profitSharePercentage || ''}
                                                 onChange={(e) => updatePartner(index, 'profitSharePercentage', e.target.value)}
                                                 className="w-full border rounded px-2 py-1 text-right"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="0"
                                                 step="0.01"
                                             />
@@ -393,7 +393,7 @@ export default function PartnerCapitalAccounts() {
                                                 value={partner.openingBalance || ''}
                                                 onChange={(e) => updatePartner(index, 'openingBalance', e.target.value)}
                                                 className="w-full border rounded px-2 py-1 text-right"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </td>
@@ -406,7 +406,7 @@ export default function PartnerCapitalAccounts() {
                                                 value={partner.drawings || ''}
                                                 onChange={(e) => updatePartner(index, 'drawings', e.target.value)}
                                                 className="w-full border rounded px-2 py-1 text-right"
-                                                style={{ borderColor: COLORS.lightGray }}
+                                                style={{ borderColor: COLORS.borderLight }}
                                                 placeholder="€0.00"
                                             />
                                         </td>
@@ -432,7 +432,7 @@ export default function PartnerCapitalAccounts() {
                             })}
 
                             {/* Totals Row */}
-                            <tr style={{ backgroundColor: COLORS.backgroundGray, fontWeight: 'bold' }}>
+                            <tr style={{ backgroundColor: COLORS.bgPage, fontWeight: 'bold' }}>
                                 <td className="p-3">TOTAL</td>
                                 <td className="p-3 text-right">{totalProfitShare.toFixed(2)}%</td>
                                 <td className="p-3 text-right">{formatCurrency(allocations.reduce((sum, a) => sum + a.openingBalance, 0))}</td>
@@ -455,8 +455,8 @@ export default function PartnerCapitalAccounts() {
             <div className="mb-6">
                 <div className="flex items-center justify-between mb-4">
                     <div>
-                        <h4 className="font-semibold" style={{ color: COLORS.darkGray }}>Withholding Tax Calculator</h4>
-                        <p className="text-sm" style={{ color: COLORS.mediumGray }}>
+                        <h4 className="font-semibold" style={{ color: COLORS.textPrimary }}>Withholding Tax Calculator</h4>
+                        <p className="text-sm" style={{ color: COLORS.textSecondary }}>
                             Calculate withholding tax from State Contracts and GMS payments
                         </p>
                     </div>
@@ -488,9 +488,9 @@ export default function PartnerCapitalAccounts() {
             </div>
 
             {/* Help Text */}
-            <div className="p-4 rounded-lg" style={{ backgroundColor: COLORS.backgroundGray }}>
-                <h4 className="font-semibold mb-2" style={{ color: COLORS.darkGray }}>How This Works:</h4>
-                <ul className="text-sm space-y-1" style={{ color: COLORS.mediumGray }}>
+            <div className="p-4 rounded-lg" style={{ backgroundColor: COLORS.bgPage }}>
+                <h4 className="font-semibold mb-2" style={{ color: COLORS.textPrimary }}>How This Works:</h4>
+                <ul className="text-sm space-y-1" style={{ color: COLORS.textSecondary }}>
                     <li>• <strong>Opening Balance:</strong> Each partner's capital account balance at the start of the year</li>
                     <li>• <strong>Share of Profit:</strong> Automatically calculated based on profit share percentage</li>
                     <li>• <strong>Drawings:</strong> Money withdrawn by the partner during the year</li>

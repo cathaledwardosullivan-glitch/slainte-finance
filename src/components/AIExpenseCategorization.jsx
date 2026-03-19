@@ -854,14 +854,14 @@ IMPORTANT:
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <DollarSign className="h-6 w-6" style={{ color: COLORS.slainteBlue }} />
-              <h2 className="text-2xl font-bold" style={{ color: COLORS.darkGray }}>
+              <h2 className="text-2xl font-bold" style={{ color: COLORS.textPrimary }}>
                 AI Expense Categorization
               </h2>
             </div>
             <button
               onClick={onClose}
               className="p-2 hover:bg-gray-100 rounded"
-              style={{ color: COLORS.mediumGray }}
+              style={{ color: COLORS.textSecondary }}
             >
               <X className="h-5 w-5" />
             </button>
@@ -872,7 +872,7 @@ IMPORTANT:
         <div className="p-6" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
           {/* Description */}
           <div className="mb-6 p-4 rounded-lg" style={{ backgroundColor: `${COLORS.slainteBlue}15` }}>
-            <p className="text-sm" style={{ color: COLORS.darkGray }}>
+            <p className="text-sm" style={{ color: COLORS.textPrimary }}>
               Our AI will analyze your unidentified transactions to identify recurring expense patterns
               (utilities, subscriptions, professional fees, etc.) and suggest appropriate categories.
             </p>
@@ -880,14 +880,14 @@ IMPORTANT:
 
           {/* Stats */}
           <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="p-4 rounded-lg" style={{ backgroundColor: COLORS.backgroundGray }}>
-              <p className="text-sm" style={{ color: COLORS.mediumGray }}>Unidentified Transactions</p>
+            <div className="p-4 rounded-lg" style={{ backgroundColor: COLORS.bgPage }}>
+              <p className="text-sm" style={{ color: COLORS.textSecondary }}>Unidentified Transactions</p>
               <p className="text-2xl font-bold" style={{ color: COLORS.highlightYellow }}>
                 {unidentifiedTransactions.length}
               </p>
             </div>
-            <div className="p-4 rounded-lg" style={{ backgroundColor: COLORS.backgroundGray }}>
-              <p className="text-sm" style={{ color: COLORS.mediumGray }}>Expense Categories</p>
+            <div className="p-4 rounded-lg" style={{ backgroundColor: COLORS.bgPage }}>
+              <p className="text-sm" style={{ color: COLORS.textSecondary }}>Expense Categories</p>
               <p className="text-2xl font-bold" style={{ color: COLORS.slainteBlue }}>
                 {categoryMapping.filter(c => c.type === 'expense' && c.personalization !== 'Personalized').length}
               </p>
@@ -897,7 +897,7 @@ IMPORTANT:
           {/* License Key Input */}
           {!hideApiKeyInput && !recurringPatterns.length && !isAnalyzing && appliedSuggestions.size === 0 && (
             <div className="mb-6">
-              <label className="block text-sm font-medium mb-2" style={{ color: COLORS.darkGray }}>
+              <label className="block text-sm font-medium mb-2" style={{ color: COLORS.textPrimary }}>
                 Sláinte License Key
               </label>
               <input
@@ -906,9 +906,9 @@ IMPORTANT:
                 onChange={(e) => setApiKey(e.target.value)}
                 placeholder="Enter your license key"
                 className="w-full border rounded-lg px-4 py-2 mb-2"
-                style={{ borderColor: COLORS.lightGray }}
+                style={{ borderColor: COLORS.borderLight }}
               />
-              <p className="text-xs" style={{ color: COLORS.mediumGray }}>
+              <p className="text-xs" style={{ color: COLORS.textSecondary }}>
                 Your license key is stored locally.
               </p>
             </div>
@@ -928,7 +928,7 @@ IMPORTANT:
               disabled={!apiKey || unidentifiedTransactions.length === 0}
               className="w-full py-3 rounded-lg text-white font-medium flex items-center justify-center gap-2"
               style={{
-                backgroundColor: (apiKey && unidentifiedTransactions.length > 0) ? COLORS.slainteBlue : COLORS.lightGray,
+                backgroundColor: (apiKey && unidentifiedTransactions.length > 0) ? COLORS.slainteBlue : COLORS.borderLight,
                 cursor: (apiKey && unidentifiedTransactions.length > 0) ? 'pointer' : 'not-allowed'
               }}
             >
@@ -941,10 +941,10 @@ IMPORTANT:
           {isAnalyzing && (
             <div className="text-center py-12">
               <Loader className="h-12 w-12 animate-spin mx-auto mb-4" style={{ color: COLORS.slainteBlue }} />
-              <p className="text-lg font-medium" style={{ color: COLORS.darkGray }}>
+              <p className="text-lg font-medium" style={{ color: COLORS.textPrimary }}>
                 Analyzing recurring expense patterns...
               </p>
-              <p className="text-sm mt-2" style={{ color: COLORS.mediumGray }}>
+              <p className="text-sm mt-2" style={{ color: COLORS.textSecondary }}>
                 This may take 15-45 seconds
               </p>
             </div>
@@ -964,12 +964,12 @@ IMPORTANT:
                     {recurringPatterns.length}
                   </p>
                 </div>
-                <div className="p-4 rounded-lg border-2" style={{ borderColor: COLORS.mediumGray, backgroundColor: COLORS.backgroundGray }}>
+                <div className="p-4 rounded-lg border-2" style={{ borderColor: COLORS.textSecondary, backgroundColor: COLORS.bgPage }}>
                   <div className="flex items-center gap-2 mb-1">
-                    <AlertCircle className="h-5 w-5" style={{ color: COLORS.mediumGray }} />
-                    <p className="text-sm font-medium" style={{ color: COLORS.mediumGray }}>One-Off Expenses</p>
+                    <AlertCircle className="h-5 w-5" style={{ color: COLORS.textSecondary }} />
+                    <p className="text-sm font-medium" style={{ color: COLORS.textSecondary }}>One-Off Expenses</p>
                   </div>
-                  <p className="text-2xl font-bold" style={{ color: COLORS.mediumGray }}>
+                  <p className="text-2xl font-bold" style={{ color: COLORS.textSecondary }}>
                     {oneOffCount}
                   </p>
                 </div>
@@ -983,10 +983,10 @@ IMPORTANT:
                 }}>
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium" style={{ color: COLORS.darkGray }}>
+                      <p className="text-sm font-medium" style={{ color: COLORS.textPrimary }}>
                         Batch Progress: {currentBatch}/{totalBatches}
                       </p>
-                      <p className="text-xs mt-1" style={{ color: COLORS.mediumGray }}>
+                      <p className="text-xs mt-1" style={{ color: COLORS.textSecondary }}>
                         Showing {recurringPatterns.length} of {allRecurringGroups.length} total patterns
                       </p>
                     </div>
@@ -996,7 +996,7 @@ IMPORTANT:
                         disabled={isAnalyzing}
                         className="px-6 py-2 rounded-lg text-white font-medium flex items-center gap-2"
                         style={{
-                          backgroundColor: isAnalyzing ? COLORS.lightGray : COLORS.slainteBlue,
+                          backgroundColor: isAnalyzing ? COLORS.borderLight : COLORS.slainteBlue,
                           cursor: isAnalyzing ? 'not-allowed' : 'pointer'
                         }}
                       >
@@ -1023,10 +1023,10 @@ IMPORTANT:
                 </div>
               )}
 
-              <h3 className="font-semibold text-lg" style={{ color: COLORS.darkGray }}>
+              <h3 className="font-semibold text-lg" style={{ color: COLORS.textPrimary }}>
                 Recurring Expense Patterns
                 {totalBatches > 1 && currentBatch < totalBatches && (
-                  <span className="text-sm font-normal ml-2" style={{ color: COLORS.mediumGray }}>
+                  <span className="text-sm font-normal ml-2" style={{ color: COLORS.textSecondary }}>
                     (Showing first {recurringPatterns.length})
                   </span>
                 )}
@@ -1051,13 +1051,13 @@ IMPORTANT:
                     key={index}
                     className="border-2 rounded-lg p-4"
                     style={{
-                      borderColor: isApplied ? COLORS.incomeColor : (isNewCategory ? COLORS.highlightYellow : COLORS.lightGray),
+                      borderColor: isApplied ? COLORS.incomeColor : (isNewCategory ? COLORS.highlightYellow : COLORS.borderLight),
                       backgroundColor: isApplied ? `${COLORS.incomeColor}10` : (isNewCategory ? `${COLORS.highlightYellow}10` : COLORS.white)
                     }}
                   >
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
-                        <h4 className="font-semibold text-base mb-1" style={{ color: COLORS.darkGray }}>
+                        <h4 className="font-semibold text-base mb-1" style={{ color: COLORS.textPrimary }}>
                           {pattern.pattern}
                         </h4>
                         {isNewCategory ? (
@@ -1066,7 +1066,7 @@ IMPORTANT:
                           </p>
                         ) : (
                           <div className="mt-2 p-2 rounded" style={{ backgroundColor: `${COLORS.slainteBlue}10`, border: `1px solid ${COLORS.slainteBlue}` }}>
-                            <p className="text-xs font-medium mb-1" style={{ color: COLORS.mediumGray }}>
+                            <p className="text-xs font-medium mb-1" style={{ color: COLORS.textSecondary }}>
                               Suggested Category:
                             </p>
                             <p className="text-sm font-semibold" style={{ color: COLORS.slainteBlue }}>
@@ -1084,23 +1084,23 @@ IMPORTANT:
                     </div>
 
                     <div className="mb-3">
-                      <div className="flex gap-4 text-xs mb-2" style={{ color: COLORS.mediumGray }}>
+                      <div className="flex gap-4 text-xs mb-2" style={{ color: COLORS.textSecondary }}>
                         <span>Frequency: {pattern.frequency}</span>
                         <span>Occurrences: {pattern.occurrences}x</span>
                         <span>Avg: €{pattern.averageAmount?.toFixed(2)}</span>
                       </div>
-                      <p className="text-sm mb-2" style={{ color: COLORS.mediumGray }}>
+                      <p className="text-sm mb-2" style={{ color: COLORS.textSecondary }}>
                         {pattern.reasoning}
                       </p>
 
                       {/* Sample Transactions */}
                       {pattern.sampleTransactions && pattern.sampleTransactions.length > 0 && (
-                        <div className="mt-2 p-2 rounded" style={{ backgroundColor: COLORS.backgroundGray, border: `1px solid ${COLORS.lightGray}` }}>
-                          <p className="text-xs font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                        <div className="mt-2 p-2 rounded" style={{ backgroundColor: COLORS.bgPage, border: `1px solid ${COLORS.borderLight}` }}>
+                          <p className="text-xs font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                             Sample Transactions:
                           </p>
                           {pattern.sampleTransactions.map((tx, txIndex) => (
-                            <div key={txIndex} className="text-xs mb-1" style={{ color: COLORS.mediumGray }}>
+                            <div key={txIndex} className="text-xs mb-1" style={{ color: COLORS.textSecondary }}>
                               • {tx.details} - €{Math.abs(tx.amount).toFixed(2)}
                             </div>
                           ))}
@@ -1167,7 +1167,7 @@ IMPORTANT:
                                 });
                               }}
                               className="px-4 py-2 rounded border"
-                              style={{ borderColor: COLORS.lightGray, color: COLORS.mediumGray }}
+                              style={{ borderColor: COLORS.borderLight, color: COLORS.textSecondary }}
                             >
                               Cancel
                             </button>
@@ -1212,7 +1212,7 @@ IMPORTANT:
                             <button
                               onClick={() => dismissSuggestion(index)}
                               className="px-4 py-2 rounded border"
-                              style={{ borderColor: COLORS.lightGray, color: COLORS.mediumGray }}
+                              style={{ borderColor: COLORS.borderLight, color: COLORS.textSecondary }}
                             >
                               Dismiss
                             </button>
@@ -1230,10 +1230,10 @@ IMPORTANT:
           {recurringPatterns.length === 0 && appliedSuggestions.size > 0 && unidentifiedTransactions.length > 0 && (
             <div className="text-center py-12">
               <CheckCircle className="h-16 w-16 mx-auto mb-4" style={{ color: COLORS.incomeColor }} />
-              <p className="text-lg font-medium" style={{ color: COLORS.darkGray }}>
+              <p className="text-lg font-medium" style={{ color: COLORS.textPrimary }}>
                 Great work! All recurring patterns have been categorized.
               </p>
-              <p className="text-sm mt-2" style={{ color: COLORS.mediumGray }}>
+              <p className="text-sm mt-2" style={{ color: COLORS.textSecondary }}>
                 {unidentifiedTransactions.length} one-off transactions remain. You can categorize these manually or click "Done" to continue.
               </p>
             </div>
@@ -1243,10 +1243,10 @@ IMPORTANT:
           {unidentifiedTransactions.length === 0 && !isAnalyzing && (
             <div className="text-center py-12">
               <CheckCircle className="h-16 w-16 mx-auto mb-4" style={{ color: COLORS.incomeColor }} />
-              <p className="text-lg font-medium" style={{ color: COLORS.darkGray }}>
+              <p className="text-lg font-medium" style={{ color: COLORS.textPrimary }}>
                 All transactions are categorized!
               </p>
-              <p className="text-sm mt-2" style={{ color: COLORS.mediumGray }}>
+              <p className="text-sm mt-2" style={{ color: COLORS.textSecondary }}>
                 Upload more transaction data to get AI suggestions.
               </p>
             </div>
@@ -1255,7 +1255,7 @@ IMPORTANT:
 
         {/* Fixed Footer - Show if patterns exist OR if any suggestions were applied */}
         {(recurringPatterns.length > 0 || appliedSuggestions.size > 0) && (
-          <div className="p-6 border-t" style={{ flexShrink: 0, borderColor: COLORS.lightGray }}>
+          <div className="p-6 border-t" style={{ flexShrink: 0, borderColor: COLORS.borderLight }}>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => {
@@ -1264,7 +1264,7 @@ IMPORTANT:
                   setAppliedSuggestions(new Set());
                 }}
                 className="px-4 py-2 rounded border"
-                style={{ borderColor: COLORS.lightGray, color: COLORS.darkGray }}
+                style={{ borderColor: COLORS.borderLight, color: COLORS.textPrimary }}
               >
                 Start Over
               </button>

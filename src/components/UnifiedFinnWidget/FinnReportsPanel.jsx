@@ -75,19 +75,19 @@ const FinnReportsPanel = () => {
         }}
       >
         {finnReports.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '2rem 1rem', color: COLORS.mediumGray }}>
+          <div style={{ textAlign: 'center', padding: '2rem 1rem', color: COLORS.textSecondary }}>
             <FileText
               style={{
                 margin: '0 auto 0.75rem',
                 height: '2.5rem',
                 width: '2.5rem',
-                color: COLORS.lightGray
+                color: COLORS.borderLight
               }}
             />
             <div style={{ fontSize: '0.875rem', marginBottom: '0.5rem' }}>
               No reports yet
             </div>
-            <div style={{ fontSize: '0.75rem', color: COLORS.lightGray }}>
+            <div style={{ fontSize: '0.75rem', color: COLORS.borderLight }}>
               Ask Finn to analyze your finances and generate a detailed report
             </div>
           </div>
@@ -99,7 +99,7 @@ const FinnReportsPanel = () => {
                 onClick={() => setSelectedReport(report)}
                 style={{
                   padding: '0.875rem',
-                  backgroundColor: COLORS.backgroundGray,
+                  backgroundColor: COLORS.bgPage,
                   borderRadius: '0.625rem',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
@@ -110,7 +110,7 @@ const FinnReportsPanel = () => {
                   e.currentTarget.style.borderColor = `${COLORS.slainteBlue}30`;
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = COLORS.backgroundGray;
+                  e.currentTarget.style.backgroundColor = COLORS.bgPage;
                   e.currentTarget.style.borderColor = 'transparent';
                 }}
               >
@@ -135,7 +135,7 @@ const FinnReportsPanel = () => {
                       style={{
                         fontWeight: 500,
                         fontSize: '0.8125rem',
-                        color: COLORS.darkGray,
+                        color: COLORS.textPrimary,
                         marginBottom: '0.25rem',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
@@ -150,7 +150,7 @@ const FinnReportsPanel = () => {
                         alignItems: 'center',
                         gap: '0.75rem',
                         fontSize: '0.6875rem',
-                        color: COLORS.mediumGray
+                        color: COLORS.textSecondary
                       }}
                     >
                       <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
@@ -173,7 +173,7 @@ const FinnReportsPanel = () => {
                         border: 'none',
                         borderRadius: '0.375rem',
                         cursor: 'pointer',
-                        color: COLORS.mediumGray,
+                        color: COLORS.textSecondary,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center'
@@ -184,7 +184,7 @@ const FinnReportsPanel = () => {
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.backgroundColor = 'transparent';
-                        e.currentTarget.style.color = COLORS.mediumGray;
+                        e.currentTarget.style.color = COLORS.textSecondary;
                       }}
                       title="View full screen"
                     >
@@ -200,7 +200,7 @@ const FinnReportsPanel = () => {
                         border: 'none',
                         borderRadius: '0.375rem',
                         cursor: 'pointer',
-                        color: confirmDelete === report.id ? COLORS.expenseColor : COLORS.mediumGray,
+                        color: confirmDelete === report.id ? COLORS.expenseColor : COLORS.textSecondary,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center'
@@ -214,7 +214,7 @@ const FinnReportsPanel = () => {
                       onMouseLeave={(e) => {
                         if (confirmDelete !== report.id) {
                           e.currentTarget.style.backgroundColor = 'transparent';
-                          e.currentTarget.style.color = COLORS.mediumGray;
+                          e.currentTarget.style.color = COLORS.textSecondary;
                         }
                       }}
                       title={confirmDelete === report.id ? "Click again to confirm" : "Delete report"}
@@ -233,7 +233,7 @@ const FinnReportsPanel = () => {
                       backgroundColor: COLORS.white,
                       borderRadius: '0.375rem',
                       fontSize: '0.6875rem',
-                      color: COLORS.mediumGray,
+                      color: COLORS.textSecondary,
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap'
@@ -252,9 +252,9 @@ const FinnReportsPanel = () => {
       {finnReports.length > 0 && (
         <div
           style={{
-            borderTop: `1px solid ${COLORS.lightGray}`,
+            borderTop: `1px solid ${COLORS.borderLight}`,
             padding: '0.75rem',
-            backgroundColor: COLORS.backgroundGray
+            backgroundColor: COLORS.bgPage
           }}
         >
           <div
@@ -265,8 +265,8 @@ const FinnReportsPanel = () => {
               marginBottom: '0.5rem'
             }}
           >
-            <MessageCircle style={{ height: '0.875rem', width: '0.875rem', color: COLORS.mediumGray }} />
-            <span style={{ fontSize: '0.75rem', color: COLORS.mediumGray }}>
+            <MessageCircle style={{ height: '0.875rem', width: '0.875rem', color: COLORS.textSecondary }} />
+            <span style={{ fontSize: '0.75rem', color: COLORS.textSecondary }}>
               {lastGeneratedReport ? 'Ask about the report' : 'Ask Finn a question'}
             </span>
           </div>
@@ -281,18 +281,18 @@ const FinnReportsPanel = () => {
               disabled={isLoading || !apiKey}
               style={{
                 flex: 1,
-                border: `1px solid ${COLORS.lightGray}`,
+                border: `1px solid ${COLORS.borderLight}`,
                 borderRadius: '0.375rem',
                 padding: '0.5rem 0.75rem',
                 fontSize: '0.8125rem',
                 outline: 'none',
-                backgroundColor: (isLoading || !apiKey) ? COLORS.backgroundGray : COLORS.white
+                backgroundColor: (isLoading || !apiKey) ? COLORS.bgPage : COLORS.white
               }}
               onFocus={(e) => {
                 e.target.style.borderColor = COLORS.slainteBlue;
               }}
               onBlur={(e) => {
-                e.target.style.borderColor = COLORS.lightGray;
+                e.target.style.borderColor = COLORS.borderLight;
               }}
             />
             <button

@@ -425,10 +425,10 @@ const DaraSupport = () => {
         height: '100%',
         padding: '2rem',
         textAlign: 'center',
-        color: COLORS.mediumGray
+        color: COLORS.textSecondary
       }}>
-        <Monitor style={{ width: '3rem', height: '3rem', marginBottom: '1rem', color: COLORS.lightGray }} />
-        <h3 style={{ color: COLORS.darkGray, marginBottom: '0.5rem' }}>No EHR System Selected</h3>
+        <Monitor style={{ width: '3rem', height: '3rem', marginBottom: '1rem', color: COLORS.borderLight }} />
+        <h3 style={{ color: COLORS.textPrimary, marginBottom: '0.5rem' }}>No EHR System Selected</h3>
         <p style={{ maxWidth: '400px', lineHeight: 1.6 }}>
           To use Dara, please set your Electronic Health Record (EHR) system in
           Settings &gt; Practice Profile first.
@@ -447,9 +447,9 @@ const DaraSupport = () => {
       {/* Header — constrained to same width as chat */}
       <div style={{
         padding: '1rem 1.5rem',
-        borderBottom: `1px solid ${COLORS.lightGray}`,
+        borderBottom: `1px solid ${COLORS.borderLight}`,
         flexShrink: 0,
-        backgroundColor: COLORS.backgroundGray
+        backgroundColor: COLORS.bgPage
       }}>
         <div style={{
           maxWidth: '700px',
@@ -464,7 +464,7 @@ const DaraSupport = () => {
               width: '2.5rem',
               height: '2.5rem',
               borderRadius: '50%',
-              backgroundColor: '#7C3AED',
+              backgroundColor: COLORS.daraViolet,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -475,10 +475,10 @@ const DaraSupport = () => {
               D
             </div>
             <div>
-              <h2 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 600, color: COLORS.darkGray }}>
+              <h2 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 600, color: COLORS.textPrimary }}>
                 Dara — IT Support
               </h2>
-              <p style={{ margin: 0, fontSize: '0.8125rem', color: COLORS.mediumGray }}>
+              <p style={{ margin: 0, fontSize: '0.8125rem', color: COLORS.textSecondary }}>
                 Virtual IT support for {ehrName}
               </p>
             </div>
@@ -490,9 +490,9 @@ const DaraSupport = () => {
               borderRadius: '9999px',
               fontSize: '0.75rem',
               fontWeight: 500,
-              backgroundColor: '#7C3AED15',
-              color: '#7C3AED',
-              border: '1px solid #7C3AED30'
+              backgroundColor: COLORS.daraVioletMedium,
+              color: COLORS.daraViolet,
+              border: `1px solid ${COLORS.daraVioletBorder}`
             }}>
               {ehrName}
             </span>
@@ -502,14 +502,14 @@ const DaraSupport = () => {
               title="New conversation"
               style={{
                 background: 'none',
-                border: `1px solid ${COLORS.lightGray}`,
+                border: `1px solid ${COLORS.borderLight}`,
                 borderRadius: '0.375rem',
                 padding: '0.5rem 0.75rem',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.375rem',
-                color: COLORS.mediumGray,
+                color: COLORS.textSecondary,
                 fontSize: '0.8125rem'
               }}
               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.white}
@@ -541,7 +541,7 @@ const DaraSupport = () => {
                   width: '2rem',
                   height: '2rem',
                   borderRadius: '50%',
-                  backgroundColor: '#7C3AED',
+                  backgroundColor: COLORS.daraViolet,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -556,10 +556,10 @@ const DaraSupport = () => {
                 <div style={{
                   padding: '0.875rem 1rem',
                   borderRadius: '0 0.75rem 0.75rem 0.75rem',
-                  backgroundColor: COLORS.backgroundGray,
+                  backgroundColor: COLORS.bgPage,
                   fontSize: '0.875rem',
                   lineHeight: 1.6,
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   whiteSpace: 'pre-line'
                 }}>
                   {welcomeMessage}
@@ -581,20 +581,20 @@ const DaraSupport = () => {
                     style={{
                       padding: '0.5rem 0.875rem',
                       borderRadius: '9999px',
-                      border: '1px solid #7C3AED30',
-                      backgroundColor: '#7C3AED08',
-                      color: '#7C3AED',
+                      border: `1px solid ${COLORS.daraVioletBorder}`,
+                      backgroundColor: COLORS.daraVioletLight,
+                      color: COLORS.daraViolet,
                       fontSize: '0.8125rem',
                       cursor: isLoading ? 'not-allowed' : 'pointer',
                       opacity: isLoading ? 0.5 : 1
                     }}
                     onMouseEnter={(e) => {
                       if (!isLoading) {
-                        e.currentTarget.style.backgroundColor = '#7C3AED15';
+                        e.currentTarget.style.backgroundColor = COLORS.daraVioletMedium;
                       }
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#7C3AED08';
+                      e.currentTarget.style.backgroundColor = COLORS.daraVioletLight;
                     }}
                   >
                     {topic.label}
@@ -624,7 +624,7 @@ const DaraSupport = () => {
                     width: '2rem',
                     height: '2rem',
                     borderRadius: '50%',
-                    backgroundColor: isError ? COLORS.expenseColor : '#7C3AED',
+                    backgroundColor: isError ? COLORS.expenseColor : COLORS.daraViolet,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -650,8 +650,8 @@ const DaraSupport = () => {
                     ? COLORS.slainteBlue
                     : isError
                       ? `${COLORS.expenseColor}10`
-                      : COLORS.backgroundGray,
-                  color: isUser ? COLORS.white : COLORS.darkGray,
+                      : COLORS.bgPage,
+                  color: isUser ? COLORS.white : COLORS.textPrimary,
                   border: isError ? `1px solid ${COLORS.expenseColor}30` : 'none'
                 }}>
                   {/* Image attachment indicator */}
@@ -684,7 +684,7 @@ const DaraSupport = () => {
                 width: '2rem',
                 height: '2rem',
                 borderRadius: '50%',
-                backgroundColor: '#7C3AED',
+                backgroundColor: COLORS.daraViolet,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -697,9 +697,9 @@ const DaraSupport = () => {
               <div style={{
                 padding: '0.75rem 1rem',
                 borderRadius: '0 0.75rem 0.75rem 0.75rem',
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 fontSize: '0.875rem',
-                color: COLORS.mediumGray,
+                color: COLORS.textSecondary,
                 fontStyle: 'italic'
               }}>
                 Dara is thinking...
@@ -714,7 +714,7 @@ const DaraSupport = () => {
               <div style={{
                 padding: '0.5rem 0.75rem',
                 marginBottom: '0.5rem',
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 borderRadius: '0.5rem',
                 display: 'flex',
                 alignItems: 'center',
@@ -725,7 +725,7 @@ const DaraSupport = () => {
                   height: '3rem',
                   borderRadius: '0.375rem',
                   overflow: 'hidden',
-                  border: `1px solid ${COLORS.lightGray}`,
+                  border: `1px solid ${COLORS.borderLight}`,
                   flexShrink: 0
                 }}>
                   <img
@@ -734,7 +734,7 @@ const DaraSupport = () => {
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
                 </div>
-                <span style={{ fontSize: '0.8125rem', color: COLORS.mediumGray, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: '0.8125rem', color: COLORS.textSecondary, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {pendingImage.name}
                 </span>
                 <button
@@ -744,7 +744,7 @@ const DaraSupport = () => {
                     border: 'none',
                     padding: '0.25rem',
                     cursor: 'pointer',
-                    color: COLORS.mediumGray,
+                    color: COLORS.textSecondary,
                     display: 'flex'
                   }}
                 >
@@ -756,7 +756,7 @@ const DaraSupport = () => {
             {/* Privacy reminder */}
             <div style={{
               fontSize: '0.6875rem',
-              color: '#F59E0B',
+              color: COLORS.warning,
               display: 'flex',
               alignItems: 'center',
               gap: '0.375rem',
@@ -778,17 +778,17 @@ const DaraSupport = () => {
                 title="Upload screenshot"
                 style={{
                   background: 'none',
-                  border: `1px solid ${COLORS.lightGray}`,
+                  border: `1px solid ${COLORS.borderLight}`,
                   borderRadius: '0.5rem',
                   padding: '0.625rem',
                   cursor: isLoading ? 'not-allowed' : 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  color: pendingImage ? '#7C3AED' : COLORS.mediumGray,
+                  color: pendingImage ? COLORS.daraViolet : COLORS.textSecondary,
                   opacity: isLoading ? 0.5 : 1
                 }}
                 onMouseEnter={(e) => {
-                  if (!isLoading) e.currentTarget.style.backgroundColor = COLORS.backgroundGray;
+                  if (!isLoading) e.currentTarget.style.backgroundColor = COLORS.bgPage;
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = 'transparent';
@@ -817,7 +817,7 @@ const DaraSupport = () => {
                   flex: 1,
                   padding: '0.625rem 0.875rem',
                   borderRadius: '0.5rem',
-                  border: `1px solid ${COLORS.lightGray}`,
+                  border: `1px solid ${COLORS.borderLight}`,
                   fontSize: '0.875rem',
                   resize: 'none',
                   outline: 'none',
@@ -826,10 +826,10 @@ const DaraSupport = () => {
                   maxHeight: '6rem',
                   overflow: 'auto',
                   backgroundColor: COLORS.white,
-                  color: COLORS.darkGray
+                  color: COLORS.textPrimary
                 }}
-                onFocus={(e) => e.target.style.borderColor = '#7C3AED'}
-                onBlur={(e) => e.target.style.borderColor = COLORS.lightGray}
+                onFocus={(e) => e.target.style.borderColor = COLORS.daraViolet}
+                onBlur={(e) => e.target.style.borderColor = COLORS.borderLight}
               />
 
               {/* Send button */}
@@ -837,7 +837,7 @@ const DaraSupport = () => {
                 onClick={() => handleSend()}
                 disabled={isLoading || (!inputValue.trim() && !pendingImage)}
                 style={{
-                  backgroundColor: '#7C3AED',
+                  backgroundColor: COLORS.daraViolet,
                   color: COLORS.white,
                   border: 'none',
                   borderRadius: '0.5rem',
@@ -865,7 +865,7 @@ const DaraSupport = () => {
         <div style={{
           position: 'fixed',
           inset: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
+          backgroundColor: COLORS.overlayDark,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -881,20 +881,20 @@ const DaraSupport = () => {
             boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-              <AlertTriangle style={{ width: '1.5rem', height: '1.5rem', color: '#F59E0B' }} />
-              <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 600, color: COLORS.darkGray }}>
+              <AlertTriangle style={{ width: '1.5rem', height: '1.5rem', color: COLORS.warning }} />
+              <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 600, color: COLORS.textPrimary }}>
                 Patient Data Warning
               </h3>
             </div>
-            <p style={{ fontSize: '0.875rem', lineHeight: 1.6, color: COLORS.darkGray, marginBottom: '0.75rem' }}>
+            <p style={{ fontSize: '0.875rem', lineHeight: 1.6, color: COLORS.textPrimary, marginBottom: '0.75rem' }}>
               Before uploading a screenshot, please ensure it does <strong>not contain any patient-identifiable information</strong> such as:
             </p>
-            <ul style={{ fontSize: '0.875rem', lineHeight: 1.8, color: COLORS.darkGray, paddingLeft: '1.25rem', marginBottom: '1rem' }}>
+            <ul style={{ fontSize: '0.875rem', lineHeight: 1.8, color: COLORS.textPrimary, paddingLeft: '1.25rem', marginBottom: '1rem' }}>
               <li>Patient names, dates of birth, or PPS numbers</li>
               <li>Addresses, phone numbers, or email addresses</li>
               <li>Medical record numbers or health information</li>
             </ul>
-            <p style={{ fontSize: '0.8125rem', color: COLORS.mediumGray, marginBottom: '1.25rem' }}>
+            <p style={{ fontSize: '0.8125rem', color: COLORS.textSecondary, marginBottom: '1.25rem' }}>
               If your screenshot contains patient data, please crop or redact it before uploading.
               Dara will also flag any patient data it detects.
             </p>
@@ -905,7 +905,7 @@ const DaraSupport = () => {
                 padding: '0.625rem',
                 borderRadius: '0.5rem',
                 border: 'none',
-                backgroundColor: '#7C3AED',
+                backgroundColor: COLORS.daraViolet,
                 color: COLORS.white,
                 fontSize: '0.875rem',
                 fontWeight: 500,

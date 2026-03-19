@@ -26,7 +26,7 @@ const FinnAvatar = () => (
     width: 32,
     height: 32,
     borderRadius: '50%',
-    background: `linear-gradient(135deg, ${slainteBlue} 0%, #357ABD 100%)`,
+    background: `linear-gradient(135deg, ${slainteBlue} 0%, ${COLORS.slainteBlueDark} 100%)`,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -76,8 +76,8 @@ const StageIndicator = ({ currentStage }) => {
               height: 24,
               borderRadius: '50%',
               background: i < currentIndex ? incomeColor :
-                         i === currentIndex ? slainteBlue : '#e0e0e0',
-              color: i <= currentIndex ? 'white' : '#666',
+                         i === currentIndex ? slainteBlue : COLORS.borderLight,
+              color: i <= currentIndex ? 'white' : COLORS.textMuted,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -89,7 +89,7 @@ const StageIndicator = ({ currentStage }) => {
             <span style={{
               fontSize: '13px',
               fontWeight: i === currentIndex ? 600 : 400,
-              color: i === currentIndex ? slainteBlue : '#666'
+              color: i === currentIndex ? slainteBlue : COLORS.textMuted
             }}>
               {stage.label}
             </span>
@@ -98,7 +98,7 @@ const StageIndicator = ({ currentStage }) => {
             <div style={{
               width: 30,
               height: 2,
-              background: i < currentIndex ? incomeColor : '#e0e0e0'
+              background: i < currentIndex ? incomeColor : COLORS.borderLight
             }} />
           )}
         </React.Fragment>
@@ -110,14 +110,14 @@ const StageIndicator = ({ currentStage }) => {
 // Cohort badge - Updated labels to reflect actual behavior
 const CohortBadge = ({ cohort, count }) => {
   const colors = {
-    [COHORTS.AUTO]: { bg: '#e8f5e9', color: '#2e7d32', label: 'Auto-Matched', icon: '✓' },
-    [COHORTS.AI_ASSIST]: { bg: '#e3f2fd', color: '#1565c0', label: 'AI Suggested', icon: '✦' },
-    [COHORTS.REVIEW]: { bg: '#fff3e0', color: '#ef6c00', label: 'Need Input', icon: '?' },
-    [COHORTS.CONFLICT]: { bg: '#fce4ec', color: '#ad1457', label: 'Conflict', icon: '⚠' },
-    needs_review: { bg: '#fff3e0', color: '#ef6c00', label: 'Needs Review', icon: '?' }
+    [COHORTS.AUTO]: { bg: COLORS.successLighter, color: COLORS.successText, label: 'Auto-Matched', icon: '✓' },
+    [COHORTS.AI_ASSIST]: { bg: COLORS.infoLighter, color: COLORS.infoText, label: 'AI Suggested', icon: '✦' },
+    [COHORTS.REVIEW]: { bg: COLORS.warningLight, color: COLORS.warningDark, label: 'Need Input', icon: '?' },
+    [COHORTS.CONFLICT]: { bg: COLORS.errorLight, color: COLORS.errorDark, label: 'Conflict', icon: '⚠' },
+    needs_review: { bg: COLORS.warningLight, color: COLORS.warningDark, label: 'Needs Review', icon: '?' }
   };
 
-  const style = colors[cohort] || { bg: '#f5f5f5', color: '#666', label: cohort, icon: '' };
+  const style = colors[cohort] || { bg: COLORS.bgHover, color: COLORS.textMuted, label: cohort, icon: '' };
 
   return (
     <div style={{
@@ -153,7 +153,7 @@ const FinnGuidance = ({ message }) => (
     alignItems: 'flex-start',
     gap: 12,
     padding: 16,
-    background: '#f8f9fa',
+    background: COLORS.bgPage,
     borderRadius: 12,
     marginBottom: 16
   }}>
@@ -162,7 +162,7 @@ const FinnGuidance = ({ message }) => (
       flex: 1,
       fontSize: '14px',
       lineHeight: 1.5,
-      color: '#333'
+      color: COLORS.textPrimary
     }}>
       {message}
     </div>
@@ -192,7 +192,7 @@ const AutoMatchedDebugPanel = ({ transactions, isGroupLevel }) => {
   return (
     <div style={{
       marginBottom: 16,
-      border: '1px solid #e8f5e9',
+      border: `1px solid ${COLORS.successLighter}`,
       borderRadius: 8,
       overflow: 'hidden'
     }}>
@@ -201,7 +201,7 @@ const AutoMatchedDebugPanel = ({ transactions, isGroupLevel }) => {
         style={{
           width: '100%',
           padding: '10px 16px',
-          background: '#e8f5e9',
+          background: COLORS.successLighter,
           border: 'none',
           cursor: 'pointer',
           display: 'flex',
@@ -209,7 +209,7 @@ const AutoMatchedDebugPanel = ({ transactions, isGroupLevel }) => {
           alignItems: 'center',
           fontSize: '13px',
           fontWeight: 500,
-          color: '#2e7d32'
+          color: COLORS.successText
         }}
       >
         <span>✓ Auto-Matched ({autoMatched.length}) - Click to inspect calculations</span>
@@ -217,7 +217,7 @@ const AutoMatchedDebugPanel = ({ transactions, isGroupLevel }) => {
       </button>
 
       {isExpanded && (
-        <div style={{ maxHeight: showAll ? 600 : 400, overflowY: 'auto', padding: 8, background: '#fafafa' }}>
+        <div style={{ maxHeight: showAll ? 600 : 400, overflowY: 'auto', padding: 8, background: COLORS.bgPage }}>
           {displayedTransactions.map((tx, i) => {
             const calc = tx.calculationDetails;
             const similarCalc = calc?.similar || {};
@@ -230,7 +230,7 @@ const AutoMatchedDebugPanel = ({ transactions, isGroupLevel }) => {
                 marginBottom: 4,
                 background: 'white',
                 borderRadius: 6,
-                border: '1px solid #e0e0e0',
+                border: `1px solid ${COLORS.borderLight}`,
                 fontSize: '11px'
               }}>
                 <div
@@ -239,7 +239,7 @@ const AutoMatchedDebugPanel = ({ transactions, isGroupLevel }) => {
                 >
                   <div style={{ flex: 1 }}>
                     <span style={{ fontWeight: 500 }}>{tx.details?.substring(0, 45)}{tx.details?.length > 45 ? '...' : ''}</span>
-                    <span style={{ marginLeft: 8, color: '#666' }}>
+                    <span style={{ marginLeft: 8, color: COLORS.textMuted }}>
                       → {isGroupLevel ? tx.group : tx.categoryName || tx.categoryCode}
                     </span>
                   </div>
@@ -247,13 +247,13 @@ const AutoMatchedDebugPanel = ({ transactions, isGroupLevel }) => {
                     <span style={{
                       padding: '2px 6px',
                       borderRadius: 4,
-                      background: '#e8f5e9',
-                      color: '#2e7d32',
+                      background: COLORS.successLighter,
+                      color: COLORS.successText,
                       fontWeight: 500
                     }}>
                       {((tx.unifiedConfidence || 0) * 100).toFixed(0)}%
                     </span>
-                    <span style={{ color: '#999' }}>{isThisExpanded ? '▼' : '▶'}</span>
+                    <span style={{ color: COLORS.textSecondary }}>{isThisExpanded ? '▼' : '▶'}</span>
                   </div>
                 </div>
 
@@ -261,7 +261,7 @@ const AutoMatchedDebugPanel = ({ transactions, isGroupLevel }) => {
                   <div style={{
                     marginTop: 8,
                     padding: 8,
-                    background: '#f8f9fa',
+                    background: COLORS.bgPage,
                     borderRadius: 4,
                     fontFamily: 'monospace',
                     fontSize: '10px'
@@ -271,30 +271,30 @@ const AutoMatchedDebugPanel = ({ transactions, isGroupLevel }) => {
                       {similarCalc.count > 0 ? (
                         <div style={{ paddingLeft: 8, marginTop: 4 }}>
                           {(similarCalc.matches || []).slice(0, 3).map((m, j) => (
-                            <div key={j} style={{ color: (m.diffRatio || 0) > 0.5 ? '#ef6c00' : '#666' }}>
+                            <div key={j} style={{ color: (m.diffRatio || 0) > 0.5 ? COLORS.warningDark : COLORS.textMuted }}>
                               #{j + 1}: "{(m.details || '').substring(0, 30)}..." → diff {(m.diffRatio || 0).toFixed(2)}
                               {(m.diffRatio || 0) > 0.5 && ' (weak)'}
                             </div>
                           ))}
-                          <div style={{ color: '#1565c0', marginTop: 4 }}>
+                          <div style={{ color: COLORS.infoText, marginTop: 4 }}>
                             Avg diff: {(similarCalc.avgDiffRatio || 0).toFixed(4)} | Count: {similarCalc.count}
                           </div>
-                          <div style={{ color: '#1565c0' }}>
+                          <div style={{ color: COLORS.infoText }}>
                             Formula: {similarCalc.formula || `1 - (${(similarCalc.avgDiffRatio || 0).toFixed(4)})^${similarCalc.count}`} = {((similarCalc.score || 0) * 100).toFixed(1)}%
                           </div>
                         </div>
                       ) : (
-                        <span style={{ color: '#999', marginLeft: 8 }}>None</span>
+                        <span style={{ color: COLORS.textSecondary, marginLeft: 8 }}>None</span>
                       )}
                     </div>
                     <div style={{ marginBottom: 6 }}>
                       <strong>IDENTIFIER (10% weight):</strong>
                       {identifierCalc.bestMatch ? (
-                        <span style={{ marginLeft: 8, color: '#2e7d32' }}>
+                        <span style={{ marginLeft: 8, color: COLORS.successText }}>
                           "{identifierCalc.bestMatch}" → {((identifierCalc.score || 0) * 100).toFixed(0)}%
                         </span>
                       ) : (
-                        <span style={{ color: '#999', marginLeft: 8 }}>None</span>
+                        <span style={{ color: COLORS.textSecondary, marginLeft: 8 }}>None</span>
                       )}
                     </div>
                     {(() => {
@@ -306,9 +306,9 @@ const AutoMatchedDebugPanel = ({ transactions, isGroupLevel }) => {
                       return (
                         <>
                           <div style={{
-                            borderTop: '1px solid #ddd',
+                            borderTop: `1px solid ${COLORS.borderLight}`,
                             paddingTop: 4,
-                            color: hasAIBoost ? '#666' : '#2e7d32',
+                            color: hasAIBoost ? COLORS.textMuted : COLORS.successText,
                             fontWeight: hasAIBoost ? 'normal' : 600
                           }}>
                             COMBINED: ({((similarCalc.score || 0) * 100).toFixed(0)}% × 0.9) + ({((identifierCalc.score || 0) * 100).toFixed(0)}% × 0.1) = {(preAIScore * 100).toFixed(1)}%
@@ -317,9 +317,9 @@ const AutoMatchedDebugPanel = ({ transactions, isGroupLevel }) => {
                             <div style={{
                               marginTop: 4,
                               padding: 4,
-                              background: calc.bayesian.aiConfirmed ? '#e8f5e9' : '#fff3e0',
+                              background: calc.bayesian.aiConfirmed ? COLORS.successLighter : COLORS.warningLight,
                               borderRadius: 4,
-                              color: calc.bayesian.aiConfirmed ? '#1b5e20' : '#e65100'
+                              color: calc.bayesian.aiConfirmed ? COLORS.successText : COLORS.warningText
                             }}>
                               <strong>{calc.bayesian.aiConfirmed ? '+ AI CONFIRMED:' : '⚠ AI OVERRIDE:'}</strong>
                               {calc.bayesian.aiConfirmed ? (
@@ -342,7 +342,7 @@ const AutoMatchedDebugPanel = ({ transactions, isGroupLevel }) => {
                           <div style={{
                             marginTop: 4,
                             fontWeight: 600,
-                            color: finalScore >= 0.90 ? '#2e7d32' : finalScore >= 0.50 ? '#ed6c02' : '#d32f2f'
+                            color: finalScore >= 0.90 ? COLORS.successText : finalScore >= 0.50 ? COLORS.warningDark : COLORS.error
                           }}>
                             FINAL: {(finalScore * 100).toFixed(1)}% → {finalScore >= 0.90 ? 'AUTO ✓' : finalScore >= 0.50 ? 'AI_ASSIST' : 'REVIEW'}
                           </div>
@@ -363,7 +363,7 @@ const AutoMatchedDebugPanel = ({ transactions, isGroupLevel }) => {
               justifyContent: 'center',
               alignItems: 'center',
               gap: 12,
-              borderTop: '1px solid #e0e0e0',
+              borderTop: `1px solid ${COLORS.borderLight}`,
               marginTop: 8
             }}>
               {!showAll ? (
@@ -374,16 +374,16 @@ const AutoMatchedDebugPanel = ({ transactions, isGroupLevel }) => {
                     style={{
                       padding: '4px 12px',
                       borderRadius: 4,
-                      border: '1px solid #ccc',
-                      background: currentPage === 0 ? '#f5f5f5' : 'white',
+                      border: `1px solid ${COLORS.borderLight}`,
+                      background: currentPage === 0 ? COLORS.bgHover : 'white',
                       cursor: currentPage === 0 ? 'default' : 'pointer',
                       fontSize: '12px',
-                      color: currentPage === 0 ? '#999' : '#333'
+                      color: currentPage === 0 ? COLORS.textSecondary : COLORS.textPrimary
                     }}
                   >
                     ← Prev
                   </button>
-                  <span style={{ fontSize: '12px', color: '#666' }}>
+                  <span style={{ fontSize: '12px', color: COLORS.textMuted }}>
                     Page {currentPage + 1} of {totalPages} ({startIdx + 1}-{endIdx} of {autoMatched.length})
                   </span>
                   <button
@@ -392,11 +392,11 @@ const AutoMatchedDebugPanel = ({ transactions, isGroupLevel }) => {
                     style={{
                       padding: '4px 12px',
                       borderRadius: 4,
-                      border: '1px solid #ccc',
-                      background: currentPage >= totalPages - 1 ? '#f5f5f5' : 'white',
+                      border: `1px solid ${COLORS.borderLight}`,
+                      background: currentPage >= totalPages - 1 ? COLORS.bgHover : 'white',
                       cursor: currentPage >= totalPages - 1 ? 'default' : 'pointer',
                       fontSize: '12px',
-                      color: currentPage >= totalPages - 1 ? '#999' : '#333'
+                      color: currentPage >= totalPages - 1 ? COLORS.textSecondary : COLORS.textPrimary
                     }}
                   >
                     Next →
@@ -410,7 +410,7 @@ const AutoMatchedDebugPanel = ({ transactions, isGroupLevel }) => {
                       background: 'white',
                       cursor: 'pointer',
                       fontSize: '12px',
-                      color: '#2e7d32'
+                      color: COLORS.successText
                     }}
                   >
                     Show All
@@ -426,7 +426,7 @@ const AutoMatchedDebugPanel = ({ transactions, isGroupLevel }) => {
                     background: 'white',
                     cursor: 'pointer',
                     fontSize: '12px',
-                    color: '#666'
+                    color: COLORS.textMuted
                   }}
                 >
                   Show Paginated ({autoMatched.length} total)
@@ -453,51 +453,51 @@ const StatsSummary = ({ stats }) => {
     }}>
       <div style={{
         padding: 12,
-        background: '#f5f5f5',
+        background: COLORS.bgHover,
         borderRadius: 8,
         textAlign: 'center'
       }}>
-        <div style={{ fontSize: '24px', fontWeight: 600, color: '#333' }}>
+        <div style={{ fontSize: '24px', fontWeight: 600, color: COLORS.textPrimary }}>
           {stats.total}
         </div>
-        <div style={{ fontSize: '12px', color: '#666' }}>Total</div>
+        <div style={{ fontSize: '12px', color: COLORS.textMuted }}>Total</div>
       </div>
       <div style={{
         padding: 12,
-        background: '#e8f5e9',
+        background: COLORS.successLighter,
         borderRadius: 8,
         textAlign: 'center'
       }}>
         <div style={{ fontSize: '24px', fontWeight: 600, color: incomeColor }}>
           {stats.income}
         </div>
-        <div style={{ fontSize: '12px', color: '#666' }}>Income</div>
+        <div style={{ fontSize: '12px', color: COLORS.textMuted }}>Income</div>
       </div>
       <div style={{
         padding: 12,
-        background: '#ffebee',
+        background: COLORS.errorLight,
         borderRadius: 8,
         textAlign: 'center'
       }}>
         <div style={{ fontSize: '24px', fontWeight: 600, color: expenseColor }}>
           {stats.expense}
         </div>
-        <div style={{ fontSize: '12px', color: '#666' }}>Expense</div>
+        <div style={{ fontSize: '12px', color: COLORS.textMuted }}>Expense</div>
       </div>
       <div style={{
         padding: 12,
-        background: stats.typeAnomalies > 0 ? '#fff3e0' : '#f5f5f5',
+        background: stats.typeAnomalies > 0 ? COLORS.warningLight : COLORS.bgHover,
         borderRadius: 8,
         textAlign: 'center'
       }}>
         <div style={{
           fontSize: '24px',
           fontWeight: 600,
-          color: stats.typeAnomalies > 0 ? '#ef6c00' : '#999'
+          color: stats.typeAnomalies > 0 ? COLORS.warningDark : COLORS.textSecondary
         }}>
           {stats.typeAnomalies}
         </div>
-        <div style={{ fontSize: '12px', color: '#666' }}>Anomalies</div>
+        <div style={{ fontSize: '12px', color: COLORS.textMuted }}>Anomalies</div>
       </div>
     </div>
   );
@@ -533,78 +533,78 @@ const CalculationDebugPanel = ({ transaction }) => {
     <div style={{
       marginTop: 8,
       padding: 10,
-      background: '#f8f9fa',
+      background: COLORS.bgPage,
       borderRadius: 6,
       fontSize: '11px',
       fontFamily: 'monospace',
       borderLeft: '3px solid ' + slainteBlue
     }}>
-      <div style={{ fontWeight: 600, marginBottom: 6, color: '#333' }}>
+      <div style={{ fontWeight: 600, marginBottom: 6, color: COLORS.textPrimary }}>
         Confidence Calculation
       </div>
 
       {/* Similar Transactions Score (90% weight) */}
       <div style={{ marginBottom: 8 }}>
-        <div style={{ fontWeight: 500, color: '#666' }}>
+        <div style={{ fontWeight: 500, color: COLORS.textMuted }}>
           SIMILAR TRANSACTIONS (90% weight):
         </div>
         {similarCalc.count > 0 ? (
           <>
-            <div style={{ paddingLeft: 8, color: '#444' }}>
+            <div style={{ paddingLeft: 8, color: COLORS.textPrimary }}>
               {(similarCalc.matches || []).slice(0, 3).map((match, i) => (
                 <div key={i} style={{ marginTop: 2 }}>
                   #{i + 1}: "{(match.details || '').substring(0, 35)}..." → diff {match.diffRatio?.toFixed(4) || 'N/A'}
                 </div>
               ))}
-              <div style={{ marginTop: 4, color: '#1565c0' }}>
+              <div style={{ marginTop: 4, color: COLORS.infoText }}>
                 Avg diff ratio: {similarCalc.avgDiffRatio?.toFixed(4) || 'N/A'}
               </div>
-              <div style={{ color: '#1565c0' }}>
+              <div style={{ color: COLORS.infoText }}>
                 Formula: {similarCalc.formula || 'N/A'}
               </div>
-              <div style={{ fontWeight: 500, color: '#2e7d32' }}>
+              <div style={{ fontWeight: 500, color: COLORS.successText }}>
                 Similar Score: {((similarCalc.score || 0) * 100).toFixed(1)}%
               </div>
             </div>
           </>
         ) : (
-          <div style={{ paddingLeft: 8, color: '#999' }}>No similar transactions found</div>
+          <div style={{ paddingLeft: 8, color: COLORS.textSecondary }}>No similar transactions found</div>
         )}
       </div>
 
       {/* Identifier Score (10% weight) */}
       <div style={{ marginBottom: 8 }}>
-        <div style={{ fontWeight: 500, color: '#666' }}>
+        <div style={{ fontWeight: 500, color: COLORS.textMuted }}>
           IDENTIFIER MATCH (10% weight):
         </div>
-        <div style={{ paddingLeft: 8, color: '#444' }}>
+        <div style={{ paddingLeft: 8, color: COLORS.textPrimary }}>
           {identifierCalc.bestMatch ? (
             <>
               <div>Best: "{identifierCalc.bestMatch}" → {identifierCalc.matchedChars}/{identifierCalc.totalChars} chars ({identifierCalc.matchType})</div>
-              <div style={{ fontWeight: 500, color: '#2e7d32' }}>
+              <div style={{ fontWeight: 500, color: COLORS.successText }}>
                 Identifier Score: {((identifierCalc.score || 0) * 100).toFixed(1)}%
               </div>
             </>
           ) : (
-            <div style={{ color: '#999' }}>No identifier match</div>
+            <div style={{ color: COLORS.textSecondary }}>No identifier match</div>
           )}
         </div>
       </div>
 
       {/* Combined Score */}
       <div style={{
-        borderTop: '1px solid #ddd',
+        borderTop: `1px solid ${COLORS.borderLight}`,
         paddingTop: 6,
         marginTop: 6
       }}>
-        <div style={{ fontWeight: 500, color: '#666' }}>
+        <div style={{ fontWeight: 500, color: COLORS.textMuted }}>
           COMBINED ({calc.formula || 'N/A'}):
         </div>
         <div style={{
           fontSize: '13px',
           fontWeight: 600,
-          color: (transaction.unifiedConfidence || 0) >= 0.90 ? '#2e7d32' :
-                 (transaction.unifiedConfidence || 0) >= 0.50 ? '#1565c0' : '#ef6c00'
+          color: (transaction.unifiedConfidence || 0) >= 0.90 ? COLORS.successText :
+                 (transaction.unifiedConfidence || 0) >= 0.50 ? COLORS.infoText : COLORS.warningDark
         }}>
           FINAL: {((transaction.unifiedConfidence || 0) * 100).toFixed(1)}% → {(transaction.unifiedCohort || 'review').toUpperCase()}
           {(transaction.unifiedConfidence || 0) >= 0.90 && ' ✓'}
@@ -653,7 +653,7 @@ const TransactionReviewItem = ({ transaction, onUpdate, categoryMapping, isGroup
       return {
         label: 'User selected',
         detail: 'You selected this category',
-        color: '#2e7d32',  // Green for user choice
+        color: COLORS.successText,  // Green for user choice
         displayGroup: isGroupLevel ? transaction.group : null,
         displayCategory: !isGroupLevel ? transaction.categoryCode : null,
         displayName
@@ -661,7 +661,7 @@ const TransactionReviewItem = ({ transaction, onUpdate, categoryMapping, isGroup
     }
 
     if (matchType === 'identifier') {
-      return { label: 'Identifier matched', detail: matchedIdentifier, color: '#2e7d32' };
+      return { label: 'Identifier matched', detail: matchedIdentifier, color: COLORS.successText };
     }
 
     // AI suggestion - but FIRST check if transaction already has a different value
@@ -695,7 +695,7 @@ const TransactionReviewItem = ({ transaction, onUpdate, categoryMapping, isGroup
         return {
           label: `Similar match (AI suggested different)`,
           detail: `Set to ${displayName}. AI suggested: ${isGroupLevel ? GROUPS[aiGroup]?.name : aiSuggestion.categoryName}`,
-          color: '#ff9800',  // Orange to indicate conflict
+          color: COLORS.warning,  // Orange to indicate conflict
           displayGroup: isGroupLevel ? transaction.group : null,
           displayCategory: !isGroupLevel ? transaction.categoryCode : null,
           displayName,
@@ -718,7 +718,7 @@ const TransactionReviewItem = ({ transaction, onUpdate, categoryMapping, isGroup
       return {
         label: `${aiConfidence}% AI confidence`,
         detail: reasoning,
-        color: '#1565c0',
+        color: COLORS.infoText,
         // Pass the AI's suggested group/category as the display value
         displayGroup,
         displayCategory,
@@ -781,7 +781,7 @@ const TransactionReviewItem = ({ transaction, onUpdate, categoryMapping, isGroup
       return {
         label: `${Math.round(confidence * 100)}% confidence`,
         detail: detailedReason,
-        color: cohort === 'auto' ? '#2e7d32' : cohort === 'ai_assist' ? '#1565c0' : '#ef6c00',
+        color: cohort === 'auto' ? COLORS.successText : cohort === 'ai_assist' ? COLORS.infoText : COLORS.warningDark,
         // For category level, provide the suggested category from similar transactions
         displayCategory: !isGroupLevel ? suggestedCategoryCode : null,
         displayName: !isGroupLevel ? suggestedCategoryName : null
@@ -790,11 +790,11 @@ const TransactionReviewItem = ({ transaction, onUpdate, categoryMapping, isGroup
 
     // Similar transaction match - based on existing categorized transactions
     if (matchType === 'similar_transaction' && reason) {
-      return { label: 'Similar transaction', detail: reason, color: '#7b1fa2' }; // Purple for similar
+      return { label: 'Similar transaction', detail: reason, color: COLORS.accentPurple }; // Purple for similar
     }
 
     if (matchType === 'probability' && reason) {
-      return { label: 'Partial match', detail: reason, color: '#ef6c00' };
+      return { label: 'Partial match', detail: reason, color: COLORS.warningDark };
     }
 
     // Check if this is an UNKNOWN group - show as "Petty Cash / Other" default with guidance
@@ -803,14 +803,14 @@ const TransactionReviewItem = ({ transaction, onUpdate, categoryMapping, isGroup
       return {
         label: 'Needs review',
         detail: 'No matching patterns found. Defaulting to Petty Cash / Other - please accept or change.',
-        color: '#ef6c00',  // Orange for needs action
+        color: COLORS.warningDark,  // Orange for needs action
         isUnknown: true,
         displayGroup: 'OTHER',  // Show OTHER as the display group
         displayName: 'Petty Cash / Other'
       };
     }
 
-    return { label: 'No match', detail: 'Please categorize manually', color: '#c62828' };
+    return { label: 'No match', detail: 'Please categorize manually', color: COLORS.error };
   };
 
   const matchInfo = getMatchInfo();
@@ -1031,7 +1031,7 @@ const TransactionReviewItem = ({ transaction, onUpdate, categoryMapping, isGroup
       padding: 12,
       background: 'white',
       borderRadius: 8,
-      border: '1px solid #e0e0e0',
+      border: `1px solid ${COLORS.borderLight}`,
       marginBottom: 8
     }}>
       <div style={{
@@ -1044,13 +1044,13 @@ const TransactionReviewItem = ({ transaction, onUpdate, categoryMapping, isGroup
           <div style={{
             fontSize: '13px',
             fontWeight: 500,
-            color: '#333',
+            color: COLORS.textPrimary,
             marginBottom: 4
           }}>
             {transaction.details?.substring(0, 50)}
             {transaction.details?.length > 50 && '...'}
           </div>
-          <div style={{ fontSize: '12px', color: '#666' }}>
+          <div style={{ fontSize: '12px', color: COLORS.textMuted }}>
             {transaction.date instanceof Date
               ? transaction.date.toLocaleDateString()
               : transaction.date}
@@ -1078,7 +1078,7 @@ const TransactionReviewItem = ({ transaction, onUpdate, categoryMapping, isGroup
           flexDirection: 'column',
           gap: 6,
           padding: '8px 12px',
-          background: matchInfo.aiSuggestsDifferent ? '#fff3e0' : '#f8f9fa',
+          background: matchInfo.aiSuggestsDifferent ? COLORS.warningLight : COLORS.bgPage,
           borderRadius: 6,
           borderLeft: `3px solid ${matchInfo.color}`
         }}>
@@ -1113,11 +1113,11 @@ const TransactionReviewItem = ({ transaction, onUpdate, categoryMapping, isGroup
               style={{
                 padding: '6px 10px',
                 borderRadius: 4,
-                border: '1px solid ' + (isChangingGroup ? '#ff9800' : slainteBlue),
+                border: '1px solid ' + (isChangingGroup ? COLORS.warning : slainteBlue),
                 fontSize: '13px',
                 flex: 1,
                 maxWidth: 250,
-                background: isChangingGroup ? '#fff8e1' : 'white'
+                background: isChangingGroup ? COLORS.warningLighter : 'white'
               }}
             >
               <option value="">{isChangingGroup ? 'Select new group...' : 'Select...'}</option>
@@ -1125,7 +1125,7 @@ const TransactionReviewItem = ({ transaction, onUpdate, categoryMapping, isGroup
                 <option
                   key={opt.value}
                   value={opt.value}
-                  style={opt.isSpecial ? { fontWeight: 'bold', color: '#1565c0' } : {}}
+                  style={opt.isSpecial ? { fontWeight: 'bold', color: COLORS.infoText } : {}}
                 >
                   {opt.label}
                 </option>
@@ -1145,7 +1145,7 @@ const TransactionReviewItem = ({ transaction, onUpdate, categoryMapping, isGroup
                     3. Transaction's assigned category (transaction.categoryName)
                     4. "Uncategorized" as fallback
                 */}
-                <span style={{ fontSize: '15px', fontWeight: 600, color: '#333' }}>
+                <span style={{ fontSize: '15px', fontWeight: 600, color: COLORS.textPrimary }}>
                   → {isGroupLevel
                     ? (matchInfo.displayName ||
                        (transaction.group === 'UNKNOWN' ? 'Petty Cash / Other' :
@@ -1199,7 +1199,7 @@ const TransactionReviewItem = ({ transaction, onUpdate, categoryMapping, isGroup
                     padding: '4px 12px',
                     borderRadius: 4,
                     border: 'none',
-                    background: '#4caf50',
+                    background: COLORS.success,
                     cursor: 'pointer',
                     fontSize: '11px',
                     color: 'white',
@@ -1235,10 +1235,10 @@ const TransactionReviewItem = ({ transaction, onUpdate, categoryMapping, isGroup
                       padding: '4px 12px',
                       borderRadius: 4,
                       border: '2px solid #7b1fa2',
-                      background: '#f3e5f5',
+                      background: COLORS.accentPurpleLight,
                       cursor: 'pointer',
                       fontSize: '11px',
-                      color: '#7b1fa2',
+                      color: COLORS.accentPurple,
                       fontWeight: 600
                     }}
                     title={`Apply to this and ${similarTransactions.length} similar transactions`}
@@ -1253,8 +1253,8 @@ const TransactionReviewItem = ({ transaction, onUpdate, categoryMapping, isGroup
               <span style={{
                 padding: '4px 8px',
                 borderRadius: 4,
-                background: '#e8f5e9',
-                color: '#2e7d32',
+                background: COLORS.successLighter,
+                color: COLORS.successText,
                 fontSize: '11px',
                 fontWeight: 500
               }}>
@@ -1283,11 +1283,11 @@ const TransactionReviewItem = ({ transaction, onUpdate, categoryMapping, isGroup
               style={{
                 padding: '4px 10px',
                 borderRadius: 4,
-                border: '1px solid #ccc',
+                border: `1px solid ${COLORS.borderLight}`,
                 background: 'white',
                 cursor: 'pointer',
                 fontSize: '11px',
-                color: '#666'
+                color: COLORS.textMuted
               }}
             >
               Change
@@ -1297,11 +1297,11 @@ const TransactionReviewItem = ({ transaction, onUpdate, categoryMapping, isGroup
               style={{
                 padding: '4px 10px',
                 borderRadius: 4,
-                border: '1px solid #ccc',
-                background: showCommentInput ? '#e3f2fd' : 'white',
+                border: `1px solid ${COLORS.borderLight}`,
+                background: showCommentInput ? COLORS.infoLighter : 'white',
                 cursor: 'pointer',
                 fontSize: '11px',
-                color: '#666'
+                color: COLORS.textMuted
               }}
             >
               {comment ? '✎ Edit Comment' : '+ Add Comment'}
@@ -1321,7 +1321,7 @@ const TransactionReviewItem = ({ transaction, onUpdate, categoryMapping, isGroup
                 flex: 1,
                 padding: '6px 10px',
                 borderRadius: 4,
-                border: '1px solid #ddd',
+                border: `1px solid ${COLORS.borderLight}`,
                 fontSize: '12px'
               }}
             />
@@ -1348,11 +1348,11 @@ const TransactionReviewItem = ({ transaction, onUpdate, categoryMapping, isGroup
         {/* Show full reasoning if available - no truncation */}
         {matchInfo.detail && (
           <div style={{
-            color: '#555',
+            color: COLORS.textMuted,
             fontSize: '12px',
             lineHeight: 1.5,
             padding: '8px 10px',
-            background: '#fafafa',
+            background: COLORS.bgPage,
             borderRadius: 4,
             marginTop: 2
           }}>
@@ -1368,11 +1368,11 @@ const TransactionReviewItem = ({ transaction, onUpdate, categoryMapping, isGroup
               marginTop: 4,
               padding: '4px 8px',
               borderRadius: 4,
-              border: '1px solid #ddd',
-              background: showDebug ? '#e3f2fd' : 'transparent',
+              border: `1px solid ${COLORS.borderLight}`,
+              background: showDebug ? COLORS.infoLighter : 'transparent',
               cursor: 'pointer',
               fontSize: '10px',
-              color: '#666',
+              color: COLORS.textMuted,
               display: 'inline-flex',
               alignItems: 'center',
               gap: 4,
@@ -1434,24 +1434,24 @@ const CohortReviewPanel = ({ cohort, transactions, onAcceptAll, onSkip, isGroupL
 
   return (
     <div style={{
-      background: '#fff',
+      background: COLORS.white,
       borderRadius: 12,
-      border: '1px solid #e0e0e0',
+      border: `1px solid ${COLORS.borderLight}`,
       overflow: 'hidden'
     }}>
       <div style={{
         padding: '12px 16px',
-        background: '#f8f9fa',
-        borderBottom: '1px solid #e0e0e0',
+        background: COLORS.bgPage,
+        borderBottom: `1px solid ${COLORS.borderLight}`,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center'
       }}>
         <div>
-          <div style={{ fontWeight: 600, fontSize: '14px', color: '#333' }}>
+          <div style={{ fontWeight: 600, fontSize: '14px', color: COLORS.textPrimary }}>
             {info.title} ({transactions.length})
           </div>
-          <div style={{ fontSize: '12px', color: '#666' }}>
+          <div style={{ fontSize: '12px', color: COLORS.textMuted }}>
             {info.description}
           </div>
         </div>
@@ -1462,11 +1462,11 @@ const CohortReviewPanel = ({ cohort, transactions, onAcceptAll, onSkip, isGroupL
               style={{
                 padding: '6px 12px',
                 borderRadius: 6,
-                border: '1px solid #e0e0e0',
+                border: `1px solid ${COLORS.borderLight}`,
                 background: 'white',
                 cursor: 'pointer',
                 fontSize: '12px',
-                color: '#666'
+                color: COLORS.textMuted
               }}
             >
               Skip Review
@@ -1519,7 +1519,7 @@ const CohortReviewPanel = ({ cohort, transactions, onAcceptAll, onSkip, isGroupL
           <div style={{
             padding: 12,
             textAlign: 'center',
-            color: '#666',
+            color: COLORS.textMuted,
             fontSize: '13px'
           }}>
             + {transactions.length - 20} more transactions
@@ -1531,13 +1531,13 @@ const CohortReviewPanel = ({ cohort, transactions, onAcceptAll, onSkip, isGroupL
       {similarNotification && (
         <div style={{
           padding: '8px 12px',
-          background: '#e8f5e9',
+          background: COLORS.successLighter,
           borderTop: '1px solid #c8e6c9',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           fontSize: '12px',
-          color: '#2e7d32'
+          color: COLORS.successText
         }}>
           <span>{similarNotification.message}</span>
           {similarNotification.undoData && (
@@ -1548,7 +1548,7 @@ const CohortReviewPanel = ({ cohort, transactions, onAcceptAll, onSkip, isGroupL
                 borderRadius: 4,
                 border: '1px solid #2e7d32',
                 background: 'white',
-                color: '#2e7d32',
+                color: COLORS.successText,
                 cursor: 'pointer',
                 fontSize: '11px',
                 fontWeight: 600
@@ -1651,7 +1651,7 @@ const ConflictResolutionPanel = ({ transactions, onResolve, isGroupLevel, catego
 
   return (
     <div style={{
-      background: '#fff',
+      background: COLORS.white,
       borderRadius: 12,
       border: '2px solid #ad1457',
       overflow: 'hidden',
@@ -1659,17 +1659,17 @@ const ConflictResolutionPanel = ({ transactions, onResolve, isGroupLevel, catego
     }}>
       <div style={{
         padding: '12px 16px',
-        background: '#fce4ec',
+        background: COLORS.errorLight,
         borderBottom: '1px solid #f8bbd9',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center'
       }}>
         <div>
-          <div style={{ fontWeight: 600, fontSize: '14px', color: '#ad1457', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ fontWeight: 600, fontSize: '14px', color: COLORS.errorDark, display: 'flex', alignItems: 'center', gap: 6 }}>
             <span>⚠</span> Identifier Conflicts ({transactions.length})
           </div>
-          <div style={{ fontSize: '12px', color: '#880e4f' }}>
+          <div style={{ fontSize: '12px', color: COLORS.errorText }}>
             These transactions matched multiple categories - choose correct one or remove wrong identifiers
           </div>
         </div>
@@ -1691,7 +1691,7 @@ const ConflictResolutionPanel = ({ transactions, onResolve, isGroupLevel, catego
           return (
             <div key={tx.id} style={{
               padding: 12,
-              background: isResolving ? '#e8f5e9' : 'white',
+              background: isResolving ? COLORS.successLighter : 'white',
               borderRadius: 8,
               border: isResolving ? '2px solid #4caf50' : '1px solid #f8bbd9',
               marginBottom: 8,
@@ -1706,10 +1706,10 @@ const ConflictResolutionPanel = ({ transactions, onResolve, isGroupLevel, catego
                 marginBottom: 8
               }}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '13px', fontWeight: 500, color: '#333', marginBottom: 4 }}>
+                  <div style={{ fontSize: '13px', fontWeight: 500, color: COLORS.textPrimary, marginBottom: 4 }}>
                     {tx.details?.substring(0, 60)}{tx.details?.length > 60 && '...'}
                   </div>
-                  <div style={{ fontSize: '11px', color: '#666' }}>
+                  <div style={{ fontSize: '11px', color: COLORS.textMuted }}>
                     Matched identifier: <strong>{matchedIdentifier}</strong>
                   </div>
                 </div>
@@ -1726,10 +1726,10 @@ const ConflictResolutionPanel = ({ transactions, onResolve, isGroupLevel, catego
               {isResolving && (
                 <div style={{
                   padding: '8px 12px',
-                  background: '#c8e6c9',
+                  background: COLORS.successLighter,
                   borderRadius: 6,
                   fontSize: '12px',
-                  color: '#2e7d32',
+                  color: COLORS.successText,
                   fontWeight: 500,
                   textAlign: 'center',
                   marginBottom: 8
@@ -1741,7 +1741,7 @@ const ConflictResolutionPanel = ({ transactions, onResolve, isGroupLevel, catego
               {/* Conflict options */}
               {!isResolving && (
                 <>
-                  <div style={{ fontSize: '12px', color: '#666', marginBottom: 8 }}>
+                  <div style={{ fontSize: '12px', color: COLORS.textMuted, marginBottom: 8 }}>
                     {effectiveConflicts.length > 1
                       ? `This identifier appears in ${effectiveConflicts.length} ${isGroupLevel ? 'groups' : 'categories'}. Choose the correct one, or remove wrong identifiers:`
                       : `Only one option remains. Click to confirm:`
@@ -1762,9 +1762,9 @@ const ConflictResolutionPanel = ({ transactions, onResolve, isGroupLevel, catego
                           alignItems: 'center',
                           gap: 8,
                           padding: '6px 10px',
-                          background: isOnlyOption ? '#e8f5e9' : '#fafafa',
+                          background: isOnlyOption ? COLORS.successLighter : COLORS.bgPage,
                           borderRadius: 6,
-                          border: isOnlyOption ? '2px solid #4caf50' : '1px solid #e0e0e0',
+                          border: isOnlyOption ? '2px solid #4caf50' : `1px solid ${COLORS.borderLight}`,
                           transition: 'all 0.3s ease'
                         }}>
                           {/* Choose this category button */}
@@ -1775,16 +1775,16 @@ const ConflictResolutionPanel = ({ transactions, onResolve, isGroupLevel, catego
                               padding: '6px 12px',
                               borderRadius: 4,
                               border: isOnlyOption ? '1px solid #4caf50' : '1px solid #ad1457',
-                              background: isOnlyOption ? '#4caf50' : 'white',
+                              background: isOnlyOption ? COLORS.success : 'white',
                               cursor: 'pointer',
                               fontSize: '12px',
-                              color: isOnlyOption ? 'white' : '#ad1457',
+                              color: isOnlyOption ? 'white' : COLORS.errorDark,
                               fontWeight: 500,
                               textAlign: 'left',
                               transition: 'all 0.2s'
                             }}
                             onMouseOver={(e) => {
-                              if (!isOnlyOption) e.target.style.background = '#fce4ec';
+                              if (!isOnlyOption) e.target.style.background = COLORS.errorLight;
                             }}
                             onMouseOut={(e) => {
                               if (!isOnlyOption) e.target.style.background = 'white';
@@ -1804,13 +1804,13 @@ const ConflictResolutionPanel = ({ transactions, onResolve, isGroupLevel, catego
                                 background: 'white',
                                 cursor: 'pointer',
                                 fontSize: '11px',
-                                color: '#c62828',
+                                color: COLORS.error,
                                 fontWeight: 500,
                                 transition: 'all 0.2s',
                                 whiteSpace: 'nowrap'
                               }}
                               onMouseOver={(e) => {
-                                e.target.style.background = '#ffebee';
+                                e.target.style.background = COLORS.errorLight;
                               }}
                               onMouseOut={(e) => {
                                 e.target.style.background = 'white';
@@ -1841,7 +1841,7 @@ const AIProcessingIndicator = ({ progress }) => (
     alignItems: 'center',
     gap: 12,
     padding: 16,
-    background: '#e3f2fd',
+    background: COLORS.infoLighter,
     borderRadius: 8,
     marginBottom: 16
   }}>
@@ -1849,7 +1849,7 @@ const AIProcessingIndicator = ({ progress }) => (
       width: 32,
       height: 32,
       borderRadius: '50%',
-      background: `linear-gradient(135deg, ${slainteBlue} 0%, #357ABD 100%)`,
+      background: `linear-gradient(135deg, ${slainteBlue} 0%, ${COLORS.slainteBlueDark} 100%)`,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -1860,11 +1860,11 @@ const AIProcessingIndicator = ({ progress }) => (
       F
     </div>
     <div style={{ flex: 1 }}>
-      <div style={{ fontWeight: 500, color: '#1565c0', fontSize: '14px' }}>
+      <div style={{ fontWeight: 500, color: COLORS.infoText, fontSize: '14px' }}>
         Finn is analyzing transactions...
       </div>
       {progress.total > 0 && (
-        <div style={{ fontSize: '12px', color: '#666', marginTop: 2 }}>
+        <div style={{ fontSize: '12px', color: COLORS.textMuted, marginTop: 2 }}>
           Processing {progress.total} transaction{progress.total !== 1 ? 's' : ''}
         </div>
       )}
@@ -2139,7 +2139,7 @@ const ProcessingFlowPanel = ({ categoryMapping, onComplete, onCancel, onRemoveId
                 animation: 'spin 1s linear infinite'
               }} />
             </div>
-            <div style={{ fontSize: '16px', color: '#333' }}>
+            <div style={{ fontSize: '16px', color: COLORS.textPrimary }}>
               Processing transactions...
             </div>
           </div>
@@ -2157,7 +2157,7 @@ const ProcessingFlowPanel = ({ categoryMapping, onComplete, onCancel, onRemoveId
                 alignItems: 'center',
                 gap: 12,
                 padding: 16,
-                background: '#e8f5e9',
+                background: COLORS.successLighter,
                 borderRadius: 8,
                 marginBottom: 16
               }}>
@@ -2175,10 +2175,10 @@ const ProcessingFlowPanel = ({ categoryMapping, onComplete, onCancel, onRemoveId
                   ✓
                 </div>
                 <div>
-                  <div style={{ fontWeight: 500, color: '#2e7d32' }}>
+                  <div style={{ fontWeight: 500, color: COLORS.successText }}>
                     Type sorting complete
                   </div>
-                  <div style={{ fontSize: '13px', color: '#666' }}>
+                  <div style={{ fontSize: '13px', color: COLORS.textMuted }}>
                     All {summary?.total || 0} transactions classified as income or expense
                   </div>
                 </div>
@@ -2239,7 +2239,7 @@ const ProcessingFlowPanel = ({ categoryMapping, onComplete, onCancel, onRemoveId
               <>
                 <div style={{
                   padding: 12,
-                  background: '#fff3e0',
+                  background: COLORS.warningLight,
                   borderRadius: 8,
                   marginBottom: 16,
                   display: 'flex',
@@ -2247,7 +2247,7 @@ const ProcessingFlowPanel = ({ categoryMapping, onComplete, onCancel, onRemoveId
                   gap: 12
                 }}>
                   <span style={{ fontSize: '16px' }}>⚠️</span>
-                  <div style={{ fontSize: '13px', color: '#e65100' }}>
+                  <div style={{ fontSize: '13px', color: COLORS.warningText }}>
                     <strong>Step 1:</strong> Please resolve these identifier conflicts before reviewing other transactions.
                   </div>
                 </div>
@@ -2268,15 +2268,15 @@ const ProcessingFlowPanel = ({ categoryMapping, onComplete, onCancel, onRemoveId
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 padding: 16,
-                background: '#e3f2fd',
+                background: COLORS.infoLighter,
                 borderRadius: 8,
                 marginBottom: 16
               }}>
                 <div>
-                  <div style={{ fontSize: '14px', fontWeight: 500, color: '#1565c0', marginBottom: 4 }}>
+                  <div style={{ fontSize: '14px', fontWeight: 500, color: COLORS.infoText, marginBottom: 4 }}>
                     AI Analysis Required
                   </div>
-                  <div style={{ fontSize: '12px', color: '#666' }}>
+                  <div style={{ fontSize: '12px', color: COLORS.textMuted }}>
                     {reviewTransactions.length + aiAssistTransactions.length} transactions need AI analysis
                   </div>
                 </div>
@@ -2310,11 +2310,11 @@ const ProcessingFlowPanel = ({ categoryMapping, onComplete, onCancel, onRemoveId
                   <>
                     <div style={{
                       padding: 10,
-                      background: '#fff3e0',
+                      background: COLORS.warningLight,
                       borderRadius: 8,
                       marginBottom: 12,
                       fontSize: '13px',
-                      color: '#ef6c00'
+                      color: COLORS.warningDark
                     }}>
                       <strong>Step 2 of 2:</strong> Review these transactions. Some have suggestions — accept or change them.
                     </div>
@@ -2340,11 +2340,11 @@ const ProcessingFlowPanel = ({ categoryMapping, onComplete, onCancel, onRemoveId
                   <>
                     <div style={{
                       padding: 10,
-                      background: '#fff3e0',
+                      background: COLORS.warningLight,
                       borderRadius: 8,
                       marginBottom: 12,
                       fontSize: '13px',
-                      color: '#ef6c00'
+                      color: COLORS.warningDark
                     }}>
                       <strong>Step 2 of 2:</strong> These transactions need manual review. Please select the correct group for each.
                     </div>
@@ -2371,7 +2371,7 @@ const ProcessingFlowPanel = ({ categoryMapping, onComplete, onCancel, onRemoveId
                     alignItems: 'center',
                     gap: 12,
                     padding: 16,
-                    background: '#e8f5e9',
+                    background: COLORS.successLighter,
                     borderRadius: 8,
                     marginBottom: 16
                   }}>
@@ -2389,10 +2389,10 @@ const ProcessingFlowPanel = ({ categoryMapping, onComplete, onCancel, onRemoveId
                       ✓
                     </div>
                     <div>
-                      <div style={{ fontWeight: 500, color: '#2e7d32' }}>
+                      <div style={{ fontWeight: 500, color: COLORS.successText }}>
                         Group sorting complete
                       </div>
-                      <div style={{ fontSize: '13px', color: '#666' }}>
+                      <div style={{ fontSize: '13px', color: COLORS.textMuted }}>
                         All transactions have been assigned to groups
                       </div>
                     </div>
@@ -2408,7 +2408,7 @@ const ProcessingFlowPanel = ({ categoryMapping, onComplete, onCancel, onRemoveId
               alignItems: 'center'
             }}>
               {estimatedTime && (
-                <div style={{ fontSize: '13px', color: '#666' }}>
+                <div style={{ fontSize: '13px', color: COLORS.textMuted }}>
                   Estimated: ~{estimatedTime} min to review
                 </div>
               )}
@@ -2419,7 +2419,7 @@ const ProcessingFlowPanel = ({ categoryMapping, onComplete, onCancel, onRemoveId
                   padding: '10px 24px',
                   borderRadius: 8,
                   border: 'none',
-                  background: (aiProcessing || conflictTransactions.length > 0) ? '#ccc' : slainteBlue,
+                  background: (aiProcessing || conflictTransactions.length > 0) ? COLORS.borderLight : slainteBlue,
                   color: 'white',
                   cursor: (aiProcessing || conflictTransactions.length > 0) ? 'not-allowed' : 'pointer',
                   fontSize: '14px',
@@ -2453,7 +2453,7 @@ const ProcessingFlowPanel = ({ categoryMapping, onComplete, onCancel, onRemoveId
               <CohortDistribution counts={getCohortCounts('category')} layer="category" />
             </div>
             {estimatedTime && (
-              <div style={{ fontSize: '14px', color: '#666', marginBottom: 20 }}>
+              <div style={{ fontSize: '14px', color: COLORS.textMuted, marginBottom: 20 }}>
                 About {reviewTransactions.length + aiAssistTransactions.length} transactions to review (~{estimatedTime} min)
               </div>
             )}
@@ -2463,11 +2463,11 @@ const ProcessingFlowPanel = ({ categoryMapping, onComplete, onCancel, onRemoveId
                 style={{
                   padding: '10px 24px',
                   borderRadius: 8,
-                  border: '1px solid #e0e0e0',
+                  border: `1px solid ${COLORS.borderLight}`,
                   background: 'white',
                   cursor: 'pointer',
                   fontSize: '14px',
-                  color: '#666'
+                  color: COLORS.textMuted
                 }}
               >
                 Do This Later
@@ -2516,7 +2516,7 @@ const ProcessingFlowPanel = ({ categoryMapping, onComplete, onCancel, onRemoveId
               <>
                 <div style={{
                   padding: 12,
-                  background: '#fff3e0',
+                  background: COLORS.warningLight,
                   borderRadius: 8,
                   marginBottom: 16,
                   display: 'flex',
@@ -2524,7 +2524,7 @@ const ProcessingFlowPanel = ({ categoryMapping, onComplete, onCancel, onRemoveId
                   gap: 12
                 }}>
                   <span style={{ fontSize: '16px' }}>⚠️</span>
-                  <div style={{ fontSize: '13px', color: '#e65100' }}>
+                  <div style={{ fontSize: '13px', color: COLORS.warningText }}>
                     <strong>Step 1:</strong> Please resolve these identifier conflicts before reviewing other transactions.
                   </div>
                 </div>
@@ -2545,15 +2545,15 @@ const ProcessingFlowPanel = ({ categoryMapping, onComplete, onCancel, onRemoveId
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 padding: 16,
-                background: '#e3f2fd',
+                background: COLORS.infoLighter,
                 borderRadius: 8,
                 marginBottom: 16
               }}>
                 <div>
-                  <div style={{ fontSize: '14px', fontWeight: 500, color: '#1565c0', marginBottom: 4 }}>
+                  <div style={{ fontSize: '14px', fontWeight: 500, color: COLORS.infoText, marginBottom: 4 }}>
                     AI Analysis Required
                   </div>
-                  <div style={{ fontSize: '12px', color: '#666' }}>
+                  <div style={{ fontSize: '12px', color: COLORS.textMuted }}>
                     {catReviewTx.length + catAITx.length} category assignments need AI analysis
                   </div>
                 </div>
@@ -2587,11 +2587,11 @@ const ProcessingFlowPanel = ({ categoryMapping, onComplete, onCancel, onRemoveId
                   <>
                     <div style={{
                       padding: 10,
-                      background: '#fff3e0',
+                      background: COLORS.warningLight,
                       borderRadius: 8,
                       marginBottom: 12,
                       fontSize: '13px',
-                      color: '#ef6c00'
+                      color: COLORS.warningDark
                     }}>
                       <strong>Step 2 of 2:</strong> Review these category suggestions. Accept or change each one.
                     </div>
@@ -2617,11 +2617,11 @@ const ProcessingFlowPanel = ({ categoryMapping, onComplete, onCancel, onRemoveId
                   <>
                     <div style={{
                       padding: 10,
-                      background: '#fff3e0',
+                      background: COLORS.warningLight,
                       borderRadius: 8,
                       marginBottom: 12,
                       fontSize: '13px',
-                      color: '#ef6c00'
+                      color: COLORS.warningDark
                     }}>
                       <strong>Step 2 of 2:</strong> These transactions need manual review. Please select the correct category for each.
                     </div>
@@ -2648,7 +2648,7 @@ const ProcessingFlowPanel = ({ categoryMapping, onComplete, onCancel, onRemoveId
                     alignItems: 'center',
                     gap: 12,
                     padding: 16,
-                    background: '#e8f5e9',
+                    background: COLORS.successLighter,
                     borderRadius: 8,
                     marginBottom: 16
                   }}>
@@ -2666,10 +2666,10 @@ const ProcessingFlowPanel = ({ categoryMapping, onComplete, onCancel, onRemoveId
                       ✓
                     </div>
                     <div>
-                      <div style={{ fontWeight: 500, color: '#2e7d32' }}>
+                      <div style={{ fontWeight: 500, color: COLORS.successText }}>
                         Category sorting complete
                       </div>
-                      <div style={{ fontSize: '13px', color: '#666' }}>
+                      <div style={{ fontSize: '13px', color: COLORS.textMuted }}>
                         All transactions have been assigned to categories
                       </div>
                     </div>
@@ -2686,7 +2686,7 @@ const ProcessingFlowPanel = ({ categoryMapping, onComplete, onCancel, onRemoveId
                   padding: '10px 24px',
                   borderRadius: 8,
                   border: 'none',
-                  background: (aiProcessing || catConflictTx.length > 0) ? '#ccc' : incomeColor,
+                  background: (aiProcessing || catConflictTx.length > 0) ? COLORS.borderLight : incomeColor,
                   color: 'white',
                   cursor: (aiProcessing || catConflictTx.length > 0) ? 'not-allowed' : 'pointer',
                   fontSize: '14px',
@@ -2717,10 +2717,10 @@ const ProcessingFlowPanel = ({ categoryMapping, onComplete, onCancel, onRemoveId
             }}>
               ✓
             </div>
-            <div style={{ fontSize: '18px', fontWeight: 600, color: '#333', marginBottom: 8 }}>
+            <div style={{ fontSize: '18px', fontWeight: 600, color: COLORS.textPrimary, marginBottom: 8 }}>
               Processing Complete
             </div>
-            <div style={{ fontSize: '14px', color: '#666', marginBottom: 24 }}>
+            <div style={{ fontSize: '14px', color: COLORS.textMuted, marginBottom: 24 }}>
               {processingTransactions.length} transactions categorized
             </div>
             <button
@@ -2753,7 +2753,7 @@ const ProcessingFlowPanel = ({ categoryMapping, onComplete, onCancel, onRemoveId
     : {
         position: 'fixed',
         top: 0, left: 0, right: 0, bottom: 0,
-        background: 'rgba(0, 0, 0, 0.5)',
+        background: COLORS.overlayDark,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -2788,7 +2788,7 @@ const ProcessingFlowPanel = ({ categoryMapping, onComplete, onCancel, onRemoveId
         {/* Header */}
         <div style={{
           padding: '16px 20px',
-          borderBottom: '1px solid #e0e0e0',
+          borderBottom: `1px solid ${COLORS.borderLight}`,
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center'
@@ -2814,21 +2814,21 @@ const ProcessingFlowPanel = ({ categoryMapping, onComplete, onCancel, onRemoveId
                   gap: 4,
                   padding: '6px 10px',
                   borderRadius: 6,
-                  border: '1px solid #e0e0e0',
-                  background: aiProcessing ? '#f5f5f5' : 'white',
+                  border: `1px solid ${COLORS.borderLight}`,
+                  background: aiProcessing ? COLORS.bgHover : 'white',
                   cursor: aiProcessing ? 'not-allowed' : 'pointer',
                   fontSize: '13px',
-                  color: aiProcessing ? '#999' : '#666'
+                  color: aiProcessing ? COLORS.textSecondary : COLORS.textMuted
                 }}
                 title="Go back"
               >
                 ← Back
               </button>
             )}
-            <div style={{ fontWeight: 600, fontSize: '16px', color: '#333' }}>
+            <div style={{ fontWeight: 600, fontSize: '16px', color: COLORS.textPrimary }}>
               Transaction Processing
               {waveInfo && (
-                <span style={{ fontSize: '13px', color: '#666', fontWeight: 400, marginLeft: 8 }}>
+                <span style={{ fontSize: '13px', color: COLORS.textMuted, fontWeight: 400, marginLeft: 8 }}>
                   — Wave {waveInfo.current} of {waveInfo.total}
                 </span>
               )}
@@ -2842,10 +2842,10 @@ const ProcessingFlowPanel = ({ categoryMapping, onComplete, onCancel, onRemoveId
                 height: 32,
                 borderRadius: '50%',
                 border: 'none',
-                background: '#f5f5f5',
+                background: COLORS.bgHover,
                 cursor: 'pointer',
                 fontSize: '18px',
-                color: '#666',
+                color: COLORS.textMuted,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'

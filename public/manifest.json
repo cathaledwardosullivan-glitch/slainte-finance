@@ -1,7 +1,8 @@
 {
-  "name": "Sláinte Finance",
+  "id": "/companion",
+  "name": "Sláinte Finance Companion",
   "short_name": "Sláinte",
-  "description": "AI-powered financial management for Irish GP practices",
+  "description": "Companion app for Sláinte Finance — view dashboards, reports, and chat with Finn",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -28,13 +29,6 @@
       "short_name": "Dashboard",
       "description": "View financial dashboard",
       "url": "/",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
-    },
-    {
-      "name": "GMS Health Check",
-      "short_name": "Health Check",
-      "description": "Run GMS Health Check",
-      "url": "/?view=gms",
       "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     },
     {

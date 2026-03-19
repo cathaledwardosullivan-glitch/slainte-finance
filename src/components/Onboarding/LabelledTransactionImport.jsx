@@ -283,7 +283,7 @@ export default function LabelledTransactionImport({ onComplete, onSwitchToRaw, o
         backgroundColor: COLORS.white,
         borderRadius: '0.75rem',
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-        border: `1px solid ${COLORS.lightGray}`,
+        border: `1px solid ${COLORS.borderLight}`,
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column'
@@ -330,7 +330,7 @@ export default function LabelledTransactionImport({ onComplete, onSwitchToRaw, o
                 width: '32px',
                 height: '32px',
                 borderRadius: '50%',
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -339,7 +339,7 @@ export default function LabelledTransactionImport({ onComplete, onSwitchToRaw, o
                 <MessageCircle style={{ width: '16px', height: '16px', color: COLORS.slainteBlue }} />
               </div>
               <div style={{
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 padding: '0.875rem 1rem',
                 borderRadius: '12px',
                 maxWidth: '85%'
@@ -347,7 +347,7 @@ export default function LabelledTransactionImport({ onComplete, onSwitchToRaw, o
                 <div style={{
                   fontSize: '1.125rem',
                   fontWeight: 600,
-                  color: COLORS.darkGray
+                  color: COLORS.textPrimary
                 }}>
                   {greeting}
                 </div>
@@ -360,14 +360,14 @@ export default function LabelledTransactionImport({ onComplete, onSwitchToRaw, o
             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
               <div style={{ width: '32px', flexShrink: 0 }} />
               <div style={{
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 padding: '0.875rem 1rem',
                 borderRadius: '12px',
                 maxWidth: '85%'
               }}>
                 <div style={{
                   fontSize: '0.9375rem',
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   lineHeight: 1.5
                 }}>
                   {message}
@@ -389,7 +389,7 @@ export default function LabelledTransactionImport({ onComplete, onSwitchToRaw, o
               }}>
                 <div style={{
                   fontSize: '0.875rem',
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   lineHeight: 1.5
                 }}>
                   {tip}
@@ -413,7 +413,7 @@ export default function LabelledTransactionImport({ onComplete, onSwitchToRaw, o
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem',
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   fontSize: '0.9375rem'
                 }}>
                   <CheckCircle style={{ width: '18px', height: '18px', color: COLORS.incomeColor }} />
@@ -438,7 +438,7 @@ export default function LabelledTransactionImport({ onComplete, onSwitchToRaw, o
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem',
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   fontSize: '0.9375rem'
                 }}>
                   <Tag style={{ width: '18px', height: '18px', color: COLORS.incomeColor }} />
@@ -452,10 +452,10 @@ export default function LabelledTransactionImport({ onComplete, onSwitchToRaw, o
         {/* Option to switch to raw import */}
         <div style={{
           padding: '1rem',
-          borderTop: `1px solid ${COLORS.lightGray}`,
-          backgroundColor: COLORS.backgroundGray
+          borderTop: `1px solid ${COLORS.borderLight}`,
+          backgroundColor: COLORS.bgPage
         }}>
-          <p style={{ fontSize: '0.8125rem', color: COLORS.mediumGray, textAlign: 'center', marginBottom: '0.5rem' }}>
+          <p style={{ fontSize: '0.8125rem', color: COLORS.textSecondary, textAlign: 'center', marginBottom: '0.5rem' }}>
             Don't have pre-labelled data?
           </p>
           <button
@@ -515,14 +515,14 @@ export default function LabelledTransactionImport({ onComplete, onSwitchToRaw, o
                 <h3 style={{
                   fontSize: '1.5rem',
                   fontWeight: 700,
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   marginBottom: '0.5rem'
                 }}>
                   Upload Labelled Transactions
                 </h3>
                 <p style={{
                   fontSize: '1rem',
-                  color: COLORS.mediumGray,
+                  color: COLORS.textSecondary,
                   lineHeight: 1.6
                 }}>
                   Upload a CSV that includes your existing category labels.
@@ -537,12 +537,12 @@ export default function LabelledTransactionImport({ onComplete, onSwitchToRaw, o
               onDragOver={handleDrag}
               onDrop={handleDrop}
               style={{
-                border: `2px dashed ${dragActive ? COLORS.slainteBlue : parseError ? COLORS.expenseColor : COLORS.lightGray}`,
+                border: `2px dashed ${dragActive ? COLORS.slainteBlue : parseError ? COLORS.expenseColor : COLORS.borderLight}`,
                 borderRadius: '12px',
                 padding: '2rem 1.5rem',
                 textAlign: 'center',
                 marginBottom: '1rem',
-                backgroundColor: dragActive ? `${COLORS.slainteBlue}05` : COLORS.backgroundGray,
+                backgroundColor: dragActive ? `${COLORS.slainteBlue}05` : COLORS.bgPage,
                 cursor: 'pointer',
                 transition: 'all 0.3s ease'
               }}
@@ -556,18 +556,18 @@ export default function LabelledTransactionImport({ onComplete, onSwitchToRaw, o
                 style={{ display: 'none' }}
               />
 
-              <Upload style={{ width: '40px', height: '40px', color: COLORS.mediumGray, margin: '0 auto 0.75rem' }} />
+              <Upload style={{ width: '40px', height: '40px', color: COLORS.textSecondary, margin: '0 auto 0.75rem' }} />
               <h3 style={{
                 fontSize: '1rem',
                 fontWeight: 600,
-                color: COLORS.darkGray,
+                color: COLORS.textPrimary,
                 marginBottom: '0.375rem'
               }}>
                 Drop your CSV file here
               </h3>
               <p style={{
                 fontSize: '0.875rem',
-                color: COLORS.mediumGray
+                color: COLORS.textSecondary
               }}>
                 or click to browse
               </p>
@@ -592,7 +592,7 @@ export default function LabelledTransactionImport({ onComplete, onSwitchToRaw, o
             <div style={{
               textAlign: 'center',
               paddingTop: '1.5rem',
-              borderTop: `1px solid ${COLORS.lightGray}`,
+              borderTop: `1px solid ${COLORS.borderLight}`,
               marginTop: '1rem'
             }}>
               <button
@@ -606,8 +606,8 @@ export default function LabelledTransactionImport({ onComplete, onSwitchToRaw, o
                   fontSize: '0.875rem',
                   fontWeight: 500,
                   cursor: 'pointer',
-                  border: `1px solid ${COLORS.lightGray}`,
-                  color: COLORS.mediumGray,
+                  border: `1px solid ${COLORS.borderLight}`,
+                  color: COLORS.textSecondary,
                   backgroundColor: 'transparent'
                 }}
               >
@@ -643,12 +643,12 @@ export default function LabelledTransactionImport({ onComplete, onSwitchToRaw, o
                 <h3 style={{
                   fontSize: '1.25rem',
                   fontWeight: 700,
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   marginBottom: '0.25rem'
                 }}>
                   Map Your Columns
                 </h3>
-                <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>
+                <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>
                   {file.name} • {columns.length} columns detected
                 </p>
               </div>
@@ -658,7 +658,7 @@ export default function LabelledTransactionImport({ onComplete, onSwitchToRaw, o
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
               {/* Date */}
               <div>
-                <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: COLORS.darkGray, marginBottom: '0.25rem' }}>
+                <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: COLORS.textPrimary, marginBottom: '0.25rem' }}>
                   Date Column *
                 </label>
                 <select
@@ -668,7 +668,7 @@ export default function LabelledTransactionImport({ onComplete, onSwitchToRaw, o
                     width: '100%',
                     padding: '0.625rem',
                     fontSize: '0.875rem',
-                    border: `1px solid ${columnMapping.date ? COLORS.incomeColor : COLORS.lightGray}`,
+                    border: `1px solid ${columnMapping.date ? COLORS.incomeColor : COLORS.borderLight}`,
                     borderRadius: '6px',
                     backgroundColor: COLORS.white
                   }}
@@ -679,7 +679,7 @@ export default function LabelledTransactionImport({ onComplete, onSwitchToRaw, o
                   ))}
                 </select>
                 {columnMapping.date && (
-                  <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginTop: '0.25rem' }}>
+                  <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginTop: '0.25rem' }}>
                     Sample: {getSampleValues(columnMapping.date).join(', ')}
                   </p>
                 )}
@@ -687,7 +687,7 @@ export default function LabelledTransactionImport({ onComplete, onSwitchToRaw, o
 
               {/* Description */}
               <div>
-                <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: COLORS.darkGray, marginBottom: '0.25rem' }}>
+                <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: COLORS.textPrimary, marginBottom: '0.25rem' }}>
                   Description Column *
                 </label>
                 <select
@@ -697,7 +697,7 @@ export default function LabelledTransactionImport({ onComplete, onSwitchToRaw, o
                     width: '100%',
                     padding: '0.625rem',
                     fontSize: '0.875rem',
-                    border: `1px solid ${columnMapping.description ? COLORS.incomeColor : COLORS.lightGray}`,
+                    border: `1px solid ${columnMapping.description ? COLORS.incomeColor : COLORS.borderLight}`,
                     borderRadius: '6px',
                     backgroundColor: COLORS.white
                   }}
@@ -708,7 +708,7 @@ export default function LabelledTransactionImport({ onComplete, onSwitchToRaw, o
                   ))}
                 </select>
                 {columnMapping.description && (
-                  <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginTop: '0.25rem' }}>
+                  <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginTop: '0.25rem' }}>
                     Sample: {getSampleValues(columnMapping.description).slice(0, 2).join('; ')}
                   </p>
                 )}
@@ -717,7 +717,7 @@ export default function LabelledTransactionImport({ onComplete, onSwitchToRaw, o
               {/* Amount / Debit+Credit */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: COLORS.darkGray, marginBottom: '0.25rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: COLORS.textPrimary, marginBottom: '0.25rem' }}>
                     Amount
                   </label>
                   <select
@@ -727,7 +727,7 @@ export default function LabelledTransactionImport({ onComplete, onSwitchToRaw, o
                       width: '100%',
                       padding: '0.625rem',
                       fontSize: '0.875rem',
-                      border: `1px solid ${columnMapping.amount ? COLORS.incomeColor : COLORS.lightGray}`,
+                      border: `1px solid ${columnMapping.amount ? COLORS.incomeColor : COLORS.borderLight}`,
                       borderRadius: '6px',
                       backgroundColor: COLORS.white
                     }}
@@ -739,7 +739,7 @@ export default function LabelledTransactionImport({ onComplete, onSwitchToRaw, o
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: COLORS.darkGray, marginBottom: '0.25rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: COLORS.textPrimary, marginBottom: '0.25rem' }}>
                     OR Debit
                   </label>
                   <select
@@ -749,7 +749,7 @@ export default function LabelledTransactionImport({ onComplete, onSwitchToRaw, o
                       width: '100%',
                       padding: '0.625rem',
                       fontSize: '0.875rem',
-                      border: `1px solid ${columnMapping.debit ? COLORS.incomeColor : COLORS.lightGray}`,
+                      border: `1px solid ${columnMapping.debit ? COLORS.incomeColor : COLORS.borderLight}`,
                       borderRadius: '6px',
                       backgroundColor: COLORS.white
                     }}
@@ -761,7 +761,7 @@ export default function LabelledTransactionImport({ onComplete, onSwitchToRaw, o
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: COLORS.darkGray, marginBottom: '0.25rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: COLORS.textPrimary, marginBottom: '0.25rem' }}>
                     Credit
                   </label>
                   <select
@@ -771,7 +771,7 @@ export default function LabelledTransactionImport({ onComplete, onSwitchToRaw, o
                       width: '100%',
                       padding: '0.625rem',
                       fontSize: '0.875rem',
-                      border: `1px solid ${columnMapping.credit ? COLORS.incomeColor : COLORS.lightGray}`,
+                      border: `1px solid ${columnMapping.credit ? COLORS.incomeColor : COLORS.borderLight}`,
                       borderRadius: '6px',
                       backgroundColor: COLORS.white
                     }}
@@ -791,7 +791,7 @@ export default function LabelledTransactionImport({ onComplete, onSwitchToRaw, o
                 borderRadius: '10px',
                 padding: '1rem'
               }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', fontWeight: 700, color: COLORS.darkGray, marginBottom: '0.5rem' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', fontWeight: 700, color: COLORS.textPrimary, marginBottom: '0.5rem' }}>
                   <Tag style={{ width: '16px', height: '16px', color: COLORS.highlightYellow }} />
                   Your Category Labels Column *
                 </label>
@@ -815,10 +815,10 @@ export default function LabelledTransactionImport({ onComplete, onSwitchToRaw, o
                 </select>
                 {columnMapping.category && (
                   <div style={{ marginTop: '0.5rem' }}>
-                    <p style={{ fontSize: '0.8125rem', color: COLORS.darkGray }}>
+                    <p style={{ fontSize: '0.8125rem', color: COLORS.textPrimary }}>
                       Found <strong>{getUniqueCategoryCount()}</strong> unique categories
                     </p>
-                    <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginTop: '0.25rem' }}>
+                    <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginTop: '0.25rem' }}>
                       Samples: {getSampleValues(columnMapping.category).join(', ')}
                     </p>
                   </div>
@@ -837,7 +837,7 @@ export default function LabelledTransactionImport({ onComplete, onSwitchToRaw, o
                 fontSize: '1rem',
                 fontWeight: 600,
                 color: COLORS.white,
-                backgroundColor: isValidMapping() ? COLORS.incomeColor : COLORS.mediumGray,
+                backgroundColor: isValidMapping() ? COLORS.incomeColor : COLORS.textSecondary,
                 border: 'none',
                 borderRadius: '8px',
                 cursor: isValidMapping() ? 'pointer' : 'not-allowed',
@@ -878,12 +878,12 @@ export default function LabelledTransactionImport({ onComplete, onSwitchToRaw, o
                 <h3 style={{
                   fontSize: '1.25rem',
                   fontWeight: 700,
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   marginBottom: '0.25rem'
                 }}>
                   Preview Your Data
                 </h3>
-                <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>
+                <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>
                   Here's how your data will be imported
                 </p>
               </div>
@@ -893,16 +893,16 @@ export default function LabelledTransactionImport({ onComplete, onSwitchToRaw, o
             <div style={{
               overflowX: 'auto',
               marginBottom: '1.25rem',
-              border: `1px solid ${COLORS.lightGray}`,
+              border: `1px solid ${COLORS.borderLight}`,
               borderRadius: '8px'
             }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8125rem' }}>
                 <thead>
-                  <tr style={{ backgroundColor: COLORS.backgroundGray }}>
-                    <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: COLORS.darkGray, borderBottom: `1px solid ${COLORS.lightGray}` }}>Date</th>
-                    <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: COLORS.darkGray, borderBottom: `1px solid ${COLORS.lightGray}` }}>Description</th>
-                    <th style={{ padding: '0.75rem', textAlign: 'right', fontWeight: 600, color: COLORS.darkGray, borderBottom: `1px solid ${COLORS.lightGray}` }}>Amount</th>
-                    <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: COLORS.highlightYellow, borderBottom: `1px solid ${COLORS.lightGray}` }}>
+                  <tr style={{ backgroundColor: COLORS.bgPage }}>
+                    <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: COLORS.textPrimary, borderBottom: `1px solid ${COLORS.borderLight}` }}>Date</th>
+                    <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: COLORS.textPrimary, borderBottom: `1px solid ${COLORS.borderLight}` }}>Description</th>
+                    <th style={{ padding: '0.75rem', textAlign: 'right', fontWeight: 600, color: COLORS.textPrimary, borderBottom: `1px solid ${COLORS.borderLight}` }}>Amount</th>
+                    <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: COLORS.highlightYellow, borderBottom: `1px solid ${COLORS.borderLight}` }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                         <Tag style={{ width: '14px', height: '14px' }} />
                         Category
@@ -922,11 +922,11 @@ export default function LabelledTransactionImport({ onComplete, onSwitchToRaw, o
                     }
 
                     return (
-                      <tr key={idx} style={{ borderBottom: idx < 4 ? `1px solid ${COLORS.lightGray}` : 'none' }}>
-                        <td style={{ padding: '0.625rem 0.75rem', color: COLORS.darkGray }}>
+                      <tr key={idx} style={{ borderBottom: idx < 4 ? `1px solid ${COLORS.borderLight}` : 'none' }}>
+                        <td style={{ padding: '0.625rem 0.75rem', color: COLORS.textPrimary }}>
                           {row[columnMapping.date]}
                         </td>
-                        <td style={{ padding: '0.625rem 0.75rem', color: COLORS.darkGray, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <td style={{ padding: '0.625rem 0.75rem', color: COLORS.textPrimary, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {row[columnMapping.description]}
                         </td>
                         <td style={{ padding: '0.625rem 0.75rem', textAlign: 'right', color: amount >= 0 ? COLORS.incomeColor : COLORS.expenseColor, fontWeight: 500 }}>
@@ -940,7 +940,7 @@ export default function LabelledTransactionImport({ onComplete, onSwitchToRaw, o
                             borderRadius: '4px',
                             fontSize: '0.75rem',
                             fontWeight: 500,
-                            color: COLORS.darkGray
+                            color: COLORS.textPrimary
                           }}>
                             {row[columnMapping.category] || '-'}
                           </span>
@@ -954,15 +954,15 @@ export default function LabelledTransactionImport({ onComplete, onSwitchToRaw, o
 
             {/* Summary */}
             <div style={{
-              backgroundColor: COLORS.backgroundGray,
+              backgroundColor: COLORS.bgPage,
               borderRadius: '8px',
               padding: '1rem',
               marginBottom: '1.25rem'
             }}>
-              <p style={{ fontSize: '0.875rem', color: COLORS.darkGray }}>
+              <p style={{ fontSize: '0.875rem', color: COLORS.textPrimary }}>
                 Ready to import <strong>{parsedData.length}</strong> transactions with <strong>{getUniqueCategoryCount()}</strong> unique category labels.
               </p>
-              <p style={{ fontSize: '0.8125rem', color: COLORS.mediumGray, marginTop: '0.25rem' }}>
+              <p style={{ fontSize: '0.8125rem', color: COLORS.textSecondary, marginTop: '0.25rem' }}>
                 Next: I'll map your categories to Sláinte's system.
               </p>
             </div>
@@ -976,9 +976,9 @@ export default function LabelledTransactionImport({ onComplete, onSwitchToRaw, o
                   padding: '0.875rem',
                   fontSize: '0.9375rem',
                   fontWeight: 500,
-                  color: COLORS.mediumGray,
+                  color: COLORS.textSecondary,
                   backgroundColor: COLORS.white,
-                  border: `2px solid ${COLORS.lightGray}`,
+                  border: `2px solid ${COLORS.borderLight}`,
                   borderRadius: '8px',
                   cursor: 'pointer'
                 }}

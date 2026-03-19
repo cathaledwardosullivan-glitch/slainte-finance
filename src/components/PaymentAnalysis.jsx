@@ -2,6 +2,7 @@
 import { useAppContext } from '../context/AppContext';
 import { Upload, FileText, Download, AlertCircle, CheckCircle, Trash2, ChevronDown, ChevronUp, DollarSign, Users, Briefcase, TrendingUp, X } from 'lucide-react';
 import { parsePCRSPaymentPDF, validateExtractedData } from '../utils/pdfParser';
+import { syncPanelNumbersFromPaymentData } from '../storage/practiceProfileStorage';
 import { PCRS_PAYMENT_CATEGORIES, MONTHS } from '../data/paymentCategories';
 import { getUniquePanelCount, analyzeGMSIncome } from '../utils/healthCheckCalculations';
 import { usePracticeProfile } from '../hooks/usePracticeProfile';
@@ -17,10 +18,11 @@ import {
     ResponsiveContainer
 } from 'recharts';
 
-const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSelectedYear: propSetSelectedYear, useRollingYear = false }) => {
+const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSelectedYear: propSetSelectedYear }) => {
     const {
         paymentAnalysisData,
-        setPaymentAnalysisData
+        setPaymentAnalysisData,
+        useRollingYear
     } = useAppContext();
     const [uploadedFiles, setUploadedFiles] = useState([]);
     // Use prop if provided, otherwise use local state (for standalone usage)
@@ -52,6 +54,7 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
         if (files.length === 0) return;
 
         setProcessing(true);
+        const allExtractedData = [];
 
         for (const file of files) {
             if (file.type === 'application/pdf') {
@@ -107,6 +110,8 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
                         }
                     });
 
+                    allExtractedData.push(extractedData);
+
                     // Update file status to completed
                     setUploadedFiles(prev =>
                         prev.map(f =>
@@ -138,6 +143,11 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
                 };
                 setUploadedFiles(prev => [...prev, fileEntry]);
             }
+        }
+
+        // Sync panel numbers from extracted PCRS data to practice profile
+        if (allExtractedData.length > 0) {
+            syncPanelNumbersFromPaymentData(allExtractedData);
         }
 
         setProcessing(false);
@@ -387,7 +397,7 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
                                 }
                             }}
                             className="p-4 rounded-lg cursor-pointer transition-all shadow-md hover:shadow-lg"
-                            style={{ backgroundColor: gmsMetrics.hasRecentGMSData ? COLORS.slainteBlue : '#F59E0B' }}
+                            style={{ backgroundColor: gmsMetrics.hasRecentGMSData ? COLORS.slainteBlue : COLORS.warning }}
                         >
                             <div className="flex items-center justify-between">
                                 <div>
@@ -414,7 +424,7 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
                         <div
                             onClick={() => hasHealthCheckData ? setShowGMSKPIModal('leave') : window.dispatchEvent(new CustomEvent('tour:switchToHealthCheck'))}
                             className="p-4 rounded-lg cursor-pointer transition-all shadow-md hover:shadow-lg"
-                            style={{ backgroundColor: '#8B5CF6' }}
+                            style={{ backgroundColor: COLORS.chartViolet }}
                         >
                             <div className="flex items-center justify-between">
                                 <div>
@@ -499,6 +509,16 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
                     }
                 }
 
+                // Fallback: compute weighted panel from raw paymentAnalysisData if health check hasn't been run
+                if (gmsMetrics.weightedPanel === 0 && paymentAnalysisData.length > 0) {
+                    const { monthData: wpMonthData } = getLatestMonthData();
+                    const wpSource = wpMonthData.length > 0 ? wpMonthData : paymentAnalysisData;
+                    const wpOver70 = wpSource.reduce((sum, d) => sum + (d.demographics?.total70PlusAllCategories || d.demographics?.total70Plus || 0), 0);
+                    if (gmsMetrics.panelSize > 0 && wpOver70 > 0) {
+                        gmsMetrics.weightedPanel = gmsMetrics.panelSize + wpOver70; // over 70s counted double
+                    }
+                }
+
                 // Fallback: compute demographics from raw paymentAnalysisData if health check hasn't been run
                 if (!gmsMetrics.demographics && paymentAnalysisData.length > 0) {
                     const { monthData } = getLatestMonthData();
@@ -515,7 +535,7 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
                     unclaimed: { title: 'Unclaimed GMS Income Breakdown', color: COLORS.incomeColor, icon: DollarSign },
                     panel: { title: 'Panel Size Details', color: COLORS.expenseColor, icon: Users },
                     upload: { title: 'GMS Panel Data Status', color: COLORS.slainteBlue, icon: Upload },
-                    leave: { title: 'Leave Entitlement Breakdown', color: '#8B5CF6', icon: Briefcase }
+                    leave: { title: 'Leave Entitlement Breakdown', color: COLORS.chartViolet, icon: Briefcase }
                 };
 
                 const config = modalConfig[showGMSKPIModal];
@@ -524,13 +544,13 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
                 return (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                         <div className="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col">
-                            <div className="p-4 border-b flex items-center justify-between" style={{ borderColor: COLORS.lightGray }}>
+                            <div className="p-4 border-b flex items-center justify-between" style={{ borderColor: COLORS.borderLight }}>
                                 <h3 className="text-lg font-semibold flex items-center" style={{ color: config.color }}>
                                     <Icon className="h-5 w-5 mr-2" />
                                     {config.title}
                                 </h3>
                                 <button onClick={() => setShowGMSKPIModal(null)} className="p-1 hover:bg-gray-100 rounded">
-                                    <X className="h-5 w-5" style={{ color: COLORS.mediumGray }} />
+                                    <X className="h-5 w-5" style={{ color: COLORS.textSecondary }} />
                                 </button>
                             </div>
                             <div className="flex-1 overflow-y-auto p-4">
@@ -543,14 +563,14 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
                                         {gmsMetrics.unclaimedBreakdown.length > 0 ? (
                                             <div className="space-y-2">
                                                 {gmsMetrics.unclaimedBreakdown.map((item, idx) => (
-                                                    <div key={idx} className="flex items-center justify-between p-3 rounded-lg border" style={{ borderColor: COLORS.lightGray }}>
-                                                        <span style={{ color: COLORS.darkGray }}>{item.label}</span>
+                                                    <div key={idx} className="flex items-center justify-between p-3 rounded-lg border" style={{ borderColor: COLORS.borderLight }}>
+                                                        <span style={{ color: COLORS.textPrimary }}>{item.label}</span>
                                                         <span className="font-bold" style={{ color: COLORS.incomeColor }}>{`€${Math.round(item.value).toLocaleString()}`}</span>
                                                     </div>
                                                 ))}
                                             </div>
                                         ) : (
-                                            <p className="text-center py-4" style={{ color: COLORS.mediumGray }}>No unclaimed income identified</p>
+                                            <p className="text-center py-4" style={{ color: COLORS.textSecondary }}>No unclaimed income identified</p>
                                         )}
                                     </div>
                                 )}
@@ -561,18 +581,19 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
                                             <div className="text-sm" style={{ color: COLORS.expenseColor }}>Total Panel Size</div>
                                         </div>
                                         {gmsMetrics.weightedPanel > 0 && (
-                                            <div className="p-3 rounded-lg border" style={{ borderColor: COLORS.lightGray }}>
-                                                <div className="flex justify-between"><span style={{ color: COLORS.darkGray }}>Weighted Panel</span><span className="font-bold" style={{ color: COLORS.slainteBlue }}>{gmsMetrics.weightedPanel.toLocaleString()}</span></div>
-                                                <p className="text-xs mt-1" style={{ color: COLORS.mediumGray }}>Over 70s counted double</p>
+                                            <div className="p-4 rounded-lg" style={{ backgroundColor: `${COLORS.slainteBlue}15` }}>
+                                                <div className="text-2xl font-bold" style={{ color: COLORS.slainteBlue }}>{gmsMetrics.weightedPanel.toLocaleString()}</div>
+                                                <div className="text-sm" style={{ color: COLORS.slainteBlue }}>Weighted Panel Size</div>
+                                                <p className="text-xs mt-1" style={{ color: COLORS.textSecondary }}>Over 70s counted double</p>
                                             </div>
                                         )}
                                         {gmsMetrics.demographics && (
                                             <div className="space-y-2">
-                                                <h4 className="font-medium" style={{ color: COLORS.darkGray }}>Demographics</h4>
+                                                <h4 className="font-medium" style={{ color: COLORS.textPrimary }}>Demographics</h4>
                                                 <div className="grid grid-cols-3 gap-2">
-                                                    <div className="p-2 rounded text-center" style={{ backgroundColor: COLORS.backgroundGray }}><div className="text-lg font-bold" style={{ color: COLORS.darkGray }}>{gmsMetrics.demographics.under6}</div><div className="text-xs" style={{ color: COLORS.mediumGray }}>Under 6</div></div>
-                                                    <div className="p-2 rounded text-center" style={{ backgroundColor: COLORS.backgroundGray }}><div className="text-lg font-bold" style={{ color: COLORS.darkGray }}>{gmsMetrics.demographics.over70}</div><div className="text-xs" style={{ color: COLORS.mediumGray }}>Over 70</div></div>
-                                                    <div className="p-2 rounded text-center" style={{ backgroundColor: COLORS.backgroundGray }}><div className="text-lg font-bold" style={{ color: COLORS.darkGray }}>{gmsMetrics.demographics.nursingHome}</div><div className="text-xs" style={{ color: COLORS.mediumGray }}>Nursing Home</div></div>
+                                                    <div className="p-2 rounded text-center" style={{ backgroundColor: COLORS.bgPage }}><div className="text-lg font-bold" style={{ color: COLORS.textPrimary }}>{gmsMetrics.demographics.under6}</div><div className="text-xs" style={{ color: COLORS.textSecondary }}>Under 6</div></div>
+                                                    <div className="p-2 rounded text-center" style={{ backgroundColor: COLORS.bgPage }}><div className="text-lg font-bold" style={{ color: COLORS.textPrimary }}>{gmsMetrics.demographics.over70}</div><div className="text-xs" style={{ color: COLORS.textSecondary }}>Over 70</div></div>
+                                                    <div className="p-2 rounded text-center" style={{ backgroundColor: COLORS.bgPage }}><div className="text-lg font-bold" style={{ color: COLORS.textPrimary }}>{gmsMetrics.demographics.nursingHome}</div><div className="text-xs" style={{ color: COLORS.textSecondary }}>Nursing Home</div></div>
                                                 </div>
                                             </div>
                                         )}
@@ -584,26 +605,26 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
                                             <div className="text-xl font-bold" style={{ color: COLORS.slainteBlue }}>{paymentAnalysisData.length} PDFs uploaded</div>
                                             <div className="text-sm" style={{ color: COLORS.slainteBlue }}>PCRS Payment Statements</div>
                                         </div>
-                                        <p className="text-sm" style={{ color: COLORS.mediumGray }}>Upload your monthly PCRS payment PDFs to keep your panel data current and accurate.</p>
+                                        <p className="text-sm" style={{ color: COLORS.textSecondary }}>Upload your monthly PCRS payment PDFs to keep your panel data current and accurate.</p>
                                     </div>
                                 )}
                                 {showGMSKPIModal === 'leave' && (
                                     <div className="space-y-4">
-                                        <div className="p-4 rounded-lg" style={{ backgroundColor: '#8B5CF615' }}>
-                                            <div className="text-2xl font-bold" style={{ color: '#8B5CF6' }}>{`€${Math.round(gmsMetrics.leaveUnclaimed).toLocaleString()}`}</div>
-                                            <div className="text-sm" style={{ color: '#8B5CF6' }}>Total Unclaimed Leave Value</div>
+                                        <div className="p-4 rounded-lg" style={{ backgroundColor: `${COLORS.chartViolet}15` }}>
+                                            <div className="text-2xl font-bold" style={{ color: COLORS.chartViolet }}>{`€${Math.round(gmsMetrics.leaveUnclaimed).toLocaleString()}`}</div>
+                                            <div className="text-sm" style={{ color: COLORS.chartViolet }}>Total Unclaimed Leave Value</div>
                                         </div>
                                         {gmsMetrics.leaveBreakdown.length > 0 && (
                                             <div className="space-y-3">
                                                 {gmsMetrics.leaveBreakdown.map((leave, idx) => (
-                                                    <div key={idx} className="p-3 rounded-lg border" style={{ borderColor: COLORS.lightGray }}>
-                                                        <div className="font-medium mb-2" style={{ color: COLORS.darkGray }}>{leave.label}</div>
+                                                    <div key={idx} className="p-3 rounded-lg border" style={{ borderColor: COLORS.borderLight }}>
+                                                        <div className="font-medium mb-2" style={{ color: COLORS.textPrimary }}>{leave.label}</div>
                                                         <div className="grid grid-cols-3 gap-2 text-sm">
-                                                            <div><span style={{ color: COLORS.mediumGray }}>Entitled:</span> <span className="font-medium">{`€${Math.round(leave.entitled).toLocaleString()}`}</span></div>
-                                                            <div><span style={{ color: COLORS.mediumGray }}>Claimed:</span> <span className="font-medium">{`€${Math.round(leave.claimed).toLocaleString()}`}</span></div>
-                                                            <div><span style={{ color: COLORS.mediumGray }}>Unclaimed:</span> <span className="font-bold" style={{ color: '#8B5CF6' }}>{`€${Math.round(leave.unclaimed).toLocaleString()}`}</span></div>
+                                                            <div><span style={{ color: COLORS.textSecondary }}>Entitled:</span> <span className="font-medium">{`€${Math.round(leave.entitled).toLocaleString()}`}</span></div>
+                                                            <div><span style={{ color: COLORS.textSecondary }}>Claimed:</span> <span className="font-medium">{`€${Math.round(leave.claimed).toLocaleString()}`}</span></div>
+                                                            <div><span style={{ color: COLORS.textSecondary }}>Unclaimed:</span> <span className="font-bold" style={{ color: COLORS.chartViolet }}>{`€${Math.round(leave.unclaimed).toLocaleString()}`}</span></div>
                                                         </div>
-                                                        <div className="text-xs mt-2" style={{ color: COLORS.mediumGray }}>{leave.daysClaimed} of {leave.daysEntitled} days claimed</div>
+                                                        <div className="text-xs mt-2" style={{ color: COLORS.textSecondary }}>{leave.daysClaimed} of {leave.daysEntitled} days claimed</div>
                                                     </div>
                                                 ))}
                                             </div>
@@ -611,7 +632,7 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
                                     </div>
                                 )}
                             </div>
-                            <div className="p-4 border-t" style={{ borderColor: COLORS.lightGray }}>
+                            <div className="p-4 border-t" style={{ borderColor: COLORS.borderLight }}>
                                 <button onClick={() => setShowGMSKPIModal(null)} className="w-full py-2 rounded-lg text-white font-medium" style={{ backgroundColor: config.color }}>Close</button>
                             </div>
                         </div>
@@ -629,43 +650,43 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
                     capitation: {
                         label: 'Capitation',
                         color: COLORS.slainteBlue,
-                        lightColor: '#93C5FD',
+                        lightColor: COLORS.infoLighter,
                         categories: ['Capitation Payment/Supplementary Allowance']
                     },
                     stc: {
                         label: 'STC (incl CDM)',
-                        color: '#059669',
-                        lightColor: '#6EE7B7',
+                        color: COLORS.successDark,
+                        lightColor: COLORS.successLighter,
                         categories: ['Special Type/OOH/SS/H1N1', 'Enhanced Capitation for Asthma', 'Enhanced Capitation for Diabetes', 'Asthma registration fee', 'Diabetes registration fee']
                     },
                     practiceSupport: {
                         label: 'Practice Subsidy',
-                        color: '#8B5CF6',
-                        lightColor: '#C4B5FD',
+                        color: COLORS.chartViolet,
+                        lightColor: COLORS.accentPurpleLight,
                         categories: ['Practice Support Subsidy']
                     },
                     locum: {
                         label: 'Locum Expenses',
-                        color: '#F59E0B',
-                        lightColor: '#FCD34D',
+                        color: COLORS.warning,
+                        lightColor: COLORS.warningLight,
                         categories: ['Locum Expenses For Leave']
                     },
                     cervical: {
                         label: 'Cervical Check',
-                        color: '#EC4899',
-                        lightColor: '#F9A8D4',
+                        color: COLORS.chartPink,
+                        lightColor: COLORS.expenseColorLight,
                         categories: ['National Cervical Screening Programme']
                     },
                     maternity: {
                         label: 'Maternity & Infant',
-                        color: '#14B8A6',
-                        lightColor: '#5EEAD4',
+                        color: COLORS.incomeColor,
+                        lightColor: COLORS.incomeColorLight,
                         categories: ['Maternity and Infant Care Scheme']
                     },
                     other: {
                         label: 'Other',
-                        color: '#6B7280',
-                        lightColor: '#D1D5DB',
+                        color: COLORS.textMuted,
+                        lightColor: COLORS.borderDark,
                         categories: ['Doctor Vaccinations', 'Doctor Outbreak Vaccinations', 'Covid-19 Vaccine Admin Fee', 'Incentivised payments under Covid Vaccine', 'Incentivised payments under QIV vaccine', 'Incentivised payments under LAIV vaccine', 'Winter Plan Support Grant', 'Asylum Seeker/ Non EU Registration fee', 'Ukrainian Patient Registration']
                     }
                 };
@@ -741,9 +762,9 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
                 const isPositive = change >= 0;
 
                 return (
-                    <div className="bg-white p-6 rounded-lg border" style={{ borderColor: COLORS.lightGray }} data-tour-id="gms-dashboard-chart">
+                    <div className="bg-white p-6 rounded-lg border" style={{ borderColor: COLORS.borderLight }} data-tour-id="gms-dashboard-chart">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold flex items-center" style={{ color: COLORS.darkGray }}>
+                            <h3 className="text-lg font-semibold flex items-center" style={{ color: COLORS.textPrimary }}>
                                 <TrendingUp className="h-5 w-5 mr-2" style={{ color: config.color }} />
                                 {config.label}: {useRollingYear ? 'Last 12 Months vs Prior 12' : `${currentYear} vs ${previousYear}`}
                             </h3>
@@ -757,8 +778,8 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
                                     onClick={() => setGmsChartMode(key)}
                                     className="px-3 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap"
                                     style={{
-                                        backgroundColor: gmsChartMode === key ? group.color : COLORS.backgroundGray,
-                                        color: gmsChartMode === key ? 'white' : COLORS.mediumGray,
+                                        backgroundColor: gmsChartMode === key ? group.color : COLORS.bgPage,
+                                        color: gmsChartMode === key ? 'white' : COLORS.textSecondary,
                                     }}
                                 >
                                     {group.label}
@@ -768,15 +789,15 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
 
                         <ResponsiveContainer width="100%" height={280}>
                             <LineChart data={comparisonData}>
-                                <CartesianGrid strokeDasharray="3 3" stroke={COLORS.lightGray} />
+                                <CartesianGrid strokeDasharray="3 3" stroke={COLORS.borderLight} />
                                 <XAxis
                                     dataKey="month"
-                                    tick={{ fill: COLORS.mediumGray, fontSize: 12 }}
-                                    axisLine={{ stroke: COLORS.lightGray }}
+                                    tick={{ fill: COLORS.textSecondary, fontSize: 12 }}
+                                    axisLine={{ stroke: COLORS.borderLight }}
                                 />
                                 <YAxis
-                                    tick={{ fill: COLORS.mediumGray, fontSize: 12 }}
-                                    axisLine={{ stroke: COLORS.lightGray }}
+                                    tick={{ fill: COLORS.textSecondary, fontSize: 12 }}
+                                    axisLine={{ stroke: COLORS.borderLight }}
                                     tickFormatter={(value) => `€${(value / 1000).toFixed(0)}k`}
                                 />
                                 <Tooltip
@@ -786,7 +807,7 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
                                     ]}
                                     contentStyle={{
                                         backgroundColor: 'white',
-                                        border: `1px solid ${COLORS.lightGray}`,
+                                        border: `1px solid ${COLORS.borderLight}`,
                                         borderRadius: '8px',
                                         boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                                     }}
@@ -817,23 +838,23 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
                         </ResponsiveContainer>
 
                         {/* Year-over-year summary */}
-                        <div className="mt-4 pt-4 border-t flex items-center justify-between" style={{ borderColor: COLORS.lightGray }}>
+                        <div className="mt-4 pt-4 border-t flex items-center justify-between" style={{ borderColor: COLORS.borderLight }}>
                             <div className="flex items-center gap-6">
                                 <div>
-                                    <p className="text-xs" style={{ color: COLORS.mediumGray }}>{useRollingYear ? 'Last 12 Months' : `${currentYear} Total`}</p>
+                                    <p className="text-xs" style={{ color: COLORS.textSecondary }}>{useRollingYear ? 'Last 12 Months' : `${currentYear} Total`}</p>
                                     <p className="text-lg font-semibold" style={{ color: config.color }}>
                                         {`€${Math.round(currentTotal).toLocaleString()}`}
                                     </p>
                                 </div>
                                 <div>
-                                    <p className="text-xs" style={{ color: COLORS.mediumGray }}>{useRollingYear ? 'Prior 12 Months' : `${previousYear} Total`}</p>
+                                    <p className="text-xs" style={{ color: COLORS.textSecondary }}>{useRollingYear ? 'Prior 12 Months' : `${previousYear} Total`}</p>
                                     <p className="text-lg font-semibold" style={{ color: config.lightColor }}>
                                         {`€${Math.round(previousTotal).toLocaleString()}`}
                                     </p>
                                 </div>
                             </div>
                             <div className="text-right">
-                                <p className="text-xs" style={{ color: COLORS.mediumGray }}>Year-over-Year</p>
+                                <p className="text-xs" style={{ color: COLORS.textSecondary }}>Year-over-Year</p>
                                 <p className="text-lg font-semibold flex items-center justify-end gap-1" style={{ color: isPositive ? COLORS.incomeColor : COLORS.expenseColor }}>
                                     {isPositive ? '↗' : '↘'} {`${Math.abs(change).toFixed(1)}%`}
                                 </p>
@@ -849,7 +870,7 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
                     style={{
                         backgroundColor: COLORS.white,
                         borderRadius: '0.5rem',
-                        border: `1px solid ${COLORS.lightGray}`,
+                        border: `1px solid ${COLORS.borderLight}`,
                         boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
                         padding: '1.5rem'
                     }}
@@ -865,7 +886,7 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: '0.5rem',
-                                color: COLORS.darkGray,
+                                color: COLORS.textPrimary,
                                 margin: 0
                             }}>
                                 {paymentOverviewExpanded ? <ChevronUp style={{ color: COLORS.slainteBlue }} /> : <ChevronDown style={{ color: COLORS.slainteBlue }} />}
@@ -898,26 +919,26 @@ const PaymentAnalysis = ({ setCurrentView, selectedYear: propSelectedYear, setSe
                         <div style={{
                             padding: '1rem',
                             borderRadius: '0.5rem',
-                            backgroundColor: COLORS.backgroundGray,
-                            border: `1px solid ${COLORS.lightGray}`
+                            backgroundColor: COLORS.bgPage,
+                            border: `1px solid ${COLORS.borderLight}`
                         }}>
-                            <h4 style={{ fontSize: '0.875rem', fontWeight: 600, color: COLORS.darkGray, marginBottom: '0.25rem' }}>Total Payments</h4>
+                            <h4 style={{ fontSize: '0.875rem', fontWeight: 600, color: COLORS.textPrimary, marginBottom: '0.25rem' }}>Total Payments</h4>
                             <p style={{ fontSize: '1.5rem', fontWeight: 700, color: COLORS.slainteBlue, margin: 0 }}>
                                 {`€${totalGrossPayment.toLocaleString()}`}
                             </p>
-                            <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginTop: '0.25rem' }}>
+                            <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginTop: '0.25rem' }}>
                                 {paymentAnalysisData.filter(d => d.year === selectedYear).length} statements processed
                             </p>
                         </div>
                         <div style={{
                             padding: '1rem',
                             borderRadius: '0.5rem',
-                            backgroundColor: COLORS.backgroundGray,
-                            border: `1px solid ${COLORS.lightGray}`
+                            backgroundColor: COLORS.bgPage,
+                            border: `1px solid ${COLORS.borderLight}`
                         }}>
-                            <h4 style={{ fontSize: '0.875rem', fontWeight: 600, color: COLORS.darkGray, marginBottom: '0.25rem' }}>Partners</h4>
+                            <h4 style={{ fontSize: '0.875rem', fontWeight: 600, color: COLORS.textPrimary, marginBottom: '0.25rem' }}>Partners</h4>
                             <p style={{ fontSize: '1.5rem', fontWeight: 700, color: COLORS.slainteBlue, margin: 0 }}>{partnerCount}</p>
-                            <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginTop: '0.25rem' }}>Detected from PCRS data</p>
+                            <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginTop: '0.25rem' }}>Detected from PCRS data</p>
                         </div>
                     </div>
 

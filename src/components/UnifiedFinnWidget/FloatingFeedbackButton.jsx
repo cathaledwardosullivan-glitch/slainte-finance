@@ -23,7 +23,7 @@ const FloatingFeedbackButton = () => {
           bottom: '1.5rem',
           left: '1.5rem',
           zIndex: 40,
-          backgroundColor: COLORS.mediumGray,
+          backgroundColor: COLORS.textSecondary,
           color: COLORS.white,
           borderRadius: '9999px',
           height: '56px',
@@ -39,11 +39,11 @@ const FloatingFeedbackButton = () => {
           fontWeight: 500
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = COLORS.darkGray;
+          e.currentTarget.style.backgroundColor = COLORS.textPrimary;
           e.currentTarget.style.transform = 'scale(1.05)';
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = COLORS.mediumGray;
+          e.currentTarget.style.backgroundColor = COLORS.textSecondary;
           e.currentTarget.style.transform = 'scale(1)';
         }}
       >

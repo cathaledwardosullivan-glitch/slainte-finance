@@ -143,7 +143,7 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
       <button
         onClick={nextStage}
         className="text-sm px-3 py-1 rounded border"
-        style={{ borderColor: COLORS.lightGray, color: COLORS.mediumGray }}
+        style={{ borderColor: COLORS.borderLight, color: COLORS.textSecondary }}
       >
         Skip →
       </button>
@@ -454,10 +454,10 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
         return (
           <div className="text-center space-y-6">
             <div className="text-6xl">👋</div>
-            <h2 className="text-3xl font-bold" style={{ color: COLORS.darkGray }}>
+            <h2 className="text-3xl font-bold" style={{ color: COLORS.textPrimary }}>
               Welcome to GP Practice Finance Manager
             </h2>
-            <p className="text-lg max-w-2xl mx-auto" style={{ color: COLORS.mediumGray }}>
+            <p className="text-lg max-w-2xl mx-auto" style={{ color: COLORS.textSecondary }}>
               Let's set up your financial categories in about 10-15 minutes.
               This ensures transaction labeling matches YOUR practice's specific
               staff, services, and organizational structure.
@@ -467,7 +467,7 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
               <div className="p-4 rounded-lg" style={{ backgroundColor: `${COLORS.slainteBlue}15` }}>
                 <Users className="h-8 w-8 mx-auto mb-2" style={{ color: COLORS.slainteBlue }} />
                 <h3 className="font-semibold" style={{ color: COLORS.slainteBlue }}>Staff Setup</h3>
-                <p className="text-sm" style={{ color: COLORS.mediumGray }}>
+                <p className="text-sm" style={{ color: COLORS.textSecondary }}>
                   Individual tracking for each team member
                 </p>
               </div>
@@ -475,7 +475,7 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
               <div className="p-4 rounded-lg" style={{ backgroundColor: `${COLORS.incomeColor}15` }}>
                 <Building className="h-8 w-8 mx-auto mb-2" style={{ color: COLORS.incomeColor }} />
                 <h3 className="font-semibold" style={{ color: COLORS.incomeColor }}>Services</h3>
-                <p className="text-sm" style={{ color: COLORS.mediumGray }}>
+                <p className="text-sm" style={{ color: COLORS.textSecondary }}>
                   Configure income streams and optional services
                 </p>
               </div>
@@ -483,7 +483,7 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
               <div className="p-4 rounded-lg" style={{ backgroundColor: `${COLORS.highlightYellow}15` }}>
                 <FileText className="h-8 w-8 mx-auto mb-2" style={{ color: COLORS.highlightYellow }} />
                 <h3 className="font-semibold" style={{ color: COLORS.highlightYellow }}>Categories</h3>
-                <p className="text-sm" style={{ color: COLORS.mediumGray }}>
+                <p className="text-sm" style={{ color: COLORS.textSecondary }}>
                   Automatic P&L format for your accountant
                 </p>
               </div>
@@ -502,7 +502,7 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
               <button
                 onClick={onSkip}
                 className="text-sm mt-4"
-                style={{ color: COLORS.mediumGray }}
+                style={{ color: COLORS.textSecondary }}
               >
                 Skip for now
               </button>
@@ -510,8 +510,8 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
 
             {/* Restore from Backup Option */}
             {!editMode && (
-              <div className="mt-8 pt-6 border-t" style={{ borderColor: COLORS.lightGray }}>
-                <p className="text-sm mb-3" style={{ color: COLORS.mediumGray }}>
+              <div className="mt-8 pt-6 border-t" style={{ borderColor: COLORS.borderLight }}>
+                <p className="text-sm mb-3" style={{ color: COLORS.textSecondary }}>
                   Have a previous backup?
                 </p>
                 <label
@@ -595,10 +595,10 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold" style={{ color: COLORS.darkGray }}>
+                <h2 className="text-2xl font-bold" style={{ color: COLORS.textPrimary }}>
                   Practice Information
                 </h2>
-                <p style={{ color: COLORS.mediumGray }}>
+                <p style={{ color: COLORS.textSecondary }}>
                   {editMode ? 'Update your practice information or skip to next section.' : "Let's start with some basic information about your practice."}
                 </p>
               </div>
@@ -606,7 +606,7 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
                 <button
                   onClick={nextStage}
                   className="text-sm px-3 py-1 rounded border"
-                  style={{ borderColor: COLORS.lightGray, color: COLORS.mediumGray }}
+                  style={{ borderColor: COLORS.borderLight, color: COLORS.textSecondary }}
                 >
                   Skip →
                 </button>
@@ -615,13 +615,13 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: COLORS.darkGray }}>
+                <label className="block text-sm font-medium mb-2" style={{ color: COLORS.textPrimary }}>
                   Practice Name *
                 </label>
                 <input
                   type="text"
                   className="w-full border rounded-lg px-4 py-2"
-                  style={{ borderColor: COLORS.lightGray }}
+                  style={{ borderColor: COLORS.borderLight }}
                   placeholder="e.g., Glasnevin Avenue Practice"
                   value={responses.practiceName}
                   onChange={(e) => updateResponse('practiceName', e.target.value)}
@@ -629,13 +629,13 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: COLORS.darkGray }}>
+                <label className="block text-sm font-medium mb-2" style={{ color: COLORS.textPrimary }}>
                   Location *
                 </label>
                 <input
                   type="text"
                   className="w-full border rounded-lg px-4 py-2"
-                  style={{ borderColor: COLORS.lightGray }}
+                  style={{ borderColor: COLORS.borderLight }}
                   placeholder="e.g., Dublin 9"
                   value={responses.location}
                   onChange={(e) => updateResponse('location', e.target.value)}
@@ -647,7 +647,7 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
               <button
                 onClick={prevStage}
                 className="px-6 py-2 border rounded-lg flex items-center gap-2"
-                style={{ borderColor: COLORS.lightGray, color: COLORS.darkGray }}
+                style={{ borderColor: COLORS.borderLight, color: COLORS.textPrimary }}
               >
                 <ArrowLeft className="h-4 w-4" />
                 Back
@@ -656,7 +656,7 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
                 onClick={nextStage}
                 className="px-6 py-2 rounded-lg text-white flex items-center gap-2"
                 style={{
-                  backgroundColor: (editMode || responses.practiceName) ? COLORS.slainteBlue : COLORS.lightGray,
+                  backgroundColor: (editMode || responses.practiceName) ? COLORS.slainteBlue : COLORS.borderLight,
                   cursor: (editMode || responses.practiceName) ? 'pointer' : 'not-allowed'
                 }}
                 disabled={!editMode && !responses.practiceName}
@@ -673,10 +673,10 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold" style={{ color: COLORS.darkGray }}>
+                <h2 className="text-2xl font-bold" style={{ color: COLORS.textPrimary }}>
                   Practice Size
                 </h2>
-                <p style={{ color: COLORS.mediumGray }}>
+                <p style={{ color: COLORS.textSecondary }}>
                   {editMode ? 'Update practice size or skip to next section.' : 'Tell us about your practice size (optional - you can skip this).'}
                 </p>
               </div>
@@ -685,13 +685,13 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: COLORS.darkGray }}>
+                <label className="block text-sm font-medium mb-2" style={{ color: COLORS.textPrimary }}>
                   Number of GPs
                 </label>
                 <input
                   type="number"
                   className="w-full border rounded-lg px-4 py-2"
-                  style={{ borderColor: COLORS.lightGray }}
+                  style={{ borderColor: COLORS.borderLight }}
                   placeholder="e.g., 3"
                   min="1"
                   value={responses.numberOfGPs}
@@ -700,12 +700,12 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: COLORS.darkGray }}>
+                <label className="block text-sm font-medium mb-2" style={{ color: COLORS.textPrimary }}>
                   Practice Type
                 </label>
                 <select
                   className="w-full border rounded-lg px-4 py-2"
-                  style={{ borderColor: COLORS.lightGray }}
+                  style={{ borderColor: COLORS.borderLight }}
                   value={responses.practiceType}
                   onChange={(e) => updateResponse('practiceType', e.target.value)}
                 >
@@ -721,7 +721,7 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
               <button
                 onClick={prevStage}
                 className="px-6 py-2 border rounded-lg flex items-center gap-2"
-                style={{ borderColor: COLORS.lightGray, color: COLORS.darkGray }}
+                style={{ borderColor: COLORS.borderLight, color: COLORS.textPrimary }}
               >
                 <ArrowLeft className="h-4 w-4" />
                 Back
@@ -742,7 +742,7 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
         return (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold" style={{ color: COLORS.darkGray }}>
+              <h2 className="text-2xl font-bold" style={{ color: COLORS.textPrimary }}>
                 Reception Team
               </h2>
               {renderSkipButton()}
@@ -752,25 +752,25 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
                 <strong>Why this matters:</strong> Each receptionist gets their own category
                 for accurate salary tracking and automatic transaction labeling.
               </p>
-              <p className="text-xs" style={{ color: COLORS.mediumGray }}>
+              <p className="text-xs" style={{ color: COLORS.textSecondary }}>
                 💡 Don't worry about getting names perfect - after you upload transactions,
                 our AI will analyze unidentified payments and suggest additional identifier patterns to add.
               </p>
             </div>
 
-            <p style={{ color: COLORS.mediumGray }}>
+            <p style={{ color: COLORS.textSecondary }}>
               Please list your receptionists using initials or first names,
               one per line or comma-separated.
             </p>
 
-            <div className="p-4 rounded-lg" style={{ backgroundColor: COLORS.backgroundGray }}>
-              <p className="text-sm mb-2" style={{ color: COLORS.mediumGray }}>Examples:</p>
+            <div className="p-4 rounded-lg" style={{ backgroundColor: COLORS.bgPage }}>
+              <p className="text-sm mb-2" style={{ color: COLORS.textSecondary }}>Examples:</p>
               <code className="text-sm block">
                 RobynM<br />
                 LeannD<br />
                 DeanaG
               </code>
-              <p className="text-sm mt-2" style={{ color: COLORS.mediumGray }}>or</p>
+              <p className="text-sm mt-2" style={{ color: COLORS.textSecondary }}>or</p>
               <code className="text-sm">
                 RobynM, LeannD, DeanaG
               </code>
@@ -778,7 +778,7 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
 
             <textarea
               className="w-full border rounded-lg px-4 py-2 font-mono"
-              style={{ borderColor: COLORS.lightGray }}
+              style={{ borderColor: COLORS.borderLight }}
               rows={8}
               placeholder="Enter staff names here..."
               value={responses.receptionStaff}
@@ -790,7 +790,7 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
                 <p className="text-sm font-medium mb-2" style={{ color: COLORS.incomeColor }}>
                   ✓ Will create {parseStaffInput(responses.receptionStaff).length} reception categories:
                 </p>
-                <ul className="text-sm space-y-1" style={{ color: COLORS.darkGray }}>
+                <ul className="text-sm space-y-1" style={{ color: COLORS.textPrimary }}>
                   {parseStaffInput(responses.receptionStaff).map((name, i) => (
                     <li key={i}>• 3.{i + 1} - Reception - {name}</li>
                   ))}
@@ -802,7 +802,7 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
               <button
                 onClick={prevStage}
                 className="px-6 py-2 border rounded-lg flex items-center gap-2"
-                style={{ borderColor: COLORS.lightGray, color: COLORS.darkGray }}
+                style={{ borderColor: COLORS.borderLight, color: COLORS.textPrimary }}
               >
                 <ArrowLeft className="h-4 w-4" />
                 Back
@@ -824,10 +824,10 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold" style={{ color: COLORS.darkGray }}>
+                <h2 className="text-2xl font-bold" style={{ color: COLORS.textPrimary }}>
                   Nursing Staff
                 </h2>
-                <p style={{ color: COLORS.mediumGray }}>
+                <p style={{ color: COLORS.textSecondary }}>
                   {editMode ? 'Update nursing staff or skip to next section:' : 'List your practice nurses (if any):'}
                 </p>
               </div>
@@ -836,7 +836,7 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
 
             <textarea
               className="w-full border rounded-lg px-4 py-2 font-mono"
-              style={{ borderColor: COLORS.lightGray }}
+              style={{ borderColor: COLORS.borderLight }}
               rows={4}
               placeholder="e.g., KatieB (or leave blank if none)"
               value={responses.nursingStaff}
@@ -855,7 +855,7 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
               <button
                 onClick={prevStage}
                 className="px-6 py-2 border rounded-lg flex items-center gap-2"
-                style={{ borderColor: COLORS.lightGray, color: COLORS.darkGray }}
+                style={{ borderColor: COLORS.borderLight, color: COLORS.textPrimary }}
               >
                 <ArrowLeft className="h-4 w-4" />
                 Back
@@ -877,10 +877,10 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold" style={{ color: COLORS.darkGray }}>
+                <h2 className="text-2xl font-bold" style={{ color: COLORS.textPrimary }}>
                   Phlebotomy Staff
                 </h2>
-                <p style={{ color: COLORS.mediumGray }}>
+                <p style={{ color: COLORS.textSecondary }}>
                   {editMode ? 'Update phlebotomy staff or skip to next section:' : 'List your phlebotomists (if any):'}
                 </p>
               </div>
@@ -889,7 +889,7 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
 
             <textarea
               className="w-full border rounded-lg px-4 py-2 font-mono"
-              style={{ borderColor: COLORS.lightGray }}
+              style={{ borderColor: COLORS.borderLight }}
               rows={4}
               placeholder="e.g., MariaC (or leave blank if none)"
               value={responses.phlebotomyStaff}
@@ -908,7 +908,7 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
               <button
                 onClick={prevStage}
                 className="px-6 py-2 border rounded-lg flex items-center gap-2"
-                style={{ borderColor: COLORS.lightGray, color: COLORS.darkGray }}
+                style={{ borderColor: COLORS.borderLight, color: COLORS.textPrimary }}
               >
                 <ArrowLeft className="h-4 w-4" />
                 Back
@@ -930,10 +930,10 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold" style={{ color: COLORS.darkGray }}>
+                <h2 className="text-2xl font-bold" style={{ color: COLORS.textPrimary }}>
                   GP Assistants
                 </h2>
-                <p style={{ color: COLORS.mediumGray }}>
+                <p style={{ color: COLORS.textSecondary }}>
                   {editMode ? 'Update GP assistants or skip to next section:' : 'List your GP assistants (if any):'}
                 </p>
               </div>
@@ -942,7 +942,7 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
 
             <textarea
               className="w-full border rounded-lg px-4 py-2 font-mono"
-              style={{ borderColor: COLORS.lightGray }}
+              style={{ borderColor: COLORS.borderLight }}
               rows={4}
               placeholder="e.g., JoannaM (or leave blank if none)"
               value={responses.gpAssistants}
@@ -961,7 +961,7 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
               <button
                 onClick={prevStage}
                 className="px-6 py-2 border rounded-lg flex items-center gap-2"
-                style={{ borderColor: COLORS.lightGray, color: COLORS.darkGray }}
+                style={{ borderColor: COLORS.borderLight, color: COLORS.textPrimary }}
               >
                 <ArrowLeft className="h-4 w-4" />
                 Back
@@ -983,10 +983,10 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold" style={{ color: COLORS.darkGray }}>
+                <h2 className="text-2xl font-bold" style={{ color: COLORS.textPrimary }}>
                   Practice Management
                 </h2>
-                <p style={{ color: COLORS.mediumGray }}>
+                <p style={{ color: COLORS.textSecondary }}>
                   {editMode ? 'Update practice managers or skip to next section:' : 'List your practice managers (if any):'}
                 </p>
               </div>
@@ -995,7 +995,7 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
 
             <textarea
               className="w-full border rounded-lg px-4 py-2 font-mono"
-              style={{ borderColor: COLORS.lightGray }}
+              style={{ borderColor: COLORS.borderLight }}
               rows={4}
               placeholder="e.g., LindaD (or leave blank if none)"
               value={responses.management}
@@ -1014,7 +1014,7 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
               <button
                 onClick={prevStage}
                 className="px-6 py-2 border rounded-lg flex items-center gap-2"
-                style={{ borderColor: COLORS.lightGray, color: COLORS.darkGray }}
+                style={{ borderColor: COLORS.borderLight, color: COLORS.textPrimary }}
               >
                 <ArrowLeft className="h-4 w-4" />
                 Back
@@ -1036,7 +1036,7 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold" style={{ color: COLORS.darkGray }}>
+                <h2 className="text-2xl font-bold" style={{ color: COLORS.textPrimary }}>
                   Practice Partners
                 </h2>
               </div>
@@ -1044,19 +1044,19 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
             </div>
 
             <div className="p-4 rounded-lg" style={{ backgroundColor: `${COLORS.highlightYellow}15` }}>
-              <p style={{ color: COLORS.darkGray }}>
+              <p style={{ color: COLORS.textPrimary }}>
                 <strong>Important:</strong> Partner drawings are correctly classified as
                 equity withdrawals (not expenses) for accurate P&L reporting.
               </p>
             </div>
 
-            <p style={{ color: COLORS.mediumGray }}>
+            <p style={{ color: COLORS.textSecondary }}>
               {editMode ? 'Update practice partners or skip to next section:' : 'Please list all practice partners/owners:'}
             </p>
 
             <textarea
               className="w-full border rounded-lg px-4 py-2 font-mono"
-              style={{ borderColor: COLORS.lightGray }}
+              style={{ borderColor: COLORS.borderLight }}
               rows={6}
               placeholder="e.g., RobS, KarenA, SineadM"
               value={responses.partners}
@@ -1068,7 +1068,7 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
                 <p className="text-sm font-medium mb-2" style={{ color: COLORS.incomeColor }}>
                   ✓ Will create {parseStaffInput(responses.partners).length} partner drawing categories:
                 </p>
-                <ul className="text-sm space-y-1" style={{ color: COLORS.darkGray }}>
+                <ul className="text-sm space-y-1" style={{ color: COLORS.textPrimary }}>
                   {parseStaffInput(responses.partners).map((name, i) => (
                     <li key={i}>• 90.{i + 1} - Partner Drawings - {name}</li>
                   ))}
@@ -1080,7 +1080,7 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
               <button
                 onClick={prevStage}
                 className="px-6 py-2 border rounded-lg flex items-center gap-2"
-                style={{ borderColor: COLORS.lightGray, color: COLORS.darkGray }}
+                style={{ borderColor: COLORS.borderLight, color: COLORS.textPrimary }}
               >
                 <ArrowLeft className="h-4 w-4" />
                 Back
@@ -1089,7 +1089,7 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
                 onClick={nextStage}
                 className="px-6 py-2 rounded-lg text-white flex items-center gap-2"
                 style={{
-                  backgroundColor: (editMode || responses.partners) ? COLORS.slainteBlue : COLORS.lightGray,
+                  backgroundColor: (editMode || responses.partners) ? COLORS.slainteBlue : COLORS.borderLight,
                   cursor: (editMode || responses.partners) ? 'pointer' : 'not-allowed'
                 }}
                 disabled={!editMode && !responses.partners}
@@ -1106,10 +1106,10 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold" style={{ color: COLORS.darkGray }}>
+                <h2 className="text-2xl font-bold" style={{ color: COLORS.textPrimary }}>
                   Additional Staff Roles
                 </h2>
-                <p style={{ color: COLORS.mediumGray }}>
+                <p style={{ color: COLORS.textSecondary }}>
                   {editMode ? 'Add or update any additional staff roles:' : 'Add any other staff roles not covered in the previous steps:'}
                 </p>
               </div>
@@ -1117,27 +1117,27 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
             </div>
 
             <div className="p-4 rounded-lg" style={{ backgroundColor: `${COLORS.slainteBlue}15` }}>
-              <p className="text-sm" style={{ color: COLORS.darkGray }}>
+              <p className="text-sm" style={{ color: COLORS.textPrimary }}>
                 Use this section to add staff in roles like Partner, Associate, Practice Manager,
                 Therapist, Technician, Locum, Specialist, or any other role not listed previously.
               </p>
             </div>
 
             {/* Add new staff member form */}
-            <div className="border-2 rounded-lg p-4" style={{ borderColor: COLORS.lightGray }}>
-              <h3 className="font-semibold mb-3" style={{ color: COLORS.darkGray }}>
+            <div className="border-2 rounded-lg p-4" style={{ borderColor: COLORS.borderLight }}>
+              <h3 className="font-semibold mb-3" style={{ color: COLORS.textPrimary }}>
                 Add Staff Member
               </h3>
 
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                  <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                     Role
                   </label>
                   <select
                     id="newStaffRole"
                     className="w-full border rounded px-3 py-2 text-sm"
-                    style={{ borderColor: COLORS.lightGray }}
+                    style={{ borderColor: COLORS.borderLight }}
                   >
                     <option value="">-- Select Role --</option>
                     <optgroup label="Professional Roles">
@@ -1158,14 +1158,14 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                  <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                     Staff Name
                   </label>
                   <input
                     type="text"
                     id="newStaffName"
                     className="w-full border rounded px-3 py-2 text-sm"
-                    style={{ borderColor: COLORS.lightGray }}
+                    style={{ borderColor: COLORS.borderLight }}
                     placeholder="e.g., Joan Smith"
                   />
                 </div>
@@ -1202,14 +1202,14 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
                 </p>
                 <ul className="space-y-2">
                   {responses.additionalStaff.map((staff, i) => (
-                    <li key={i} className="flex items-center justify-between text-sm" style={{ color: COLORS.darkGray }}>
+                    <li key={i} className="flex items-center justify-between text-sm" style={{ color: COLORS.textPrimary }}>
                       <span>• {staff.role} - {staff.name}</span>
                       <button
                         onClick={() => {
                           updateResponse('additionalStaff', responses.additionalStaff.filter((_, idx) => idx !== i));
                         }}
                         className="text-xs px-2 py-1 rounded border"
-                        style={{ borderColor: COLORS.lightGray, color: COLORS.mediumGray }}
+                        style={{ borderColor: COLORS.borderLight, color: COLORS.textSecondary }}
                       >
                         Remove
                       </button>
@@ -1223,7 +1223,7 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
               <button
                 onClick={prevStage}
                 className="px-6 py-2 border rounded-lg flex items-center gap-2"
-                style={{ borderColor: COLORS.lightGray, color: COLORS.darkGray }}
+                style={{ borderColor: COLORS.borderLight, color: COLORS.textPrimary }}
               >
                 <ArrowLeft className="h-4 w-4" />
                 Back
@@ -1245,10 +1245,10 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold" style={{ color: COLORS.darkGray }}>
+                <h2 className="text-2xl font-bold" style={{ color: COLORS.textPrimary }}>
                   Optional Services
                 </h2>
-                <p style={{ color: COLORS.mediumGray }}>
+                <p style={{ color: COLORS.textSecondary }}>
                   {editMode ? 'Update optional services or skip to next section:' : 'Select which services apply to your practice:'}
                 </p>
               </div>
@@ -1266,7 +1266,7 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
                 <label
                   key={option.key}
                   className="flex items-center space-x-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50"
-                  style={{ borderColor: COLORS.lightGray }}
+                  style={{ borderColor: COLORS.borderLight }}
                 >
                   <input
                     type="checkbox"
@@ -1277,7 +1277,7 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
                     })}
                     className="h-5 w-5"
                   />
-                  <span style={{ color: COLORS.darkGray }}>{option.label}</span>
+                  <span style={{ color: COLORS.textPrimary }}>{option.label}</span>
                 </label>
               ))}
             </div>
@@ -1286,7 +1286,7 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
               <button
                 onClick={prevStage}
                 className="px-6 py-2 border rounded-lg flex items-center gap-2"
-                style={{ borderColor: COLORS.lightGray, color: COLORS.darkGray }}
+                style={{ borderColor: COLORS.borderLight, color: COLORS.textPrimary }}
               >
                 <ArrowLeft className="h-4 w-4" />
                 Back
@@ -1308,7 +1308,7 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
           <div className="space-y-6">
             <div className="text-center">
               <Eye className="h-16 w-16 mx-auto mb-4" style={{ color: COLORS.slainteBlue }} />
-              <h2 className="text-2xl font-bold" style={{ color: COLORS.darkGray }}>
+              <h2 className="text-2xl font-bold" style={{ color: COLORS.textPrimary }}>
                 Category Setup
               </h2>
             </div>
@@ -1317,14 +1317,14 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
               <h3 className="font-semibold mb-3" style={{ color: COLORS.slainteBlue }}>
                 What's Next?
               </h3>
-              <p className="text-sm mb-4" style={{ color: COLORS.darkGray }}>
+              <p className="text-sm mb-4" style={{ color: COLORS.textPrimary }}>
                 In the final part of the setup, you will review the available categories and choose which ones
                 apply to your practice.
               </p>
-              <p className="text-sm mb-4" style={{ color: COLORS.darkGray }}>
+              <p className="text-sm mb-4" style={{ color: COLORS.textPrimary }}>
                 You have the option to choose:
               </p>
-              <ul className="text-sm space-y-2 ml-4" style={{ color: COLORS.darkGray }}>
+              <ul className="text-sm space-y-2 ml-4" style={{ color: COLORS.textPrimary }}>
                 <li>• <strong>All available subcategories</strong> - See every option when categorizing</li>
                 <li>• <strong>Some subcategories</strong> - Hide rarely-used ones to reduce clutter</li>
                 <li>• <strong>None</strong> - Use default "Unclassified" labels (e.g., "Staff Costs Unclassified")</li>
@@ -1332,7 +1332,7 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
             </div>
 
             <div className="p-4 rounded-lg" style={{ backgroundColor: `${COLORS.highlightYellow}15` }}>
-              <p className="text-sm" style={{ color: COLORS.darkGray }}>
+              <p className="text-sm" style={{ color: COLORS.textPrimary }}>
                 <strong>Remember:</strong> Hidden categories can still be used when needed - they just won't
                 appear in the quick-select dropdown. You can always change these preferences later in Admin Settings.
               </p>
@@ -1342,7 +1342,7 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
               <button
                 onClick={prevStage}
                 className="px-6 py-2 border rounded-lg flex items-center gap-2"
-                style={{ borderColor: COLORS.lightGray, color: COLORS.darkGray }}
+                style={{ borderColor: COLORS.borderLight, color: COLORS.textPrimary }}
               >
                 <ArrowLeft className="h-4 w-4" />
                 Back
@@ -1552,10 +1552,10 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold" style={{ color: COLORS.darkGray }}>
+                <h2 className="text-2xl font-bold" style={{ color: COLORS.textPrimary }}>
                   Category Setup: {currentSectionName}
                 </h2>
-                <p style={{ color: COLORS.mediumGray }}>
+                <p style={{ color: COLORS.textSecondary }}>
                   Section {currentSectionIndex + 1} of {sectionsArray.length}
                 </p>
               </div>
@@ -1563,19 +1563,19 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
 
             {sectionExplanation && (
               <div className="p-4 rounded-lg" style={{ backgroundColor: `${COLORS.highlightYellow}15` }}>
-                <p className="text-sm" style={{ color: COLORS.darkGray }}>
+                <p className="text-sm" style={{ color: COLORS.textPrimary }}>
                   ℹ️ {sectionExplanation}
                 </p>
               </div>
             )}
 
-            <div className="p-4 rounded-lg border" style={{ backgroundColor: COLORS.backgroundGray, borderColor: COLORS.lightGray }}>
-              <p className="text-sm font-medium mb-3" style={{ color: COLORS.darkGray }}>
+            <div className="p-4 rounded-lg border" style={{ backgroundColor: COLORS.bgPage, borderColor: COLORS.borderLight }}>
+              <p className="text-sm font-medium mb-3" style={{ color: COLORS.textPrimary }}>
                 How would you like to handle {currentSectionName} categories?
               </p>
               <div className="space-y-2">
                 <label className="flex items-center gap-3 p-3 rounded cursor-pointer border" style={{
-                  borderColor: sectionMode === 'all' ? COLORS.slainteBlue : COLORS.lightGray,
+                  borderColor: sectionMode === 'all' ? COLORS.slainteBlue : COLORS.borderLight,
                   backgroundColor: sectionMode === 'all' ? `${COLORS.slainteBlue}10` : 'transparent'
                 }}>
                   <input
@@ -1587,13 +1587,13 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
                     style={{ accentColor: COLORS.slainteBlue }}
                   />
                   <div>
-                    <p className="font-medium text-sm" style={{ color: COLORS.darkGray }}>Use All Available Subcategories</p>
-                    <p className="text-xs" style={{ color: COLORS.mediumGray }}>Show all {currentSectionCategories.length} categories when categorizing</p>
+                    <p className="font-medium text-sm" style={{ color: COLORS.textPrimary }}>Use All Available Subcategories</p>
+                    <p className="text-xs" style={{ color: COLORS.textSecondary }}>Show all {currentSectionCategories.length} categories when categorizing</p>
                   </div>
                 </label>
 
                 <label className="flex items-center gap-3 p-3 rounded cursor-pointer border" style={{
-                  borderColor: sectionMode === 'some' ? COLORS.slainteBlue : COLORS.lightGray,
+                  borderColor: sectionMode === 'some' ? COLORS.slainteBlue : COLORS.borderLight,
                   backgroundColor: sectionMode === 'some' ? `${COLORS.slainteBlue}10` : 'transparent'
                 }}>
                   <input
@@ -1605,13 +1605,13 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
                     style={{ accentColor: COLORS.slainteBlue }}
                   />
                   <div>
-                    <p className="font-medium text-sm" style={{ color: COLORS.darkGray }}>Use Some Subcategories</p>
-                    <p className="text-xs" style={{ color: COLORS.mediumGray }}>Choose specific categories below</p>
+                    <p className="font-medium text-sm" style={{ color: COLORS.textPrimary }}>Use Some Subcategories</p>
+                    <p className="text-xs" style={{ color: COLORS.textSecondary }}>Choose specific categories below</p>
                   </div>
                 </label>
 
                 <label className="flex items-center gap-3 p-3 rounded cursor-pointer border" style={{
-                  borderColor: sectionMode === 'none' ? COLORS.slainteBlue : COLORS.lightGray,
+                  borderColor: sectionMode === 'none' ? COLORS.slainteBlue : COLORS.borderLight,
                   backgroundColor: sectionMode === 'none' ? `${COLORS.slainteBlue}10` : 'transparent'
                 }}>
                   <input
@@ -1623,8 +1623,8 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
                     style={{ accentColor: COLORS.slainteBlue }}
                   />
                   <div>
-                    <p className="font-medium text-sm" style={{ color: COLORS.darkGray }}>Use None of the Subcategories</p>
-                    <p className="text-xs" style={{ color: COLORS.mediumGray }}>All items default to "{currentSectionName.split(' ').map((w, i) => i === 0 ? w : w.toLowerCase()).join(' ')} Unclassified"</p>
+                    <p className="font-medium text-sm" style={{ color: COLORS.textPrimary }}>Use None of the Subcategories</p>
+                    <p className="text-xs" style={{ color: COLORS.textSecondary }}>All items default to "{currentSectionName.split(' ').map((w, i) => i === 0 ? w : w.toLowerCase()).join(' ')} Unclassified"</p>
                   </div>
                 </label>
               </div>
@@ -1635,33 +1635,33 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
                 <p className="text-sm font-medium mb-2" style={{ color: COLORS.incomeColor }}>
                   ✓ All {currentSectionCategories.length} categories will be available
                 </p>
-                <p className="text-xs" style={{ color: COLORS.mediumGray }}>
+                <p className="text-xs" style={{ color: COLORS.textSecondary }}>
                   You'll see all subcategories in the dropdown when categorizing transactions.
                 </p>
               </div>
             )}
 
             {sectionMode === 'none' && (
-              <div className="p-4 rounded-lg border" style={{ backgroundColor: `${COLORS.mediumGray}15`, borderColor: COLORS.mediumGray }}>
-                <p className="text-sm font-medium mb-2" style={{ color: COLORS.darkGray }}>
+              <div className="p-4 rounded-lg border" style={{ backgroundColor: `${COLORS.textSecondary}15`, borderColor: COLORS.textSecondary }}>
+                <p className="text-sm font-medium mb-2" style={{ color: COLORS.textPrimary }}>
                   All categories hidden
                 </p>
-                <p className="text-xs" style={{ color: COLORS.mediumGray }}>
+                <p className="text-xs" style={{ color: COLORS.textSecondary }}>
                   Transactions will default to "{currentSectionName.split(' ').map((w, i) => i === 0 ? w : w.toLowerCase()).join(' ')} Unclassified" and can be refined later.
                 </p>
               </div>
             )}
 
             {sectionMode === 'some' && (
-              <div className="space-y-2 border rounded-lg p-4" style={{ borderColor: COLORS.lightGray }}>
-                <p className="text-sm font-medium mb-3" style={{ color: COLORS.darkGray }}>
+              <div className="space-y-2 border rounded-lg p-4" style={{ borderColor: COLORS.borderLight }}>
+                <p className="text-sm font-medium mb-3" style={{ color: COLORS.textPrimary }}>
                   Select categories to show:
                 </p>
                 {currentSectionCategories.map(category => (
                   <label
                     key={category.code}
                     className="flex items-center gap-3 p-3 rounded hover:bg-gray-50 cursor-pointer border"
-                    style={{ borderColor: category.visible ? COLORS.incomeColor : COLORS.lightGray }}
+                    style={{ borderColor: category.visible ? COLORS.incomeColor : COLORS.borderLight }}
                   >
                     <input
                       type="checkbox"
@@ -1670,11 +1670,11 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
                       className="h-5 w-5"
                       style={{ accentColor: COLORS.slainteBlue }}
                     />
-                    <span className="flex-1" style={{ color: COLORS.darkGray }}>{category.name}</span>
+                    <span className="flex-1" style={{ color: COLORS.textPrimary }}>{category.name}</span>
                     {category.visible ? (
                       <Eye className="h-4 w-4" style={{ color: COLORS.incomeColor }} />
                     ) : (
-                      <EyeOff className="h-4 w-4" style={{ color: COLORS.lightGray }} />
+                      <EyeOff className="h-4 w-4" style={{ color: COLORS.borderLight }} />
                     )}
                   </label>
                 ))}
@@ -1682,7 +1682,7 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
             )}
 
             <div className="p-3 rounded-lg" style={{ backgroundColor: `${COLORS.highlightYellow}15` }}>
-              <p className="text-xs" style={{ color: COLORS.darkGray }}>
+              <p className="text-xs" style={{ color: COLORS.textPrimary }}>
                 💡 <strong>Tip:</strong> You can always customize this later in Admin Settings. The defaults work well for most practices!
               </p>
             </div>
@@ -1691,7 +1691,7 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
               <button
                 onClick={handlePrevSection}
                 className="px-6 py-2 border rounded-lg flex items-center gap-2"
-                style={{ borderColor: COLORS.lightGray, color: COLORS.darkGray }}
+                style={{ borderColor: COLORS.borderLight, color: COLORS.textPrimary }}
               >
                 <ArrowLeft className="h-4 w-4" />
                 {currentSectionIndex === 0 ? 'Back' : 'Previous Section'}
@@ -1700,7 +1700,7 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
                 <button
                   onClick={nextStage}
                   className="px-4 py-2 border rounded-lg text-sm"
-                  style={{ borderColor: COLORS.lightGray, color: COLORS.mediumGray }}
+                  style={{ borderColor: COLORS.borderLight, color: COLORS.textSecondary }}
                 >
                   Skip All
                 </button>
@@ -1732,7 +1732,7 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
           <div className="space-y-6">
             <div className="text-center">
               <CheckCircle className="h-16 w-16 mx-auto mb-4" style={{ color: COLORS.incomeColor }} />
-              <h2 className="text-2xl font-bold" style={{ color: COLORS.darkGray }}>
+              <h2 className="text-2xl font-bold" style={{ color: COLORS.textPrimary }}>
                 Review Your Setup
               </h2>
             </div>
@@ -1744,23 +1744,23 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
 
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="font-medium" style={{ color: COLORS.darkGray }}>Staff Categories:</p>
-                  <p style={{ color: COLORS.mediumGray }}>{staffCount} individual staff members</p>
+                  <p className="font-medium" style={{ color: COLORS.textPrimary }}>Staff Categories:</p>
+                  <p style={{ color: COLORS.textSecondary }}>{staffCount} individual staff members</p>
                 </div>
 
                 <div>
-                  <p className="font-medium" style={{ color: COLORS.darkGray }}>Partner Categories:</p>
-                  <p style={{ color: COLORS.mediumGray }}>{partnerCount} partners</p>
+                  <p className="font-medium" style={{ color: COLORS.textPrimary }}>Partner Categories:</p>
+                  <p style={{ color: COLORS.textSecondary }}>{partnerCount} partners</p>
                 </div>
 
                 <div>
-                  <p className="font-medium" style={{ color: COLORS.darkGray }}>Total Categories:</p>
-                  <p style={{ color: COLORS.mediumGray }}>{previewCategories.length} active</p>
+                  <p className="font-medium" style={{ color: COLORS.textPrimary }}>Total Categories:</p>
+                  <p style={{ color: COLORS.textSecondary }}>{previewCategories.length} active</p>
                 </div>
 
                 <div>
-                  <p className="font-medium" style={{ color: COLORS.darkGray }}>Location:</p>
-                  <p style={{ color: COLORS.mediumGray }}>{responses.location}</p>
+                  <p className="font-medium" style={{ color: COLORS.textPrimary }}>Location:</p>
+                  <p style={{ color: COLORS.textSecondary }}>{responses.location}</p>
                 </div>
               </div>
             </div>
@@ -1777,7 +1777,7 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
               <button
                 onClick={prevStage}
                 className="px-6 py-2 border rounded-lg flex items-center gap-2"
-                style={{ borderColor: COLORS.lightGray, color: COLORS.darkGray }}
+                style={{ borderColor: COLORS.borderLight, color: COLORS.textPrimary }}
               >
                 <ArrowLeft className="h-4 w-4" />
                 Back
@@ -1828,18 +1828,18 @@ export default function PracticeOnboarding({ onComplete, onSkip, editMode = fals
   const progress = stage === STAGES.WELCOME ? 0 : ((currentStep) / totalSteps) * 100;
 
   return (
-    <div className="min-h-screen py-8" style={{ backgroundColor: COLORS.backgroundGray }}>
+    <div className="min-h-screen py-8" style={{ backgroundColor: COLORS.bgPage }}>
       <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-lg p-8">
         {/* Progress indicator */}
         {stage !== STAGES.WELCOME && stage !== STAGES.COMPLETE && (
           <div className="mb-8">
-            <div className="flex justify-between text-sm mb-2" style={{ color: COLORS.mediumGray }}>
+            <div className="flex justify-between text-sm mb-2" style={{ color: COLORS.textSecondary }}>
               <span>Setup Progress</span>
               <span>
                 {currentStep} / {totalSteps}
               </span>
             </div>
-            <div className="w-full rounded-full h-2" style={{ backgroundColor: COLORS.lightGray }}>
+            <div className="w-full rounded-full h-2" style={{ backgroundColor: COLORS.borderLight }}>
               <div
                 className="h-2 rounded-full transition-all"
                 style={{

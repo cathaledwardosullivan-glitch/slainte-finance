@@ -44,7 +44,7 @@ const GroupInfoItem = ({ group }) => {
         <ChevronDown style={{
           width: '14px',
           height: '14px',
-          color: COLORS.mediumGray,
+          color: COLORS.textSecondary,
           transition: 'transform 0.15s',
           transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)'
         }} />
@@ -53,7 +53,7 @@ const GroupInfoItem = ({ group }) => {
         <div style={{
           padding: '0.25rem 0.625rem 0.5rem',
           fontSize: '0.75rem',
-          color: COLORS.mediumGray,
+          color: COLORS.textSecondary,
           lineHeight: 1.4
         }}>
           {group.desc}
@@ -89,11 +89,11 @@ const CategorySection = ({ sectionName, categories }) => {
           textAlign: 'left'
         }}
       >
-        <span>{sectionName} <span style={{ fontWeight: 400, color: COLORS.mediumGray }}>({categories.length})</span></span>
+        <span>{sectionName} <span style={{ fontWeight: 400, color: COLORS.textSecondary }}>({categories.length})</span></span>
         <ChevronDown style={{
           width: '14px',
           height: '14px',
-          color: COLORS.mediumGray,
+          color: COLORS.textSecondary,
           transition: 'transform 0.15s',
           transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)'
         }} />
@@ -103,14 +103,14 @@ const CategorySection = ({ sectionName, categories }) => {
           {categories.map(cat => (
             <div key={cat.code} style={{
               fontSize: '0.75rem',
-              color: COLORS.mediumGray,
+              color: COLORS.textSecondary,
               lineHeight: 1.5,
               padding: '0.125rem 0',
               display: 'flex',
               alignItems: 'baseline',
               gap: '0.375rem'
             }}>
-              <span style={{ color: COLORS.darkGray, fontWeight: 500 }}>{cat.name}</span>
+              <span style={{ color: COLORS.textPrimary, fontWeight: 500 }}>{cat.name}</span>
               {cat.personalization === 'Personalized' && (
                 <span style={{
                   fontSize: '0.625rem',
@@ -142,7 +142,7 @@ const FinnBubble = ({ children, isGreeting, isTip }) => (
         width: '32px',
         height: '32px',
         borderRadius: '50%',
-        backgroundColor: COLORS.backgroundGray,
+        backgroundColor: COLORS.bgPage,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -154,7 +154,7 @@ const FinnBubble = ({ children, isGreeting, isTip }) => (
       <div style={{ width: '32px', flexShrink: 0 }} />
     )}
     <div style={{
-      backgroundColor: isTip ? `${COLORS.highlightYellow}15` : COLORS.backgroundGray,
+      backgroundColor: isTip ? `${COLORS.highlightYellow}15` : COLORS.bgPage,
       padding: '0.875rem 1rem',
       borderRadius: '12px',
       maxWidth: '85%',
@@ -223,7 +223,7 @@ export default function FinnEducationPanel({
       backgroundColor: COLORS.white,
       borderRadius: '0.75rem',
       boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-      border: `1px solid ${COLORS.lightGray}`,
+      border: `1px solid ${COLORS.borderLight}`,
       overflow: 'hidden',
       display: 'flex',
       flexDirection: 'column'
@@ -285,13 +285,13 @@ export default function FinnEducationPanel({
         {phase === 'groups' && (
           <>
             <FinnBubble isGreeting>
-              <div style={{ fontSize: '1rem', fontWeight: 600, color: COLORS.darkGray }}>
+              <div style={{ fontSize: '1rem', fontWeight: 600, color: COLORS.textPrimary }}>
                 Sorting {transactionCount} transactions
               </div>
             </FinnBubble>
 
             <FinnBubble>
-              <div style={{ fontSize: '0.875rem', color: COLORS.darkGray, lineHeight: 1.5 }}>
+              <div style={{ fontSize: '0.875rem', color: COLORS.textPrimary, lineHeight: 1.5 }}>
                 While I work through these, here's a quick guide to how the Groups work. Click any Group to see what belongs there:
               </div>
             </FinnBubble>
@@ -303,7 +303,7 @@ export default function FinnEducationPanel({
                 backgroundColor: COLORS.white,
                 padding: '0.5rem',
                 borderRadius: '12px',
-                border: `1px solid ${COLORS.lightGray}`,
+                border: `1px solid ${COLORS.borderLight}`,
                 width: '100%',
                 maxWidth: '85%'
               }}>
@@ -341,25 +341,25 @@ export default function FinnEducationPanel({
         {phase === 'tips' && (
           <>
             <FinnBubble isGreeting>
-              <div style={{ fontSize: '0.9375rem', fontWeight: 600, color: COLORS.darkGray }}>
+              <div style={{ fontSize: '0.9375rem', fontWeight: 600, color: COLORS.textPrimary }}>
                 Tips for reviewing
               </div>
             </FinnBubble>
 
             <FinnBubble isTip>
-              <div style={{ fontSize: '0.875rem', color: COLORS.darkGray, lineHeight: 1.5 }}>
+              <div style={{ fontSize: '0.875rem', color: COLORS.textPrimary, lineHeight: 1.5 }}>
                 <strong>Corrections teach the system.</strong> Every time you change a Group assignment, that correction improves accuracy for future uploads.
               </div>
             </FinnBubble>
 
             <FinnBubble isTip>
-              <div style={{ fontSize: '0.875rem', color: COLORS.darkGray, lineHeight: 1.5 }}>
+              <div style={{ fontSize: '0.875rem', color: COLORS.textPrimary, lineHeight: 1.5 }}>
                 <strong>Review the suggestions.</strong> The AI has suggested groups for these transactions based on similar patterns. Most suggestions are good, but it's worth a quick scan. Any mistakes are easy to correct later.
               </div>
             </FinnBubble>
 
             <FinnBubble isTip>
-              <div style={{ fontSize: '0.875rem', color: COLORS.darkGray, lineHeight: 1.5 }}>
+              <div style={{ fontSize: '0.875rem', color: COLORS.textPrimary, lineHeight: 1.5 }}>
                 <strong>Apply to Similar.</strong> When you categorise a transaction, the system will offer to apply the same Group to all similar transactions — saving you time.
               </div>
             </FinnBubble>
@@ -370,10 +370,10 @@ export default function FinnEducationPanel({
                 onClick={() => setPhase('groups')}
                 style={{
                   padding: '0.5rem 1rem',
-                  border: `1px solid ${COLORS.lightGray}`,
+                  border: `1px solid ${COLORS.borderLight}`,
                   borderRadius: '8px',
                   backgroundColor: 'transparent',
-                  color: COLORS.mediumGray,
+                  color: COLORS.textSecondary,
                   fontSize: '0.8125rem',
                   cursor: 'pointer'
                 }}
@@ -394,7 +394,7 @@ export default function FinnEducationPanel({
             </FinnBubble>
 
             <FinnBubble>
-              <div style={{ fontSize: '0.875rem', color: COLORS.darkGray, lineHeight: 1.5 }}>
+              <div style={{ fontSize: '0.875rem', color: COLORS.textPrimary, lineHeight: 1.5 }}>
                 I've finished analysing all the uncertain transactions. Review the results on the right — you can accept suggestions or change any assignment.
               </div>
             </FinnBubble>
@@ -405,10 +405,10 @@ export default function FinnEducationPanel({
                 onClick={() => setPhase('groups')}
                 style={{
                   padding: '0.375rem 0.75rem',
-                  border: `1px solid ${COLORS.lightGray}`,
+                  border: `1px solid ${COLORS.borderLight}`,
                   borderRadius: '6px',
                   backgroundColor: 'transparent',
-                  color: COLORS.mediumGray,
+                  color: COLORS.textSecondary,
                   fontSize: '0.75rem',
                   cursor: 'pointer'
                 }}
@@ -419,10 +419,10 @@ export default function FinnEducationPanel({
                 onClick={() => setPhase('tips')}
                 style={{
                   padding: '0.375rem 0.75rem',
-                  border: `1px solid ${COLORS.lightGray}`,
+                  border: `1px solid ${COLORS.borderLight}`,
                   borderRadius: '6px',
                   backgroundColor: 'transparent',
-                  color: COLORS.mediumGray,
+                  color: COLORS.textSecondary,
                   fontSize: '0.75rem',
                   cursor: 'pointer'
                 }}
@@ -437,10 +437,10 @@ export default function FinnEducationPanel({
       {/* Status Footer */}
       <div style={{
         padding: '0.625rem 1rem',
-        borderTop: `1px solid ${COLORS.lightGray}`,
-        backgroundColor: COLORS.backgroundGray,
+        borderTop: `1px solid ${COLORS.borderLight}`,
+        backgroundColor: COLORS.bgPage,
         fontSize: '0.75rem',
-        color: COLORS.mediumGray,
+        color: COLORS.textSecondary,
         display: 'flex',
         alignItems: 'center',
         gap: '0.75rem'
@@ -452,7 +452,7 @@ export default function FinnEducationPanel({
           </span>
         )}
 
-        {waveInfo && <span style={{ color: COLORS.lightGray }}>|</span>}
+        {waveInfo && <span style={{ color: COLORS.borderLight }}>|</span>}
 
         {/* AI status */}
         {aiStatus?.running ? (
@@ -464,7 +464,7 @@ export default function FinnEducationPanel({
                 <span style={{
                   flex: 1,
                   height: '4px',
-                  backgroundColor: COLORS.lightGray,
+                  backgroundColor: COLORS.borderLight,
                   borderRadius: '2px',
                   overflow: 'hidden',
                   maxWidth: '80px'

@@ -36,7 +36,7 @@ export default function LicenseLockout({ onRetry }) {
         alignItems: 'center',
         justifyContent: 'center',
         padding: '2rem',
-        backgroundColor: COLORS.backgroundGray
+        backgroundColor: COLORS.bgPage
       }}
     >
       <div
@@ -69,7 +69,7 @@ export default function LicenseLockout({ onRetry }) {
           style={{
             fontSize: '1.5rem',
             fontWeight: 700,
-            color: COLORS.darkGray,
+            color: COLORS.textPrimary,
             marginBottom: '1rem'
           }}
         >
@@ -78,7 +78,7 @@ export default function LicenseLockout({ onRetry }) {
 
         <p
           style={{
-            color: COLORS.mediumGray,
+            color: COLORS.textSecondary,
             marginBottom: '1.5rem',
             lineHeight: 1.6
           }}
@@ -98,7 +98,7 @@ export default function LicenseLockout({ onRetry }) {
             padding: '0.75rem 1.5rem',
             borderRadius: '0.5rem',
             border: 'none',
-            backgroundColor: retrying ? COLORS.mediumGray : COLORS.slainteBlue,
+            backgroundColor: retrying ? COLORS.textSecondary : COLORS.slainteBlue,
             color: COLORS.white,
             fontSize: '1rem',
             fontWeight: 600,
@@ -130,7 +130,7 @@ export default function LicenseLockout({ onRetry }) {
             backgroundColor: `${COLORS.slainteBlue}10`
           }}
         >
-          <p style={{ margin: '0 0 0.5rem', fontSize: '0.85rem', color: COLORS.mediumGray }}>
+          <p style={{ margin: '0 0 0.5rem', fontSize: '0.85rem', color: COLORS.textSecondary }}>
             If this issue persists, please contact support:
           </p>
           <Mail
@@ -158,7 +158,7 @@ export default function LicenseLockout({ onRetry }) {
           style={{
             marginTop: '1.5rem',
             fontSize: '0.875rem',
-            color: COLORS.mediumGray
+            color: COLORS.textSecondary
           }}
         >
           Please include your practice name when contacting support.

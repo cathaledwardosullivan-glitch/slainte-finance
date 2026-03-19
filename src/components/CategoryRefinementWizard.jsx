@@ -27,7 +27,7 @@ const CATEGORY_REFINEMENT_CONFIG = {
         parentCode: '2.0',
         parentName: 'Staff Costs',
         icon: '👥',
-        color: '#059669',
+        color: COLORS.successDark,
         reason: 'Different staff types (nurses, receptionists, locums, etc.) require separate P&L lines',
         categoryType: 'expense'
       },
@@ -45,7 +45,7 @@ const CATEGORY_REFINEMENT_CONFIG = {
         parentCodes: ['40.0', '50.0'], // Both parent codes this category handles
         parentName: 'Professional (Fees & Development)',
         icon: '📚',
-        color: '#8B5CF6',
+        color: COLORS.chartViolet,
         reason: 'Accountancy, legal, bank charges, indemnity, subscriptions, and CPD require separate P&L lines',
         categoryType: 'expense',
         subcategoryRange: [40, 60] // Include all 40.x and 50.x subcategories
@@ -60,7 +60,7 @@ const CATEGORY_REFINEMENT_CONFIG = {
         parentCode: '10.0',
         parentName: 'Medical Supplies',
         icon: '💉',
-        color: '#10B981',
+        color: COLORS.success,
         reason: 'All medical supplies appear on the same P&L line',
         categoryType: 'expense'
       },
@@ -76,7 +76,7 @@ const CATEGORY_REFINEMENT_CONFIG = {
         parentCode: '80.0',
         parentName: 'Petty Cash / Other',
         icon: '📊',
-        color: COLORS.mediumGray,
+        color: COLORS.textSecondary,
         reason: 'Sundry and miscellaneous expenses share P&L lines',
         categoryType: 'expense'
       }
@@ -647,7 +647,7 @@ export default function CategoryRefinementWizard({ isOpen, onClose }) {
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      backgroundColor: COLORS.overlayDark,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -667,16 +667,16 @@ export default function CategoryRefinementWizard({ isOpen, onClose }) {
         {/* Header */}
         <div style={{
           padding: '1.5rem',
-          borderBottom: `1px solid ${COLORS.lightGray}`,
+          borderBottom: `1px solid ${COLORS.borderLight}`,
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center'
         }}>
           <div>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: '600', color: COLORS.darkGray, margin: 0 }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '600', color: COLORS.textPrimary, margin: 0 }}>
               Category Refinement
             </h2>
-            <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray, margin: '0.25rem 0 0 0' }}>
+            <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary, margin: '0.25rem 0 0 0' }}>
               {currentStep === 'overview' && 'Improve your P&L report accuracy'}
               {currentStep === 'refining' && `Refining ${currentCategory?.parentName} (${currentCategoryIndex + 1} of ${totalCategories})`}
               {currentStep === 'complete' && 'Refinement Complete'}
@@ -688,11 +688,11 @@ export default function CategoryRefinementWizard({ isOpen, onClose }) {
               background: 'none',
               border: 'none',
               cursor: 'pointer',
-              color: COLORS.mediumGray,
+              color: COLORS.textSecondary,
               padding: '0.5rem'
             }}
-            onMouseEnter={(e) => e.currentTarget.style.color = COLORS.darkGray}
-            onMouseLeave={(e) => e.currentTarget.style.color = COLORS.mediumGray}
+            onMouseEnter={(e) => e.currentTarget.style.color = COLORS.textPrimary}
+            onMouseLeave={(e) => e.currentTarget.style.color = COLORS.textSecondary}
           >
             <X style={{ width: '1.5rem', height: '1.5rem' }} />
           </button>
@@ -738,7 +738,7 @@ export default function CategoryRefinementWizard({ isOpen, onClose }) {
         {currentStep === 'refining' && (
           <div style={{
             padding: '1.5rem',
-            borderTop: `1px solid ${COLORS.lightGray}`,
+            borderTop: `1px solid ${COLORS.borderLight}`,
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center'
@@ -751,21 +751,21 @@ export default function CategoryRefinementWizard({ isOpen, onClose }) {
                 gap: '0.5rem',
                 padding: '0.75rem 1.5rem',
                 borderRadius: '0.5rem',
-                border: `1px solid ${COLORS.lightGray}`,
+                border: `1px solid ${COLORS.borderLight}`,
                 backgroundColor: COLORS.white,
-                color: COLORS.darkGray,
+                color: COLORS.textPrimary,
                 fontSize: '0.875rem',
                 fontWeight: '500',
                 cursor: 'pointer'
               }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.backgroundGray}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.bgPage}
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.white}
             >
               <ChevronLeft style={{ width: '1rem', height: '1rem' }} />
               Back
             </button>
 
-            <div style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>
+            <div style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>
               Category {currentCategoryIndex + 1} of {totalCategories}
             </div>
 
@@ -840,10 +840,10 @@ function OverviewStep({ partiallyClassified, config, onStartRefinement }) {
         border: `1px solid ${COLORS.slainteBlue}`,
         marginBottom: '2rem'
       }}>
-        <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: COLORS.darkGray, margin: '0 0 0.5rem 0' }}>
+        <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: COLORS.textPrimary, margin: '0 0 0.5rem 0' }}>
           You have {totalPartial} partially classified transactions
         </h3>
-        <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray, margin: 0, lineHeight: '1.6' }}>
+        <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary, margin: 0, lineHeight: '1.6' }}>
           These transactions are currently assigned to parent categories. Refining them to specific subcategories
           improves your P&L report accuracy and provides better financial insights.
         </p>
@@ -854,11 +854,11 @@ function OverviewStep({ partiallyClassified, config, onStartRefinement }) {
         <div style={{ marginBottom: '2rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
             <CheckCircle style={{ width: '1.25rem', height: '1.25rem', color: COLORS.incomeColor }} />
-            <h4 style={{ fontSize: '1rem', fontWeight: '600', color: COLORS.darkGray, margin: 0 }}>
+            <h4 style={{ fontSize: '1rem', fontWeight: '600', color: COLORS.textPrimary, margin: 0 }}>
               {config.income.label}
             </h4>
           </div>
-          <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray, marginBottom: '1rem', lineHeight: '1.6' }}>
+          <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary, marginBottom: '1rem', lineHeight: '1.6' }}>
             {config.income.description}
           </p>
 
@@ -882,11 +882,11 @@ function OverviewStep({ partiallyClassified, config, onStartRefinement }) {
         <div style={{ marginBottom: '2rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
             <AlertCircle style={{ width: '1.25rem', height: '1.25rem', color: COLORS.expenseColor }} />
-            <h4 style={{ fontSize: '1rem', fontWeight: '600', color: COLORS.darkGray, margin: 0 }}>
+            <h4 style={{ fontSize: '1rem', fontWeight: '600', color: COLORS.textPrimary, margin: 0 }}>
               {config.essential.label}
             </h4>
           </div>
-          <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray, marginBottom: '1rem', lineHeight: '1.6' }}>
+          <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary, marginBottom: '1rem', lineHeight: '1.6' }}>
             {config.essential.description}
           </p>
 
@@ -910,11 +910,11 @@ function OverviewStep({ partiallyClassified, config, onStartRefinement }) {
         <div style={{ marginBottom: '2rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
             <CheckCircle style={{ width: '1.25rem', height: '1.25rem', color: COLORS.incomeColor }} />
-            <h4 style={{ fontSize: '1rem', fontWeight: '600', color: COLORS.darkGray, margin: 0 }}>
+            <h4 style={{ fontSize: '1rem', fontWeight: '600', color: COLORS.textPrimary, margin: 0 }}>
               {config.optional.label}
             </h4>
           </div>
-          <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray, marginBottom: '1rem', lineHeight: '1.6' }}>
+          <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary, marginBottom: '1rem', lineHeight: '1.6' }}>
             {config.optional.description}
           </p>
 
@@ -940,7 +940,7 @@ function OverviewStep({ partiallyClassified, config, onStartRefinement }) {
         gap: '1rem',
         marginTop: '2rem',
         paddingTop: '2rem',
-        borderTop: `1px solid ${COLORS.lightGray}`
+        borderTop: `1px solid ${COLORS.borderLight}`
       }}>
         {/* Income Button */}
         {incomeCount > 0 && (
@@ -1034,20 +1034,20 @@ function OverviewStep({ partiallyClassified, config, onStartRefinement }) {
             flex: '0 0 auto',
             padding: '1rem 1.5rem',
             borderRadius: '0.5rem',
-            border: `1px solid ${COLORS.lightGray}`,
+            border: `1px solid ${COLORS.borderLight}`,
             backgroundColor: COLORS.white,
-            color: COLORS.mediumGray,
+            color: COLORS.textSecondary,
             fontSize: '0.875rem',
             fontWeight: '500',
             cursor: 'pointer'
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = COLORS.backgroundGray;
-            e.currentTarget.style.color = COLORS.darkGray;
+            e.currentTarget.style.backgroundColor = COLORS.bgPage;
+            e.currentTarget.style.color = COLORS.textPrimary;
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.backgroundColor = COLORS.white;
-            e.currentTarget.style.color = COLORS.mediumGray;
+            e.currentTarget.style.color = COLORS.textSecondary;
           }}
         >
           Skip for Now
@@ -1063,8 +1063,8 @@ function CategoryCard({ category, count }) {
     <div style={{
       padding: '1rem',
       borderRadius: '0.5rem',
-      border: `1px solid ${COLORS.lightGray}`,
-      backgroundColor: COLORS.backgroundGray,
+      border: `1px solid ${COLORS.borderLight}`,
+      backgroundColor: COLORS.bgPage,
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center'
@@ -1083,10 +1083,10 @@ function CategoryCard({ category, count }) {
           {category.icon}
         </div>
         <div>
-          <div style={{ fontWeight: '600', color: COLORS.darkGray, fontSize: '0.9375rem' }}>
+          <div style={{ fontWeight: '600', color: COLORS.textPrimary, fontSize: '0.9375rem' }}>
             {category.parentName}
           </div>
-          <div style={{ fontSize: '0.8125rem', color: COLORS.mediumGray, marginTop: '0.25rem' }}>
+          <div style={{ fontSize: '0.8125rem', color: COLORS.textSecondary, marginTop: '0.25rem' }}>
             {category.reason}
           </div>
         </div>
@@ -1153,10 +1153,10 @@ function RefinementStep({ category, subcategories, onCategorySelect, onBatchAssi
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' }}>
           <div style={{ fontSize: '2rem' }}>{category.icon}</div>
           <div>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: COLORS.darkGray, margin: 0 }}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: COLORS.textPrimary, margin: 0 }}>
               {category.parentName}
             </h3>
-            <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray, margin: '0.25rem 0 0 0' }}>
+            <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary, margin: '0.25rem 0 0 0' }}>
               {category.count > 0
                 ? `${category.count} identifiers (${category.totalTransactions} transactions) to refine`
                 : `${category.totalTransactions} transactions to refine (no identifiers)`
@@ -1164,7 +1164,7 @@ function RefinementStep({ category, subcategories, onCategorySelect, onBatchAssi
             </p>
           </div>
         </div>
-        <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray, margin: 0, lineHeight: '1.6' }}>
+        <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary, margin: 0, lineHeight: '1.6' }}>
           {category.reason}
         </p>
       </div>
@@ -1180,10 +1180,10 @@ function RefinementStep({ category, subcategories, onCategorySelect, onBatchAssi
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
             <div>
-              <h4 style={{ fontSize: '0.9375rem', fontWeight: '600', color: COLORS.darkGray, margin: 0 }}>
+              <h4 style={{ fontSize: '0.9375rem', fontWeight: '600', color: COLORS.textPrimary, margin: 0 }}>
                 Auto-Refine Available
               </h4>
-              <p style={{ fontSize: '0.8125rem', color: COLORS.mediumGray, margin: '0.25rem 0 0 0' }}>
+              <p style={{ fontSize: '0.8125rem', color: COLORS.textSecondary, margin: '0.25rem 0 0 0' }}>
                 {autoRefineableIdentifiers.length} identifier{autoRefineableIdentifiers.length !== 1 ? 's' : ''} ({autoRefineableCount} transactions)
                 can be automatically refined based on known category mappings
               </p>
@@ -1209,7 +1209,7 @@ function RefinementStep({ category, subcategories, onCategorySelect, onBatchAssi
               Auto-Refine All
             </button>
           </div>
-          <div style={{ fontSize: '0.75rem', color: COLORS.mediumGray }}>
+          <div style={{ fontSize: '0.75rem', color: COLORS.textSecondary }}>
             Suggested refinements: {autoRefineableIdentifiers.map(g =>
               `${g.identifier} → ${g.suggestedCategoryName}`
             ).join(', ')}
@@ -1219,7 +1219,7 @@ function RefinementStep({ category, subcategories, onCategorySelect, onBatchAssi
 
       {/* Quick Actions */}
       <div style={{ marginBottom: '1.5rem' }}>
-        <h4 style={{ fontSize: '0.875rem', fontWeight: '600', color: COLORS.darkGray, marginBottom: '0.75rem' }}>
+        <h4 style={{ fontSize: '0.875rem', fontWeight: '600', color: COLORS.textPrimary, marginBottom: '0.75rem' }}>
           Quick Actions - Assign all to:
         </h4>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
@@ -1230,9 +1230,9 @@ function RefinementStep({ category, subcategories, onCategorySelect, onBatchAssi
               style={{
                 padding: '0.5rem 1rem',
                 borderRadius: '0.375rem',
-                border: `1px solid ${COLORS.lightGray}`,
+                border: `1px solid ${COLORS.borderLight}`,
                 backgroundColor: COLORS.white,
-                color: COLORS.darkGray,
+                color: COLORS.textPrimary,
                 fontSize: '0.8125rem',
                 fontWeight: '500',
                 cursor: 'pointer'
@@ -1244,8 +1244,8 @@ function RefinementStep({ category, subcategories, onCategorySelect, onBatchAssi
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = COLORS.white;
-                e.currentTarget.style.color = COLORS.darkGray;
-                e.currentTarget.style.borderColor = COLORS.lightGray;
+                e.currentTarget.style.color = COLORS.textPrimary;
+                e.currentTarget.style.borderColor = COLORS.borderLight;
               }}
             >
               {subcat.code} - {subcat.name}
@@ -1257,7 +1257,7 @@ function RefinementStep({ category, subcategories, onCategorySelect, onBatchAssi
       {/* Identifier List */}
       {category.identifiers && category.identifiers.length > 0 && (
         <div>
-          <h4 style={{ fontSize: '0.875rem', fontWeight: '600', color: COLORS.darkGray, marginBottom: '0.75rem' }}>
+          <h4 style={{ fontSize: '0.875rem', fontWeight: '600', color: COLORS.textPrimary, marginBottom: '0.75rem' }}>
             Individual Identifiers:
           </h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -1280,7 +1280,7 @@ function RefinementStep({ category, subcategories, onCategorySelect, onBatchAssi
       {/* Individual Transactions (when no identifiers) */}
       {category.transactionsWithoutIdentifiers && category.transactionsWithoutIdentifiers.length > 0 && (
         <div style={{ marginTop: category.identifiers.length > 0 ? '1.5rem' : '0' }}>
-          <h4 style={{ fontSize: '0.875rem', fontWeight: '600', color: COLORS.darkGray, marginBottom: '0.75rem' }}>
+          <h4 style={{ fontSize: '0.875rem', fontWeight: '600', color: COLORS.textPrimary, marginBottom: '0.75rem' }}>
             {category.identifiers.length > 0 ? 'Transactions without identifiers:' : 'Individual Transactions:'}
           </h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -1317,7 +1317,7 @@ function RecategorizePanel({ identifierGroup, onRecategorize, onCancel }) {
       <div style={{
         fontSize: '0.875rem',
         fontWeight: '600',
-        color: COLORS.darkGray,
+        color: COLORS.textPrimary,
         marginBottom: '0.75rem'
       }}>
         Choose the correct category:
@@ -1338,16 +1338,16 @@ function RecategorizePanel({ identifierGroup, onRecategorize, onCancel }) {
             style={{
               padding: '0.75rem',
               borderRadius: '0.375rem',
-              border: `1px solid ${COLORS.lightGray}`,
+              border: `1px solid ${COLORS.borderLight}`,
               backgroundColor: COLORS.white,
-              color: COLORS.darkGray,
+              color: COLORS.textPrimary,
               fontSize: '0.8125rem',
               fontWeight: '500',
               cursor: 'pointer',
               textAlign: 'left'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = COLORS.backgroundGray;
+              e.currentTarget.style.backgroundColor = COLORS.bgPage;
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = COLORS.white;
@@ -1369,14 +1369,14 @@ function RecategorizePanel({ identifierGroup, onRecategorize, onCancel }) {
           width: '100%',
           padding: '0.625rem',
           borderRadius: '0.375rem',
-          border: `1px solid ${COLORS.lightGray}`,
+          border: `1px solid ${COLORS.borderLight}`,
           backgroundColor: COLORS.white,
-          color: COLORS.mediumGray,
+          color: COLORS.textSecondary,
           fontSize: '0.8125rem',
           fontWeight: '500',
           cursor: 'pointer'
         }}
-        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.backgroundGray}
+        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.bgPage}
         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.white}
       >
         Cancel
@@ -1392,7 +1392,7 @@ function TransactionRefinementRow({ transaction, subcategories, selectedCategory
 
   return (
     <div style={{
-      border: `1px solid ${selectedCategory ? categoryColor : COLORS.lightGray}`,
+      border: `1px solid ${selectedCategory ? categoryColor : COLORS.borderLight}`,
       borderRadius: '0.5rem',
       backgroundColor: selectedCategory ? `${categoryColor}10` : COLORS.white,
       overflow: 'hidden'
@@ -1409,10 +1409,10 @@ function TransactionRefinementRow({ transaction, subcategories, selectedCategory
         }}
       >
         <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: '600', color: COLORS.darkGray, fontSize: '0.9375rem' }}>
+          <div style={{ fontWeight: '600', color: COLORS.textPrimary, fontSize: '0.9375rem' }}>
             {transaction.details}
           </div>
-          <div style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginTop: '0.125rem' }}>
+          <div style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginTop: '0.125rem' }}>
             {transaction.date ? new Date(transaction.date).toLocaleDateString() : ''} • €{transaction.amount?.toLocaleString() || '0'}
           </div>
         </div>
@@ -1432,7 +1432,7 @@ function TransactionRefinementRow({ transaction, subcategories, selectedCategory
         <ArrowRight style={{
           width: '1.25rem',
           height: '1.25rem',
-          color: COLORS.mediumGray,
+          color: COLORS.textSecondary,
           transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
           transition: 'transform 0.2s'
         }} />
@@ -1460,9 +1460,9 @@ function TransactionRefinementRow({ transaction, subcategories, selectedCategory
                 style={{
                   padding: '0.75rem',
                   borderRadius: '0.375rem',
-                  border: `1px solid ${selectedCategory === subcat.code ? categoryColor : COLORS.lightGray}`,
+                  border: `1px solid ${selectedCategory === subcat.code ? categoryColor : COLORS.borderLight}`,
                   backgroundColor: selectedCategory === subcat.code ? categoryColor : COLORS.white,
-                  color: selectedCategory === subcat.code ? COLORS.white : COLORS.darkGray,
+                  color: selectedCategory === subcat.code ? COLORS.white : COLORS.textPrimary,
                   fontSize: '0.8125rem',
                   fontWeight: selectedCategory === subcat.code ? '600' : '500',
                   cursor: 'pointer',
@@ -1470,7 +1470,7 @@ function TransactionRefinementRow({ transaction, subcategories, selectedCategory
                 }}
                 onMouseEnter={(e) => {
                   if (selectedCategory !== subcat.code) {
-                    e.currentTarget.style.backgroundColor = COLORS.backgroundGray;
+                    e.currentTarget.style.backgroundColor = COLORS.bgPage;
                   }
                 }}
                 onMouseLeave={(e) => {
@@ -1492,7 +1492,7 @@ function TransactionRefinementRow({ transaction, subcategories, selectedCategory
             <div style={{
               marginTop: '0.75rem',
               paddingTop: '0.75rem',
-              borderTop: `1px solid ${COLORS.lightGray}`
+              borderTop: `1px solid ${COLORS.borderLight}`
             }}>
               <button
                 onClick={(e) => {
@@ -1503,21 +1503,21 @@ function TransactionRefinementRow({ transaction, subcategories, selectedCategory
                   width: '100%',
                   padding: '0.625rem',
                   borderRadius: '0.375rem',
-                  border: `1px solid ${COLORS.lightGray}`,
+                  border: `1px solid ${COLORS.borderLight}`,
                   backgroundColor: COLORS.white,
-                  color: COLORS.mediumGray,
+                  color: COLORS.textSecondary,
                   fontSize: '0.8125rem',
                   fontWeight: '500',
                   cursor: 'pointer',
                   textAlign: 'center'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = COLORS.backgroundGray;
-                  e.currentTarget.style.color = COLORS.darkGray;
+                  e.currentTarget.style.backgroundColor = COLORS.bgPage;
+                  e.currentTarget.style.color = COLORS.textPrimary;
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = COLORS.white;
-                  e.currentTarget.style.color = COLORS.mediumGray;
+                  e.currentTarget.style.color = COLORS.textSecondary;
                 }}
               >
                 Wrong category? Choose a different one
@@ -1556,14 +1556,14 @@ function TransactionRecategorizePanel({ transaction, onRecategorize, onCancel })
     <div style={{
       padding: '1rem',
       paddingTop: '0',
-      backgroundColor: COLORS.backgroundGray,
-      borderTop: `1px solid ${COLORS.lightGray}`
+      backgroundColor: COLORS.bgPage,
+      borderTop: `1px solid ${COLORS.borderLight}`
     }}>
       <div style={{ marginBottom: '0.75rem' }}>
-        <div style={{ fontSize: '0.875rem', fontWeight: '600', color: COLORS.darkGray, marginBottom: '0.25rem' }}>
+        <div style={{ fontSize: '0.875rem', fontWeight: '600', color: COLORS.textPrimary, marginBottom: '0.25rem' }}>
           Choose a different category:
         </div>
-        <div style={{ fontSize: '0.75rem', color: COLORS.mediumGray }}>
+        <div style={{ fontSize: '0.75rem', color: COLORS.textSecondary }}>
           Transaction: {transaction.details}
         </div>
       </div>
@@ -1583,16 +1583,16 @@ function TransactionRecategorizePanel({ transaction, onRecategorize, onCancel })
             style={{
               padding: '0.625rem',
               borderRadius: '0.375rem',
-              border: `1px solid ${COLORS.lightGray}`,
+              border: `1px solid ${COLORS.borderLight}`,
               backgroundColor: COLORS.white,
-              color: COLORS.darkGray,
+              color: COLORS.textPrimary,
               fontSize: '0.8125rem',
               fontWeight: '500',
               cursor: 'pointer',
               textAlign: 'left'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = COLORS.backgroundGray;
+              e.currentTarget.style.backgroundColor = COLORS.bgPage;
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = COLORS.white;
@@ -1614,14 +1614,14 @@ function TransactionRecategorizePanel({ transaction, onRecategorize, onCancel })
           width: '100%',
           padding: '0.625rem',
           borderRadius: '0.375rem',
-          border: `1px solid ${COLORS.lightGray}`,
+          border: `1px solid ${COLORS.borderLight}`,
           backgroundColor: COLORS.white,
-          color: COLORS.mediumGray,
+          color: COLORS.textSecondary,
           fontSize: '0.8125rem',
           fontWeight: '500',
           cursor: 'pointer'
         }}
-        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.backgroundGray}
+        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.bgPage}
         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.white}
       >
         Cancel
@@ -1638,7 +1638,7 @@ function IdentifierRefinementRow({ identifierGroup, subcategories, selectedCateg
 
   return (
     <div style={{
-      border: `1px solid ${selectedCategory ? categoryColor : suggestedCategoryCode ? COLORS.incomeColor : COLORS.lightGray}`,
+      border: `1px solid ${selectedCategory ? categoryColor : suggestedCategoryCode ? COLORS.incomeColor : COLORS.borderLight}`,
       borderRadius: '0.5rem',
       backgroundColor: selectedCategory ? `${categoryColor}10` : suggestedCategoryCode ? `${COLORS.incomeColor}08` : COLORS.white,
       overflow: 'hidden'
@@ -1656,7 +1656,7 @@ function IdentifierRefinementRow({ identifierGroup, subcategories, selectedCateg
       >
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span style={{ fontWeight: '600', color: COLORS.darkGray, fontSize: '0.9375rem' }}>
+            <span style={{ fontWeight: '600', color: COLORS.textPrimary, fontSize: '0.9375rem' }}>
               {identifier}
             </span>
             {suggestedCategoryCode && !selectedCategory && (
@@ -1672,10 +1672,10 @@ function IdentifierRefinementRow({ identifierGroup, subcategories, selectedCateg
               </span>
             )}
           </div>
-          <div style={{ fontSize: '0.8125rem', color: COLORS.mediumGray, marginTop: '0.25rem' }}>
+          <div style={{ fontSize: '0.8125rem', color: COLORS.textSecondary, marginTop: '0.25rem' }}>
             {count} transaction{count > 1 ? 's' : ''} • Sample: {sampleTransaction.details}
           </div>
-          <div style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginTop: '0.125rem' }}>
+          <div style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginTop: '0.125rem' }}>
             {sampleTransaction.date ? new Date(sampleTransaction.date).toLocaleDateString() : ''} • €{sampleTransaction.amount?.toLocaleString() || '0'}
           </div>
         </div>
@@ -1719,7 +1719,7 @@ function IdentifierRefinementRow({ identifierGroup, subcategories, selectedCateg
         <ArrowRight style={{
           width: '1.25rem',
           height: '1.25rem',
-          color: COLORS.mediumGray,
+          color: COLORS.textSecondary,
           transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
           transition: 'transform 0.2s'
         }} />
@@ -1747,9 +1747,9 @@ function IdentifierRefinementRow({ identifierGroup, subcategories, selectedCateg
                 style={{
                   padding: '0.75rem',
                   borderRadius: '0.375rem',
-                  border: `1px solid ${selectedCategory === subcat.code ? categoryColor : COLORS.lightGray}`,
+                  border: `1px solid ${selectedCategory === subcat.code ? categoryColor : COLORS.borderLight}`,
                   backgroundColor: selectedCategory === subcat.code ? categoryColor : COLORS.white,
-                  color: selectedCategory === subcat.code ? COLORS.white : COLORS.darkGray,
+                  color: selectedCategory === subcat.code ? COLORS.white : COLORS.textPrimary,
                   fontSize: '0.8125rem',
                   fontWeight: selectedCategory === subcat.code ? '600' : '500',
                   cursor: 'pointer',
@@ -1757,7 +1757,7 @@ function IdentifierRefinementRow({ identifierGroup, subcategories, selectedCateg
                 }}
                 onMouseEnter={(e) => {
                   if (selectedCategory !== subcat.code) {
-                    e.currentTarget.style.backgroundColor = COLORS.backgroundGray;
+                    e.currentTarget.style.backgroundColor = COLORS.bgPage;
                   }
                 }}
                 onMouseLeave={(e) => {
@@ -1778,7 +1778,7 @@ function IdentifierRefinementRow({ identifierGroup, subcategories, selectedCateg
           <div style={{
             marginTop: '0.75rem',
             paddingTop: '0.75rem',
-            borderTop: `1px solid ${COLORS.lightGray}`
+            borderTop: `1px solid ${COLORS.borderLight}`
           }}>
             <button
               onClick={(e) => {
@@ -1789,21 +1789,21 @@ function IdentifierRefinementRow({ identifierGroup, subcategories, selectedCateg
                 width: '100%',
                 padding: '0.625rem',
                 borderRadius: '0.375rem',
-                border: `1px solid ${COLORS.lightGray}`,
+                border: `1px solid ${COLORS.borderLight}`,
                 backgroundColor: COLORS.white,
-                color: COLORS.mediumGray,
+                color: COLORS.textSecondary,
                 fontSize: '0.8125rem',
                 fontWeight: '500',
                 cursor: 'pointer',
                 textAlign: 'center'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = COLORS.backgroundGray;
-                e.currentTarget.style.color = COLORS.darkGray;
+                e.currentTarget.style.backgroundColor = COLORS.bgPage;
+                e.currentTarget.style.color = COLORS.textPrimary;
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = COLORS.white;
-                e.currentTarget.style.color = COLORS.mediumGray;
+                e.currentTarget.style.color = COLORS.textSecondary;
               }}
             >
               Wrong category? Choose a different one
@@ -1845,11 +1845,11 @@ function CompleteStep({ refinedCount, learnedIdentifiers, onClose }) {
         <CheckCircle style={{ width: '2rem', height: '2rem', color: COLORS.incomeColor }} />
       </div>
 
-      <h3 style={{ fontSize: '1.5rem', fontWeight: '600', color: COLORS.darkGray, marginBottom: '0.75rem' }}>
+      <h3 style={{ fontSize: '1.5rem', fontWeight: '600', color: COLORS.textPrimary, marginBottom: '0.75rem' }}>
         Refinement Complete!
       </h3>
 
-      <p style={{ fontSize: '1rem', color: COLORS.mediumGray, marginBottom: '1.5rem', lineHeight: '1.6' }}>
+      <p style={{ fontSize: '1rem', color: COLORS.textSecondary, marginBottom: '1.5rem', lineHeight: '1.6' }}>
         You've refined {refinedCount} transactions to specific subcategories.
         <br />
         Your P&L reports will now show more detailed and accurate breakdowns.
@@ -1865,19 +1865,19 @@ function CompleteStep({ refinedCount, learnedIdentifiers, onClose }) {
           marginBottom: '2rem',
           textAlign: 'left'
         }}>
-          <h4 style={{ fontSize: '0.875rem', fontWeight: '600', color: COLORS.darkGray, marginBottom: '0.5rem' }}>
+          <h4 style={{ fontSize: '0.875rem', fontWeight: '600', color: COLORS.textPrimary, marginBottom: '0.5rem' }}>
             Learned {learnedIdentifiers.length} new identifier{learnedIdentifiers.length !== 1 ? 's' : ''} for future uploads:
           </h4>
-          <div style={{ fontSize: '0.8125rem', color: COLORS.mediumGray, maxHeight: '120px', overflowY: 'auto' }}>
+          <div style={{ fontSize: '0.8125rem', color: COLORS.textSecondary, maxHeight: '120px', overflowY: 'auto' }}>
             {learnedIdentifiers.map((item, index) => (
               <div key={index} style={{ marginBottom: '0.25rem' }}>
-                <span style={{ fontWeight: '500', color: COLORS.darkGray }}>{item.identifier}</span>
+                <span style={{ fontWeight: '500', color: COLORS.textPrimary }}>{item.identifier}</span>
                 {' → '}
                 <span style={{ color: COLORS.incomeColor }}>{item.categoryName}</span>
               </div>
             ))}
           </div>
-          <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginTop: '0.75rem', marginBottom: 0 }}>
+          <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginTop: '0.75rem', marginBottom: 0 }}>
             Future transactions with these identifiers will be automatically categorized.
           </p>
         </div>

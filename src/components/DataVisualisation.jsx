@@ -20,7 +20,7 @@ import {
 import { calculateSummaries } from '../utils/financialCalculations';
 import { PCRS_PAYMENT_CATEGORIES } from '../data/paymentCategories';
 
-const CHART_COLORS = [COLORS.slainteBlue, COLORS.incomeColor, COLORS.highlightYellow, COLORS.expenseColor, '#8884D8', '#82CA9D', '#FF8042', '#00C49F', '#FFBB28', '#0088FE', '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B739', '#52B788'];
+const CHART_COLORS = [COLORS.warning, COLORS.incomeColor, COLORS.highlightYellow, COLORS.slainteBlue, COLORS.success, COLORS.expenseColor, COLORS.accentPurple, COLORS.chartViolet, COLORS.chartPink, COLORS.slainteBlueDark, COLORS.incomeColorDark, COLORS.warningDark];
 
 export default function DataVisualisation() {
   const { transactions, selectedYear, setSelectedYear, getAvailableYears, useRollingYear, setUseRollingYear, paymentAnalysisData } = useAppContext();
@@ -31,12 +31,12 @@ export default function DataVisualisation() {
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex items-center mb-6">
           <BarChart3 className="h-6 w-6 mr-2" style={{ color: COLORS.slainteBlue }} />
-          <h2 className="text-2xl font-semibold" style={{ color: COLORS.darkGray }}>
+          <h2 className="text-2xl font-semibold" style={{ color: COLORS.textPrimary }}>
             Data Visualisation
           </h2>
         </div>
         <div className="p-8 text-center rounded-lg" style={{ backgroundColor: `${COLORS.highlightYellow}20`, borderLeft: `4px solid ${COLORS.highlightYellow}` }}>
-          <p style={{ color: COLORS.darkGray, fontSize: '1.125rem', fontWeight: 500 }}>
+          <p style={{ color: COLORS.textPrimary, fontSize: '1.125rem', fontWeight: 500 }}>
             <strong>No data available.</strong> Upload transaction data to see visualisations.
           </p>
         </div>
@@ -51,7 +51,7 @@ export default function DataVisualisation() {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center">
             <BarChart3 className="h-6 w-6 mr-2" style={{ color: COLORS.slainteBlue }} />
-            <h2 className="text-2xl font-semibold" style={{ color: COLORS.darkGray }}>
+            <h2 className="text-2xl font-semibold" style={{ color: COLORS.textPrimary }}>
               Data Visualisation
             </h2>
           </div>
@@ -72,12 +72,12 @@ export default function DataVisualisation() {
             {/* Year Selector - only shown in calendar year mode */}
             {!useRollingYear && (
               <div className="flex items-center space-x-2">
-                <Calendar className="h-4 w-4" style={{ color: COLORS.mediumGray }} />
+                <Calendar className="h-4 w-4" style={{ color: COLORS.textSecondary }} />
                 <select
                   value={selectedYear}
                   onChange={(e) => setSelectedYear(parseInt(e.target.value))}
                   className="border rounded px-3 py-1"
-                  style={{ borderColor: COLORS.lightGray }}
+                  style={{ borderColor: COLORS.borderLight }}
                 >
                   {getAvailableYears().length > 0 ? getAvailableYears().map(year => (
                     <option key={year} value={year}>{year}</option>
@@ -89,7 +89,7 @@ export default function DataVisualisation() {
             )}
           </div>
         </div>
-        <p className="text-sm" style={{ color: COLORS.mediumGray }}>
+        <p className="text-sm" style={{ color: COLORS.textSecondary }}>
           Visual analysis of your financial data {summaries.periodLabel ? `(${summaries.periodLabel})` : `for ${selectedYear}`}
         </p>
       </div>
@@ -199,7 +199,7 @@ export default function DataVisualisation() {
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-300 flex items-center justify-center" style={{ color: COLORS.mediumGray }}>
+            <div className="h-300 flex items-center justify-center" style={{ color: COLORS.textSecondary }}>
               No income data available
             </div>
           )}
@@ -306,7 +306,7 @@ export default function DataVisualisation() {
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-300 flex items-center justify-center" style={{ color: COLORS.mediumGray }}>
+            <div className="h-300 flex items-center justify-center" style={{ color: COLORS.textSecondary }}>
               No expense data available
             </div>
           )}
@@ -321,7 +321,7 @@ export default function DataVisualisation() {
           </h3>
 
           <div className="mb-6">
-            <h4 className="text-md font-medium mb-3" style={{ color: COLORS.darkGray }}>
+            <h4 className="text-md font-medium mb-3" style={{ color: COLORS.textPrimary }}>
               Salary Distribution
             </h4>
             <ResponsiveContainer width="100%" height={400}>
@@ -349,26 +349,26 @@ export default function DataVisualisation() {
 
           {/* Year-over-Year Comparison Table */}
           <div className="mt-6">
-            <h4 className="text-md font-medium mb-3" style={{ color: COLORS.darkGray }}>
+            <h4 className="text-md font-medium mb-3" style={{ color: COLORS.textPrimary }}>
               Salary Costs Comparison: {selectedYear} vs {summaries.previousYear || 'Previous Year'}
             </h4>
             <div className="overflow-x-auto">
-              <table className="min-w-full table-auto border" style={{ borderColor: COLORS.lightGray }}>
+              <table className="min-w-full table-auto border" style={{ borderColor: COLORS.borderLight }}>
                 <thead>
                   <tr style={{ backgroundColor: `${COLORS.slainteBlue}15` }}>
-                    <th className="px-4 py-3 text-left border-b font-medium" style={{ borderColor: COLORS.lightGray, color: COLORS.slainteBlue }}>
+                    <th className="px-4 py-3 text-left border-b font-medium" style={{ borderColor: COLORS.borderLight, color: COLORS.slainteBlue }}>
                       Salary Category
                     </th>
-                    <th className="px-4 py-3 text-right border-b font-medium" style={{ borderColor: COLORS.lightGray, color: COLORS.slainteBlue }}>
+                    <th className="px-4 py-3 text-right border-b font-medium" style={{ borderColor: COLORS.borderLight, color: COLORS.slainteBlue }}>
                       {summaries.previousYear || 'Previous Year'}
                     </th>
-                    <th className="px-4 py-3 text-right border-b font-medium" style={{ borderColor: COLORS.lightGray, color: COLORS.slainteBlue }}>
+                    <th className="px-4 py-3 text-right border-b font-medium" style={{ borderColor: COLORS.borderLight, color: COLORS.slainteBlue }}>
                       {selectedYear}
                     </th>
-                    <th className="px-4 py-3 text-right border-b font-medium" style={{ borderColor: COLORS.lightGray, color: COLORS.slainteBlue }}>
+                    <th className="px-4 py-3 text-right border-b font-medium" style={{ borderColor: COLORS.borderLight, color: COLORS.slainteBlue }}>
                       Change
                     </th>
-                    <th className="px-4 py-3 text-center border-b font-medium" style={{ borderColor: COLORS.lightGray, color: COLORS.slainteBlue }}>
+                    <th className="px-4 py-3 text-center border-b font-medium" style={{ borderColor: COLORS.borderLight, color: COLORS.slainteBlue }}>
                       % Change
                     </th>
                   </tr>
@@ -398,27 +398,27 @@ export default function DataVisualisation() {
                       const percentChange = prevYear > 0 ? ((change / prevYear) * 100) : (currentYear > 0 && prevYear === 0 ? 100 : 0);
 
                       return (
-                        <tr key={category.name} style={{ backgroundColor: index % 2 === 0 ? COLORS.backgroundGray : COLORS.white }}>
-                          <td className="px-4 py-3 border-b font-medium" style={{ borderColor: COLORS.lightGray, color: COLORS.darkGray }}>
+                        <tr key={category.name} style={{ backgroundColor: index % 2 === 0 ? COLORS.bgPage : COLORS.white }}>
+                          <td className="px-4 py-3 border-b font-medium" style={{ borderColor: COLORS.borderLight, color: COLORS.textPrimary }}>
                             {category.name.replace(/^\d{2}-/, '')}
                           </td>
-                          <td className="px-4 py-3 border-b text-right font-mono" style={{ borderColor: COLORS.lightGray, color: COLORS.darkGray }}>
+                          <td className="px-4 py-3 border-b text-right font-mono" style={{ borderColor: COLORS.borderLight, color: COLORS.textPrimary }}>
                             {prevYear > 0 ?
                               `€${prevYear.toLocaleString()}` :
-                              <span style={{ color: COLORS.mediumGray }}>€0</span>
+                              <span style={{ color: COLORS.textSecondary }}>€0</span>
                             }
                           </td>
-                          <td className="px-4 py-3 border-b text-right font-mono font-semibold" style={{ borderColor: COLORS.lightGray, color: COLORS.darkGray }}>
+                          <td className="px-4 py-3 border-b text-right font-mono font-semibold" style={{ borderColor: COLORS.borderLight, color: COLORS.textPrimary }}>
                             {`€${currentYear.toLocaleString()}`}
                           </td>
-                          <td className="px-4 py-3 border-b text-right font-mono font-semibold" style={{ borderColor: COLORS.lightGray, color: change > 0 ? COLORS.expenseColor : change < 0 ? COLORS.incomeColor : COLORS.darkGray }}>
+                          <td className="px-4 py-3 border-b text-right font-mono font-semibold" style={{ borderColor: COLORS.borderLight, color: change > 0 ? COLORS.expenseColor : change < 0 ? COLORS.incomeColor : COLORS.textPrimary }}>
                             {prevYear > 0 ? (
                               `${change >= 0 ? '+' : ''}€${change.toLocaleString()}`
                             ) : (
-                              <span style={{ color: COLORS.mediumGray }}>N/A</span>
+                              <span style={{ color: COLORS.textSecondary }}>N/A</span>
                             )}
                           </td>
-                          <td className="px-4 py-3 border-b text-center font-semibold" style={{ borderColor: COLORS.lightGray, color: percentChange > 0 ? COLORS.expenseColor : percentChange < 0 ? COLORS.incomeColor : COLORS.darkGray }}>
+                          <td className="px-4 py-3 border-b text-center font-semibold" style={{ borderColor: COLORS.borderLight, color: percentChange > 0 ? COLORS.expenseColor : percentChange < 0 ? COLORS.incomeColor : COLORS.textPrimary }}>
                             {prevYear > 0 ? (
                               <>
                                 {percentChange === 0 ? '0%' : `${percentChange >= 0 ? '+' : ''}${percentChange.toFixed(1)}%`}
@@ -426,7 +426,7 @@ export default function DataVisualisation() {
                                 {percentChange < 0 && <span className="ml-1">↘</span>}
                               </>
                             ) : (
-                              <span style={{ color: COLORS.mediumGray }}>N/A</span>
+                              <span style={{ color: COLORS.textSecondary }}>N/A</span>
                             )}
                           </td>
                         </tr>
@@ -479,7 +479,7 @@ export default function DataVisualisation() {
             <h3 className="text-lg font-semibold mb-4" style={{ color: COLORS.slainteBlue }}>
               PCRS Payment Breakdown ({selectedYear})
             </h3>
-            <p className="text-sm mb-4" style={{ color: COLORS.mediumGray }}>
+            <p className="text-sm mb-4" style={{ color: COLORS.textSecondary }}>
               Distribution of Total Gross Payment across payment categories from GMS Panel Analysis
             </p>
 
@@ -503,7 +503,7 @@ export default function DataVisualisation() {
                     const shortName = name.length > 25 ? name.substring(0, 22) + '...' : name;
                     return `${shortName}: €${value.toLocaleString()} (${(percent * 100).toFixed(1)}%)`;
                   }}
-                  labelLine={{ stroke: COLORS.mediumGray, strokeWidth: 1 }}
+                  labelLine={{ stroke: COLORS.textSecondary, strokeWidth: 1 }}
                 >
                   {chartData.map((entry, index) => (
                     <Cell key={`pcrs-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
@@ -517,20 +517,20 @@ export default function DataVisualisation() {
 
             {/* Category Legend Table */}
             <div className="mt-6">
-              <h4 className="text-md font-medium mb-3" style={{ color: COLORS.darkGray }}>
+              <h4 className="text-md font-medium mb-3" style={{ color: COLORS.textPrimary }}>
                 Payment Category Details
               </h4>
               <div className="overflow-x-auto">
-                <table className="min-w-full table-auto border" style={{ borderColor: COLORS.lightGray }}>
+                <table className="min-w-full table-auto border" style={{ borderColor: COLORS.borderLight }}>
                   <thead>
                     <tr style={{ backgroundColor: `${COLORS.slainteBlue}15` }}>
-                      <th className="px-4 py-3 text-left border-b font-medium" style={{ borderColor: COLORS.lightGray, color: COLORS.slainteBlue }}>
+                      <th className="px-4 py-3 text-left border-b font-medium" style={{ borderColor: COLORS.borderLight, color: COLORS.slainteBlue }}>
                         Category
                       </th>
-                      <th className="px-4 py-3 text-right border-b font-medium" style={{ borderColor: COLORS.lightGray, color: COLORS.slainteBlue }}>
+                      <th className="px-4 py-3 text-right border-b font-medium" style={{ borderColor: COLORS.borderLight, color: COLORS.slainteBlue }}>
                         Amount
                       </th>
-                      <th className="px-4 py-3 text-center border-b font-medium" style={{ borderColor: COLORS.lightGray, color: COLORS.slainteBlue }}>
+                      <th className="px-4 py-3 text-center border-b font-medium" style={{ borderColor: COLORS.borderLight, color: COLORS.slainteBlue }}>
                         % of Total
                       </th>
                     </tr>
@@ -539,8 +539,8 @@ export default function DataVisualisation() {
                     {chartData.map((item, index) => {
                       const percentage = ((item.value / totalPayment) * 100).toFixed(1);
                       return (
-                        <tr key={item.name} style={{ backgroundColor: index % 2 === 0 ? COLORS.backgroundGray : COLORS.white }}>
-                          <td className="px-4 py-3 border-b font-medium" style={{ borderColor: COLORS.lightGray, color: COLORS.darkGray }}>
+                        <tr key={item.name} style={{ backgroundColor: index % 2 === 0 ? COLORS.bgPage : COLORS.white }}>
+                          <td className="px-4 py-3 border-b font-medium" style={{ borderColor: COLORS.borderLight, color: COLORS.textPrimary }}>
                             <div className="flex items-center gap-2">
                               <div
                                 className="w-4 h-4 rounded"
@@ -549,10 +549,10 @@ export default function DataVisualisation() {
                               {item.name}
                             </div>
                           </td>
-                          <td className="px-4 py-3 border-b text-right font-mono font-semibold" style={{ borderColor: COLORS.lightGray, color: COLORS.darkGray }}>
+                          <td className="px-4 py-3 border-b text-right font-mono font-semibold" style={{ borderColor: COLORS.borderLight, color: COLORS.textPrimary }}>
                             {`€${item.value.toLocaleString()}`}
                           </td>
-                          <td className="px-4 py-3 border-b text-center font-semibold" style={{ borderColor: COLORS.lightGray, color: COLORS.darkGray }}>
+                          <td className="px-4 py-3 border-b text-center font-semibold" style={{ borderColor: COLORS.borderLight, color: COLORS.textPrimary }}>
                             {percentage}%
                           </td>
                         </tr>
@@ -561,13 +561,13 @@ export default function DataVisualisation() {
                   </tbody>
                   <tfoot>
                     <tr style={{ backgroundColor: `${COLORS.incomeColor}15` }}>
-                      <td className="px-4 py-3 border-t font-bold" style={{ borderColor: COLORS.lightGray, color: COLORS.darkGray }}>
+                      <td className="px-4 py-3 border-t font-bold" style={{ borderColor: COLORS.borderLight, color: COLORS.textPrimary }}>
                         TOTAL
                       </td>
-                      <td className="px-4 py-3 border-t text-right font-mono font-bold" style={{ borderColor: COLORS.lightGray, color: COLORS.incomeColor }}>
+                      <td className="px-4 py-3 border-t text-right font-mono font-bold" style={{ borderColor: COLORS.borderLight, color: COLORS.incomeColor }}>
                         {`€${totalPayment.toLocaleString()}`}
                       </td>
-                      <td className="px-4 py-3 border-t text-center font-bold" style={{ borderColor: COLORS.lightGray, color: COLORS.darkGray }}>
+                      <td className="px-4 py-3 border-t text-center font-bold" style={{ borderColor: COLORS.borderLight, color: COLORS.textPrimary }}>
                         100%
                       </td>
                     </tr>

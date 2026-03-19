@@ -8,6 +8,7 @@
  */
 
 import { createUnifiedProfile } from './practiceProfileSchemaV2';
+import COLORS from '../utils/colors';
 
 export const DEMO_PROFILE = {
   ...createUnifiedProfile(),
@@ -627,7 +628,7 @@ export function generateDemoSavedReport() {
     .join('');
 
   const htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>GP Practice - Year to Date Profit &amp; Loss Statement</title>
-<style>body{font-family:Arial,sans-serif;margin:20px;font-size:11px}.header{text-align:center;margin-bottom:30px}.draft-badge{display:inline-block;background-color:#ff6b6b;color:#fff;padding:4px 12px;border-radius:4px;font-size:10px;font-weight:bold;margin-left:10px;vertical-align:middle}.pl-table{width:100%;border-collapse:collapse}.pl-table th,.pl-table td{border:1px solid #ddd;padding:6px;text-align:left}.pl-table th{background-color:#f5f5f5;font-weight:bold}.amount{text-align:right;font-family:monospace}.total-line{border-top:2px solid #000;font-weight:bold}.section-header{background-color:#e6f3ff;font-weight:bold}.notes{margin-top:30px;padding:15px;background-color:#fff9e6;border-left:4px solid #ffc107}.notes h4{margin:0 0 10px 0;color:#856404}.notes ul{margin:5px 0;padding-left:20px}.notes li{margin:5px 0;color:#856404}.notes .important{font-weight:bold;color:#d32f2f}</style></head>
+<style>body{font-family:Arial,sans-serif;margin:20px;font-size:11px}.header{text-align:center;margin-bottom:30px}.draft-badge{display:inline-block;background-color:${COLORS.expenseColor};color:${COLORS.white};padding:4px 12px;border-radius:4px;font-size:10px;font-weight:bold;margin-left:10px;vertical-align:middle}.pl-table{width:100%;border-collapse:collapse}.pl-table th,.pl-table td{border:1px solid #ddd;padding:6px;text-align:left}.pl-table th{background-color:${COLORS.bgPage};font-weight:bold}.amount{text-align:right;font-family:monospace}.total-line{border-top:2px solid #000;font-weight:bold}.section-header{background-color:#e6f3ff;font-weight:bold}.notes{margin-top:30px;padding:15px;background-color:#fff9e6;border-left:4px solid #ffc107}.notes h4{margin:0 0 10px 0;color:#856404}.notes ul{margin:5px 0;padding-left:20px}.notes li{margin:5px 0;color:#856404}.notes .important{font-weight:bold;color:#d32f2f}</style></head>
 <body><div class="header"><h2>Ballsbridge Medical Centre</h2><h3>Year to Date Profit &amp; Loss Statement<span class="draft-badge">DRAFT</span></h3><p>For the period 1st January to ${now.toLocaleDateString('en-IE')} for ${currentYear} and ${prevYear}</p></div>
 <table class="pl-table"><thead><tr><th style="width:60%">Description</th><th style="width:20%" class="amount">${currentYear} \u20ac</th><th style="width:20%" class="amount">${prevYear} \u20ac</th></tr></thead>
 <tbody><tr class="section-header"><td><strong>INCOME</strong></td><td class="amount"></td><td class="amount"></td></tr>

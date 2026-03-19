@@ -16,15 +16,19 @@ import {
   getActionItems,
   updateActionItem,
   deleteActionItem,
-  addActionItem
+  addActionItem,
+  addSavingsEntry,
+  removeSavingsEntryByTaskId,
+  getSavingsLedger
 } from '../../storage/practiceProfileStorage';
+import { RECOMMENDATION_METRIC_MAP, calculateImpactSummary } from '../../utils/healthCheckCalculations';
 import ConfirmDialog from './ConfirmDialog';
 
 /**
  * GMSTasksModal - Extracted from PaymentAnalysis.jsx
  * Modal for viewing and managing all GMS action items
  */
-const GMSTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
+const GMSTasksModal = ({ isOpen, onClose, onTasksChanged, autoEditTaskId }) => {
   const [allActionItems, setAllActionItems] = useState([]);
   const [editingAction, setEditingAction] = useState(null);
   const [showAddTask, setShowAddTask] = useState(false);
@@ -51,6 +55,22 @@ const GMSTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
       setAllActionItems(getActionItems());
     }
   }, [isOpen]);
+
+  // Auto-open edit form when a specific task ID is passed (e.g. from Finn)
+  useEffect(() => {
+    if (isOpen && autoEditTaskId) {
+      const items = getActionItems();
+      const itemToEdit = items.find(a => a.id === autoEditTaskId);
+      if (itemToEdit) {
+        setEditingAction(itemToEdit);
+        setEditForm({
+          assignedTo: itemToEdit.assignedTo || '',
+          dueDate: itemToEdit.dueDate || '',
+          status: itemToEdit.status || 'pending'
+        });
+      }
+    }
+  }, [isOpen, autoEditTaskId]);
 
   // Get assignee list from practice profile
   const getAssigneeList = () => {
@@ -97,6 +117,33 @@ const GMSTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
     return assignees;
   };
 
+  // Record a projected saving when a task is completed
+  const recordProjectedSaving = (action) => {
+    if (!action.potentialValue || action.potentialValue <= 0) return;
+    const mapping = RECOMMENDATION_METRIC_MAP[action.recommendationId] || {};
+    // Derive areaId from category if not in the mapping
+    const CATEGORY_TO_AREA = {
+      'Capitation': 'capitation',
+      'Practice Support': 'practiceSupport',
+      'Study & Annual Leave': 'leave',
+      'Cervical Check': 'cervicalCheck',
+      'Special Type Consultations': 'stc',
+      'Chronic Disease Management': 'cdm',
+      'Disease Management': 'cdm',
+    };
+    addSavingsEntry({
+      taskId: action.id,
+      recommendationId: action.recommendationId || null,
+      category: action.category || '',
+      areaId: mapping.areaId || CATEGORY_TO_AREA[action.category] || '',
+      type: 'projected',
+      amount: action.potentialValue,
+      description: `Completed: ${action.title}`,
+      metric: mapping.metric || null,
+    });
+    window.dispatchEvent(new Event('impact:refresh'));
+  };
+
   // Handle editing an action
   const handleEditAction = (action) => {
     setEditingAction(action);
@@ -117,11 +164,23 @@ const GMSTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
       status: editForm.status
     };
 
-    if (editForm.status === 'completed' && editingAction.status !== 'completed') {
+    const wasCompleted = editingAction.status === 'completed';
+    const nowCompleted = editForm.status === 'completed';
+
+    if (nowCompleted && !wasCompleted) {
       updates.completedDate = new Date().toISOString();
     }
 
     updateActionItem(editingAction.id, updates);
+
+    // Impact tracking: record or remove projected savings
+    if (nowCompleted && !wasCompleted) {
+      recordProjectedSaving(editingAction);
+    } else if (wasCompleted && !nowCompleted) {
+      removeSavingsEntryByTaskId(editingAction.id);
+      window.dispatchEvent(new Event('impact:refresh'));
+    }
+
     setAllActionItems(getActionItems());
     setEditingAction(null);
     setEditForm({ assignedTo: '', dueDate: '', status: 'pending' });
@@ -142,8 +201,13 @@ const GMSTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
   };
 
   const handleConfirmComplete = () => {
+    const action = allActionItems.find(a => a.id === confirmDialog.actionId);
     const updates = { status: 'completed', completedDate: new Date().toISOString() };
     updateActionItem(confirmDialog.actionId, updates);
+
+    // Impact tracking: record projected saving
+    if (action) recordProjectedSaving(action);
+
     setAllActionItems(getActionItems());
     setConfirmDialog({ isOpen: false, type: null, actionId: null });
     if (onTasksChanged) onTasksChanged();
@@ -227,11 +291,11 @@ const GMSTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
     <>
       {/* Main Modal - View All Tasks */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 overflow-y-auto">
-        <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl flex flex-col" style={{ border: `1px solid ${COLORS.lightGray}`, maxHeight: 'calc(100vh - 2rem)' }}>
-          <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: COLORS.lightGray }}>
+        <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl flex flex-col" style={{ border: `1px solid ${COLORS.borderLight}`, maxHeight: 'calc(100vh - 2rem)' }}>
+          <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: COLORS.borderLight }}>
             <div className="flex items-center gap-3">
               <Target className="h-5 w-5" style={{ color: COLORS.slainteBlue }} />
-              <h3 className="font-semibold" style={{ color: COLORS.darkGray }}>GMS Action Plan - All Tasks</h3>
+              <h3 className="font-semibold" style={{ color: COLORS.textPrimary }}>GMS Action Plan - All Tasks</h3>
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -248,40 +312,57 @@ const GMSTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
                   setShowAddTask(true);
                 }}
                 className="px-3 py-1.5 text-sm rounded-lg flex items-center gap-1 border"
-                style={{ borderColor: COLORS.lightGray, color: COLORS.mediumGray }}
+                style={{ borderColor: COLORS.borderLight, color: COLORS.textSecondary }}
               >
                 <Plus className="h-4 w-4" /> Add
               </button>
               <button onClick={onClose} className="p-1 rounded hover:bg-gray-100">
-                <X className="h-5 w-5" style={{ color: COLORS.mediumGray }} />
+                <X className="h-5 w-5" style={{ color: COLORS.textSecondary }} />
               </button>
             </div>
           </div>
 
           {/* Summary Stats */}
-          <div className="p-4 border-b" style={{ borderColor: COLORS.lightGray, backgroundColor: '#F9FAFB' }}>
+          <div className="p-4 border-b" style={{ borderColor: COLORS.borderLight, backgroundColor: COLORS.bgPage }}>
             <div className="grid grid-cols-5 gap-4 text-center">
               <div>
-                <p className="text-2xl font-bold" style={{ color: COLORS.darkGray }}>{stats.total}</p>
-                <p className="text-xs" style={{ color: COLORS.mediumGray }}>Total</p>
+                <p className="text-2xl font-bold" style={{ color: COLORS.textPrimary }}>{stats.total}</p>
+                <p className="text-xs" style={{ color: COLORS.textSecondary }}>Total</p>
               </div>
               <div>
-                <p className="text-2xl font-bold" style={{ color: '#6B7280' }}>{stats.pending}</p>
-                <p className="text-xs" style={{ color: COLORS.mediumGray }}>Pending</p>
+                <p className="text-2xl font-bold" style={{ color: COLORS.textMuted }}>{stats.pending}</p>
+                <p className="text-xs" style={{ color: COLORS.textSecondary }}>Pending</p>
               </div>
               <div>
                 <p className="text-2xl font-bold" style={{ color: COLORS.slainteBlue }}>{stats.inProgress}</p>
-                <p className="text-xs" style={{ color: COLORS.mediumGray }}>In Progress</p>
+                <p className="text-xs" style={{ color: COLORS.textSecondary }}>In Progress</p>
               </div>
               <div>
                 <p className="text-2xl font-bold" style={{ color: COLORS.incomeColor }}>{stats.completed}</p>
-                <p className="text-xs" style={{ color: COLORS.mediumGray }}>Completed</p>
+                <p className="text-xs" style={{ color: COLORS.textSecondary }}>Completed</p>
               </div>
               <div>
-                <p className="text-2xl font-bold" style={{ color: COLORS.incomeColor }}>
-                  {new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0 }).format(stats.recoveredValue)}
-                </p>
-                <p className="text-xs" style={{ color: COLORS.mediumGray }}>Recovered</p>
+                {(() => {
+                  const impact = calculateImpactSummary(getSavingsLedger());
+                  const fmt = v => new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0 }).format(v);
+                  return impact.totalCombined > 0 ? (
+                    <>
+                      <p className="text-2xl font-bold" style={{ color: '#2ECC71' }}>{fmt(impact.totalCombined)}</p>
+                      <p className="text-xs" style={{ color: COLORS.textSecondary }}>
+                        {impact.totalVerified > 0 && impact.totalProjected > 0
+                          ? `${fmt(impact.totalProjected)} projected · ${fmt(impact.totalVerified)} verified`
+                          : impact.totalVerified > 0 ? 'Verified' : 'Projected'}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-2xl font-bold" style={{ color: COLORS.incomeColor }}>
+                        {fmt(stats.recoveredValue)}
+                      </p>
+                      <p className="text-xs" style={{ color: COLORS.textSecondary }}>Recovered</p>
+                    </>
+                  );
+                })()}
               </div>
             </div>
           </div>
@@ -289,7 +370,7 @@ const GMSTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
           {/* Task List */}
           <div className="flex-1 overflow-y-auto p-4">
             {allActionItems.length === 0 ? (
-              <div className="text-center py-8" style={{ color: COLORS.mediumGray }}>
+              <div className="text-center py-8" style={{ color: COLORS.textSecondary }}>
                 <Target className="h-12 w-12 mx-auto mb-2 opacity-30" />
                 <p>No GMS tasks yet</p>
                 <p className="text-sm mt-1">Run a GMS Health Check to generate recommendations</p>
@@ -302,14 +383,14 @@ const GMSTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
                     <div
                       key={action.id}
                       className={`p-4 rounded-lg border ${isOverdue ? 'bg-red-50 border-red-200' : action.status === 'completed' ? 'bg-green-50 border-green-200' : 'bg-gray-50'}`}
-                      style={{ borderColor: isOverdue ? '#FCA5A5' : action.status === 'completed' ? '#A7F3D0' : COLORS.lightGray }}
+                      style={{ borderColor: isOverdue ? COLORS.errorLight : action.status === 'completed' ? COLORS.successLighter : COLORS.borderLight }}
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex items-start gap-3 flex-1">
                           <div
                             className="flex items-center justify-center w-8 h-8 rounded-full text-white flex-shrink-0"
                             style={{
-                              backgroundColor: action.status === 'completed' ? '#059669' : action.type === 'priority' ? '#DC2626' : '#3B82F6'
+                              backgroundColor: action.status === 'completed' ? COLORS.successDark : action.type === 'priority' ? COLORS.error : COLORS.slainteBlue
                             }}
                           >
                             {action.status === 'completed' ? (
@@ -323,11 +404,11 @@ const GMSTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
                           <div className="flex-1">
                             <p
                               className={`font-medium text-sm ${action.status === 'completed' ? 'line-through opacity-60' : ''}`}
-                              style={{ color: COLORS.darkGray }}
+                              style={{ color: COLORS.textPrimary }}
                             >
                               {action.title}
                             </p>
-                            <div className="flex items-center gap-3 mt-1 text-xs" style={{ color: COLORS.mediumGray }}>
+                            <div className="flex items-center gap-3 mt-1 text-xs" style={{ color: COLORS.textSecondary }}>
                               <span>{action.category}</span>
                               {action.assignedTo && (
                                 <>
@@ -348,7 +429,7 @@ const GMSTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
                           </div>
                           <p
                             className="font-bold text-sm"
-                            style={{ color: action.status === 'completed' ? COLORS.mediumGray : COLORS.incomeColor }}
+                            style={{ color: action.status === 'completed' ? COLORS.textSecondary : COLORS.incomeColor }}
                           >
                             {new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0 }).format(action.potentialValue || 0)}
                           </p>
@@ -367,7 +448,7 @@ const GMSTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
                               className="p-1.5 rounded hover:bg-green-100"
                               title="Mark as complete"
                             >
-                              <CheckCircle className="h-4 w-4" style={{ color: '#059669' }} />
+                              <CheckCircle className="h-4 w-4" style={{ color: COLORS.successDark }} />
                             </button>
                           )}
                           <button
@@ -387,8 +468,8 @@ const GMSTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-between p-4 border-t" style={{ borderColor: COLORS.lightGray }}>
-            <p className="text-sm" style={{ color: COLORS.mediumGray }}>
+          <div className="flex items-center justify-between p-4 border-t" style={{ borderColor: COLORS.borderLight }}>
+            <p className="text-sm" style={{ color: COLORS.textSecondary }}>
               {stats.completed} of {stats.total} tasks completed
               {stats.totalValue > 0 && (
                 <span> • Potential value: {new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0 }).format(stats.totalValue)}</span>
@@ -416,30 +497,30 @@ const GMSTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
             alignItems: 'center',
             justifyContent: 'center',
             padding: '1rem',
-            backgroundColor: 'rgba(0, 0, 0, 0.5)'
+            backgroundColor: COLORS.overlayDark
           }}
         >
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md" style={{ border: `1px solid ${COLORS.lightGray}` }}>
-            <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: COLORS.lightGray }}>
-              <h3 className="font-semibold" style={{ color: COLORS.darkGray }}>Edit Action</h3>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md" style={{ border: `1px solid ${COLORS.borderLight}` }}>
+            <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: COLORS.borderLight }}>
+              <h3 className="font-semibold" style={{ color: COLORS.textPrimary }}>Edit Action</h3>
               <button onClick={() => setEditingAction(null)} className="p-1 rounded hover:bg-gray-100">
-                <X className="h-5 w-5" style={{ color: COLORS.mediumGray }} />
+                <X className="h-5 w-5" style={{ color: COLORS.textSecondary }} />
               </button>
             </div>
             <div className="p-4 space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>Action</label>
-                <p className="text-sm p-2 bg-gray-50 rounded-lg" style={{ color: COLORS.darkGray }}>
+                <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>Action</label>
+                <p className="text-sm p-2 bg-gray-50 rounded-lg" style={{ color: COLORS.textPrimary }}>
                   {editingAction.title}
                 </p>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>Status</label>
+                <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>Status</label>
                 <select
                   value={editForm.status}
                   onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
                   className="w-full p-2 border rounded-lg"
-                  style={{ borderColor: COLORS.lightGray }}
+                  style={{ borderColor: COLORS.borderLight }}
                 >
                   <option value="pending">Pending</option>
                   <option value="in_progress">In Progress</option>
@@ -447,12 +528,12 @@ const GMSTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>Assign To</label>
+                <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>Assign To</label>
                 <select
                   value={editForm.assignedTo}
                   onChange={(e) => setEditForm({ ...editForm, assignedTo: e.target.value })}
                   className="w-full p-2 border rounded-lg"
-                  style={{ borderColor: COLORS.lightGray }}
+                  style={{ borderColor: COLORS.borderLight }}
                 >
                   <option value="">Unassigned</option>
                   {getAssigneeList().map((person, idx) => (
@@ -461,25 +542,25 @@ const GMSTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>Due Date</label>
+                <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>Due Date</label>
                 <input
                   type="date"
                   value={editForm.dueDate}
                   onChange={(e) => setEditForm({ ...editForm, dueDate: e.target.value })}
                   className="w-full p-2 border rounded-lg"
-                  style={{ borderColor: COLORS.lightGray }}
+                  style={{ borderColor: COLORS.borderLight }}
                 />
               </div>
               {editingAction.potentialValue > 0 && (
                 <div>
-                  <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>Potential Value</label>
+                  <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>Potential Value</label>
                   <p className="text-sm font-bold" style={{ color: COLORS.incomeColor }}>
                     {new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0 }).format(editingAction.potentialValue)}
                   </p>
                 </div>
               )}
             </div>
-            <div className="flex justify-between p-4 border-t" style={{ borderColor: COLORS.lightGray }}>
+            <div className="flex justify-between p-4 border-t" style={{ borderColor: COLORS.borderLight }}>
               <button
                 onClick={() => handleDeleteAction(editingAction.id)}
                 className="px-4 py-2 text-sm rounded-lg text-red-600 hover:bg-red-50"
@@ -490,7 +571,7 @@ const GMSTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
                 <button
                   onClick={() => setEditingAction(null)}
                   className="px-4 py-2 text-sm rounded-lg border"
-                  style={{ borderColor: COLORS.lightGray, color: COLORS.mediumGray }}
+                  style={{ borderColor: COLORS.borderLight, color: COLORS.textSecondary }}
                 >
                   Cancel
                 </button>
@@ -518,7 +599,7 @@ const GMSTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
             alignItems: 'center',
             justifyContent: 'center',
             padding: '1rem',
-            backgroundColor: 'rgba(0, 0, 0, 0.5)'
+            backgroundColor: COLORS.overlayDark
           }}
         >
           <div
@@ -531,11 +612,11 @@ const GMSTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
               maxHeight: '85vh',
               display: 'flex',
               flexDirection: 'column',
-              border: `1px solid ${COLORS.lightGray}`
+              border: `1px solid ${COLORS.borderLight}`
             }}
           >
-            <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: COLORS.lightGray }}>
-              <h3 className="font-semibold" style={{ color: COLORS.darkGray }}>
+            <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: COLORS.borderLight }}>
+              <h3 className="font-semibold" style={{ color: COLORS.textPrimary }}>
                 {showCustomTaskForm ? 'Create Custom GMS Task' : 'Add GMS Task'}
               </h3>
               <button
@@ -545,7 +626,7 @@ const GMSTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
                 }}
                 className="p-1 rounded hover:bg-gray-100"
               >
-                <X className="h-5 w-5" style={{ color: COLORS.mediumGray }} />
+                <X className="h-5 w-5" style={{ color: COLORS.textSecondary }} />
               </button>
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ minHeight: 0 }}>
@@ -553,7 +634,7 @@ const GMSTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
                 <>
                   {/* Quick Add - Preset Tasks */}
                   <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: COLORS.darkGray }}>Select a task to add:</label>
+                    <label className="block text-sm font-medium mb-2" style={{ color: COLORS.textPrimary }}>Select a task to add:</label>
                     <div className="grid grid-cols-1 gap-2">
                       {presetGMSTasks.map((preset, idx) => (
                         <button
@@ -572,11 +653,11 @@ const GMSTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
                             setShowCustomTaskForm(true);
                           }}
                           className="flex items-center gap-3 p-3 rounded-lg border text-left hover:bg-gray-50 transition-colors"
-                          style={{ borderColor: COLORS.lightGray }}
+                          style={{ borderColor: COLORS.borderLight }}
                         >
                           <div
                             className="flex items-center justify-center w-8 h-8 rounded-full text-white flex-shrink-0"
-                            style={{ backgroundColor: preset.type === 'priority' ? '#DC2626' : '#3B82F6' }}
+                            style={{ backgroundColor: preset.type === 'priority' ? COLORS.error : COLORS.slainteBlue }}
                           >
                             {preset.type === 'priority' ? (
                               <AlertCircle className="h-4 w-4" />
@@ -585,9 +666,9 @@ const GMSTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
                             )}
                           </div>
                           <div className="flex-1">
-                            <p className="font-medium text-sm" style={{ color: COLORS.darkGray }}>{preset.title}</p>
+                            <p className="font-medium text-sm" style={{ color: COLORS.textPrimary }}>{preset.title}</p>
                             <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-xs" style={{ color: COLORS.mediumGray }}>{preset.category}</span>
+                              <span className="text-xs" style={{ color: COLORS.textSecondary }}>{preset.category}</span>
                               <span className="text-xs font-medium" style={{ color: COLORS.incomeColor }}>
                                 {new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0 }).format(preset.potentialValue)}
                               </span>
@@ -603,7 +684,7 @@ const GMSTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
                   <button
                     onClick={() => setShowCustomTaskForm(true)}
                     className="w-full p-3 rounded-lg border-2 border-dashed text-center hover:bg-gray-50 transition-colors"
-                    style={{ borderColor: COLORS.lightGray, color: COLORS.mediumGray }}
+                    style={{ borderColor: COLORS.borderLight, color: COLORS.textSecondary }}
                   >
                     <Plus className="h-5 w-5 mx-auto mb-1" />
                     <span className="text-sm font-medium">Create Custom Task</span>
@@ -623,24 +704,24 @@ const GMSTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
 
                   {/* Custom Task Form */}
                   <div>
-                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>Title *</label>
+                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>Title *</label>
                     <input
                       type="text"
                       value={addTaskForm.title}
                       onChange={(e) => setAddTaskForm({ ...addTaskForm, title: e.target.value })}
                       className="w-full p-2 border rounded-lg"
-                      style={{ borderColor: COLORS.lightGray }}
+                      style={{ borderColor: COLORS.borderLight }}
                       placeholder="e.g., Review flu vaccination uptake"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>Category</label>
+                      <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>Category</label>
                       <select
                         value={addTaskForm.category}
                         onChange={(e) => setAddTaskForm({ ...addTaskForm, category: e.target.value })}
                         className="w-full p-2 border rounded-lg"
-                        style={{ borderColor: COLORS.lightGray }}
+                        style={{ borderColor: COLORS.borderLight }}
                       >
                         <option value="manual">Manual</option>
                         <option value="vaccinations">Vaccinations</option>
@@ -651,12 +732,12 @@ const GMSTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>Type</label>
+                      <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>Type</label>
                       <select
                         value={addTaskForm.type}
                         onChange={(e) => setAddTaskForm({ ...addTaskForm, type: e.target.value })}
                         className="w-full p-2 border rounded-lg"
-                        style={{ borderColor: COLORS.lightGray }}
+                        style={{ borderColor: COLORS.borderLight }}
                       >
                         <option value="growth">Growth Opportunity</option>
                         <option value="priority">Priority Action</option>
@@ -665,23 +746,23 @@ const GMSTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>Potential Value (€)</label>
+                      <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>Potential Value (€)</label>
                       <input
                         type="number"
                         value={addTaskForm.potentialValue}
                         onChange={(e) => setAddTaskForm({ ...addTaskForm, potentialValue: parseInt(e.target.value) || 0 })}
                         className="w-full p-2 border rounded-lg"
-                        style={{ borderColor: COLORS.lightGray }}
+                        style={{ borderColor: COLORS.borderLight }}
                         placeholder="0"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>Effort</label>
+                      <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>Effort</label>
                       <select
                         value={addTaskForm.effort}
                         onChange={(e) => setAddTaskForm({ ...addTaskForm, effort: e.target.value })}
                         className="w-full p-2 border rounded-lg"
-                        style={{ borderColor: COLORS.lightGray }}
+                        style={{ borderColor: COLORS.borderLight }}
                       >
                         <option value="low">Low</option>
                         <option value="medium">Medium</option>
@@ -690,12 +771,12 @@ const GMSTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>Assign To</label>
+                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>Assign To</label>
                     <select
                       value={addTaskForm.assignedTo}
                       onChange={(e) => setAddTaskForm({ ...addTaskForm, assignedTo: e.target.value })}
                       className="w-full p-2 border rounded-lg"
-                      style={{ borderColor: COLORS.lightGray }}
+                      style={{ borderColor: COLORS.borderLight }}
                     >
                       <option value="">Unassigned</option>
                       {getAssigneeList().map((person, idx) => (
@@ -706,27 +787,27 @@ const GMSTasksModal = ({ isOpen, onClose, onTasksChanged }) => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.darkGray }}>Due Date</label>
+                    <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textPrimary }}>Due Date</label>
                     <input
                       type="date"
                       value={addTaskForm.dueDate}
                       onChange={(e) => setAddTaskForm({ ...addTaskForm, dueDate: e.target.value })}
                       className="w-full p-2 border rounded-lg"
-                      style={{ borderColor: COLORS.lightGray }}
+                      style={{ borderColor: COLORS.borderLight }}
                     />
                   </div>
                 </>
               )}
             </div>
             {showCustomTaskForm && (
-              <div className="flex justify-end gap-2 p-4 border-t" style={{ borderColor: COLORS.lightGray }}>
+              <div className="flex justify-end gap-2 p-4 border-t" style={{ borderColor: COLORS.borderLight }}>
                 <button
                   onClick={() => {
                     setShowAddTask(false);
                     setShowCustomTaskForm(false);
                   }}
                   className="px-4 py-2 text-sm rounded-lg border"
-                  style={{ borderColor: COLORS.lightGray, color: COLORS.mediumGray }}
+                  style={{ borderColor: COLORS.borderLight, color: COLORS.textSecondary }}
                 >
                   Cancel
                 </button>

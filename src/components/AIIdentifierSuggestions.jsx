@@ -427,14 +427,14 @@ If no useful patterns found, return empty array: []`;
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Brain className="h-6 w-6" style={{ color: COLORS.slainteBlue }} />
-              <h2 className="text-2xl font-bold" style={{ color: COLORS.darkGray }}>
+              <h2 className="text-2xl font-bold" style={{ color: COLORS.textPrimary }}>
                 AI Identifier Suggestions
               </h2>
             </div>
             <button
               onClick={onClose}
               className="p-2 hover:bg-gray-100 rounded"
-              style={{ color: COLORS.mediumGray }}
+              style={{ color: COLORS.textSecondary }}
             >
               <X className="h-5 w-5" />
             </button>
@@ -445,7 +445,7 @@ If no useful patterns found, return empty array: []`;
         <div className="p-6" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
           {/* Description */}
           <div className="mb-6 p-4 rounded-lg" style={{ backgroundColor: `${COLORS.slainteBlue}15` }}>
-            <p className="text-sm" style={{ color: COLORS.darkGray }}>
+            <p className="text-sm" style={{ color: COLORS.textPrimary }}>
               Our AI will analyze your unidentified transactions and suggest identifier patterns
               to add to your staff categories. This helps automatically categorize salary payments
               based on how they actually appear in your bank statements.
@@ -454,14 +454,14 @@ If no useful patterns found, return empty array: []`;
 
           {/* Stats */}
           <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="p-4 rounded-lg" style={{ backgroundColor: COLORS.backgroundGray }}>
-              <p className="text-sm" style={{ color: COLORS.mediumGray }}>Unidentified Transactions</p>
+            <div className="p-4 rounded-lg" style={{ backgroundColor: COLORS.bgPage }}>
+              <p className="text-sm" style={{ color: COLORS.textSecondary }}>Unidentified Transactions</p>
               <p className="text-2xl font-bold" style={{ color: COLORS.highlightYellow }}>
                 {unidentifiedTransactions.length}
               </p>
             </div>
-            <div className="p-4 rounded-lg" style={{ backgroundColor: COLORS.backgroundGray }}>
-              <p className="text-sm" style={{ color: COLORS.mediumGray }}>Staff Categories</p>
+            <div className="p-4 rounded-lg" style={{ backgroundColor: COLORS.bgPage }}>
+              <p className="text-sm" style={{ color: COLORS.textSecondary }}>Staff Categories</p>
               <p className="text-2xl font-bold" style={{ color: COLORS.slainteBlue }}>
                 {categoryMapping.filter(c => c.personalization === 'Personalized' && ['3', '4', '5', '6', '7'].includes(c.role)).length}
               </p>
@@ -471,7 +471,7 @@ If no useful patterns found, return empty array: []`;
           {/* License Key Input */}
           {!hideApiKeyInput && !suggestions.length && !isAnalyzing && (
             <div className="mb-6">
-              <label className="block text-sm font-medium mb-2" style={{ color: COLORS.darkGray }}>
+              <label className="block text-sm font-medium mb-2" style={{ color: COLORS.textPrimary }}>
                 Sláinte License Key
               </label>
               <input
@@ -480,9 +480,9 @@ If no useful patterns found, return empty array: []`;
                 onChange={(e) => setApiKey(e.target.value)}
                 placeholder="Enter your license key"
                 className="w-full border rounded-lg px-4 py-2 mb-2"
-                style={{ borderColor: COLORS.lightGray }}
+                style={{ borderColor: COLORS.borderLight }}
               />
-              <p className="text-xs" style={{ color: COLORS.mediumGray }}>
+              <p className="text-xs" style={{ color: COLORS.textSecondary }}>
                 Your license key is stored locally.
               </p>
             </div>
@@ -502,7 +502,7 @@ If no useful patterns found, return empty array: []`;
               disabled={!apiKey || unidentifiedTransactions.length === 0}
               className="w-full py-3 rounded-lg text-white font-medium flex items-center justify-center gap-2"
               style={{
-                backgroundColor: (apiKey && unidentifiedTransactions.length > 0) ? COLORS.slainteBlue : COLORS.lightGray,
+                backgroundColor: (apiKey && unidentifiedTransactions.length > 0) ? COLORS.slainteBlue : COLORS.borderLight,
                 cursor: (apiKey && unidentifiedTransactions.length > 0) ? 'pointer' : 'not-allowed'
               }}
             >
@@ -515,10 +515,10 @@ If no useful patterns found, return empty array: []`;
           {isAnalyzing && (
             <div className="text-center py-12">
               <Loader className="h-12 w-12 animate-spin mx-auto mb-4" style={{ color: COLORS.slainteBlue }} />
-              <p className="text-lg font-medium" style={{ color: COLORS.darkGray }}>
+              <p className="text-lg font-medium" style={{ color: COLORS.textPrimary }}>
                 Analyzing transaction patterns...
               </p>
-              <p className="text-sm mt-2" style={{ color: COLORS.mediumGray }}>
+              <p className="text-sm mt-2" style={{ color: COLORS.textSecondary }}>
                 This may take 10-30 seconds
               </p>
             </div>
@@ -527,7 +527,7 @@ If no useful patterns found, return empty array: []`;
           {/* Suggestions List */}
           {suggestions.length > 0 && (
             <div className="space-y-4">
-              <h3 className="font-semibold text-lg" style={{ color: COLORS.darkGray }}>
+              <h3 className="font-semibold text-lg" style={{ color: COLORS.textPrimary }}>
                 Suggested Identifier Patterns
               </h3>
 
@@ -542,16 +542,16 @@ If no useful patterns found, return empty array: []`;
                     key={`${suggestion.categoryCode}-${index}`}
                     className="border-2 rounded-lg p-4"
                     style={{
-                      borderColor: isApplied ? COLORS.incomeColor : (isNewCategory ? COLORS.highlightYellow : COLORS.lightGray),
+                      borderColor: isApplied ? COLORS.incomeColor : (isNewCategory ? COLORS.highlightYellow : COLORS.borderLight),
                       backgroundColor: isApplied ? `${COLORS.incomeColor}10` : (isNewCategory ? `${COLORS.highlightYellow}10` : COLORS.white)
                     }}
                   >
                     <div className="flex items-start justify-between mb-2">
                       <div>
-                        <h4 className="font-semibold" style={{ color: COLORS.darkGray }}>
+                        <h4 className="font-semibold" style={{ color: COLORS.textPrimary }}>
                           {suggestion.categoryName}
                         </h4>
-                        <p className="text-xs" style={{ color: COLORS.mediumGray }}>
+                        <p className="text-xs" style={{ color: COLORS.textSecondary }}>
                           {isNewCategory ? (
                             <span className="font-medium" style={{ color: COLORS.highlightYellow }}>
                               ⚠️ New Staff Member
@@ -570,7 +570,7 @@ If no useful patterns found, return empty array: []`;
                     </div>
 
                     <div className="mb-3">
-                      <p className="text-sm mb-2" style={{ color: COLORS.mediumGray }}>
+                      <p className="text-sm mb-2" style={{ color: COLORS.textSecondary }}>
                         {suggestion.reasoning}
                       </p>
                       <div className="flex flex-wrap gap-2">
@@ -578,7 +578,7 @@ If no useful patterns found, return empty array: []`;
                           <span
                             key={idx}
                             className="px-3 py-1 rounded-full text-sm font-mono"
-                            style={{ backgroundColor: COLORS.backgroundGray, color: COLORS.darkGray }}
+                            style={{ backgroundColor: COLORS.bgPage, color: COLORS.textPrimary }}
                           >
                             {identifier}
                           </span>
@@ -588,22 +588,22 @@ If no useful patterns found, return empty array: []`;
 
                     {/* Inline Staff Creation Form */}
                     {isCreating && staffData && (
-                      <div className="mb-3 p-3 rounded-lg border" style={{ borderColor: COLORS.slainteBlue, backgroundColor: COLORS.backgroundGray }}>
-                        <h5 className="font-semibold text-sm mb-3" style={{ color: COLORS.darkGray }}>
+                      <div className="mb-3 p-3 rounded-lg border" style={{ borderColor: COLORS.slainteBlue, backgroundColor: COLORS.bgPage }}>
+                        <h5 className="font-semibold text-sm mb-3" style={{ color: COLORS.textPrimary }}>
                           Create New Staff Category
                         </h5>
 
                         <div className="space-y-3">
                           {/* Role Selection */}
                           <div>
-                            <label className="block text-xs font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                            <label className="block text-xs font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                               Role
                             </label>
                             <select
                               value={staffData.role}
                               onChange={(e) => updateStaffCreationField(index, 'role', e.target.value)}
                               className="w-full border rounded px-3 py-2 text-sm"
-                              style={{ borderColor: COLORS.lightGray }}
+                              style={{ borderColor: COLORS.borderLight }}
                             >
                               <optgroup label="Common Roles">
                                 <option value="Receptionist">Receptionist</option>
@@ -631,7 +631,7 @@ If no useful patterns found, return empty array: []`;
 
                           {/* Name Input */}
                           <div>
-                            <label className="block text-xs font-medium mb-1" style={{ color: COLORS.darkGray }}>
+                            <label className="block text-xs font-medium mb-1" style={{ color: COLORS.textPrimary }}>
                               Staff Name
                             </label>
                             <input
@@ -639,13 +639,13 @@ If no useful patterns found, return empty array: []`;
                               value={staffData.name}
                               onChange={(e) => updateStaffCreationField(index, 'name', e.target.value)}
                               className="w-full border rounded px-3 py-2 text-sm"
-                              style={{ borderColor: COLORS.lightGray }}
+                              style={{ borderColor: COLORS.borderLight }}
                               placeholder="e.g., Joan Smith"
                             />
                           </div>
 
                           {/* Preview */}
-                          <div className="p-2 rounded text-xs" style={{ backgroundColor: `${COLORS.slainteBlue}15`, color: COLORS.darkGray }}>
+                          <div className="p-2 rounded text-xs" style={{ backgroundColor: `${COLORS.slainteBlue}15`, color: COLORS.textPrimary }}>
                             <strong>Will create:</strong> {staffData.role} - {staffData.name}
                             <br />
                             <strong>Identifiers:</strong> {staffData.identifiers.join(', ')}
@@ -658,7 +658,7 @@ If no useful patterns found, return empty array: []`;
                               disabled={!staffData.name.trim()}
                               className="flex-1 px-4 py-2 rounded text-white font-medium text-sm"
                               style={{
-                                backgroundColor: staffData.name.trim() ? COLORS.incomeColor : COLORS.lightGray,
+                                backgroundColor: staffData.name.trim() ? COLORS.incomeColor : COLORS.borderLight,
                                 cursor: staffData.name.trim() ? 'pointer' : 'not-allowed'
                               }}
                             >
@@ -667,7 +667,7 @@ If no useful patterns found, return empty array: []`;
                             <button
                               onClick={() => cancelStaffCreation(index)}
                               className="px-4 py-2 rounded border text-sm"
-                              style={{ borderColor: COLORS.lightGray, color: COLORS.darkGray }}
+                              style={{ borderColor: COLORS.borderLight, color: COLORS.textPrimary }}
                             >
                               Cancel
                             </button>
@@ -689,7 +689,7 @@ If no useful patterns found, return empty array: []`;
                         <button
                           onClick={() => dismissSuggestion(index)}
                           className="px-4 py-2 rounded border"
-                          style={{ borderColor: COLORS.lightGray, color: COLORS.mediumGray }}
+                          style={{ borderColor: COLORS.borderLight, color: COLORS.textSecondary }}
                         >
                           Dismiss
                         </button>
@@ -705,10 +705,10 @@ If no useful patterns found, return empty array: []`;
           {unidentifiedTransactions.length === 0 && !isAnalyzing && (
             <div className="text-center py-12">
               <CheckCircle className="h-16 w-16 mx-auto mb-4" style={{ color: COLORS.incomeColor }} />
-              <p className="text-lg font-medium" style={{ color: COLORS.darkGray }}>
+              <p className="text-lg font-medium" style={{ color: COLORS.textPrimary }}>
                 All transactions are categorized!
               </p>
-              <p className="text-sm mt-2" style={{ color: COLORS.mediumGray }}>
+              <p className="text-sm mt-2" style={{ color: COLORS.textSecondary }}>
                 Upload more transaction data to get AI suggestions.
               </p>
             </div>
@@ -717,7 +717,7 @@ If no useful patterns found, return empty array: []`;
 
         {/* Fixed Footer - only shown when there are suggestions */}
         {suggestions.length > 0 && (
-          <div className="p-6 border-t" style={{ flexShrink: 0, borderColor: COLORS.lightGray }}>
+          <div className="p-6 border-t" style={{ flexShrink: 0, borderColor: COLORS.borderLight }}>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => {
@@ -725,7 +725,7 @@ If no useful patterns found, return empty array: []`;
                   setAppliedSuggestions(new Set());
                 }}
                 className="px-4 py-2 rounded border"
-                style={{ borderColor: COLORS.lightGray, color: COLORS.darkGray }}
+                style={{ borderColor: COLORS.borderLight, color: COLORS.textPrimary }}
               >
                 Start Over
               </button>

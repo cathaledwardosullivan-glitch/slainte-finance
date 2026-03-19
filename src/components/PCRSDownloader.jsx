@@ -331,10 +331,10 @@ export default function PCRSDownloader({
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <Shield style={{ width: '24px', height: '24px', color: COLORS.slainteBlue }} />
           <div>
-            <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '600', color: COLORS.darkGray }}>
+            <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '600', color: COLORS.textPrimary }}>
               Log in to PCRS Portal
             </h3>
-            <p style={{ margin: 0, fontSize: '0.875rem', color: COLORS.mediumGray }}>
+            <p style={{ margin: 0, fontSize: '0.875rem', color: COLORS.textSecondary }}>
               Enter your credentials above. Your login details are not stored by this app.
             </p>
           </div>
@@ -371,7 +371,7 @@ export default function PCRSDownloader({
               style={{ width: '32px', height: '32px', color: COLORS.slainteBlue, marginBottom: '1rem' }}
               className="animate-spin"
             />
-            <p style={{ color: COLORS.mediumGray }}>{currentAction || 'Initializing...'}</p>
+            <p style={{ color: COLORS.textSecondary }}>{currentAction || 'Initializing...'}</p>
           </div>
         );
 
@@ -379,21 +379,21 @@ export default function PCRSDownloader({
         return (
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <div style={{
-              backgroundColor: '#D1FAE5',
-              border: '1px solid #10B981',
+              backgroundColor: COLORS.successLighter,
+              border: `1px solid ${COLORS.success}`,
               borderRadius: '8px',
               padding: '1rem',
               marginBottom: '1rem'
             }}>
               <div style={{ display: 'flex', alignItems: 'center' }}>
-                <CheckCircle style={{ width: '20px', height: '20px', color: '#059669', marginRight: '0.5rem' }} />
-                <span style={{ color: '#065F46', fontWeight: '500' }}>Connected to PCRS</span>
+                <CheckCircle style={{ width: '20px', height: '20px', color: COLORS.successDark, marginRight: '0.5rem' }} />
+                <span style={{ color: COLORS.successText, fontWeight: '500' }}>Connected to PCRS</span>
               </div>
             </div>
 
             {panels.length > 1 && (
               <div style={{ marginBottom: '1rem' }}>
-                <h4 style={{ fontWeight: '500', color: COLORS.darkGray, marginBottom: '0.5rem' }}>
+                <h4 style={{ fontWeight: '500', color: COLORS.textPrimary, marginBottom: '0.5rem' }}>
                   <Users style={{ width: '16px', height: '16px', display: 'inline', marginRight: '0.5rem' }} />
                   Select Panels to Download
                 </h4>
@@ -405,7 +405,7 @@ export default function PCRSDownloader({
                         display: 'flex',
                         alignItems: 'center',
                         padding: '0.75rem',
-                        backgroundColor: COLORS.backgroundGray,
+                        backgroundColor: COLORS.bgPage,
                         borderRadius: '8px',
                         cursor: 'pointer'
                       }}
@@ -416,7 +416,7 @@ export default function PCRSDownloader({
                         onChange={() => togglePanel(panel.id)}
                         style={{ width: '16px', height: '16px', marginRight: '0.75rem' }}
                       />
-                      <span style={{ color: COLORS.darkGray }}>
+                      <span style={{ color: COLORS.textPrimary }}>
                         {panel.displayName || panel.fullName || `Panel ${panel.id}`}
                       </span>
                     </label>
@@ -427,7 +427,7 @@ export default function PCRSDownloader({
 
             {/* Month Range Selection */}
             <div style={{ marginBottom: '1rem' }}>
-              <h4 style={{ fontWeight: '500', color: COLORS.darkGray, marginBottom: '0.5rem' }}>
+              <h4 style={{ fontWeight: '500', color: COLORS.textPrimary, marginBottom: '0.5rem' }}>
                 <Calendar style={{ width: '16px', height: '16px', display: 'inline', marginRight: '0.5rem' }} />
                 Download Range
               </h4>
@@ -446,13 +446,13 @@ export default function PCRSDownloader({
                       borderRadius: '8px',
                       border: quickSelect === option.value
                         ? `2px solid ${COLORS.slainteBlue}`
-                        : `1px solid ${COLORS.lightGray}`,
+                        : `1px solid ${COLORS.borderLight}`,
                       backgroundColor: quickSelect === option.value
                         ? `${COLORS.slainteBlue}15`
                         : COLORS.white,
                       color: quickSelect === option.value
                         ? COLORS.slainteBlue
-                        : COLORS.darkGray,
+                        : COLORS.textPrimary,
                       cursor: 'pointer',
                       fontWeight: quickSelect === option.value ? '600' : '400',
                       fontSize: '0.875rem',
@@ -471,12 +471,12 @@ export default function PCRSDownloader({
                   borderRadius: '8px',
                   fontSize: '0.8125rem'
                 }}>
-                  <div style={{ color: COLORS.darkGray, marginBottom: '0.25rem' }}>
+                  <div style={{ color: COLORS.textPrimary, marginBottom: '0.25rem' }}>
                     <strong>{selectedMonths.length}</strong> months selected
                     ({formatMonth(selectedMonths[selectedMonths.length - 1])} to {formatMonth(selectedMonths[0])})
                   </div>
                   {getTimeEstimate() && (
-                    <div style={{ color: COLORS.mediumGray, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                    <div style={{ color: COLORS.textSecondary, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                       <Clock style={{ width: '12px', height: '12px' }} />
                       Estimated time: {getTimeEstimate()}
                     </div>
@@ -488,8 +488,8 @@ export default function PCRSDownloader({
             {/* Show message if background download is already running */}
             {backgroundDownloadAvailable && isBackgroundDownloadRunning && (
               <div style={{
-                backgroundColor: '#FEF3C7',
-                border: '1px solid #F59E0B',
+                backgroundColor: COLORS.warningLight,
+                border: `1px solid ${COLORS.warning}`,
                 borderRadius: '8px',
                 padding: '0.75rem 1rem',
                 marginBottom: '1rem',
@@ -497,8 +497,8 @@ export default function PCRSDownloader({
                 alignItems: 'center',
                 gap: '0.5rem'
               }}>
-                <Loader style={{ width: '16px', height: '16px', color: '#D97706' }} className="animate-spin" />
-                <span style={{ color: '#92400E', fontSize: '0.875rem' }}>
+                <Loader style={{ width: '16px', height: '16px', color: COLORS.warningDark }} className="animate-spin" />
+                <span style={{ color: COLORS.warningText, fontSize: '0.875rem' }}>
                   A background download is already in progress. Finn will notify you when it's done.
                 </span>
               </div>
@@ -512,7 +512,7 @@ export default function PCRSDownloader({
                 style={{
                   flex: 1,
                   padding: '0.75rem 1rem',
-                  backgroundColor: (selectedPanels.length === 0 || isBackgroundDownloadRunning) ? COLORS.lightGray : COLORS.slainteBlue,
+                  backgroundColor: (selectedPanels.length === 0 || isBackgroundDownloadRunning) ? COLORS.borderLight : COLORS.slainteBlue,
                   color: COLORS.white,
                   border: 'none',
                   borderRadius: '8px',
@@ -536,7 +536,7 @@ export default function PCRSDownloader({
                   style={{
                     flex: 1,
                     padding: '0.75rem 1rem',
-                    backgroundColor: (selectedPanels.length === 0 || isBackgroundDownloadRunning) ? COLORS.lightGray : COLORS.incomeColor,
+                    backgroundColor: (selectedPanels.length === 0 || isBackgroundDownloadRunning) ? COLORS.borderLight : COLORS.incomeColor,
                     color: COLORS.white,
                     border: 'none',
                     borderRadius: '8px',
@@ -555,7 +555,7 @@ export default function PCRSDownloader({
             {backgroundDownloadAvailable && (
               <p style={{
                 fontSize: '0.75rem',
-                color: COLORS.mediumGray,
+                color: COLORS.textSecondary,
                 marginTop: '0.5rem',
                 textAlign: 'center'
               }}>
@@ -572,7 +572,7 @@ export default function PCRSDownloader({
               style={{ width: '32px', height: '32px', color: COLORS.slainteBlue, marginBottom: '1rem' }}
               className="animate-spin"
             />
-            <p style={{ color: COLORS.darkGray, fontWeight: '500' }}>{currentAction}</p>
+            <p style={{ color: COLORS.textPrimary, fontWeight: '500' }}>{currentAction}</p>
           </div>
         );
 
@@ -580,15 +580,15 @@ export default function PCRSDownloader({
         return (
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <div style={{
-              backgroundColor: '#D1FAE5',
-              border: '1px solid #10B981',
+              backgroundColor: COLORS.successLighter,
+              border: `1px solid ${COLORS.success}`,
               borderRadius: '8px',
               padding: '1rem',
               marginBottom: '1rem'
             }}>
               <div style={{ display: 'flex', alignItems: 'center' }}>
-                <CheckCircle style={{ width: '20px', height: '20px', color: '#059669', marginRight: '0.5rem' }} />
-                <span style={{ color: '#065F46', fontWeight: '500' }}>Download Complete</span>
+                <CheckCircle style={{ width: '20px', height: '20px', color: COLORS.successDark, marginRight: '0.5rem' }} />
+                <span style={{ color: COLORS.successText, fontWeight: '500' }}>Download Complete</span>
               </div>
             </div>
 
@@ -599,26 +599,26 @@ export default function PCRSDownloader({
                   style={{
                     padding: '0.75rem',
                     borderRadius: '8px',
-                    backgroundColor: result.success ? '#D1FAE5' : '#FEE2E2'
+                    backgroundColor: result.success ? COLORS.successLighter : COLORS.errorLight
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ color: result.success ? '#065F46' : '#991B1B' }}>
+                    <span style={{ color: result.success ? COLORS.successText : COLORS.errorText }}>
                       {result.panelName}
                     </span>
                     {result.success ? (
-                      <CheckCircle style={{ width: '16px', height: '16px', color: '#059669' }} />
+                      <CheckCircle style={{ width: '16px', height: '16px', color: COLORS.successDark }} />
                     ) : (
-                      <AlertCircle style={{ width: '16px', height: '16px', color: '#DC2626' }} />
+                      <AlertCircle style={{ width: '16px', height: '16px', color: COLORS.error }} />
                     )}
                   </div>
                   {result.filename && (
-                    <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray, marginTop: '0.25rem', marginBottom: 0 }}>
+                    <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary, marginTop: '0.25rem', marginBottom: 0 }}>
                       {result.filename}
                     </p>
                   )}
                   {result.error && (
-                    <p style={{ fontSize: '0.875rem', color: '#DC2626', marginTop: '0.25rem', marginBottom: 0 }}>
+                    <p style={{ fontSize: '0.875rem', color: COLORS.error, marginTop: '0.25rem', marginBottom: 0 }}>
                       {result.error}
                     </p>
                   )}
@@ -648,17 +648,17 @@ export default function PCRSDownloader({
         return (
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <div style={{
-              backgroundColor: '#FEE2E2',
-              border: '1px solid #DC2626',
+              backgroundColor: COLORS.errorLight,
+              border: `1px solid ${COLORS.error}`,
               borderRadius: '8px',
               padding: '1rem',
               marginBottom: '1rem'
             }}>
               <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-                <AlertCircle style={{ width: '20px', height: '20px', color: '#DC2626', marginRight: '0.5rem', marginTop: '2px' }} />
+                <AlertCircle style={{ width: '20px', height: '20px', color: COLORS.error, marginRight: '0.5rem', marginTop: '2px' }} />
                 <div>
-                  <h4 style={{ fontWeight: '500', color: '#991B1B', margin: 0 }}>Error</h4>
-                  <p style={{ fontSize: '0.875rem', color: '#B91C1C', marginTop: '0.25rem', marginBottom: 0 }}>
+                  <h4 style={{ fontWeight: '500', color: COLORS.errorText, margin: 0 }}>Error</h4>
+                  <p style={{ fontSize: '0.875rem', color: COLORS.errorDark, marginTop: '0.25rem', marginBottom: 0 }}>
                     {errorMessage}
                   </p>
                 </div>
@@ -671,7 +671,7 @@ export default function PCRSDownloader({
                 style={{
                   flex: 1,
                   padding: '0.5rem 1rem',
-                  border: `1px solid ${COLORS.lightGray}`,
+                  border: `1px solid ${COLORS.borderLight}`,
                   borderRadius: '8px',
                   backgroundColor: COLORS.white,
                   cursor: 'pointer',
@@ -688,7 +688,7 @@ export default function PCRSDownloader({
                 style={{
                   flex: 1,
                   padding: '0.5rem 1rem',
-                  backgroundColor: COLORS.mediumGray,
+                  backgroundColor: COLORS.textSecondary,
                   color: COLORS.white,
                   border: 'none',
                   borderRadius: '8px',
@@ -713,7 +713,7 @@ export default function PCRSDownloader({
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      backgroundColor: COLORS.overlayDark,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -738,11 +738,11 @@ export default function PCRSDownloader({
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '1rem 1.5rem',
-          borderBottom: `1px solid ${COLORS.lightGray}`
+          borderBottom: `1px solid ${COLORS.borderLight}`
         }}>
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <Download style={{ width: '20px', height: '20px', color: COLORS.slainteBlue, marginRight: '0.5rem' }} />
-            <h2 style={{ fontSize: '1.125rem', fontWeight: '600', color: COLORS.darkGray, margin: 0 }}>
+            <h2 style={{ fontSize: '1.125rem', fontWeight: '600', color: COLORS.textPrimary, margin: 0 }}>
               Download PCRS Statements
             </h2>
           </div>
@@ -756,7 +756,7 @@ export default function PCRSDownloader({
               cursor: 'pointer'
             }}
           >
-            <X style={{ width: '20px', height: '20px', color: COLORS.mediumGray }} />
+            <X style={{ width: '20px', height: '20px', color: COLORS.textSecondary }} />
           </button>
         </div>
 
@@ -769,13 +769,13 @@ export default function PCRSDownloader({
         {sessionInfo?.valid && status === 'authenticated' && (
           <div style={{
             padding: '0.75rem 1.5rem',
-            borderTop: `1px solid ${COLORS.lightGray}`,
-            backgroundColor: COLORS.backgroundGray,
+            borderTop: `1px solid ${COLORS.borderLight}`,
+            backgroundColor: COLORS.bgPage,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', fontSize: '0.75rem', color: COLORS.mediumGray }}>
+            <div style={{ display: 'flex', alignItems: 'center', fontSize: '0.75rem', color: COLORS.textSecondary }}>
               <Clock style={{ width: '14px', height: '14px', marginRight: '0.25rem' }} />
               Session expires in {sessionInfo.remainingHours} hours
             </div>

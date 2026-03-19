@@ -74,7 +74,7 @@ const FeedbackModal = () => {
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: COLORS.overlayDark,
         zIndex: 200,
         display: 'flex',
         alignItems: 'center',
@@ -101,7 +101,7 @@ const FeedbackModal = () => {
         {/* Header */}
         <div style={{
           padding: '1rem 1.25rem',
-          borderBottom: `1px solid ${COLORS.lightGray}`,
+          borderBottom: `1px solid ${COLORS.borderLight}`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -120,10 +120,10 @@ const FeedbackModal = () => {
               <MessageSquare style={{ height: '1.125rem', width: '1.125rem', color: COLORS.slainteBlue }} />
             </div>
             <div>
-              <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600, color: COLORS.darkGray }}>
+              <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600, color: COLORS.textPrimary }}>
                 Send Feedback
               </h3>
-              <p style={{ margin: 0, fontSize: '0.75rem', color: COLORS.mediumGray }}>
+              <p style={{ margin: 0, fontSize: '0.75rem', color: COLORS.textSecondary }}>
                 Help us improve Sláinte Finance
               </p>
             </div>
@@ -136,10 +136,10 @@ const FeedbackModal = () => {
               border: 'none',
               borderRadius: '0.375rem',
               cursor: 'pointer',
-              color: COLORS.mediumGray,
+              color: COLORS.textSecondary,
               display: 'flex'
             }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.backgroundGray}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.bgPage}
             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
           >
             <X style={{ height: '1.125rem', width: '1.125rem' }} />
@@ -154,7 +154,7 @@ const FeedbackModal = () => {
         }}>
           {/* Category selection */}
           <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: COLORS.darkGray, marginBottom: '0.5rem' }}>
+            <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: COLORS.textPrimary, marginBottom: '0.5rem' }}>
               Category
             </label>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
@@ -165,23 +165,23 @@ const FeedbackModal = () => {
                   style={{
                     padding: '0.5rem 0.75rem',
                     borderRadius: '0.5rem',
-                    border: `1.5px solid ${category === cat.value ? COLORS.slainteBlue : COLORS.lightGray}`,
+                    border: `1.5px solid ${category === cat.value ? COLORS.slainteBlue : COLORS.borderLight}`,
                     backgroundColor: category === cat.value ? `${COLORS.slainteBlue}10` : COLORS.white,
                     cursor: 'pointer',
                     textAlign: 'left',
                     transition: 'all 0.15s ease'
                   }}
                   onMouseEnter={(e) => {
-                    if (category !== cat.value) e.currentTarget.style.borderColor = COLORS.mediumGray;
+                    if (category !== cat.value) e.currentTarget.style.borderColor = COLORS.textSecondary;
                   }}
                   onMouseLeave={(e) => {
-                    if (category !== cat.value) e.currentTarget.style.borderColor = COLORS.lightGray;
+                    if (category !== cat.value) e.currentTarget.style.borderColor = COLORS.borderLight;
                   }}
                 >
-                  <div style={{ fontSize: '0.8125rem', fontWeight: 500, color: category === cat.value ? COLORS.slainteBlue : COLORS.darkGray }}>
+                  <div style={{ fontSize: '0.8125rem', fontWeight: 500, color: category === cat.value ? COLORS.slainteBlue : COLORS.textPrimary }}>
                     {cat.label}
                   </div>
-                  <div style={{ fontSize: '0.6875rem', color: COLORS.mediumGray, marginTop: '0.125rem' }}>
+                  <div style={{ fontSize: '0.6875rem', color: COLORS.textSecondary, marginTop: '0.125rem' }}>
                     {cat.description}
                   </div>
                 </button>
@@ -191,7 +191,7 @@ const FeedbackModal = () => {
 
           {/* Description */}
           <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: COLORS.darkGray, marginBottom: '0.5rem' }}>
+            <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: COLORS.textPrimary, marginBottom: '0.5rem' }}>
               Description
             </label>
             <textarea
@@ -203,23 +203,23 @@ const FeedbackModal = () => {
                 width: '100%',
                 padding: '0.75rem',
                 borderRadius: '0.5rem',
-                border: `1px solid ${COLORS.lightGray}`,
+                border: `1px solid ${COLORS.borderLight}`,
                 fontSize: '0.875rem',
                 lineHeight: '1.5',
-                color: COLORS.darkGray,
+                color: COLORS.textPrimary,
                 resize: 'vertical',
                 fontFamily: 'inherit',
                 outline: 'none',
                 boxSizing: 'border-box'
               }}
               onFocus={(e) => e.currentTarget.style.borderColor = COLORS.slainteBlue}
-              onBlur={(e) => e.currentTarget.style.borderColor = COLORS.lightGray}
+              onBlur={(e) => e.currentTarget.style.borderColor = COLORS.borderLight}
             />
           </div>
 
           {/* Context panel */}
           <div style={{
-            border: `1px solid ${COLORS.lightGray}`,
+            border: `1px solid ${COLORS.borderLight}`,
             borderRadius: '0.5rem',
             overflow: 'hidden'
           }}>
@@ -228,7 +228,7 @@ const FeedbackModal = () => {
               style={{
                 width: '100%',
                 padding: '0.625rem 0.75rem',
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 border: 'none',
                 cursor: 'pointer',
                 display: 'flex',
@@ -236,7 +236,7 @@ const FeedbackModal = () => {
                 justifyContent: 'space-between',
                 fontSize: '0.75rem',
                 fontWeight: 500,
-                color: COLORS.mediumGray
+                color: COLORS.textSecondary
               }}
             >
               <span>This information will also be included</span>
@@ -249,7 +249,7 @@ const FeedbackModal = () => {
               <div style={{
                 padding: '0.625rem 0.75rem',
                 fontSize: '0.75rem',
-                color: COLORS.mediumGray,
+                color: COLORS.textSecondary,
                 lineHeight: '1.6'
               }}>
                 {practiceId && <div>Your Practice ID ({practiceId})</div>}
@@ -274,7 +274,7 @@ const FeedbackModal = () => {
               border: `1px solid ${COLORS.highlightYellow}40`,
               borderRadius: '0.5rem',
               fontSize: '0.75rem',
-              color: COLORS.darkGray
+              color: COLORS.textPrimary
             }}>
               <strong>Local Only Mode is active.</strong> Feedback will be saved locally.
               To deliver it to the Sláinte team, temporarily disable Local Only Mode or email the saved file.
@@ -293,13 +293,13 @@ const FeedbackModal = () => {
               display: 'flex',
               alignItems: 'flex-start',
               gap: '0.5rem',
-              color: COLORS.darkGray
+              color: COLORS.textPrimary
             }}>
               <AlertCircle style={{ height: '1rem', width: '1rem', color: COLORS.expenseColor, flexShrink: 0, marginTop: '0.0625rem' }} />
               <div>
                 <div>{error}</div>
                 {savedLocally && (
-                  <div style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: COLORS.mediumGray }}>
+                  <div style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: COLORS.textSecondary }}>
                     <CheckCircle2 style={{ height: '0.75rem', width: '0.75rem', display: 'inline', verticalAlign: 'middle' }} /> Your feedback was saved locally as a backup.
                   </div>
                 )}
@@ -311,7 +311,7 @@ const FeedbackModal = () => {
         {/* Footer */}
         <div style={{
           padding: '0.875rem 1.25rem',
-          borderTop: `1px solid ${COLORS.lightGray}`,
+          borderTop: `1px solid ${COLORS.borderLight}`,
           display: 'flex',
           justifyContent: 'flex-end',
           gap: '0.5rem',
@@ -323,11 +323,11 @@ const FeedbackModal = () => {
             style={{
               padding: '0.5rem 1rem',
               backgroundColor: COLORS.white,
-              border: `1px solid ${COLORS.lightGray}`,
+              border: `1px solid ${COLORS.borderLight}`,
               borderRadius: '0.5rem',
               fontSize: '0.8125rem',
               fontWeight: 500,
-              color: COLORS.darkGray,
+              color: COLORS.textPrimary,
               cursor: submitting ? 'not-allowed' : 'pointer',
               opacity: submitting ? 0.5 : 1
             }}
@@ -339,7 +339,7 @@ const FeedbackModal = () => {
             disabled={!description.trim() || submitting}
             style={{
               padding: '0.5rem 1.25rem',
-              backgroundColor: !description.trim() || submitting ? COLORS.mediumGray : COLORS.slainteBlue,
+              backgroundColor: !description.trim() || submitting ? COLORS.textSecondary : COLORS.slainteBlue,
               color: COLORS.white,
               border: 'none',
               borderRadius: '0.5rem',
@@ -351,7 +351,7 @@ const FeedbackModal = () => {
               gap: '0.5rem'
             }}
             onMouseEnter={(e) => {
-              if (description.trim() && !submitting) e.currentTarget.style.backgroundColor = '#3D7BC7';
+              if (description.trim() && !submitting) e.currentTarget.style.backgroundColor = COLORS.slainteBlueDark;
             }}
             onMouseLeave={(e) => {
               if (description.trim() && !submitting) e.currentTarget.style.backgroundColor = COLORS.slainteBlue;

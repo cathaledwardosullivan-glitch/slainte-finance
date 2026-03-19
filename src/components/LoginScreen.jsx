@@ -60,7 +60,7 @@ export default function LoginScreen({ onLogin }) {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: COLORS.backgroundGray,
+      backgroundColor: COLORS.bgPage,
       padding: '1rem'
     }}>
       <div style={{
@@ -90,7 +90,7 @@ export default function LoginScreen({ onLogin }) {
         <h1 style={{
           fontSize: '1.75rem',
           fontWeight: 700,
-          color: COLORS.darkGray,
+          color: COLORS.textPrimary,
           marginBottom: '0.5rem'
         }}>
           Slainte Finance
@@ -98,7 +98,7 @@ export default function LoginScreen({ onLogin }) {
 
         <p style={{
           fontSize: '1rem',
-          color: COLORS.mediumGray,
+          color: COLORS.textSecondary,
           marginBottom: '2rem'
         }}>
           Enter your password to continue
@@ -112,7 +112,7 @@ export default function LoginScreen({ onLogin }) {
               display: 'block',
               fontSize: '0.875rem',
               fontWeight: 500,
-              color: COLORS.darkGray,
+              color: COLORS.textPrimary,
               marginBottom: '0.5rem'
             }}>
               Password
@@ -133,18 +133,18 @@ export default function LoginScreen({ onLogin }) {
                   width: '100%',
                   padding: '0.875rem 3rem 0.875rem 1rem',
                   fontSize: '1rem',
-                  border: `2px solid ${error ? COLORS.expenseColor : COLORS.lightGray}`,
+                  border: `2px solid ${error ? COLORS.expenseColor : COLORS.borderLight}`,
                   borderRadius: '8px',
                   outline: 'none',
                   transition: 'border-color 0.2s',
-                  backgroundColor: isVerifying ? COLORS.backgroundGray : COLORS.white,
+                  backgroundColor: isVerifying ? COLORS.bgPage : COLORS.white,
                   boxSizing: 'border-box'
                 }}
                 onFocus={(e) => {
                   if (!error) e.target.style.borderColor = COLORS.slainteBlue;
                 }}
                 onBlur={(e) => {
-                  if (!error) e.target.style.borderColor = COLORS.lightGray;
+                  if (!error) e.target.style.borderColor = COLORS.borderLight;
                 }}
               />
               <button
@@ -159,7 +159,7 @@ export default function LoginScreen({ onLogin }) {
                   border: 'none',
                   cursor: 'pointer',
                   padding: '0.25rem',
-                  color: COLORS.mediumGray
+                  color: COLORS.textSecondary
                 }}
               >
                 {showPassword ?
@@ -207,7 +207,7 @@ export default function LoginScreen({ onLogin }) {
               htmlFor="rememberMe"
               style={{
                 fontSize: '0.875rem',
-                color: COLORS.mediumGray,
+                color: COLORS.textSecondary,
                 cursor: 'pointer'
               }}
             >
@@ -240,7 +240,7 @@ export default function LoginScreen({ onLogin }) {
         {/* Help Text */}
         <p style={{
           fontSize: '0.75rem',
-          color: COLORS.mediumGray,
+          color: COLORS.textSecondary,
           marginTop: '1.5rem'
         }}>
           This is the same password used for mobile access

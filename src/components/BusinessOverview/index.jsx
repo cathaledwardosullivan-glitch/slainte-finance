@@ -8,7 +8,7 @@ import TransactionListModalV2 from '../TransactionListModalV2';
 import PaymentAnalysis from '../PaymentAnalysis';
 
 // Dashboard accent colors
-const GMS_PINK = '#E91E63';
+const GMS_PINK = COLORS.chartPink;
 
 /**
  * BusinessOverview - Unified business dashboard tab
@@ -67,12 +67,12 @@ const BusinessOverview = ({ setCurrentView }) => {
           padding: '1rem',
           backgroundColor: COLORS.white,
           borderRadius: '0.5rem',
-          border: `1px solid ${COLORS.lightGray}`,
+          border: `1px solid ${COLORS.borderLight}`,
           flexShrink: 0
         }}
       >
         {/* Left side - Dashboard toggle */}
-        <div data-tour-id="business-dashboard-toggle" style={{ display: 'flex', borderRadius: '0.5rem', overflow: 'hidden', border: `1px solid ${COLORS.lightGray}` }}>
+        <div data-tour-id="business-dashboard-toggle" style={{ display: 'flex', borderRadius: '0.5rem', overflow: 'hidden', border: `1px solid ${COLORS.borderLight}` }}>
           <button
             onClick={() => setActiveDashboard('financial')}
             style={{
@@ -82,7 +82,7 @@ const BusinessOverview = ({ setCurrentView }) => {
               padding: '0.5rem 1rem',
               border: 'none',
               backgroundColor: activeDashboard === 'financial' ? COLORS.slainteBlue : 'transparent',
-              color: activeDashboard === 'financial' ? COLORS.white : COLORS.darkGray,
+              color: activeDashboard === 'financial' ? COLORS.white : COLORS.textPrimary,
               fontWeight: activeDashboard === 'financial' ? 600 : 400,
               fontSize: '0.875rem',
               cursor: 'pointer',
@@ -90,7 +90,7 @@ const BusinessOverview = ({ setCurrentView }) => {
             }}
             onMouseEnter={(e) => {
               if (activeDashboard !== 'financial') {
-                e.currentTarget.style.backgroundColor = COLORS.backgroundGray;
+                e.currentTarget.style.backgroundColor = COLORS.bgPage;
               }
             }}
             onMouseLeave={(e) => {
@@ -109,9 +109,9 @@ const BusinessOverview = ({ setCurrentView }) => {
               gap: '0.5rem',
               padding: '0.5rem 1rem',
               border: 'none',
-              borderLeft: `1px solid ${COLORS.lightGray}`,
+              borderLeft: `1px solid ${COLORS.borderLight}`,
               backgroundColor: activeDashboard === 'gms' ? GMS_PINK : 'transparent',
-              color: activeDashboard === 'gms' ? COLORS.white : COLORS.darkGray,
+              color: activeDashboard === 'gms' ? COLORS.white : COLORS.textPrimary,
               fontWeight: activeDashboard === 'gms' ? 600 : 400,
               fontSize: '0.875rem',
               cursor: 'pointer',
@@ -119,7 +119,7 @@ const BusinessOverview = ({ setCurrentView }) => {
             }}
             onMouseEnter={(e) => {
               if (activeDashboard !== 'gms') {
-                e.currentTarget.style.backgroundColor = COLORS.backgroundGray;
+                e.currentTarget.style.backgroundColor = COLORS.bgPage;
               }
             }}
             onMouseLeave={(e) => {
@@ -170,17 +170,17 @@ const BusinessOverview = ({ setCurrentView }) => {
           {/* Year Selector - only shown in calendar year mode */}
           {!useRollingYear && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Calendar style={{ height: '1rem', width: '1rem', color: COLORS.mediumGray }} />
+              <Calendar style={{ height: '1rem', width: '1rem', color: COLORS.textSecondary }} />
               <select
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(parseInt(e.target.value))}
                 style={{
                   padding: '0.375rem 0.75rem',
                   borderRadius: '0.5rem',
-                  border: `1px solid ${COLORS.lightGray}`,
+                  border: `1px solid ${COLORS.borderLight}`,
                   backgroundColor: COLORS.white,
                   fontSize: '0.875rem',
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   cursor: 'pointer',
                   outline: 'none'
                 }}
@@ -201,7 +201,7 @@ const BusinessOverview = ({ setCurrentView }) => {
         style={{
           flex: 1,
           overflow: 'auto',
-          backgroundColor: COLORS.backgroundGray
+          backgroundColor: COLORS.bgPage
         }}
       >
         {activeDashboard === 'financial' && (

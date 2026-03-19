@@ -9,7 +9,9 @@ import {
   Link2,
   Unlink,
   Monitor,
-  Clock
+  Clock,
+  Copy,
+  Check
 } from 'lucide-react';
 import COLORS from '../../../utils/colors';
 
@@ -75,6 +77,7 @@ const ConnectedPracticeSection = () => {
   const [pullError, setPullError] = useState(null);
   const [hubReachable, setHubReachable] = useState(null); // null = unchecked, true/false
   const [lanIP, setLanIP] = useState(null);
+  const [copied, setCopied] = useState(false);
 
   // Load saved connection config on mount
   useEffect(() => {
@@ -324,7 +327,7 @@ const ConnectedPracticeSection = () => {
                   <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 600 }}>
                     Connected to {connectedName || 'Practice'}
                   </h3>
-                  <p style={{ margin: 0, fontSize: '0.85rem', color: COLORS.mediumGray }}>
+                  <p style={{ margin: 0, fontSize: '0.85rem', color: COLORS.textSecondary }}>
                     {connectedAddress}
                     {hubReachable === false && ' — Hub offline, using cached data'}
                   </p>
@@ -342,28 +345,28 @@ const ConnectedPracticeSection = () => {
               padding: '0.75rem',
               backgroundColor: COLORS.white,
               borderRadius: '0.375rem',
-              border: `1px solid ${COLORS.lightGray}`
+              border: `1px solid ${COLORS.borderLight}`
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Clock size={14} color={isStale(lastRefresh) ? COLORS.highlightYellow : COLORS.mediumGray} />
+                <Clock size={14} color={isStale(lastRefresh) ? COLORS.highlightYellow : COLORS.textSecondary} />
                 <span style={{
                   fontSize: '0.85rem',
                   fontWeight: isStale(lastRefresh) ? 600 : 400,
-                  color: isStale(lastRefresh) ? COLORS.highlightYellow : COLORS.darkGray
+                  color: isStale(lastRefresh) ? COLORS.highlightYellow : COLORS.textPrimary
                 }}>
                   Last refreshed: {formatRelativeTime(lastRefresh)}
                 </span>
               </div>
               {dataSummary && (
                 <>
-                  <span style={{ fontSize: '0.85rem', color: COLORS.mediumGray }}>
+                  <span style={{ fontSize: '0.85rem', color: COLORS.textSecondary }}>
                     {dataSummary.transactions} transactions
                   </span>
-                  <span style={{ fontSize: '0.85rem', color: COLORS.mediumGray }}>
+                  <span style={{ fontSize: '0.85rem', color: COLORS.textSecondary }}>
                     {dataSummary.pcrs} PCRS records
                   </span>
                   {dataSummary.reports > 0 && (
-                    <span style={{ fontSize: '0.85rem', color: COLORS.mediumGray }}>
+                    <span style={{ fontSize: '0.85rem', color: COLORS.textSecondary }}>
                       {dataSummary.reports} reports
                     </span>
                   )}
@@ -382,7 +385,7 @@ const ConnectedPracticeSection = () => {
                   fontSize: '0.875rem',
                   fontWeight: 600,
                   color: COLORS.white,
-                  backgroundColor: (isPulling || hubReachable === false) ? COLORS.lightGray : COLORS.slainteBlue,
+                  backgroundColor: (isPulling || hubReachable === false) ? COLORS.borderLight : COLORS.slainteBlue,
                   border: 'none',
                   cursor: (isPulling || hubReachable === false) ? 'not-allowed' : 'pointer',
                   display: 'flex',
@@ -401,9 +404,9 @@ const ConnectedPracticeSection = () => {
                   borderRadius: '0.5rem',
                   fontSize: '0.875rem',
                   fontWeight: 500,
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   backgroundColor: COLORS.white,
-                  border: `1px solid ${COLORS.lightGray}`,
+                  border: `1px solid ${COLORS.borderLight}`,
                   cursor: 'pointer'
                 }}
               >
@@ -478,7 +481,7 @@ const ConnectedPracticeSection = () => {
           backgroundColor: COLORS.white,
           padding: '1.5rem',
           borderRadius: '0.5rem',
-          border: `1px solid ${COLORS.lightGray}`
+          border: `1px solid ${COLORS.borderLight}`
         }}>
           <h3 style={{
             fontSize: '1.125rem',
@@ -486,21 +489,21 @@ const ConnectedPracticeSection = () => {
             display: 'flex',
             alignItems: 'center',
             gap: '0.5rem',
-            color: COLORS.darkGray,
+            color: COLORS.textPrimary,
             marginTop: 0,
             marginBottom: '0.25rem'
           }}>
             <Link2 size={18} color={COLORS.slainteBlue} />
             Connect to Practice Computer
           </h3>
-          <p style={{ fontSize: '0.85rem', color: COLORS.mediumGray, marginTop: 0, marginBottom: '1.25rem' }}>
+          <p style={{ fontSize: '0.85rem', color: COLORS.textSecondary, marginTop: 0, marginBottom: '1.25rem' }}>
             Pull practice data from another computer running Sláinte Finance on your network.
             Enter the IP address shown on that computer's Settings page.
           </p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxWidth: '400px' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.375rem', color: COLORS.darkGray }}>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.375rem', color: COLORS.textPrimary }}>
                 Hub IP Address
               </label>
               <input
@@ -511,7 +514,7 @@ const ConnectedPracticeSection = () => {
                 style={{
                   width: '100%',
                   padding: '0.625rem 0.75rem',
-                  border: `1px solid ${COLORS.lightGray}`,
+                  border: `1px solid ${COLORS.borderLight}`,
                   borderRadius: '0.375rem',
                   fontSize: '0.9rem',
                   boxSizing: 'border-box'
@@ -520,7 +523,7 @@ const ConnectedPracticeSection = () => {
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.375rem', color: COLORS.darkGray }}>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.375rem', color: COLORS.textPrimary }}>
                 Partner Password
               </label>
               <input
@@ -531,7 +534,7 @@ const ConnectedPracticeSection = () => {
                 style={{
                   width: '100%',
                   padding: '0.625rem 0.75rem',
-                  border: `1px solid ${COLORS.lightGray}`,
+                  border: `1px solid ${COLORS.borderLight}`,
                   borderRadius: '0.375rem',
                   fontSize: '0.9rem',
                   boxSizing: 'border-box'
@@ -583,9 +586,9 @@ const ConnectedPracticeSection = () => {
                   borderRadius: '0.5rem',
                   fontSize: '0.875rem',
                   fontWeight: 500,
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   backgroundColor: COLORS.white,
-                  border: `1px solid ${COLORS.lightGray}`,
+                  border: `1px solid ${COLORS.borderLight}`,
                   cursor: !hubAddress.trim() || isTesting ? 'not-allowed' : 'pointer',
                   opacity: !hubAddress.trim() ? 0.5 : 1
                 }}
@@ -602,7 +605,7 @@ const ConnectedPracticeSection = () => {
                   fontSize: '0.875rem',
                   fontWeight: 600,
                   color: COLORS.white,
-                  backgroundColor: (!hubAddress.trim() || !password || isPulling) ? COLORS.lightGray : COLORS.slainteBlue,
+                  backgroundColor: (!hubAddress.trim() || !password || isPulling) ? COLORS.borderLight : COLORS.slainteBlue,
                   border: 'none',
                   cursor: (!hubAddress.trim() || !password || isPulling) ? 'not-allowed' : 'pointer',
                   display: 'flex',
@@ -632,41 +635,66 @@ const ConnectedPracticeSection = () => {
             display: 'flex',
             alignItems: 'center',
             gap: '0.5rem',
-            color: COLORS.darkGray,
+            color: COLORS.textPrimary,
             marginTop: 0,
             marginBottom: '0.5rem'
           }}>
             <Monitor size={16} color={COLORS.slainteBlue} />
             Sharing This Computer's Data
           </h3>
-          <p style={{ fontSize: '0.85rem', color: COLORS.mediumGray, margin: '0 0 0.75rem 0' }}>
+          <p style={{ fontSize: '0.85rem', color: COLORS.textSecondary, margin: '0 0 0.75rem 0' }}>
             Other computers on your practice network can connect to this machine to pull your practice data.
           </p>
 
           {lanIP ? (
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              padding: '0.5rem 0.75rem',
-              backgroundColor: COLORS.white,
-              borderRadius: '0.375rem',
-              border: `1px solid ${COLORS.lightGray}`,
-              fontFamily: 'monospace',
-              fontSize: '0.9rem',
-              fontWeight: 600,
-              color: COLORS.darkGray
-            }}>
-              <Wifi size={14} color={COLORS.slainteBlue} />
-              {lanIP}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.5rem 0.75rem',
+                backgroundColor: COLORS.white,
+                borderRadius: '0.375rem',
+                border: `1px solid ${COLORS.borderLight}`,
+                fontFamily: 'monospace',
+                fontSize: '0.9rem',
+                fontWeight: 600,
+                color: COLORS.textPrimary
+              }}>
+                <Wifi size={14} color={COLORS.slainteBlue} />
+                {lanIP}
+              </div>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(lanIP);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                }}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  padding: '0.5rem 0.75rem',
+                  backgroundColor: copied ? 'rgba(78, 205, 196, 0.1)' : COLORS.white,
+                  borderRadius: '0.375rem',
+                  border: `1px solid ${copied ? 'rgba(78, 205, 196, 0.4)' : COLORS.borderLight}`,
+                  fontSize: '0.8rem',
+                  color: copied ? COLORS.incomeColorDark : COLORS.textSecondary,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                {copied ? <Check size={13} /> : <Copy size={13} />}
+                {copied ? 'Copied!' : 'Copy'}
+              </button>
             </div>
           ) : (
-            <p style={{ fontSize: '0.85rem', color: COLORS.mediumGray, margin: 0 }}>
+            <p style={{ fontSize: '0.85rem', color: COLORS.textSecondary, margin: 0 }}>
               Your LAN IP address is available on the practice network (port 3001).
             </p>
           )}
 
-          <p style={{ fontSize: '0.8rem', color: COLORS.mediumGray, margin: '0.75rem 0 0 0' }}>
+          <p style={{ fontSize: '0.8rem', color: COLORS.textSecondary, margin: '0.75rem 0 0 0' }}>
             A partner password must be set up first — see Backup & Restore section for Security Password.
           </p>
 
@@ -677,7 +705,7 @@ const ConnectedPracticeSection = () => {
             backgroundColor: 'rgba(255, 210, 60, 0.08)',
             border: '1px solid rgba(255, 210, 60, 0.25)',
             fontSize: '0.8rem',
-            color: '#8B6914',
+            color: COLORS.warningText,
             lineHeight: 1.5
           }}>
             <strong>Important:</strong> If this is the computer where you upload bank statements and PCRS data,
@@ -717,14 +745,14 @@ const ReauthCard = ({ address, onReauth, isPulling, error }) => {
         display: 'flex',
         alignItems: 'center',
         gap: '0.5rem',
-        color: COLORS.darkGray,
+        color: COLORS.textPrimary,
         marginTop: 0,
         marginBottom: '0.5rem'
       }}>
         <AlertTriangle size={16} color={COLORS.highlightYellow} />
         Session Expired
       </h3>
-      <p style={{ fontSize: '0.85rem', color: COLORS.mediumGray, margin: '0 0 0.75rem 0' }}>
+      <p style={{ fontSize: '0.85rem', color: COLORS.textSecondary, margin: '0 0 0.75rem 0' }}>
         Your connection to {address} has expired. Re-enter the partner password to reconnect.
       </p>
 
@@ -737,7 +765,7 @@ const ReauthCard = ({ address, onReauth, isPulling, error }) => {
           style={{
             flex: 1,
             padding: '0.625rem 0.75rem',
-            border: `1px solid ${COLORS.lightGray}`,
+            border: `1px solid ${COLORS.borderLight}`,
             borderRadius: '0.375rem',
             fontSize: '0.9rem'
           }}
@@ -751,7 +779,7 @@ const ReauthCard = ({ address, onReauth, isPulling, error }) => {
             fontSize: '0.875rem',
             fontWeight: 600,
             color: COLORS.white,
-            backgroundColor: (!pwd || isPulling) ? COLORS.lightGray : COLORS.slainteBlue,
+            backgroundColor: (!pwd || isPulling) ? COLORS.borderLight : COLORS.slainteBlue,
             border: 'none',
             cursor: (!pwd || isPulling) ? 'not-allowed' : 'pointer'
           }}

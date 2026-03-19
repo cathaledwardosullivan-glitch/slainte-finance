@@ -43,7 +43,7 @@ const TourControls = () => {
           padding: '8px 12px',
           backgroundColor: 'transparent',
           border: 'none',
-          color: COLORS.mediumGray,
+          color: COLORS.textSecondary,
           fontSize: '13px',
           fontWeight: '500',
           cursor: isTransitioning ? 'not-allowed' : 'pointer',
@@ -53,13 +53,13 @@ const TourControls = () => {
         }}
         onMouseEnter={(e) => {
           if (!isTransitioning) {
-            e.target.style.backgroundColor = COLORS.backgroundGray;
-            e.target.style.color = COLORS.darkGray;
+            e.target.style.backgroundColor = COLORS.bgPage;
+            e.target.style.color = COLORS.textPrimary;
           }
         }}
         onMouseLeave={(e) => {
           e.target.style.backgroundColor = 'transparent';
-          e.target.style.color = COLORS.mediumGray;
+          e.target.style.color = COLORS.textSecondary;
         }}
       >
         <X size={14} />
@@ -71,7 +71,7 @@ const TourControls = () => {
         style={{
           width: '1px',
           height: '24px',
-          backgroundColor: COLORS.lightGray,
+          backgroundColor: COLORS.borderLight,
         }}
       />
 
@@ -85,10 +85,10 @@ const TourControls = () => {
           justifyContent: 'center',
           width: '36px',
           height: '36px',
-          backgroundColor: isFirstStep ? COLORS.backgroundGray : COLORS.white,
-          border: `1px solid ${isFirstStep ? COLORS.lightGray : COLORS.slainteBlue}`,
+          backgroundColor: isFirstStep ? COLORS.bgPage : COLORS.white,
+          border: `1px solid ${isFirstStep ? COLORS.borderLight : COLORS.slainteBlue}`,
           borderRadius: '50%',
-          color: isFirstStep ? COLORS.lightGray : COLORS.slainteBlue,
+          color: isFirstStep ? COLORS.borderLight : COLORS.slainteBlue,
           cursor: isFirstStep || isTransitioning ? 'not-allowed' : 'pointer',
           opacity: isTransitioning ? 0.5 : 1,
           transition: 'all 0.2s',
@@ -99,7 +99,7 @@ const TourControls = () => {
           }
         }}
         onMouseLeave={(e) => {
-          e.target.style.backgroundColor = isFirstStep ? COLORS.backgroundGray : COLORS.white;
+          e.target.style.backgroundColor = isFirstStep ? COLORS.bgPage : COLORS.white;
         }}
       >
         <ChevronLeft size={20} />
@@ -126,7 +126,7 @@ const TourControls = () => {
                   ? COLORS.slainteBlue
                   : idx < currentStep
                   ? COLORS.incomeColor
-                  : COLORS.lightGray,
+                  : COLORS.borderLight,
               transition: 'all 0.3s ease',
             }}
           />

@@ -5,9 +5,20 @@ import { chatStorage } from '../storage/chatStorage';
 import { callClaude, callClaudeWithTools } from '../utils/claudeAPI';
 import { parseArtifactResponse, createArtifact } from '../utils/artifactBuilder';
 import { analyzeGMSIncome, generateRecommendations } from '../utils/healthCheckCalculations';
-import { buildInteractiveGMSContext } from '../utils/gmsHealthCheckContext';
+import { buildInteractiveGMSContext, buildAreaMetricsSummary } from '../utils/gmsHealthCheckContext';
 import { MODELS } from '../data/modelConfig';
 import { isAppHelpQuestion, buildAppKnowledgeContext } from '../utils/appContextBuilder';
+import { get as getProfileFromStorage, getOverdueActions, getActiveFinancialTasks, getActionsDueSoon, createFinancialTask, addFinancialTask, addActionItem } from '../storage/practiceProfileStorage';
+import { buildCiaranContext } from '../utils/ciaranContextBuilder';
+import { isDemoMode, getDemoApiKey } from '../utils/demoMode';
+import { isLANMode } from '../hooks/useLANMode';
+import { SUGGESTED_ANALYSES } from '../data/suggestedAnalyses';
+import { getContactInfo } from '../data/contactDirectory';
+import {
+  buildSimpleTransactionsCSV, buildDetailedTransactionsCSV,
+  buildPCRSSummaryCSV, buildPaymentOverviewCSV,
+  buildPLReportCSV, buildAndDownloadAccountantPackZIP, downloadBlob
+} from '../utils/exportUtils';
 
 // Create the context
 const FinnContext = createContext(null);
@@ -34,7 +45,7 @@ const TASK_TIMEOUT_MS = 3 * 60 * 1000;
 const FINN_TOOLS = [
   {
     name: 'navigate',
-    description: 'Navigate to a page, section, or modal in Sláinte Finance. Use when the user wants to go somewhere or open something.',
+    description: 'Navigate to a page, section, or modal in Sláinte Finance, create a task, create a new category, or trigger a file export/download. Use when the user wants to go somewhere, open something, add a task, create a category, or download data. Use "tasks:create" to create a task — provide just the title and description, then the Tasks panel will open for the user to set assignee, due date, and priority. IMPORTANT: Always describe the proposed task to the user and get their confirmation BEFORE calling with tasks:create. Use "categories:create" to create a new expense/income category — provide categoryData with name, type, and section. IMPORTANT: Always describe the proposed category to the user and get their confirmation BEFORE calling with categories:create. After creating a category, you can immediately recategorize matching transactions using search_transactions with action="recategorize". EXPORT RULE: When the user says "export", "download", "give me", or "send me" a data file (transactions CSV, PCRS summary, payment overview, accountant pack), use the matching "export:*" target for an instant download. EXCEPTION — P&L REPORTS: For P&L requests, navigate to "reports" instead of using "export:pl-draft", because the Reports panel lets the user choose the year and flags incomplete items like motor expenses and depreciation. Only use "export:pl-draft" if the user specifically asks for a quick/draft/raw P&L data extract.',
     input_schema: {
       type: 'object',
       properties: {
@@ -42,11 +53,58 @@ const FINN_TOOLS = [
           type: 'string',
           enum: [
             'finances-overview', 'gms-overview', 'gms-health-check',
+            'gms-health-check:leave', 'gms-health-check:practiceSupport',
+            'gms-health-check:capitation', 'gms-health-check:cervicalCheck',
+            'gms-health-check:stc', 'gms-health-check:cdm',
+            'advanced-insights',
+            'advanced-insights:overview', 'advanced-insights:gms',
+            'advanced-insights:growth', 'advanced-insights:costs', 'advanced-insights:tax',
             'settings', 'transactions', 'reports', 'pcrs-downloader',
             'settings:profile', 'settings:data', 'settings:categories',
-            'settings:backup', 'settings:privacy'
+            'settings:backup', 'settings:privacy',
+            'tasks:create', 'categories:create',
+            'export:transactions-simple', 'export:transactions-detailed',
+            'export:pcrs-summary', 'export:payment-overview',
+            'export:pl-draft', 'export:accountant-pack'
           ],
-          description: 'The page or section to navigate to. "reports" opens the Financial Dashboard Reports panel (P&L, Balance Sheet, etc.). "finances-overview" opens the Financial Dashboard main page. "gms-health-check" opens the GMS Health Check tool. "pcrs-downloader" opens the built-in PCRS/GMS statement downloader.'
+          description: 'The page or section to navigate to. "reports" opens the Reports panel where the user can generate a proper P&L report (with year selection, motor expenses, depreciation flags) — use this for P&L requests. "finances-overview" opens the Financial Dashboard. "gms-health-check" opens the GMS Health Check. "pcrs-downloader" opens the PCRS statement downloader. "advanced-insights" opens the Advanced Insights tab. "advanced-insights:overview/gms/growth/costs/tax" opens a specific Advanced Insights category. "tasks:create" creates a new task (requires taskData). "categories:create" creates a new expense/income category (requires categoryData) — use when the user wants a category that doesn\'t exist yet. FILE DOWNLOADS (instant): "export:transactions-simple" downloads simplified transaction CSV. "export:transactions-detailed" downloads full transaction CSV with categories. "export:pcrs-summary" downloads PCRS payment summary CSV. "export:payment-overview" downloads monthly payment breakdown CSV. "export:pl-draft" downloads a quick draft P&L CSV (raw data only — no motor expenses or depreciation, use only when user explicitly wants a quick/draft extract). "export:accountant-pack" downloads all exports bundled as ZIP.'
+        },
+        taskData: {
+          type: 'object',
+          description: 'Only used when target is "tasks:create". Defines the task to create. Finn creates the task with title and description, then opens the Tasks panel for the user to assign, set due date, and prioritize.',
+          properties: {
+            title: { type: 'string', description: 'Short task title (max 80 chars)' },
+            description: { type: 'string', description: 'Detailed description of what needs to be done' },
+            taskType: { type: 'string', enum: ['financial', 'gms'], description: 'Use "gms" for GMS/PCRS/Health Check related tasks, "financial" for everything else. Default: "financial".' },
+            category: { type: 'string', description: 'Task category (e.g. "reporting", "transactions", "upload", "follow-up", "general", or a GMS area like "Practice Support", "Capitation")' }
+          }
+        },
+        categoryData: {
+          type: 'object',
+          description: 'Only used when target is "categories:create". Defines the new category. IMPORTANT: Always describe the proposed category (name, section, identifiers) to the user and get their confirmation BEFORE calling. When the correct section is ambiguous, explain your reasoning and offer the most likely alternative — e.g. "This sounds like Medical Supplies (dispensing costs) — or would Professional Fees be more appropriate?" Only proceed after the user confirms. GP practice section guidance: Revenue payments (PAYE/PRSI/USC) → DIRECT STAFF COSTS. Locum fees → DIRECT STAFF COSTS. Professional indemnity → PROFESSIONAL DEV. Cleaning → PREMISES COSTS. Software subscriptions → OFFICE & IT. Bank charges → PROFESSIONAL FEES.',
+          properties: {
+            name: { type: 'string', description: 'Category display name (e.g. "Payments to Revenue")' },
+            type: { type: 'string', enum: ['income', 'expense', 'non-business'], description: 'Category type' },
+            section: {
+              type: 'string',
+              enum: [
+                'INCOME', 'DIRECT STAFF COSTS', 'MEDICAL SUPPLIES',
+                'PREMISES COSTS', 'OFFICE & IT', 'PROFESSIONAL FEES',
+                'PROFESSIONAL DEV', 'MOTOR & TRANSPORT',
+                'PETTY CASH / OTHER EXPENSES', 'CAPITAL & DEPRECIATION', 'NON-BUSINESS'
+              ],
+              description: 'The P&L section this category belongs to. Must be one of the 11 fixed sections.'
+            },
+            identifiers: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Keywords that auto-match transactions to this category (e.g. ["REVENUE COMMISSIONERS"])'
+            },
+            accountantLine: {
+              type: 'string',
+              description: 'P&L reporting line for the accountant (e.g. "Employer\'s PRSI & PAYE", "Staff costs")'
+            }
+          }
         }
       },
       required: ['target']
@@ -54,7 +112,7 @@ const FINN_TOOLS = [
   },
   {
     name: 'lookup_financial_data',
-    description: 'Look up specific financial data points from the practice\'s records. Use this to answer questions about income, expenses, profit, categories, trends, or transaction counts instead of guessing.',
+    description: 'Look up specific financial data points from the practice\'s records. Use this to answer questions about income, expenses, profit, categories, trends, or transaction counts instead of guessing. Use "system_status" to check what needs attention — stale data, uncategorised transactions, overdue tasks.',
     input_schema: {
       type: 'object',
       properties: {
@@ -63,9 +121,10 @@ const FINN_TOOLS = [
           enum: [
             'total_income', 'total_expenses', 'profit', 'profit_margin',
             'top_expenses', 'top_income', 'gms_payments', 'uncategorized_count',
-            'monthly_trends', 'transaction_count', 'available_years', 'expense_breakdown', 'income_breakdown'
+            'monthly_trends', 'transaction_count', 'available_years', 'expense_breakdown', 'income_breakdown',
+            'system_status'
           ],
-          description: 'The data point to retrieve'
+          description: 'The data point to retrieve. Use "system_status" to check for stale data, uncategorised transactions, overdue tasks, and other items needing attention.'
         },
         period: {
           type: 'string',
@@ -78,7 +137,7 @@ const FINN_TOOLS = [
   },
   {
     name: 'search_transactions',
-    description: 'Search and filter individual transactions by category, date, amount, or description text. Use this when the user asks about spending on a specific item, category, or time period — e.g. "how much did we spend on uniforms" or "show me transactions over €5000".',
+    description: 'Search and filter individual transactions by category, date, amount, or description text. Use this when the user asks about spending on a specific item, category, or time period — e.g. "how much did we spend on uniforms" or "show me transactions over €5000". Can also BULK RECATEGORIZE matching transactions when action is "recategorize". IMPORTANT: For recategorize, you MUST first call with action "list" (or omit action) to show the user exactly what will be changed and the target category, then get their explicit confirmation BEFORE calling again with action "recategorize". Never recategorize without confirmation.',
     input_schema: {
       type: 'object',
       properties: {
@@ -114,24 +173,37 @@ const FINN_TOOLS = [
         limit: {
           type: 'number',
           description: 'Max results to return (default 20)'
+        },
+        action: {
+          type: 'string',
+          enum: ['list', 'recategorize'],
+          description: 'Action to perform on matched transactions. "list" (default) returns matching transactions. "recategorize" changes the category of ALL matching transactions to newCategory — REQUIRES prior user confirmation.'
+        },
+        newCategory: {
+          type: 'string',
+          description: 'Only for action "recategorize". The target category name (matched against available categories, case-insensitive). Must match exactly one category.'
         }
       }
     }
   },
   {
     name: 'generate_report',
-    description: 'Generate a CUSTOM AI advisory report. ONLY use for open-ended advisory questions like "Should I hire a nurse?", "What is my 5-year financial outlook?", "Analyse spending trends". Do NOT use for standard reports (P&L, Balance Sheet, Partner Capital Accounts, GMS Health Check, Tax Return) — those have pre-built tools in the app and should be navigated to instead.',
+    description: 'Generate a CUSTOM AI advisory report or draft a communication. ONLY use for open-ended advisory questions like "Should I hire a nurse?", or for drafting emails/letters when the user wants to contact someone about a financial matter (e.g. "draft an email to PCRS about our unclaimed hours"). Do NOT use for standard reports (P&L, Balance Sheet, Partner Capital Accounts, GMS Health Check, Tax Return) — those have pre-built tools in the app and should be navigated to instead. Use reportType "communication_draft" ONLY when the user explicitly wants an email, letter, or formal correspondence drafted.',
     input_schema: {
       type: 'object',
       properties: {
         topic: {
           type: 'string',
-          description: 'The custom advisory question — e.g. "Should we hire a nurse?", "What is our 5-year financial outlook?", "Analyse our spending efficiency"'
+          description: 'The custom advisory question or communication topic — e.g. "Should we hire a nurse?", "Draft an email to PCRS about unclaimed Practice Support hours"'
         },
         reportType: {
           type: 'string',
-          enum: ['standard', 'strategic'],
-          description: 'Use "standard" for data analysis. Use "strategic" for forward-looking advisory/planning/business decisions.'
+          enum: ['standard', 'strategic', 'communication_draft'],
+          description: 'Use "standard" for data analysis. Use "strategic" for forward-looking advisory/planning/business decisions. Use "communication_draft" for emails, letters, or formal correspondence.'
+        },
+        recipient: {
+          type: 'string',
+          description: 'Only for communication_draft. Who the communication is addressed to — e.g. "PCRS", "HSE", "accountant", "Revenue". Used to look up contact details.'
         }
       },
       required: ['topic']
@@ -149,6 +221,20 @@ const FINN_TOOLS = [
         }
       },
       required: ['search']
+    }
+  },
+  {
+    name: 'lookup_available_analyses',
+    description: 'Look up pre-defined analysis reports available in the Advanced Insights tab. Use BEFORE generate_report to check if a curated analysis matches the user\'s question. Pre-defined analyses produce significantly better reports than freeform generation.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        category: {
+          type: 'string',
+          enum: ['all', 'overview', 'gms', 'growth', 'costs', 'tax'],
+          description: 'Filter by category, or "all" to see everything'
+        }
+      }
     }
   },
   {
@@ -177,11 +263,37 @@ const FINN_TOOLS = [
       },
       required: ['summary', 'category']
     }
+  },
+  {
+    name: 'lookup_gms_metrics',
+    description: 'Look up GMS Health Check analysis metrics for a specific area or overall summary. Use when the user asks about GMS payments, PCRS income, leave entitlements, practice support subsidies, capitation, cervical screening, STC procedures, or chronic disease management.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        area: {
+          type: 'string',
+          enum: ['summary', 'leave', 'practiceSupport', 'capitation', 'cervicalCheck', 'stc', 'cdm'],
+          description: 'Which GMS area to look up. Use "summary" for an overall view across all areas.'
+        },
+        detail_level: {
+          type: 'string',
+          enum: ['headline', 'detailed'],
+          description: 'headline = key figures only; detailed = full breakdowns and recommendations. Default headline.'
+        }
+      },
+      required: ['area']
+    }
   }
 ];
 
 // Max tool-use rounds before giving up (safety limit)
 const MAX_TOOL_ROUNDS = 5;
+
+// Tool subset for report Q&A — data lookup only, no navigation/generation
+const REPORT_QA_TOOLS = FINN_TOOLS.filter(t =>
+  ['lookup_financial_data', 'search_transactions', 'lookup_saved_reports', 'lookup_gms_metrics'].includes(t.name)
+);
+const MAX_QA_TOOL_ROUNDS = 3;
 
 // Greeting fast path — exact matches skip the agentic loop and use Haiku
 const GREETING_FAST_PATH = new Set([
@@ -194,9 +306,11 @@ export const FinnProvider = ({ children }) => {
   // App context for financial data
   const {
     transactions,
+    setTransactions,
     unidentifiedTransactions,
     selectedYear,
     categoryMapping,
+    setCategoryMapping,
     paymentAnalysisData,
     localOnlyMode
   } = useAppContext();
@@ -222,7 +336,6 @@ export const FinnProvider = ({ children }) => {
 
   // Widget UI state
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('chat'); // 'chat' or 'reports'
 
   // Chat state
   const [currentChatId, setCurrentChatId] = useState(null);
@@ -236,6 +349,7 @@ export const FinnProvider = ({ children }) => {
   const taskTimeoutRef = useRef(null);
   const startBackgroundReportRef = useRef(null); // For retry functionality
   const pcrsListenerSetupRef = useRef(false); // Track if PCRS IPC listeners are set up
+  const lastCreatedCategoryRef = useRef(null); // For immediate recategorize after category creation
 
   // Reports state
   const [savedReports, setSavedReports] = useState([]);
@@ -265,8 +379,11 @@ export const FinnProvider = ({ children }) => {
     const loadApiKey = async () => {
       let savedKey = null;
 
-      // Check Electron storage first (preferred)
-      if (window.electronAPI?.isElectron) {
+      // In demo mode, use the TTL-protected demo key
+      if (isDemoMode()) {
+        savedKey = getDemoApiKey();
+      } else if (window.electronAPI?.isElectron) {
+        // Check Electron storage first (preferred)
         savedKey = await window.electronAPI.getLocalStorage('claude_api_key');
       }
 
@@ -305,7 +422,6 @@ export const FinnProvider = ({ children }) => {
     const timer = setTimeout(() => {
       console.log('[Finn] Opening widget with tour offer message');
       setIsOpen(true);
-      setActiveTab('chat');
       setMessages(prev => [...prev, {
         type: 'assistant',
         content: "Welcome to Sláinte Finance! I'm Finn, your financial advisor. Let me give you a tour of the app — I'll walk you through each section so you know where everything is.",
@@ -318,6 +434,49 @@ export const FinnProvider = ({ children }) => {
 
     return () => clearTimeout(timer);
   }, [tourOfferPending]);
+
+  // Proactive greeting: when widget opens with empty chat, check system status and nudge
+  const prevIsOpenRef = useRef(false);
+  useEffect(() => {
+    if (isOpen && !prevIsOpenRef.current) {
+      // Only nudge if: empty chat, has API key, not local-only, has data
+      if (messages.length === 0 && apiKey && !localOnlyMode && transactions.length > 0) {
+        // 4-hour cooldown to avoid nagging
+        const lastNudge = localStorage.getItem('finn_last_proactive_nudge');
+        const COOLDOWN_MS = 4 * 60 * 60 * 1000;
+        const now = Date.now();
+        if (lastNudge && (now - parseInt(lastNudge)) < COOLDOWN_MS) {
+          prevIsOpenRef.current = isOpen;
+          return;
+        }
+
+        // Run system status check (synchronous, no API call)
+        const status = lookupDataPoint('system_status');
+        if (status.statusItems && status.statusItems.length > 0) {
+          const nudgeContext = JSON.stringify(status.statusItems.slice(0, 3));
+          callClaude(
+            `You are Finn, a warm Irish financial advisor for GP practices. Based on the following system status items, write a brief 1-2 sentence greeting that naturally mentions the most important item. Be helpful, not nagging. Do NOT list all items — pick the single most actionable one. Do NOT use emojis.\n\nStatus: ${nudgeContext}`,
+            { model: MODELS.FAST, maxTokens: 150, apiKey }
+          ).then(response => {
+            if (response && response.content) {
+              const content = typeof response.content === 'string'
+                ? response.content
+                : Array.isArray(response.content)
+                  ? response.content.filter(b => b.type === 'text').map(b => b.text).join('')
+                  : '';
+              if (content) {
+                addAssistantMessage(content);
+                localStorage.setItem('finn_last_proactive_nudge', now.toString());
+              }
+            }
+          }).catch(() => {
+            // Silent fail — nudge is non-critical
+          });
+        }
+      }
+    }
+    prevIsOpenRef.current = isOpen;
+  }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Listen for post-tour choice to show contextual follow-up message
   useEffect(() => {
@@ -337,7 +496,6 @@ export const FinnProvider = ({ children }) => {
       // Open Finn widget with the follow-up message after a brief delay
       setTimeout(() => {
         setIsOpen(true);
-        setActiveTab('chat');
         setMessages(prev => [...prev, {
           type: 'assistant',
           content,
@@ -350,6 +508,54 @@ export const FinnProvider = ({ children }) => {
     window.addEventListener('tour:choiceMade', handleTourChoice);
     return () => window.removeEventListener('tour:choiceMade', handleTourChoice);
   }, []);
+
+  // Listen for Finn-triggered file exports
+  useEffect(() => {
+    const handleExport = async (e) => {
+      const { exportType, year } = e.detail;
+      try {
+        const yearTxns = transactions.filter(t => t.date && new Date(t.date).getFullYear() === year);
+        const yearPCRS = paymentAnalysisData.filter(p => parseInt(p.year) === year);
+
+        switch (exportType) {
+          case 'transactions-simple': {
+            const { content, filename } = buildSimpleTransactionsCSV(yearTxns, year);
+            downloadBlob(content, filename, 'text/csv');
+            break;
+          }
+          case 'transactions-detailed': {
+            const { content, filename } = buildDetailedTransactionsCSV(yearTxns, year);
+            downloadBlob(content, filename, 'text/csv');
+            break;
+          }
+          case 'pcrs-summary': {
+            const { content, filename } = buildPCRSSummaryCSV(yearPCRS, year);
+            downloadBlob(content, filename, 'text/csv');
+            break;
+          }
+          case 'payment-overview': {
+            const { content, filename } = buildPaymentOverviewCSV(yearPCRS, year);
+            downloadBlob(content, filename, 'text/csv');
+            break;
+          }
+          case 'pl-draft': {
+            const { content, filename } = buildPLReportCSV(yearTxns, year);
+            downloadBlob(content, filename, 'text/csv');
+            break;
+          }
+          case 'accountant-pack': {
+            await buildAndDownloadAccountantPackZIP(yearTxns, yearPCRS, year);
+            break;
+          }
+        }
+      } catch (err) {
+        console.error('[Finn] Export failed:', err);
+      }
+    };
+
+    window.addEventListener('finn:export', handleExport);
+    return () => window.removeEventListener('finn:export', handleExport);
+  }, [transactions, paymentAnalysisData]);
 
   // Load saved reports from localStorage
   const loadSavedReports = useCallback(() => {
@@ -492,28 +698,33 @@ export const FinnProvider = ({ children }) => {
           categoryBreakdown[categoryName].value += amount;
         }
 
-        // Monthly breakdown
-        if (t.monthYear) {
-          if (!monthlyBreakdown[t.monthYear]) {
-            monthlyBreakdown[t.monthYear] = { month: t.monthYear, income: 0, expenses: 0 };
+        // Monthly breakdown — derive month from t.date (not t.monthYear which can be null)
+        if (t.date) {
+          const d = new Date(t.date);
+          const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          const monthKey = `${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+          if (!monthlyBreakdown[monthKey]) {
+            monthlyBreakdown[monthKey] = { month: monthKey, income: 0, expenses: 0 };
           }
           if (t.category?.type === 'income') {
-            monthlyBreakdown[t.monthYear].income += amount;
+            monthlyBreakdown[monthKey].income += amount;
           } else if (t.category?.type === 'expense' || t.category?.type === 'drawings') {
-            monthlyBreakdown[t.monthYear].expenses += amount;
+            monthlyBreakdown[monthKey].expenses += amount;
           }
         }
       });
 
-      const topExpenseCategories = Object.values(categoryBreakdown)
+      // Full sorted lists (for reports that need complete data)
+      const allExpenseCategories = Object.values(categoryBreakdown)
         .filter(c => c.type === 'expense')
-        .sort((a, b) => b.value - a.value)
-        .slice(0, 10);
-
-      const topIncomeCategories = Object.values(categoryBreakdown)
+        .sort((a, b) => b.value - a.value);
+      const allIncomeCategories = Object.values(categoryBreakdown)
         .filter(c => c.type === 'income')
-        .sort((a, b) => b.value - a.value)
-        .slice(0, 5);
+        .sort((a, b) => b.value - a.value);
+
+      // Top-N for backward compatibility (Finn chat uses these)
+      const topExpenseCategories = allExpenseCategories.slice(0, 10);
+      const topIncomeCategories = allIncomeCategories.slice(0, 5);
 
       return {
         income,
@@ -523,6 +734,8 @@ export const FinnProvider = ({ children }) => {
         profitMargin: income > 0 ? ((income - expenses - drawings) / income * 100).toFixed(1) : 0,
         topExpenseCategories,
         topIncomeCategories,
+        allExpenseCategories,
+        allIncomeCategories,
         monthlyTrends: Object.values(monthlyBreakdown).sort((a, b) => a.month.localeCompare(b.month))
       };
     };
@@ -548,6 +761,8 @@ export const FinnProvider = ({ children }) => {
       profitMargin: recentYearSummary.profitMargin,
       topExpenseCategories: recentYearSummary.topExpenseCategories,
       topIncomeCategories: recentYearSummary.topIncomeCategories,
+      allExpenseCategories: recentYearSummary.allExpenseCategories,
+      allIncomeCategories: recentYearSummary.allIncomeCategories,
       monthlyTrends: recentYearSummary.monthlyTrends,
 
       // Last 12 months rolling data (for "last 12 months" queries)
@@ -558,6 +773,8 @@ export const FinnProvider = ({ children }) => {
         profitMargin: last12MonthsSummary.profitMargin,
         topExpenseCategories: last12MonthsSummary.topExpenseCategories,
         topIncomeCategories: last12MonthsSummary.topIncomeCategories,
+        allExpenseCategories: last12MonthsSummary.allExpenseCategories,
+        allIncomeCategories: last12MonthsSummary.allIncomeCategories,
         monthlyTrends: last12MonthsSummary.monthlyTrends
       },
 
@@ -660,9 +877,37 @@ export const FinnProvider = ({ children }) => {
     };
   }, [transactions, unidentifiedTransactions, selectedYear, categoryMapping, paymentAnalysisData, savedReports]);
 
+  // Build a lean financial summary for report Q&A (compact awareness of what data exists)
+  const buildLeanFinancialSummary = useCallback(() => {
+    const fc = getFinancialContext();
+    const incomeCount = fc.allIncomeCategories?.length || fc.topIncomeCategories?.length || 0;
+    const expenseCount = fc.allExpenseCategories?.length || fc.topExpenseCategories?.length || 0;
+
+    let summary = `PRACTICE FINANCIAL SNAPSHOT (${fc.mostRecentYear}):
+- Total Income: €${(fc.yearToDateIncome || 0).toLocaleString()} across ${incomeCount} income categories
+- Total Expenses: €${(fc.yearToDateExpenses || 0).toLocaleString()} across ${expenseCount} expense categories
+- Net Profit: €${(fc.profit || 0).toLocaleString()} (${fc.profitMargin || 0}% margin)
+- Transactions: ${fc.totalTransactions || 0} (${fc.oldestDataDate || 'N/A'} to ${fc.newestDataDate || 'N/A'})
+- Years with data: ${fc.availableYears?.join(', ') || 'Unknown'}`;
+
+    if (fc.gmsPaymentData?.hasData) {
+      summary += `\n- GMS/PCRS Data: Available (${fc.gmsPaymentData.availableYears?.join(', ') || 'unknown years'}), ${fc.gmsPaymentData.totalPayments || 0} statements`;
+    }
+
+    summary += `\n\nUse lookup_financial_data and search_transactions to access specific data. Do not guess — look it up.`;
+
+    return summary;
+  }, [getFinancialContext]);
+
   // Build GMS Health Check context - full or summary based on current view
   const buildGMSHealthCheckContext = useCallback((forceFullContext = false) => {
-    if (!profile?.healthCheckData?.healthCheckComplete) {
+    // When forceFullContext is true (e.g. GMS Optimisation Summary report),
+    // allow partial health check data through. Otherwise require full completion.
+    if (!forceFullContext && !profile?.healthCheckData?.healthCheckComplete) {
+      return '';
+    }
+    // Even with forceFullContext, we still need SOME health check data to work with
+    if (!profile?.healthCheckData) {
       return '';
     }
 
@@ -770,9 +1015,9 @@ export const FinnProvider = ({ children }) => {
       case 'top_income':
         return { categories: (period === 'last_12_months' ? data?.topIncomeCategories : financialContext.topIncomeCategories) || [] };
       case 'expense_breakdown':
-        return { categories: financialContext.topExpenseCategories || [], year: financialContext.mostRecentYear };
+        return { categories: financialContext.allExpenseCategories || financialContext.topExpenseCategories || [], year: financialContext.mostRecentYear };
       case 'income_breakdown':
-        return { categories: financialContext.topIncomeCategories || [], year: financialContext.mostRecentYear };
+        return { categories: financialContext.allIncomeCategories || financialContext.topIncomeCategories || [], year: financialContext.mostRecentYear };
       case 'gms_payments':
         return financialContext.gmsPaymentData || { hasData: false };
       case 'uncategorized_count':
@@ -783,10 +1028,68 @@ export const FinnProvider = ({ children }) => {
         return { count: financialContext.totalTransactions || transactions.length };
       case 'available_years':
         return { years: financialContext.availableYears || [], mostRecent: financialContext.mostRecentYear };
+      case 'system_status': {
+        const statusItems = [];
+
+        // 1. Stale data check
+        const allDates = transactions.filter(t => t.date).map(t => new Date(t.date));
+        if (allDates.length > 0) {
+          const newestDate = new Date(Math.max(...allDates));
+          const daysSince = Math.floor((new Date() - newestDate) / (1000 * 60 * 60 * 24));
+          if (daysSince > 30) {
+            statusItems.push({ type: 'stale_data', severity: 'high', message: `Transaction data is ${daysSince} days old`, daysSince });
+          }
+        } else {
+          statusItems.push({ type: 'no_data', severity: 'high', message: 'No transaction data uploaded yet' });
+        }
+
+        // 2. Uncategorised transactions
+        const uncatCount = unidentifiedTransactions.length;
+        if (uncatCount > 0) {
+          statusItems.push({ type: 'uncategorised', severity: uncatCount > 20 ? 'high' : 'medium', message: `${uncatCount} uncategorised transaction${uncatCount !== 1 ? 's' : ''}`, count: uncatCount });
+        }
+
+        // 3. Overdue GMS action items
+        const overdueGMS = getOverdueActions();
+        if (overdueGMS.length > 0) {
+          statusItems.push({ type: 'overdue_gms_tasks', severity: 'high', message: `${overdueGMS.length} overdue GMS action item${overdueGMS.length !== 1 ? 's' : ''}`, tasks: overdueGMS.slice(0, 3).map(t => t.title) });
+        }
+
+        // 4. Overdue financial tasks
+        const activeFinancial = getActiveFinancialTasks();
+        const now = new Date();
+        const overdueFinancial = activeFinancial.filter(t => t.dueDate && new Date(t.dueDate) < now);
+        if (overdueFinancial.length > 0) {
+          statusItems.push({ type: 'overdue_financial_tasks', severity: 'high', message: `${overdueFinancial.length} overdue financial task${overdueFinancial.length !== 1 ? 's' : ''}`, tasks: overdueFinancial.slice(0, 3).map(t => t.title) });
+        }
+
+        // 5. Tasks due soon (within 7 days)
+        const dueSoon = getActionsDueSoon();
+        if (dueSoon.length > 0) {
+          statusItems.push({ type: 'tasks_due_soon', severity: 'medium', message: `${dueSoon.length} task${dueSoon.length !== 1 ? 's' : ''} due this week`, tasks: dueSoon.slice(0, 3).map(t => t.title) });
+        }
+
+        // 6. GMS Health Check available but not run
+        if (paymentAnalysisData && paymentAnalysisData.length > 0) {
+          const uniqueMonths = new Set(paymentAnalysisData.map(d => `${d.month}-${d.year}`)).size;
+          const profile = getProfileFromStorage();
+          if (uniqueMonths >= 12 && !profile?.healthCheckData?.healthCheckComplete) {
+            statusItems.push({ type: 'gms_health_check_available', severity: 'medium', message: `${uniqueMonths} months of GMS data uploaded but Health Check not yet run` });
+          }
+        }
+
+        const totalActive = activeFinancial.length + (getOverdueActions().length > 0 ? overdueGMS.length : 0);
+        return {
+          statusItems,
+          totalActiveTaskCount: totalActive,
+          hasHighSeverity: statusItems.some(s => s.severity === 'high'),
+          allClear: statusItems.length === 0
+        };
+      }
       default:
         return { error: `Unknown query type: ${query}` };
     }
-  }, [getFinancialContext, transactions, unidentifiedTransactions]);
+  }, [getFinancialContext, transactions, unidentifiedTransactions, paymentAnalysisData]);
 
   // Search transactions by category, date, amount, or description
   const searchTransactions = useCallback((input) => {
@@ -849,6 +1152,78 @@ export const FinnProvider = ({ children }) => {
     }, 0);
     const totalCount = results.length;
 
+    const action = input.action || 'list';
+
+    // === RECATEGORIZE ACTION ===
+    if (action === 'recategorize') {
+      if (!input.newCategory) {
+        return { success: false, error: 'newCategory is required for recategorize action.' };
+      }
+      if (totalCount === 0) {
+        return { success: false, error: 'No transactions match the search criteria.' };
+      }
+
+      // Find matching category (partial match, case-insensitive)
+      // Also check lastCreatedCategoryRef for categories created in the same tool-use loop (before React re-renders)
+      const searchCat = input.newCategory.toLowerCase();
+      let allCategories = categoryMapping;
+      if (lastCreatedCategoryRef.current && !categoryMapping.find(c => c.code === lastCreatedCategoryRef.current.code)) {
+        allCategories = [...categoryMapping, lastCreatedCategoryRef.current];
+      }
+      const matchingCategories = allCategories.filter(c =>
+        c.name.toLowerCase().includes(searchCat)
+      );
+
+      if (matchingCategories.length === 0) {
+        return {
+          success: false,
+          error: `No category found matching "${input.newCategory}". Some available categories: ${categoryMapping.slice(0, 10).map(c => c.name).join(', ')}...`
+        };
+      }
+
+      // If multiple matches, try exact match first
+      let targetCategory;
+      if (matchingCategories.length === 1) {
+        targetCategory = matchingCategories[0];
+      } else {
+        const exact = matchingCategories.find(c => c.name.toLowerCase() === searchCat);
+        if (exact) {
+          targetCategory = exact;
+        } else {
+          return {
+            success: false,
+            error: `Multiple categories match "${input.newCategory}": ${matchingCategories.map(c => c.name).join(', ')}. Please be more specific.`
+          };
+        }
+      }
+
+      const matchedIds = new Set(results.map(t => t.id));
+
+      // Apply recategorization via setTransactions
+      setTransactions(prev => prev.map(t => {
+        if (!matchedIds.has(t.id)) return t;
+        return {
+          ...t,
+          category: { code: targetCategory.code, name: targetCategory.name, type: targetCategory.type, section: targetCategory.section },
+          categoryCode: targetCategory.code,
+          categoryName: targetCategory.name,
+          categoryMatchType: 'finn-bulk',
+          categoryReviewed: true,
+          categoryCohort: 'auto'
+        };
+      }));
+
+      return {
+        success: true,
+        action: 'recategorize',
+        message: `Successfully recategorized ${totalCount} transaction${totalCount !== 1 ? 's' : ''} to "${targetCategory.name}".`,
+        count: totalCount,
+        newCategory: targetCategory.name,
+        totalAmount: `€${totalAmount.toLocaleString('en-IE', { minimumFractionDigits: 2 })}`
+      };
+    }
+
+    // === DEFAULT LIST ACTION ===
     // Limit results
     const limit = input.limit || 20;
     const limited = results.slice(0, limit);
@@ -868,7 +1243,7 @@ export const FinnProvider = ({ children }) => {
         group: t.group || 'Unknown'
       }))
     };
-  }, [transactions]);
+  }, [transactions, categoryMapping, setTransactions]);
 
   // Look up saved reports
   const lookupSavedReports = useCallback((search) => {
@@ -956,6 +1331,168 @@ export const FinnProvider = ({ children }) => {
       case 'navigate': {
         const target = input.target;
 
+        // Task creation
+        if (target === 'tasks:create') {
+          if (isLANMode()) {
+            return { success: false, message: 'Task creation is only available on the desktop app.' };
+          }
+          const data = input.taskData;
+          if (!data || !data.title) {
+            return { success: false, message: 'Task title is required.' };
+          }
+
+          const isGMS = data.taskType === 'gms';
+          let taskId;
+
+          if (isGMS) {
+            // Create GMS action item
+            const now = new Date();
+            const gmsTask = {
+              id: `action_${now.getTime()}_${Math.random().toString(36).substr(2, 9)}`,
+              recommendationId: null,
+              title: data.title.slice(0, 80),
+              description: data.description || '',
+              category: data.category || 'General',
+              type: 'priority',
+              potentialValue: 0,
+              effort: 'Medium',
+              assignedTo: null,
+              status: 'pending',
+              dueDate: null,
+              createdDate: now.toISOString(),
+              completedDate: null,
+              notes: '',
+              showOnDashboard: true
+            };
+            addActionItem(gmsTask);
+            taskId = gmsTask.id;
+          } else {
+            // Create financial task
+            const task = createFinancialTask({
+              title: data.title.slice(0, 80),
+              description: data.description || '',
+              category: data.category || 'general',
+              priority: 'medium',
+              dueDate: null,
+              autoGenerated: false,
+              metadata: { createdBy: 'finn' }
+            });
+            addFinancialTask(task);
+            taskId = task.id;
+          }
+
+          // Refresh tasks, open widget, highlight the new task, then open the modal for editing
+          window.dispatchEvent(new CustomEvent('tasks:refresh'));
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('tasks:openAndHighlight', {
+              detail: { taskId, expandSection: isGMS ? 'gms' : 'financial' }
+            }));
+            setTimeout(() => {
+              window.dispatchEvent(new CustomEvent(
+                isGMS ? 'tasks:openGMSModal' : 'tasks:openFinancialModal',
+                { detail: { editTaskId: taskId } }
+              ));
+            }, 300);
+          }, 100);
+
+          return {
+            success: true,
+            message: `Task created: "${data.title}". The Tasks panel is opening so the user can set the assignee, due date, and priority.`,
+            taskId
+          };
+        }
+
+        // Category creation
+        if (target === 'categories:create') {
+          if (isLANMode()) {
+            return { success: false, message: 'Category creation is only available on the desktop app.' };
+          }
+          const data = input.categoryData;
+          if (!data?.name || !data?.type || !data?.section) {
+            return { success: false, error: 'Category name, type, and section are all required.' };
+          }
+
+          const validSections = [
+            'INCOME', 'DIRECT STAFF COSTS', 'MEDICAL SUPPLIES',
+            'PREMISES COSTS', 'OFFICE & IT', 'PROFESSIONAL FEES',
+            'PROFESSIONAL DEV', 'MOTOR & TRANSPORT',
+            'PETTY CASH / OTHER EXPENSES', 'CAPITAL & DEPRECIATION', 'NON-BUSINESS'
+          ];
+          if (!validSections.includes(data.section)) {
+            return { success: false, error: `Invalid section "${data.section}". Valid sections: ${validSections.join(', ')}` };
+          }
+
+          // Check for duplicate name
+          if (categoryMapping.find(c => c.name.toLowerCase() === data.name.toLowerCase())) {
+            const existing = categoryMapping.find(c => c.name.toLowerCase() === data.name.toLowerCase());
+            return { success: false, error: `Category "${existing.name}" already exists (in ${existing.section || 'unknown section'}). Use search_transactions with action="recategorize" to move transactions there.` };
+          }
+
+          // Generate unique code: F-{timestamp} to avoid collisions with numeric scheme
+          const code = `F-${Date.now()}`;
+
+          const newCategory = {
+            code,
+            name: data.name,
+            type: data.type,
+            section: data.section,
+            identifiers: data.identifiers || [],
+            accountantLine: data.accountantLine || '',
+            description: 'Created by Finn'
+          };
+
+          setCategoryMapping(prev => [...prev, newCategory]);
+          // Stash in ref so recategorize can find it immediately (before React re-renders)
+          lastCreatedCategoryRef.current = newCategory;
+
+          return {
+            success: true,
+            message: `Category "${data.name}" created in ${data.section} (code ${code}).${data.identifiers?.length ? ` Auto-match identifiers: ${data.identifiers.join(', ')}.` : ''} The user can now recategorize transactions into this category.`,
+            categoryCode: code,
+            categoryName: data.name
+          };
+        }
+
+        // Export actions — trigger file downloads without navigating away
+        if (target.startsWith('export:')) {
+          if (isLANMode()) {
+            return { success: false, message: 'File exports are only available on the desktop app.' };
+          }
+          const exportType = target.split(':')[1];
+          const validExports = {
+            'transactions-simple': 'Simplified Transactions CSV',
+            'transactions-detailed': 'Detailed Transactions CSV',
+            'pcrs-summary': 'PCRS Payment Summary CSV',
+            'payment-overview': 'Monthly Payment Overview CSV',
+            'pl-draft': 'Draft P&L Report CSV',
+            'accountant-pack': 'Full Accountant Pack ZIP'
+          };
+          if (!validExports[exportType]) {
+            return { success: false, error: `Unknown export type: ${exportType}` };
+          }
+          // Pre-check PCRS data availability
+          if (['pcrs-summary', 'payment-overview'].includes(exportType)) {
+            const yearPCRS = paymentAnalysisData.filter(p => parseInt(p.year) === selectedYear);
+            if (yearPCRS.length === 0) {
+              return { success: false, message: `No PCRS data available for ${selectedYear}. Upload GMS monthly payment PDFs first.` };
+            }
+          }
+          window.dispatchEvent(new CustomEvent('finn:export', {
+            detail: { exportType, year: selectedYear }
+          }));
+          return { success: true, message: `Downloading ${validExports[exportType]} for ${selectedYear}. The file download should begin shortly.` };
+        }
+
+        // Companion mode: only data-viewing targets are supported
+        if (isLANMode()) {
+          const companionTargets = ['business-overview', 'gms-overview', 'advanced-insights', 'reports'];
+          if (!companionTargets.includes(target)) {
+            return { success: false, message: `The "${target}" feature is only available on the desktop app. On this companion device you can view the Dashboard, Reports, Charts, and talk to me here.` };
+          }
+          // For supported targets, we can't navigate desktop pages — inform the user
+          return { success: true, message: `That information is available in the companion app. Check the relevant tab in the bottom navigation.` };
+        }
+
         if (target.startsWith('settings:')) {
           const section = target.split(':')[1];
           setCurrentView('settings');
@@ -982,10 +1519,16 @@ export const FinnProvider = ({ children }) => {
           return { success: true, message: 'Navigated to Financial Dashboard and opened the Reports panel where you can generate P&L Reports, Balance Sheets, and more.' };
         }
 
-        if (target === 'gms-health-check') {
-          setCurrentView('gms-overview');
-          window.dispatchEvent(new CustomEvent('tour:switchToHealthCheck'));
-          return { success: true, message: 'Navigated to GMS Health Check' };
+        if (target === 'gms-health-check' || target.startsWith('gms-health-check:')) {
+          setCurrentView('gms-health-check');
+          const areaId = target.includes(':') ? target.split(':')[1] : null;
+          if (areaId) {
+            // Deep-link to a specific area modal (v2 listens for this event)
+            setTimeout(() => {
+              window.dispatchEvent(new CustomEvent('gms-health-check-v2:openArea', { detail: { areaId } }));
+            }, 100);
+          }
+          return { success: true, message: `Navigated to GMS Health Check${areaId ? ` — ${areaId}` : ''}` };
         }
 
         if (target === 'pcrs-downloader') {
@@ -996,6 +1539,25 @@ export const FinnProvider = ({ children }) => {
             window.dispatchEvent(new CustomEvent('open-pcrs-downloader'));
           }, 300);
           return { success: true, message: 'Opened the PCRS Statement Downloader. You can log in to download your latest GMS/PCRS statements directly from here.' };
+        }
+
+        // Advanced Insights deep-link: navigate to tab and open a specific category modal
+        if (target.startsWith('advanced-insights:')) {
+          const categoryId = target.split(':')[1];
+          setCurrentView('advanced-insights');
+          window.dispatchEvent(new CustomEvent('navigate:advancedInsights'));
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('advanced-insights:openCategory', { detail: { categoryId } }));
+          }, 300);
+          const categoryNames = { overview: 'Business Overview', gms: 'GMS & PCRS', growth: 'Growth & Strategy', costs: 'Costs & Cash Flow', tax: 'Tax & Compliance' };
+          return { success: true, message: `Navigated to Advanced Insights and opened the ${categoryNames[categoryId] || categoryId} category.` };
+        }
+
+        // Advanced Insights (no deep-link)
+        if (target === 'advanced-insights') {
+          setCurrentView('advanced-insights');
+          window.dispatchEvent(new CustomEvent('navigate:advancedInsights'));
+          return { success: true, message: 'Navigated to Advanced Insights' };
         }
 
         // Direct page navigation
@@ -1016,18 +1578,23 @@ export const FinnProvider = ({ children }) => {
         const financialContext = getFinancialContext();
         const practiceContext = getCiaranContext();
         const gmsContext = buildGMSHealthCheckContext();
+        const isCommunicationDraft = input.reportType === 'communication_draft';
         const reportContext = {
           originalQuestion: input.topic,
           financialContext,
           practiceContext,
           gmsContext,
-          isStrategic: input.reportType === 'strategic'
+          isStrategic: input.reportType === 'strategic',
+          isCommunicationDraft,
+          contactInfo: isCommunicationDraft ? getContactInfo(input.recipient) : null,
+          recipient: isCommunicationDraft ? input.recipient : null
         };
 
         // Use the ref since startBackgroundReport is defined later in the file
         if (startBackgroundReportRef.current) {
           startBackgroundReportRef.current(reportContext, true); // skipClarification=true, Claude handles that
-          return { success: true, message: `Report generation started: "${input.topic}". The user will be notified when it is ready. This typically takes 15-30 seconds.` };
+          const timeEstimate = isCommunicationDraft ? '10-20 seconds' : '15-30 seconds';
+          return { success: true, message: `${isCommunicationDraft ? 'Draft communication' : 'Report'} generation started: "${input.topic}". The user will be notified when it is ready. This typically takes ${timeEstimate}.` };
         }
         return { success: false, error: 'Report generation not available right now. Please try again.' };
       }
@@ -1036,7 +1603,36 @@ export const FinnProvider = ({ children }) => {
         return lookupSavedReports(input.search);
       }
 
+      case 'lookup_available_analyses': {
+        const category = input.category || 'all';
+        const analyses = category === 'all'
+          ? SUGGESTED_ANALYSES
+          : SUGGESTED_ANALYSES.filter(a => a.categoryId === category);
+
+        const hasTransactions = transactions && transactions.length > 0;
+        const hasPaymentData = paymentAnalysisData && paymentAnalysisData.length > 0;
+
+        return {
+          success: true,
+          analyses: analyses.map(a => ({
+            id: a.id,
+            title: a.title,
+            shortQuestion: a.shortQuestion,
+            categoryId: a.categoryId,
+            reportType: a.reportType,
+            requiresData: a.requiresData,
+            dataAvailable: {
+              transactions: hasTransactions,
+              paymentAnalysisData: hasPaymentData
+            }
+          }))
+        };
+      }
+
       case 'start_app_tour': {
+        if (isLANMode()) {
+          return { success: false, message: 'App tours are only available on the desktop app. But I can help you understand any feature — just ask!' };
+        }
         // Dispatch event for TourProvider to pick up (FinnContext has no direct access to startTour)
         window.dispatchEvent(new CustomEvent('finn:start-app-tour'));
         // Close the Finn widget so the tour overlay is visible
@@ -1052,10 +1648,30 @@ export const FinnProvider = ({ children }) => {
         return { success: true, message: 'Feedback form opened and pre-filled with the issue summary. The user can now review and submit it.' };
       }
 
+      case 'lookup_gms_metrics': {
+        const area = input.area || 'summary';
+        const detailLevel = input.detail_level || 'headline';
+        try {
+          if (!paymentAnalysisData || paymentAnalysisData.length === 0) {
+            return { success: false, message: 'No PCRS data available. The user needs to upload GMS monthly payment PDFs first.' };
+          }
+          const healthCheckData = profile?.healthCheckData || {};
+          const analysisResults = analyzeGMSIncome(paymentAnalysisData, profile, healthCheckData);
+          if (!analysisResults) {
+            return { success: false, message: 'Unable to analyse GMS data. The uploaded PDFs may not contain the expected payment data.' };
+          }
+          const summary = buildAreaMetricsSummary(area, analysisResults, detailLevel, profile, healthCheckData);
+          return { success: true, data: summary };
+        } catch (err) {
+          console.error('[Finn] lookup_gms_metrics error:', err);
+          return { success: false, message: 'Error analysing GMS data.' };
+        }
+      }
+
       default:
         return { success: false, error: `Unknown tool: ${toolName}` };
     }
-  }, [lookupDataPoint, searchTransactions, lookupSavedReports, getFinancialContext, getCiaranContext, buildGMSHealthCheckContext, setCurrentView, setActiveTab, setIsOpen, openFeedback]);
+  }, [lookupDataPoint, searchTransactions, lookupSavedReports, getFinancialContext, getCiaranContext, buildGMSHealthCheckContext, setCurrentView, setIsOpen, openFeedback, transactions, paymentAnalysisData, profile, categoryMapping, setCategoryMapping]);
 
   // Handle quick queries (greetings, thanks, etc.)
   const handleQuickQuery = useCallback(async (message, queryType) => {
@@ -1102,7 +1718,8 @@ Keep your response to 1-3 sentences maximum. Be warm but concise.`;
       'export': 'The user is on the Export/Reports page.',
       'gms-panel': 'The user is viewing the GMS Panel Analysis page with PCRS payment breakdowns showing Total Gross Payments and payment categories.',
       'gms-health-check': 'The user is viewing the GMS Health Check Report. They can see all the recommendations, unclaimed income analysis, and growth opportunities displayed on their screen. When they ask about "the report" or "these recommendations", they are referring to the GMS Health Check data shown below.',
-      'admin': 'The user is on the Admin/Settings page.'
+      'admin': 'The user is on the Admin/Settings page.',
+      'advanced-insights': 'The user is viewing the Advanced Insights tab, which showcases AI-generated reports, suggested analyses, and deep financial insights. They can browse saved Finn reports, request new analyses, and follow up on existing reports.'
     };
     return pageDescriptions[currentView] || 'The user is using the Sláinte Finance app.';
   }, [currentView]);
@@ -1111,12 +1728,17 @@ Keep your response to 1-3 sentences maximum. Be warm but concise.`;
   function getToolDescription(toolName, input) {
     switch (toolName) {
       case 'navigate':
+        if (input.target === 'tasks:create') return `Creating task: ${input.taskData?.title || 'new task'}`;
+        if (input.target?.startsWith('export:')) return `Downloading ${input.target.split(':')[1]?.replace(/-/g, ' ')}`;
         return `Navigating to ${input.target?.replace(/-/g, ' ').replace(':', ' → ')}`;
       case 'lookup_financial_data':
+        if (input.query === 'system_status') return 'Checking what needs attention';
         return `Looking up ${input.query?.replace(/_/g, ' ')}`;
       case 'search_transactions':
+        if (input.action === 'recategorize') return `Recategorizing ${input.category || 'matching'} transactions to "${input.newCategory}"`;
         return `Searching transactions${input.category ? ` for "${input.category}"` : ''}${input.searchText ? ` matching "${input.searchText}"` : ''}`;
       case 'generate_report':
+        if (input.reportType === 'communication_draft') return `Drafting communication: ${input.topic}`;
         return `Generating report: ${input.topic}`;
       case 'lookup_saved_reports':
         return `Looking up saved reports${input.search ? `: "${input.search}"` : ''}`;
@@ -1124,6 +1746,8 @@ Keep your response to 1-3 sentences maximum. Be warm but concise.`;
         return 'Starting app tour';
       case 'send_feedback':
         return `Opening feedback form${input.summary ? `: "${input.summary}"` : ''}`;
+      case 'lookup_gms_metrics':
+        return `Looking up GMS ${input.area === 'summary' ? 'overall summary' : input.area} metrics`;
       default:
         return `Running ${toolName}`;
     }
@@ -1146,7 +1770,7 @@ ${gmsContext ? `\nGMS HEALTH CHECK SUMMARY: ${gmsContext.substring(0, 500)}` : '
 ${appKnowledge ? `\n${appKnowledge}` : ''}
 
 RULES:
-- For simple questions, answer in 2-4 sentences. This is a chat widget, not a report.
+- Keep ALL responses brief — this is a chat widget, not a report. Maximum 3-4 sentences. When sharing data, highlight the 2-3 most important figures only. Do NOT list every category. If the user needs a comprehensive breakdown, suggest a pre-defined analysis or offer to generate a report.
 - Do NOT introduce yourself. The user already knows who you are. Never say "I am Finn" or "Welcome to Sláinte Finance".
 - Use your tools to look up financial data rather than guessing. You have access to live practice data via the lookup_financial_data tool.
 - Use search_transactions when the user asks about spending on a specific category, item, or wants to find specific transactions. It supports filtering by category name, description text, date range, amount range, and transaction type.
@@ -1158,7 +1782,9 @@ RULES:
   • "GMS Health Check" → navigate to "gms-health-check" (separate page with its own analysis tool)
   • "Accountant Export" → navigate to "settings:data"
   When the user asks for any of these, use the navigate tool to take them there. Tell them the report is ready to generate from that page.
-- ONLY use generate_report for CUSTOM advisory questions that don't match a pre-built report — e.g. "Should I hire a nurse?", "What's my 5-year financial outlook?", "Analyse my spending trends". These are AI-generated analyses.
+- BEFORE generating a custom report, ALWAYS call lookup_available_analyses first to check if a pre-defined analysis matches the user's request. If a match exists, navigate to "advanced-insights" and tell the user which analysis matches their question and why it would be a good fit. Let them review the analysis details and generate it themselves from the Advanced Insights tab.
+- When an analysis requires data the user hasn't uploaded (check the dataAvailable field), tell them what's missing and offer to navigate to the upload page.
+- ONLY use generate_report for truly custom advisory questions that don't match any pre-defined analysis — e.g. "Should I buy the building next door?", "Compare leasing vs buying equipment".
 - Use lookup_saved_reports when the user references a previous report, asks "what did the report say", or wants to see their saved reports.
 - Use the navigate tool when the user wants to go to a page or open something.
 - You ARE qualified to help with business planning, investment analysis, and financial projections. NEVER refuse a financial question.
@@ -1266,6 +1892,221 @@ RULES:
       isError: true
     };
   }, [messages, getRecentConversationHistory, getPageContextDescription, getCiaranContext, buildGMSHealthCheckContext, executeToolAction]);
+
+  // Report Q&A — mini agentic loop for follow-up questions about a report
+  const reportQA = useCallback(async (message, report, conversationHistory = []) => {
+    const practiceContext = getCiaranContext();
+    const financialSummary = buildLeanFinancialSummary();
+
+    const reportContent = report.content?.length > 8000
+      ? report.content.slice(0, 8000) + '\n\n[Report truncated for context length]'
+      : report.content || '';
+
+    const systemPrompt = `You are Finn, a financial advisor for Irish GP practices. You work for Sláinte Finance. The user is reading a saved report and asking follow-up questions.
+
+${practiceContext ? `PRACTICE CONTEXT: ${practiceContext.substring(0, 300)}` : ''}
+
+${financialSummary}
+
+Report title: "${report.title}"
+${report.originalQuestion ? `Original question: "${report.originalQuestion}"` : ''}
+
+<report_content>
+${reportContent}
+</report_content>
+
+RULES:
+- Answer follow-up questions about this specific report. Be concise (2-4 paragraphs max).
+- Reference specific data from the report where relevant.
+- If the user asks about data NOT in the report (e.g. a specific category, monthly breakdown, or transaction details), use your tools to look it up. Do not guess.
+- For "what if" scenarios, use the financial data as your baseline.
+- Use euro (€) for currency. Never use emojis.
+- NEVER say you don't have access to data — use your tools to check.`;
+
+    // Build messages array from conversation history
+    const apiMessages = [];
+    for (const msg of conversationHistory) {
+      if (msg.content) {
+        apiMessages.push({ role: msg.role === 'user' ? 'user' : 'assistant', content: msg.content.substring(0, 500) });
+      }
+    }
+    apiMessages.push({ role: 'user', content: message });
+
+    // Ensure first message is from user
+    while (apiMessages.length > 0 && apiMessages[0].role !== 'user') {
+      apiMessages.shift();
+    }
+
+    // Ensure alternation
+    const cleanedMessages = [];
+    for (const msg of apiMessages) {
+      if (cleanedMessages.length === 0 || cleanedMessages[cleanedMessages.length - 1].role !== msg.role) {
+        cleanedMessages.push(msg);
+      }
+    }
+
+    const toolActions = [];
+
+    for (let round = 0; round < MAX_QA_TOOL_ROUNDS; round++) {
+      let response;
+      try {
+        response = await callClaudeWithTools({
+          model: MODELS.STANDARD,
+          max_tokens: 1024,
+          system: systemPrompt,
+          messages: cleanedMessages,
+          tools: REPORT_QA_TOOLS,
+          tool_choice: { type: 'auto' }
+        });
+      } catch (err) {
+        console.error(`[Finn Q&A] API error on round ${round}:`, err);
+        return {
+          content: "I ran into a connection issue. Please try again in a moment.",
+          toolActions,
+          isError: true
+        };
+      }
+
+      if (response.stop_reason === 'end_turn') {
+        const text = response.content
+          .filter(b => b.type === 'text')
+          .map(b => b.text)
+          .join('\n\n');
+        return { content: text, toolActions };
+      }
+
+      if (response.stop_reason === 'tool_use') {
+        const toolResults = [];
+        for (const block of response.content.filter(b => b.type === 'tool_use')) {
+          console.log(`[Finn Q&A] Tool call: ${block.name}`, block.input);
+          const result = executeToolAction(block.name, block.input);
+          toolActions.push({
+            name: block.name,
+            input: block.input,
+            status: 'completed',
+            description: getToolDescription(block.name, block.input)
+          });
+          toolResults.push({
+            type: 'tool_result',
+            tool_use_id: block.id,
+            content: JSON.stringify(result)
+          });
+        }
+        cleanedMessages.push({ role: 'assistant', content: response.content });
+        cleanedMessages.push({ role: 'user', content: toolResults });
+      }
+    }
+
+    console.warn('[Finn Q&A] Hit MAX_QA_TOOL_ROUNDS limit');
+    return {
+      content: "I ran into an issue completing that lookup. Please try asking in a different way.",
+      toolActions,
+      isError: true
+    };
+  }, [getCiaranContext, buildLeanFinancialSummary, executeToolAction]);
+
+  // GMS Area Q&A — per-area follow-up questions within the Health Check v2
+  const gmsAreaQA = useCallback(async (message, areaId, areaContext, conversationHistory = []) => {
+    const practiceContext = getCiaranContext();
+
+    const systemPrompt = `You are Finn, a financial advisor for Irish GP practices. You work for Sláinte Finance. The user is reviewing the "${areaId}" area of their GMS Health Check and asking questions.
+
+${practiceContext ? `PRACTICE CONTEXT: ${practiceContext.substring(0, 300)}` : ''}
+
+<area_context>
+${areaContext}
+</area_context>
+
+RULES:
+- Answer questions about this specific GMS area. Be concise (2-4 paragraphs max).
+- Reference specific figures from the analysis where relevant.
+- You have full reference data on GMS rates, rules, and calculation methods — use it to explain how things work.
+- If the user asks about data NOT in the analysis, use your tools to look it up. Do not guess.
+- Use euro (€) for currency. Never use emojis.
+- NEVER say you don't have access to data — use your tools to check.
+- Be practical and actionable — tell them exactly what steps to take.`;
+
+    // Build messages array from conversation history
+    const apiMessages = [];
+    for (const msg of conversationHistory) {
+      if (msg.content) {
+        apiMessages.push({ role: msg.role === 'user' ? 'user' : 'assistant', content: msg.content.substring(0, 500) });
+      }
+    }
+    apiMessages.push({ role: 'user', content: message });
+
+    // Ensure first message is from user
+    while (apiMessages.length > 0 && apiMessages[0].role !== 'user') {
+      apiMessages.shift();
+    }
+
+    // Ensure alternation
+    const cleanedMessages = [];
+    for (const msg of apiMessages) {
+      if (cleanedMessages.length === 0 || cleanedMessages[cleanedMessages.length - 1].role !== msg.role) {
+        cleanedMessages.push(msg);
+      }
+    }
+
+    const toolActions = [];
+
+    for (let round = 0; round < MAX_QA_TOOL_ROUNDS; round++) {
+      let response;
+      try {
+        response = await callClaudeWithTools({
+          model: MODELS.STANDARD,
+          max_tokens: 1024,
+          system: systemPrompt,
+          messages: cleanedMessages,
+          tools: REPORT_QA_TOOLS,
+          tool_choice: { type: 'auto' }
+        });
+      } catch (err) {
+        console.error(`[Finn GMS Q&A] API error on round ${round}:`, err);
+        return {
+          content: "I ran into a connection issue. Please try again in a moment.",
+          toolActions,
+          isError: true
+        };
+      }
+
+      if (response.stop_reason === 'end_turn') {
+        const text = response.content
+          .filter(b => b.type === 'text')
+          .map(b => b.text)
+          .join('\n\n');
+        return { content: text, toolActions };
+      }
+
+      if (response.stop_reason === 'tool_use') {
+        const toolResults = [];
+        for (const block of response.content.filter(b => b.type === 'tool_use')) {
+          console.log(`[Finn GMS Q&A] Tool call: ${block.name}`, block.input);
+          const result = executeToolAction(block.name, block.input);
+          toolActions.push({
+            name: block.name,
+            input: block.input,
+            status: 'completed',
+            description: getToolDescription(block.name, block.input)
+          });
+          toolResults.push({
+            type: 'tool_result',
+            tool_use_id: block.id,
+            content: JSON.stringify(result)
+          });
+        }
+        cleanedMessages.push({ role: 'assistant', content: response.content });
+        cleanedMessages.push({ role: 'user', content: toolResults });
+      }
+    }
+
+    console.warn('[Finn GMS Q&A] Hit MAX_QA_TOOL_ROUNDS limit');
+    return {
+      content: "I ran into an issue completing that lookup. Please try asking in a different way.",
+      toolActions,
+      isError: true
+    };
+  }, [getCiaranContext, executeToolAction]);
 
   // Send a message to Finn
   const sendMessage = useCallback(async (userMessage) => {
@@ -1498,10 +2339,12 @@ Only change needsClarification to true if you have an ESSENTIAL question. 90%+ o
     });
     backgroundTaskRef.current = { cancelled: false };
 
-    // Add "working on it" message - vary based on model tier
-    const workingMessage = context.isStrategic
-      ? "This is a strategic question, so I'm going to do a deeper analysis for you. Feel free to continue using the app - I'll let you know when it's ready."
-      : "I'll work on that detailed report now. Feel free to continue using the app - I'll let you know when it's ready.";
+    // Add "working on it" message - vary based on model tier and type
+    const workingMessage = context.isCommunicationDraft
+      ? "I'll draft that for you now. Feel free to continue using the app - I'll let you know when it's ready."
+      : context.isStrategic
+        ? "This is a strategic question, so I'm going to do a deeper analysis for you. Feel free to continue using the app - I'll let you know when it's ready."
+        : "I'll work on that detailed report now. Feel free to continue using the app - I'll let you know when it's ready.";
     addAssistantMessage(workingMessage);
 
     // Clear any pending clarifications
@@ -1614,7 +2457,7 @@ Only change needsClarification to true if you have an ESSENTIAL question. 90%+ o
     startBackgroundReport(context, true);
   }, [pendingClarifications, startBackgroundReport]);
 
-  // Keep ref in sync for retry functionality
+  // Keep refs in sync for retry functionality and suggested analysis triggering
   useEffect(() => {
     startBackgroundReportRef.current = startBackgroundReport;
   }, [startBackgroundReport]);
@@ -1640,11 +2483,11 @@ Only change needsClarification to true if you have an ESSENTIAL question. 90%+ o
 
   // Generate detailed report - uses Opus for strategic advisory, Sonnet for standard reports
   const generateDetailedReport = useCallback(async (context) => {
-    const { originalQuestion, financialContext, practiceContext, gmsContext, clarifications, isStrategic } = context;
+    const { originalQuestion, financialContext, practiceContext, gmsContext, clarifications, isStrategic, isCommunicationDraft, contactInfo, recipient, contextProfile, revisionContext } = context;
 
     // Select model tier based on question type
-    const modelId = isStrategic ? MODELS.STRATEGIC : MODELS.STANDARD;
-    const modelLabel = isStrategic ? 'Opus (Strategic Advisory)' : 'Sonnet (Standard Report)';
+    const modelId = isCommunicationDraft ? MODELS.STANDARD : (isStrategic ? MODELS.STRATEGIC : MODELS.STANDARD);
+    const modelLabel = isCommunicationDraft ? 'Sonnet (Communication Draft)' : (isStrategic ? 'Opus (Strategic Advisory)' : 'Sonnet (Standard Report)');
     console.log(`[Finn] Report model: ${modelLabel}`);
 
     const strategicPreamble = isStrategic ? `
@@ -1658,11 +2501,38 @@ This is a strategic question requiring deeper analysis. You should:
 - Think holistically about the business, not just the immediate financials
 ` : '';
 
+    const communicationDraftPreamble = isCommunicationDraft ? `
+**COMMUNICATION DRAFT MODE:**
+You are drafting a formal email or letter on behalf of the GP practice. Structure it as:
+
+1. **Subject line** — clearly prefixed with "Subject:" on its own line
+2. **To** — the recipient name and email (from CONTACT_INFO below if available)
+3. **Body** — professional, factual, referencing specific figures from the practice data where relevant. Be clear about what is being requested or queried.
+4. **Sign-off** — use the practice name from the profile data
+
+${contactInfo ? `**CONTACT_INFO:**
+- Name: ${contactInfo.name}
+- Email: ${contactInfo.email || 'Not available'}
+- Phone: ${contactInfo.phone || 'Not available'}
+- Address: ${contactInfo.address || 'Not available'}
+- Notes: ${contactInfo.notes || ''}` : `No contact info found for "${recipient || 'unknown'}". Use a generic "To whom it may concern" format and note that the practice should verify the correct contact details.`}
+
+**CRITICAL RULES:**
+- Use the practice name and contact person from the profile (no "[Practice Name]" placeholders if you have the data)
+- ONLY include data that is DIRECTLY relevant to the specific topic of this email. If the email is about study leave, do NOT include gross GMS totals, patient demographics, or staff headcounts unless they directly support the query.
+- The email should be SHORT and focused — a real practice manager would not write a 500-word email for a simple query
+- Keep the "before sending" checklist to 2-3 genuinely useful items maximum
+- Do NOT include charts, tables, or financial breakdowns
+- Keep the draft under 300 words (excluding the checklist)
+- Only use [square bracket placeholders] for data you genuinely do not have. GMS panel numbers should be in the practice context — always use them when writing to PCRS.
+` : '';
+
     // Static report instructions (cacheable across multiple report generations)
-    const reportSystemPrompt = `You are Finn, an expert financial advisor for Irish GP practices. Create a CONCISE, professional report.
-${strategicPreamble}
+    const reportSystemPrompt = `You are Finn, an expert financial advisor for Irish GP practices. ${isCommunicationDraft ? 'Draft a professional communication.' : 'Create a CONCISE, professional report.'}
+${isCommunicationDraft ? communicationDraftPreamble : strategicPreamble}
 **CRITICAL FORMATTING RULES:**
-1. **MAXIMUM ${isStrategic ? '1,800' : '1,200'} WORDS** - GPs are busy. Be concise. Every sentence must add value.
+1. **MAXIMUM ${isCommunicationDraft ? '600' : (isStrategic ? '1,800' : '1,200')} WORDS** - GPs are busy. Be concise. Every sentence must add value.
+   **Do NOT output <thinking> tags or chain-of-thought working.** Go straight to writing the report. All reasoning must happen internally — the output must contain ONLY the finished report.
 2. **NO REPETITION** - Never present the same data in multiple formats (e.g., table AND text AND chart showing identical information)
 3. **ACRONYMS** - On first use, write the full term followed by acronym in parentheses. Example: "General Medical Services (GMS)". After first use, use acronym only.
    Common acronyms to expand on first use: ${COMMON_ACRONYMS.slice(0, 8).join(', ')}
@@ -1698,13 +2568,40 @@ Include 1-2 Vega-Lite charts where they add visual value. Embed charts INSIDE th
 - Line charts for trends over time (monthly income/expenses)
 - Pie/donut charts for composition (expense breakdown as percentages)
 - Always include meaningful titles and axis labels
-- Use appropriate colors (green for income/positive, red for expenses/negative)
 - Do NOT create a chart that just repeats what's already in a table - use one or the other
+- **Format strings use d3-format syntax** — do NOT put currency symbols (€, $) in format strings. Use ",.0f" not "€,.0f". Put the currency symbol in the axis title instead (e.g., "title": "Value (€)")
 
-**REPORT STRUCTURE:**
+**CHART COLOUR PALETTE (you MUST use these exact hex values — no other colours):**
+- Income/positive data: #4ECDC4 (turquoise)
+- Expense/negative data: #FF6B6B (coral)
+- Primary/default: #4A90E2 (blue)
+- Warning/attention: #F9A826 (marigold)
+- Success/complete: #10B981 (green)
+- Purple accent: #7C6EBF (periwinkle)
+- Highlight: #FFD23C (yellow)
+- Extended series: #8B5CF6 (violet), #EC4899 (pink)
+- For multi-series charts, use colours in this order: #4A90E2, #4ECDC4, #FF6B6B, #7C6EBF, #F9A826, #FFD23C, #8B5CF6, #EC4899
+- For income vs expense comparisons, always use #4ECDC4 for income and #FF6B6B for expense
+- For positive/negative indicators (e.g. profit vs loss), use #10B981 (green) and #FF6B6B (coral)
+
+**${isCommunicationDraft ? 'COMMUNICATION' : 'REPORT'} STRUCTURE:**
 Use the <artifact> tag format. Keep it tight and actionable:
 
-${isStrategic ? `<artifact title="Report Title Here" type="report">
+${isCommunicationDraft ? `<artifact title="Draft: [Brief Subject]" type="report">
+Subject: [Clear, specific subject line]
+
+To: [Recipient name and email]
+
+Dear [Appropriate salutation],
+
+[1-2 paragraphs maximum. State the purpose, what is being queried, and what response is needed. Keep it direct and professional.]
+
+Yours sincerely,
+[Practice Name and contact details]
+
+</artifact>
+
+After the artifact, add 2-3 bullet points of things to check before sending. Keep these brief and genuinely useful.` : isStrategic ? `<artifact title="Report Title Here" type="report">
 # Strategic Analysis Title
 
 ## Executive Summary
@@ -1744,10 +2641,88 @@ ${isStrategic ? `<artifact title="Report Title Here" type="report">
 
 </artifact>`}
 
-After the artifact, add 1 sentence offering to clarify or explore specific aspects.`;
+${!isCommunicationDraft ? 'After the artifact, add 1 sentence offering to clarify or explore specific aspects.' : ''}`;
 
-    // Dynamic practice data and question (changes per report)
-    const reportUserMessage = `**PRACTICE CONTEXT:**
+    // For communication drafts, build a focused user message with only relevant context
+    if (isCommunicationDraft) {
+      const commUserMessage = `**PRACTICE CONTEXT:**
+${practiceContext}
+
+${gmsContext ? `**GMS HEALTH CHECK DATA (use ONLY if directly relevant to the email topic):**\n${gmsContext}` : ''}
+
+**TODAY'S DATE:** ${financialContext.currentDate}
+
+**USER'S REQUEST:**
+${originalQuestion}
+
+${clarifications ? `**USER'S CLARIFICATIONS:**\n${clarifications}\n` : ''}
+IMPORTANT RULES FOR THIS COMMUNICATION DRAFT:
+- Write a SHORT, focused email. Do NOT pad it with unnecessary detail.
+- ONLY include data points that are DIRECTLY relevant to the specific query topic.
+- Do NOT dump financial totals, income breakdowns, or general practice statistics into the email unless the user specifically asked about those topics.
+- The email should read as something a practice manager would naturally write — concise and to the point.
+- If the user is asking about a specific issue (e.g. study leave, Practice Support hours), focus ONLY on that issue.
+- Use actual staff names and practice details from the context above, but only where relevant.
+- Keep the "before sending" checklist to 2-3 genuinely useful items, not a comprehensive audit.
+Draft the communication now.`;
+
+      console.log('[Finn] Starting communication draft generation...');
+
+      const commRequest = {
+        model: modelId,
+        max_tokens: 2048,
+        system: reportSystemPrompt,
+        messages: [
+          { role: 'user', content: commUserMessage }
+        ]
+      };
+
+      const commResponse = await callClaudeWithTools(commRequest);
+      const commContent = commResponse.content
+        ?.filter(b => b.type === 'text')
+        .map(b => b.text)
+        .join('\n\n')
+        .replace(/<thinking>[\s\S]*?<\/thinking>/g, '');
+
+      const commParsed = parseArtifactResponse(commContent);
+
+      if (commParsed && commParsed.artifact) {
+        return {
+          title: commParsed.artifact.title,
+          type: commParsed.artifact.type,
+          content: commParsed.artifact.content,
+          intro: commParsed.intro,
+          conclusion: commParsed.conclusion,
+          originalQuestion,
+          modelUsed: modelId,
+          isCommunicationDraft: true
+        };
+      }
+
+      return {
+        title: 'Draft Communication',
+        type: 'report',
+        content: commContent,
+        originalQuestion,
+        modelUsed: modelId,
+        isCommunicationDraft: true
+      };
+    }
+
+    // Dynamic practice data and question (changes per report) — for standard/strategic reports
+    const reportUserMessage = `${revisionContext ? `**⚠️ REVISION MODE — READ THIS FIRST ⚠️**
+This is a REVISION of an existing report, not a new report. The user has discussed the report with you and provided corrections, clarifications, or new context. You MUST incorporate their feedback into the revised report. Do NOT simply regenerate the same analysis — the whole point is that the user wants the report updated based on what they told you.
+
+**CONVERSATION WITH THE USER (read carefully — this is what changed):**
+${revisionContext.conversationTranscript}
+
+**ORIGINAL REPORT (for reference — revise, don't repeat):**
+${revisionContext.originalContent}
+
+Now generate a revised version that integrates the above conversation. The financial data below is unchanged — but your INTERPRETATION of it must reflect what the user told you.
+---
+
+` : ''}**PRACTICE CONTEXT:**
 ${practiceContext}
 
 ${gmsContext ? `**GMS DATA:**\n${gmsContext}` : ''}
@@ -1764,39 +2739,46 @@ ${gmsContext ? `**GMS DATA:**\n${gmsContext}` : ''}
 - Net profit: €${financialContext.profit.toLocaleString()}
 - Profit margin: ${financialContext.profitMargin}%
 
-**TOP EXPENSE CATEGORIES (${financialContext.mostRecentYear}):**
-${financialContext.topExpenseCategories.map((cat, i) =>
+${(!contextProfile || contextProfile.expenseCategories !== 'none') ? `**${contextProfile?.expenseCategories === 'all' ? 'ALL EXPENSE CATEGORIES' : 'TOP EXPENSE CATEGORIES'} (${financialContext.mostRecentYear}):**
+${(contextProfile?.expenseCategories === 'all'
+      ? (financialContext.allExpenseCategories || financialContext.topExpenseCategories)
+      : financialContext.topExpenseCategories
+    ).map((cat, i) =>
       `${i + 1}. ${cat.name}: €${cat.value.toLocaleString()}`
-    ).join('\n')}
+    ).join('\n')}` : ''}
 
-**INCOME BREAKDOWN (${financialContext.mostRecentYear}):**
-${financialContext.topIncomeCategories.map((cat, i) =>
+${(!contextProfile || contextProfile.incomeCategories !== 'none') ? `**${contextProfile?.incomeCategories === 'all' ? 'ALL INCOME SOURCES' : 'TOP INCOME SOURCES'} (${financialContext.mostRecentYear}):**
+${(contextProfile?.incomeCategories === 'all'
+      ? (financialContext.allIncomeCategories || financialContext.topIncomeCategories)
+      : financialContext.topIncomeCategories
+    ).map((cat, i) =>
       `${i + 1}. ${cat.name}: €${cat.value.toLocaleString()}`
-    ).join('\n')}
+    ).join('\n')}` : ''}
 
-**MONTHLY TRENDS (${financialContext.mostRecentYear}):**
+${(!contextProfile || contextProfile.monthlyTrends !== false) ? `**MONTHLY TRENDS (${financialContext.mostRecentYear}):**
 ${financialContext.monthlyTrends.map(month =>
       `${month.month}: Income €${month.income.toLocaleString()}, Expenses €${month.expenses.toLocaleString()}`
-    ).join('\n')}
+    ).join('\n')}` : ''}
 
-**LAST 12 MONTHS ROLLING DATA:**
+${(!contextProfile || contextProfile.previousYear !== false) ? `**LAST 12 MONTHS ROLLING DATA:**
 - Income: €${financialContext.last12Months?.income?.toLocaleString() || 'N/A'}
 - Expenses: €${financialContext.last12Months?.expenses?.toLocaleString() || 'N/A'}
 - Profit: €${financialContext.last12Months?.profit?.toLocaleString() || 'N/A'}
-- Monthly trends: ${financialContext.last12Months?.monthlyTrends?.map(m => `${m.month}: €${m.expenses.toLocaleString()} expenses`).join(', ') || 'N/A'}
+- Monthly trends: ${financialContext.last12Months?.monthlyTrends?.map(m => `${m.month}: €${m.expenses.toLocaleString()} expenses`).join(', ') || 'N/A'}` : ''}
 
-${financialContext.gmsPaymentData?.hasData ? `**GMS GROSS PAYMENT DATA (from PCRS PDF Statements):**
+${((!contextProfile || contextProfile.gmsData !== 'none') && financialContext.gmsPaymentData?.hasData) ? `**GMS GROSS PAYMENT DATA (from PCRS PDF Statements):**
 This is the GROSS GMS payment data from uploaded PCRS statements (shown on GMS Overview page).
 The income figures in "FINANCIAL DATA" above show NET payments received in bank transactions.
 GROSS vs NET: Gross is before HSE deductions (PRSI, superannuation, withholding tax). Net is what actually arrived in the bank.
 
 - Total PCRS statements loaded: ${financialContext.gmsPaymentData.totalPayments}
 - Years with GMS data: ${financialContext.gmsPaymentData.availableYears?.join(', ')}
-${financialContext.gmsPaymentData.recentYearPayments?.length > 0 ? `
+${(contextProfile?.gmsData !== 'summary' && financialContext.gmsPaymentData.recentYearPayments?.length > 0) ? `
 **${financialContext.mostRecentYear} MONTHLY GROSS GMS PAYMENTS:**
 ${financialContext.gmsPaymentData.recentYearPayments.map(p => `${p.month}: €${p.totalGross.toLocaleString()}`).join('\n')}
 
-**${financialContext.mostRecentYear} TOTAL GROSS GMS: €${financialContext.gmsPaymentData.recentYearTotal?.toLocaleString()}**` : ''}
+**${financialContext.mostRecentYear} TOTAL GROSS GMS: €${financialContext.gmsPaymentData.recentYearTotal?.toLocaleString()}**` : `
+**${financialContext.mostRecentYear} TOTAL GROSS GMS: €${financialContext.gmsPaymentData.recentYearTotal?.toLocaleString()}**`}
 ` : ''}
 
 ${financialContext.previousReports?.hasReports ? `**PREVIOUSLY GENERATED REPORTS:**
@@ -1810,7 +2792,7 @@ ${isAppHelpQuestion(originalQuestion) ? buildAppKnowledgeContext(originalQuestio
 - GMS Overview page shows GROSS payments (before deductions). Financial Overview shows NET payments (after deductions). When comparing, use the correct data source.
 - ONLY use the ACTUAL data provided above in charts and tables. NEVER fabricate or estimate values.
 
-**USER'S ORIGINAL QUESTION:**
+${contextProfile?.contextNotes ? `**ANALYSIS FOCUS:**\n${contextProfile.contextNotes}\n` : ''}**USER'S ORIGINAL QUESTION:**
 ${originalQuestion}
 
 ${clarifications ? `**USER'S CLARIFICATIONS:**\n${clarifications}\n` : ''}
@@ -1846,6 +2828,9 @@ Generate the report now.`;
         .join('\n\n');
     }
 
+    // Strip any <thinking> tags that leaked into the response as literal text
+    reportContent = reportContent.replace(/<thinking>[\s\S]*?<\/thinking>/g, '').trim();
+
     // Parse artifact from response
     const parsed = parseArtifactResponse(reportContent);
 
@@ -1857,17 +2842,19 @@ Generate the report now.`;
         intro: parsed.intro,
         conclusion: parsed.conclusion,
         originalQuestion,
-        modelUsed: modelId
+        modelUsed: modelId,
+        isCommunicationDraft: isCommunicationDraft || false
       };
     }
 
     // Fallback if no artifact tags
     return {
-      title: 'Financial Analysis Report',
+      title: isCommunicationDraft ? 'Draft Communication' : 'Financial Analysis Report',
       type: 'report',
       content: reportContent,
       originalQuestion,
-      modelUsed: modelId
+      modelUsed: modelId,
+      isCommunicationDraft: isCommunicationDraft || false
     };
   }, []);
 
@@ -1875,18 +2862,37 @@ Generate the report now.`;
   const saveReport = useCallback((report) => {
     const savedReports = JSON.parse(localStorage.getItem('gp_finance_saved_reports') || '[]');
 
+    // Extract email subject and body for communication drafts
+    let emailSubject = '';
+    let emailBody = '';
+    if (report.isCommunicationDraft && report.content) {
+      const subjectMatch = report.content.match(/Subject:\s*(.+)/i);
+      if (subjectMatch) emailSubject = subjectMatch[1].trim();
+      // Extract body: everything after the Subject/To/Dear lines, before sign-off
+      const bodyMatch = report.content.match(/Dear[\s\S]*?(Yours[\s\S]*?\n)/i);
+      if (bodyMatch) {
+        emailBody = bodyMatch[0].trim();
+      } else {
+        // Fallback: use content after Subject line
+        const afterSubject = report.content.split(/Subject:.*\n/i)[1];
+        if (afterSubject) emailBody = afterSubject.trim();
+      }
+    }
+
     const newReport = {
       id: `finn-report-${Date.now()}`,
       title: report.title,
-      type: 'AI Report',
+      type: report.isCommunicationDraft ? 'Communication Draft' : 'AI Report',
       generatedDate: new Date().toISOString(),
       year: new Date().getFullYear(),
       content: report.content,
       htmlContent: null, // Will be rendered by ArtifactViewer
       artifactType: report.type,
       originalQuestion: report.originalQuestion,
+      suggestedAnalysisId: report.suggestedAnalysisId || null,
       intro: report.intro,
       conclusion: report.conclusion,
+      ...(report.isCommunicationDraft && { emailSubject, emailBody, isCommunicationDraft: true }),
       metadata: {
         generatedBy: 'Finn AI',
         model: report.modelUsed || MODELS.STANDARD
@@ -1906,20 +2912,217 @@ Generate the report now.`;
     return newReport;
   }, []);
 
+  // Update an existing report in localStorage (used by report revision)
+  const updateReport = useCallback((reportId, updatedFields) => {
+    const reports = JSON.parse(localStorage.getItem('gp_finance_saved_reports') || '[]');
+    const index = reports.findIndex(r => r.id === reportId);
+    if (index === -1) return null;
+
+    const updated = {
+      ...reports[index],
+      ...updatedFields,
+      metadata: {
+        ...reports[index].metadata,
+        ...(updatedFields.metadata || {}),
+        revisedAt: new Date().toISOString(),
+        revisionNumber: (reports[index].metadata?.revisionNumber || 0) + 1,
+        originalReportId: reports[index].metadata?.originalReportId || reportId
+      }
+    };
+
+    reports[index] = updated;
+    localStorage.setItem('gp_finance_saved_reports', JSON.stringify(reports));
+    setSavedReports(reports);
+    return updated;
+  }, []);
+
+  // Revise an existing report based on a conversation about it
+  const reviseReport = useCallback(async (report, conversationMessages) => {
+    // Guard: only one background task at a time
+    if (backgroundTask?.status === TASK_STATUS.RUNNING) return null;
+
+    // Gather fresh financial context (same pattern as generateReportFromTab)
+    const financialContext = getFinancialContext();
+    const freshProfile = getProfileFromStorage();
+    const practiceContext = freshProfile
+      ? buildCiaranContext(freshProfile)
+      : getCiaranContext();
+    const gmsContext = buildGMSHealthCheckContext(false);
+
+    // Format conversation transcript (capped at ~3000 chars)
+    const transcript = conversationMessages
+      .filter(m => !m.isError)
+      .map(m => `${m.role === 'user' ? 'User' : 'Finn'}: ${m.content}`)
+      .join('\n\n');
+    const cappedTranscript = transcript.length > 3000
+      ? '...\n\n' + transcript.slice(transcript.length - 3000)
+      : transcript;
+
+    // Cap original report content
+    const cappedOriginal = (report.content || '').length > 6000
+      ? report.content.slice(0, 6000) + '\n\n[... truncated for length]'
+      : report.content;
+
+    const isStrategic = report.metadata?.model?.includes('opus');
+
+    const context = {
+      originalQuestion: report.originalQuestion,
+      financialContext,
+      practiceContext,
+      gmsContext,
+      isStrategic,
+      revisionContext: {
+        originalContent: cappedOriginal,
+        conversationTranscript: cappedTranscript
+      }
+    };
+
+    // Set background task state (prevents concurrent generation, shows progress)
+    setBackgroundTask({
+      id: `task-${Date.now()}`,
+      status: TASK_STATUS.RUNNING,
+      startedAt: Date.now(),
+      context,
+      isRevision: true,
+      reportId: report.id
+    });
+
+    try {
+      const result = await generateDetailedReport(context);
+
+      // Update the existing report in localStorage
+      const updated = updateReport(report.id, {
+        title: result.title,
+        content: result.content,
+        artifactType: result.type,
+        intro: result.intro,
+        conclusion: result.conclusion
+      });
+
+      // Update task state
+      setBackgroundTask(prev => ({
+        ...prev,
+        status: TASK_STATUS.COMPLETED,
+        completedAt: Date.now(),
+        reportId: updated.id
+      }));
+
+      // Notify via Finn widget
+      addAssistantMessage(
+        `Your revised "${updated.title}" report is ready. You'll find it updated in Your Reports on the Advanced Insights tab.`,
+        false,
+        { isReportNotification: true, reportId: updated.id, reportTitle: updated.title }
+      );
+
+      return updated;
+    } catch (error) {
+      setBackgroundTask(prev => ({
+        ...prev,
+        status: TASK_STATUS.FAILED,
+        error: error.message
+      }));
+      throw error;
+    }
+  }, [backgroundTask, getFinancialContext, getCiaranContext, buildGMSHealthCheckContext, generateDetailedReport, updateReport, addAssistantMessage]);
+
+  // Generate a report directly from the Advanced Insights tab (no agentic loop, no widget)
+  const generateReportFromTab = useCallback(async (analysisConfig) => {
+    // Guard: only one report at a time
+    if (backgroundTask?.status === TASK_STATUS.RUNNING) return null;
+
+    const financialContext = getFinancialContext();
+    // Read profile fresh from localStorage — the modal may have just saved
+    // new operational data (consultation fee, GP hours, etc.) that the hook's
+    // cached profile state hasn't picked up yet.
+    const freshProfile = getProfileFromStorage();
+    const practiceContext = freshProfile
+      ? buildCiaranContext(freshProfile)
+      : getCiaranContext();
+    // Force full GMS Health Check context for reports that summarise Health Check data
+    // (e.g. GMS Optimisation Summary). Otherwise uses the default view-aware context.
+    const gmsContext = buildGMSHealthCheckContext(analysisConfig.forceFullGMSContext || false);
+
+    const context = {
+      originalQuestion: analysisConfig.prompt,
+      financialContext,
+      practiceContext,
+      gmsContext,
+      isStrategic: analysisConfig.reportType === 'strategic',
+      contextProfile: analysisConfig.contextProfile || null,
+      suggestedAnalysisId: analysisConfig.id || null
+    };
+
+    // Set background task state (prevents concurrent generation)
+    setBackgroundTask({
+      id: `task-${Date.now()}`,
+      status: TASK_STATUS.RUNNING,
+      startedAt: Date.now(),
+      context
+    });
+
+    try {
+      const report = await generateDetailedReport(context);
+      report.suggestedAnalysisId = context.suggestedAnalysisId;
+      const savedReport = saveReport(report);
+
+      // Update task state
+      setBackgroundTask(prev => ({
+        ...prev,
+        status: TASK_STATUS.COMPLETED,
+        completedAt: Date.now(),
+        reportId: savedReport.id
+      }));
+
+      // Open widget and notify user the report is ready
+      setIsOpen(true);
+      const isCommDraft = context.isCommunicationDraft;
+      addAssistantMessage(
+        isCommDraft
+          ? `Your draft communication is ready. You can view it, copy it, or open it directly in your email client.`
+          : `Your "${savedReport.title}" report is ready. Click below to read it.`,
+        false,
+        {
+          isReportNotification: true,
+          reportId: savedReport.id,
+          reportTitle: savedReport.title,
+          ...(isCommDraft && {
+            isCommunicationDraft: true,
+            contactInfo: context.contactInfo,
+            emailSubject: savedReport.emailSubject || '',
+            emailBody: savedReport.emailBody || ''
+          })
+        }
+      );
+
+      return savedReport;
+    } catch (error) {
+      setBackgroundTask(prev => ({
+        ...prev,
+        status: TASK_STATUS.FAILED,
+        error: error.message
+      }));
+      throw error;
+    }
+  }, [backgroundTask, getFinancialContext, getCiaranContext, buildGMSHealthCheckContext, generateDetailedReport, saveReport, addAssistantMessage]);
+
   // Notify user that report is ready
   const notifyReportReady = useCallback((report) => {
     // Open the widget if closed
     setIsOpen(true);
 
     // Add notification message to chat
+    const isCommDraft = report.isCommunicationDraft;
     const notificationMsg = {
       type: 'assistant',
-      content: `That report I've been working on is now ready for you to read. I've put together a detailed analysis based on your question.`,
+      content: isCommDraft
+        ? `Your draft email is ready. You can view it, copy it, or open it directly in your email client.`
+        : `That report I've been working on is now ready for you to read. I've put together a detailed analysis based on your question.`,
       timestamp: new Date().toISOString(),
       id: `assistant-${Date.now()}`,
       isReportNotification: true,
       reportId: report.id,
-      reportTitle: report.title
+      reportTitle: report.title,
+      ...(isCommDraft && { isCommunicationDraft: true, contactInfo: report.contactInfo, emailSubject: report.emailSubject || '', emailBody: report.emailBody || '' })
     };
 
     setMessages(prev => [...prev, notificationMsg]);
@@ -2165,8 +3368,6 @@ Generate the report now.`;
   const value = {
     // Widget state
     isOpen,
-    activeTab,
-    setActiveTab,
     openWidget,
     closeWidget,
     toggleWidget,
@@ -2178,10 +3379,12 @@ Generate the report now.`;
     sendMessage,
     startNewChat,
     apiKey,
+    setApiKey,
 
     // Background task (shared between reports and PCRS)
     backgroundTask,
     startBackgroundReport,
+    generateReportFromTab,
     cancelBackgroundTask,
     TASK_TYPES,
     TASK_STATUS,
@@ -2203,6 +3406,15 @@ Generate the report now.`;
 
     // Financial context (for components that need it)
     getFinancialContext,
+
+    // Report Q&A (for ReportConversation side panel)
+    reportQA,
+
+    // GMS Area Q&A (for Health Check v2 area conversation)
+    gmsAreaQA,
+
+    // Report revision (update report based on conversation)
+    reviseReport,
 
     // Page context - allows parent components to tell Finn what the user is looking at
     currentView,

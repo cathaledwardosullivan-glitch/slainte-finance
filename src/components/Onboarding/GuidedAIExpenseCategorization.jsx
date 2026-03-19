@@ -588,7 +588,7 @@ IMPORTANT:
     return (
       <div style={{ textAlign: 'center', padding: '3rem' }}>
         <Loader style={{ width: '32px', height: '32px', color: COLORS.slainteBlue, animation: 'spin 1s linear infinite', margin: '0 auto 1rem' }} />
-        <p style={{ color: COLORS.mediumGray }}>
+        <p style={{ color: COLORS.textSecondary }}>
           {!apiKey ? 'Loading API key...' : 'Preparing expense categorization...'}
         </p>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
@@ -614,7 +614,7 @@ IMPORTANT:
         backgroundColor: COLORS.white,
         borderRadius: '0.75rem',
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-        border: `1px solid ${COLORS.lightGray}`,
+        border: `1px solid ${COLORS.borderLight}`,
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column'
@@ -661,7 +661,7 @@ IMPORTANT:
                 width: '32px',
                 height: '32px',
                 borderRadius: '50%',
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -670,7 +670,7 @@ IMPORTANT:
                 <MessageCircle style={{ width: '16px', height: '16px', color: COLORS.slainteBlue }} />
               </div>
               <div style={{
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 padding: '0.875rem 1rem',
                 borderRadius: '12px',
                 maxWidth: '85%'
@@ -678,7 +678,7 @@ IMPORTANT:
                 <div style={{
                   fontSize: '1.125rem',
                   fontWeight: 600,
-                  color: COLORS.darkGray
+                  color: COLORS.textPrimary
                 }}>
                   {greeting}
                 </div>
@@ -691,14 +691,14 @@ IMPORTANT:
             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
               <div style={{ width: '32px', flexShrink: 0 }} />
               <div style={{
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 padding: '0.875rem 1rem',
                 borderRadius: '12px',
                 maxWidth: '85%'
               }}>
                 <div style={{
                   fontSize: '0.9375rem',
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   lineHeight: 1.5
                 }}>
                   {message}
@@ -720,7 +720,7 @@ IMPORTANT:
               }}>
                 <div style={{
                   fontSize: '0.875rem',
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   lineHeight: 1.5
                 }}>
                   Click "Quick Categorization" to automatically sort your transactions into these broad categories. You can always refine them later!
@@ -744,7 +744,7 @@ IMPORTANT:
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem',
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   fontSize: '0.9375rem'
                 }}>
                   <Loader style={{ width: '18px', height: '18px', color: COLORS.slainteBlue, animation: 'spin 1s linear infinite' }} />
@@ -769,7 +769,7 @@ IMPORTANT:
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem',
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   fontSize: '0.9375rem'
                 }}>
                   <CheckCircle style={{ width: '18px', height: '18px', color: COLORS.incomeColor }} />
@@ -785,7 +785,7 @@ IMPORTANT:
         {/* Continue Button at bottom of chat */}
         <div style={{
           padding: '1rem',
-          borderTop: `1px solid ${COLORS.lightGray}`,
+          borderTop: `1px solid ${COLORS.borderLight}`,
           backgroundColor: COLORS.white
         }}>
           <button
@@ -852,7 +852,7 @@ IMPORTANT:
               <h3 style={{
                 fontSize: '1.25rem',
                 fontWeight: 700,
-                color: COLORS.darkGray,
+                color: COLORS.textPrimary,
                 marginBottom: '0.25rem'
               }}>
                 Quick Expense Categorization
@@ -860,7 +860,7 @@ IMPORTANT:
 
               <p style={{
                 fontSize: '0.875rem',
-                color: COLORS.mediumGray,
+                color: COLORS.textSecondary,
                 lineHeight: 1.5
               }}>
                 Phase 1: Sort transactions into broad categories
@@ -898,10 +898,10 @@ IMPORTANT:
                     }}>
                       <IconComponent style={{ width: '20px', height: '20px', color: COLORS.white }} />
                     </div>
-                    <p style={{ fontSize: '0.8125rem', fontWeight: 600, color: COLORS.darkGray, marginBottom: '0.125rem' }}>
+                    <p style={{ fontSize: '0.8125rem', fontWeight: 600, color: COLORS.textPrimary, marginBottom: '0.125rem' }}>
                       {cat.name}
                     </p>
-                    <p style={{ fontSize: '0.6875rem', color: COLORS.mediumGray, lineHeight: 1.3 }}>
+                    <p style={{ fontSize: '0.6875rem', color: COLORS.textSecondary, lineHeight: 1.3 }}>
                       {cat.description}
                     </p>
                   </div>
@@ -935,7 +935,7 @@ IMPORTANT:
                   fontSize: '1rem',
                   fontWeight: 600,
                   color: COLORS.white,
-                  backgroundColor: isAnalyzing ? COLORS.mediumGray : COLORS.incomeColor,
+                  backgroundColor: isAnalyzing ? COLORS.textSecondary : COLORS.incomeColor,
                   border: 'none',
                   borderRadius: '8px',
                   cursor: isAnalyzing || unidentifiedTransactions.length === 0 ? 'default' : 'pointer',
@@ -967,9 +967,9 @@ IMPORTANT:
                   padding: '1rem',
                   fontSize: '0.9375rem',
                   fontWeight: 500,
-                  color: COLORS.mediumGray,
+                  color: COLORS.textSecondary,
                   backgroundColor: COLORS.white,
-                  border: `2px solid ${COLORS.lightGray}`,
+                  border: `2px solid ${COLORS.borderLight}`,
                   borderRadius: '8px',
                   cursor: isAnalyzing ? 'default' : 'pointer',
                   display: 'flex',
@@ -994,10 +994,10 @@ IMPORTANT:
               borderRadius: '12px'
             }}>
               <CheckCircle style={{ width: '48px', height: '48px', color: COLORS.incomeColor, margin: '0 auto 0.75rem' }} />
-              <p style={{ fontSize: '1rem', fontWeight: 600, color: COLORS.darkGray, marginBottom: '0.5rem' }}>
+              <p style={{ fontSize: '1rem', fontWeight: 600, color: COLORS.textPrimary, marginBottom: '0.5rem' }}>
                 All done!
               </p>
-              <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>
+              <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>
                 {oneOffCount > 0 ? `${oneOffCount} one-off transactions can be categorized manually later.` : 'All patterns have been processed.'}
               </p>
             </div>
@@ -1008,7 +1008,7 @@ IMPORTANT:
         {recurringPatterns.length > 0 && (
           <div style={{
             backgroundColor: COLORS.white,
-            border: `2px solid ${COLORS.lightGray}`,
+            border: `2px solid ${COLORS.borderLight}`,
             borderRadius: '16px',
             padding: '1.25rem',
             flex: 1,
@@ -1017,7 +1017,7 @@ IMPORTANT:
             <h4 style={{
               fontSize: '1rem',
               fontWeight: 600,
-              color: COLORS.darkGray,
+              color: COLORS.textPrimary,
               marginBottom: '1rem'
             }}>
               Expense Patterns to Review ({recurringPatterns.length})
@@ -1034,7 +1034,7 @@ IMPORTANT:
                   <div
                     key={`${pattern.suggestedCategory}-${index}`}
                     style={{
-                      border: `2px solid ${isApplied ? COLORS.incomeColor : COLORS.lightGray}`,
+                      border: `2px solid ${isApplied ? COLORS.incomeColor : COLORS.borderLight}`,
                       borderRadius: '12px',
                       padding: '1rem',
                       backgroundColor: isApplied ? `${COLORS.incomeColor}10` : COLORS.white
@@ -1042,10 +1042,10 @@ IMPORTANT:
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
                       <div>
-                        <h5 style={{ fontSize: '0.9375rem', fontWeight: 600, color: COLORS.darkGray }}>
+                        <h5 style={{ fontSize: '0.9375rem', fontWeight: 600, color: COLORS.textPrimary }}>
                           {pattern.pattern}
                         </h5>
-                        <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray }}>
+                        <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary }}>
                           {pattern.frequency} • Avg €{pattern.averageAmount?.toFixed(0)}
                         </p>
                       </div>
@@ -1066,11 +1066,11 @@ IMPORTANT:
                         padding: '0.5rem 0.75rem',
                         marginBottom: '0.5rem'
                       }}>
-                        <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginBottom: '0.125rem' }}>Suggested:</p>
+                        <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginBottom: '0.125rem' }}>Suggested:</p>
                         <p style={{ fontSize: '0.8125rem', fontWeight: 600, color: COLORS.slainteBlue }}>
                           {pattern.categoryName}
                         </p>
-                        <p style={{ fontSize: '0.6875rem', color: COLORS.mediumGray }}>{pattern.reasoning}</p>
+                        <p style={{ fontSize: '0.6875rem', color: COLORS.textSecondary }}>{pattern.reasoning}</p>
                       </div>
                     )}
 
@@ -1096,9 +1096,9 @@ IMPORTANT:
                             marginTop: '0.5rem',
                             padding: '0.375rem 0.75rem',
                             fontSize: '0.75rem',
-                            color: COLORS.mediumGray,
+                            color: COLORS.textSecondary,
                             backgroundColor: COLORS.white,
-                            border: `1px solid ${COLORS.lightGray}`,
+                            border: `1px solid ${COLORS.borderLight}`,
                             borderRadius: '6px',
                             cursor: 'pointer'
                           }}
@@ -1157,9 +1157,9 @@ IMPORTANT:
                           style={{
                             padding: '0.5rem 0.75rem',
                             fontSize: '0.8125rem',
-                            color: COLORS.mediumGray,
+                            color: COLORS.textSecondary,
                             backgroundColor: COLORS.white,
-                            border: `1px solid ${COLORS.lightGray}`,
+                            border: `1px solid ${COLORS.borderLight}`,
                             borderRadius: '6px',
                             cursor: 'pointer'
                           }}

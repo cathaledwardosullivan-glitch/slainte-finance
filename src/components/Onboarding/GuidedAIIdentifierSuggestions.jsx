@@ -402,7 +402,7 @@ If no useful patterns found, return empty array: []`;
     return (
       <div style={{ textAlign: 'center', padding: '3rem' }}>
         <Loader style={{ width: '32px', height: '32px', color: COLORS.slainteBlue, animation: 'spin 1s linear infinite', margin: '0 auto 1rem' }} />
-        <p style={{ color: COLORS.mediumGray }}>
+        <p style={{ color: COLORS.textSecondary }}>
           {!apiKey ? 'Loading API key...' : 'Preparing AI analysis...'}
         </p>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
@@ -428,7 +428,7 @@ If no useful patterns found, return empty array: []`;
         backgroundColor: COLORS.white,
         borderRadius: '0.75rem',
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-        border: `1px solid ${COLORS.lightGray}`,
+        border: `1px solid ${COLORS.borderLight}`,
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column'
@@ -475,7 +475,7 @@ If no useful patterns found, return empty array: []`;
                 width: '32px',
                 height: '32px',
                 borderRadius: '50%',
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -484,7 +484,7 @@ If no useful patterns found, return empty array: []`;
                 <MessageCircle style={{ width: '16px', height: '16px', color: COLORS.slainteBlue }} />
               </div>
               <div style={{
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 padding: '0.875rem 1rem',
                 borderRadius: '12px',
                 maxWidth: '85%'
@@ -492,7 +492,7 @@ If no useful patterns found, return empty array: []`;
                 <div style={{
                   fontSize: '1.125rem',
                   fontWeight: 600,
-                  color: COLORS.darkGray
+                  color: COLORS.textPrimary
                 }}>
                   {greeting}
                 </div>
@@ -505,14 +505,14 @@ If no useful patterns found, return empty array: []`;
             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
               <div style={{ width: '32px', flexShrink: 0 }} />
               <div style={{
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 padding: '0.875rem 1rem',
                 borderRadius: '12px',
                 maxWidth: '85%'
               }}>
                 <div style={{
                   fontSize: '0.9375rem',
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   lineHeight: 1.5
                 }}>
                   {message}
@@ -534,7 +534,7 @@ If no useful patterns found, return empty array: []`;
               }}>
                 <div style={{
                   fontSize: '0.875rem',
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   lineHeight: 1.5
                 }}>
                   {tip}
@@ -558,7 +558,7 @@ If no useful patterns found, return empty array: []`;
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem',
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   fontSize: '0.9375rem'
                 }}>
                   <Loader style={{ width: '18px', height: '18px', color: COLORS.slainteBlue, animation: 'spin 1s linear infinite' }} />
@@ -583,7 +583,7 @@ If no useful patterns found, return empty array: []`;
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem',
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   fontSize: '0.9375rem'
                 }}>
                   <CheckCircle style={{ width: '18px', height: '18px', color: COLORS.incomeColor }} />
@@ -599,7 +599,7 @@ If no useful patterns found, return empty array: []`;
         {/* Continue Button at bottom of chat */}
         <div style={{
           padding: '1rem',
-          borderTop: `1px solid ${COLORS.lightGray}`,
+          borderTop: `1px solid ${COLORS.borderLight}`,
           backgroundColor: COLORS.white
         }}>
           <button
@@ -665,7 +665,7 @@ If no useful patterns found, return empty array: []`;
               <h3 style={{
                 fontSize: '1.25rem',
                 fontWeight: 700,
-                color: COLORS.darkGray,
+                color: COLORS.textPrimary,
                 marginBottom: '0.25rem'
               }}>
                 Staff Payment Detection
@@ -673,7 +673,7 @@ If no useful patterns found, return empty array: []`;
 
               <p style={{
                 fontSize: '0.875rem',
-                color: COLORS.mediumGray,
+                color: COLORS.textSecondary,
                 lineHeight: 1.5
               }}>
                 AI will scan your transactions and suggest which ones are staff salary payments.
@@ -689,24 +689,24 @@ If no useful patterns found, return empty array: []`;
           }}>
             <div style={{
               flex: 1,
-              backgroundColor: COLORS.backgroundGray,
+              backgroundColor: COLORS.bgPage,
               borderRadius: '8px',
               padding: '0.75rem 1rem',
               textAlign: 'center'
             }}>
-              <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginBottom: '0.25rem' }}>Unidentified</p>
+              <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginBottom: '0.25rem' }}>Unidentified</p>
               <p style={{ fontSize: '1.25rem', fontWeight: 700, color: COLORS.highlightYellow }}>
                 {unidentifiedTransactions.length}
               </p>
             </div>
             <div style={{
               flex: 1,
-              backgroundColor: COLORS.backgroundGray,
+              backgroundColor: COLORS.bgPage,
               borderRadius: '8px',
               padding: '0.75rem 1rem',
               textAlign: 'center'
             }}>
-              <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginBottom: '0.25rem' }}>Staff Categories</p>
+              <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginBottom: '0.25rem' }}>Staff Categories</p>
               <p style={{ fontSize: '1.25rem', fontWeight: 700, color: COLORS.slainteBlue }}>
                 {categoryMapping.filter(c => c.personalization === 'Personalized' && ['3', '4', '5', '6', '7'].includes(c.role)).length}
               </p>
@@ -736,7 +736,7 @@ If no useful patterns found, return empty array: []`;
               fontSize: '1rem',
               fontWeight: 600,
               color: COLORS.white,
-              backgroundColor: isAnalyzing ? COLORS.mediumGray : analysisComplete ? COLORS.incomeColor : COLORS.slainteBlue,
+              backgroundColor: isAnalyzing ? COLORS.textSecondary : analysisComplete ? COLORS.incomeColor : COLORS.slainteBlue,
               border: 'none',
               borderRadius: '8px',
               cursor: isAnalyzing || analysisComplete ? 'default' : 'pointer',
@@ -770,7 +770,7 @@ If no useful patterns found, return empty array: []`;
         {suggestions.length > 0 && (
           <div style={{
             backgroundColor: COLORS.white,
-            border: `2px solid ${COLORS.lightGray}`,
+            border: `2px solid ${COLORS.borderLight}`,
             borderRadius: '16px',
             padding: '1.25rem',
             flex: 1,
@@ -779,7 +779,7 @@ If no useful patterns found, return empty array: []`;
             <h4 style={{
               fontSize: '1rem',
               fontWeight: 600,
-              color: COLORS.darkGray,
+              color: COLORS.textPrimary,
               marginBottom: '1rem'
             }}>
               Suggested Identifier Patterns
@@ -796,7 +796,7 @@ If no useful patterns found, return empty array: []`;
                   <div
                     key={`${suggestion.categoryCode}-${index}`}
                     style={{
-                      border: `2px solid ${isApplied ? COLORS.incomeColor : (isNewCategory ? COLORS.highlightYellow : COLORS.lightGray)}`,
+                      border: `2px solid ${isApplied ? COLORS.incomeColor : (isNewCategory ? COLORS.highlightYellow : COLORS.borderLight)}`,
                       borderRadius: '12px',
                       padding: '1rem',
                       backgroundColor: isApplied ? `${COLORS.incomeColor}10` : (isNewCategory ? `${COLORS.highlightYellow}10` : COLORS.white)
@@ -804,10 +804,10 @@ If no useful patterns found, return empty array: []`;
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
                       <div>
-                        <h5 style={{ fontSize: '0.9375rem', fontWeight: 600, color: COLORS.darkGray }}>
+                        <h5 style={{ fontSize: '0.9375rem', fontWeight: 600, color: COLORS.textPrimary }}>
                           {suggestion.categoryName}
                         </h5>
-                        <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray }}>
+                        <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary }}>
                           {isNewCategory ? (
                             <span style={{ color: COLORS.highlightYellow, fontWeight: 500 }}>New Staff Member</span>
                           ) : (
@@ -823,7 +823,7 @@ If no useful patterns found, return empty array: []`;
                       )}
                     </div>
 
-                    <p style={{ fontSize: '0.8125rem', color: COLORS.mediumGray, marginBottom: '0.5rem' }}>
+                    <p style={{ fontSize: '0.8125rem', color: COLORS.textSecondary, marginBottom: '0.5rem' }}>
                       {suggestion.reasoning}
                     </p>
 
@@ -836,8 +836,8 @@ If no useful patterns found, return empty array: []`;
                             borderRadius: '4px',
                             fontSize: '0.75rem',
                             fontFamily: 'monospace',
-                            backgroundColor: COLORS.backgroundGray,
-                            color: COLORS.darkGray
+                            backgroundColor: COLORS.bgPage,
+                            color: COLORS.textPrimary
                           }}
                         >
                           {identifier}
@@ -852,10 +852,10 @@ If no useful patterns found, return empty array: []`;
                         padding: '0.75rem',
                         borderRadius: '8px',
                         border: `1px solid ${COLORS.slainteBlue}`,
-                        backgroundColor: COLORS.backgroundGray
+                        backgroundColor: COLORS.bgPage
                       }}>
                         <div style={{ marginBottom: '0.5rem' }}>
-                          <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 500, color: COLORS.darkGray, marginBottom: '0.25rem' }}>
+                          <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 500, color: COLORS.textPrimary, marginBottom: '0.25rem' }}>
                             Role
                           </label>
                           <select
@@ -865,7 +865,7 @@ If no useful patterns found, return empty array: []`;
                               width: '100%',
                               padding: '0.5rem',
                               borderRadius: '6px',
-                              border: `1px solid ${COLORS.lightGray}`,
+                              border: `1px solid ${COLORS.borderLight}`,
                               fontSize: '0.875rem'
                             }}
                           >
@@ -881,7 +881,7 @@ If no useful patterns found, return empty array: []`;
                         </div>
 
                         <div style={{ marginBottom: '0.5rem' }}>
-                          <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 500, color: COLORS.darkGray, marginBottom: '0.25rem' }}>
+                          <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 500, color: COLORS.textPrimary, marginBottom: '0.25rem' }}>
                             Name
                           </label>
                           <input
@@ -892,7 +892,7 @@ If no useful patterns found, return empty array: []`;
                               width: '100%',
                               padding: '0.5rem',
                               borderRadius: '6px',
-                              border: `1px solid ${COLORS.lightGray}`,
+                              border: `1px solid ${COLORS.borderLight}`,
                               fontSize: '0.875rem'
                             }}
                           />
@@ -908,7 +908,7 @@ If no useful patterns found, return empty array: []`;
                               fontSize: '0.8125rem',
                               fontWeight: 500,
                               color: COLORS.white,
-                              backgroundColor: staffData.name.trim() ? COLORS.incomeColor : COLORS.lightGray,
+                              backgroundColor: staffData.name.trim() ? COLORS.incomeColor : COLORS.borderLight,
                               border: 'none',
                               borderRadius: '6px',
                               cursor: staffData.name.trim() ? 'pointer' : 'not-allowed'
@@ -921,9 +921,9 @@ If no useful patterns found, return empty array: []`;
                             style={{
                               padding: '0.5rem 0.75rem',
                               fontSize: '0.8125rem',
-                              color: COLORS.darkGray,
+                              color: COLORS.textPrimary,
                               backgroundColor: COLORS.white,
-                              border: `1px solid ${COLORS.lightGray}`,
+                              border: `1px solid ${COLORS.borderLight}`,
                               borderRadius: '6px',
                               cursor: 'pointer'
                             }}
@@ -962,9 +962,9 @@ If no useful patterns found, return empty array: []`;
                           style={{
                             padding: '0.5rem 0.75rem',
                             fontSize: '0.8125rem',
-                            color: COLORS.mediumGray,
+                            color: COLORS.textSecondary,
                             backgroundColor: COLORS.white,
-                            border: `1px solid ${COLORS.lightGray}`,
+                            border: `1px solid ${COLORS.borderLight}`,
                             borderRadius: '6px',
                             cursor: 'pointer'
                           }}
@@ -988,7 +988,7 @@ If no useful patterns found, return empty array: []`;
           }}>
             <p style={{
               fontSize: '0.8125rem',
-              color: COLORS.mediumGray
+              color: COLORS.textSecondary
             }}>
               You can also skip this and categorize payments manually later
             </p>

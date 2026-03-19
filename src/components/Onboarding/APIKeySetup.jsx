@@ -145,7 +145,7 @@ export default function APIKeySetup({ onComplete, onDemo }) {
         <h2 style={{
           fontSize: '1.75rem',
           fontWeight: 700,
-          color: COLORS.darkGray,
+          color: COLORS.textPrimary,
           marginBottom: '1rem'
         }}>
           Set Up App Security
@@ -165,7 +165,7 @@ export default function APIKeySetup({ onComplete, onDemo }) {
 
         <p style={{
           fontSize: '1rem',
-          color: COLORS.mediumGray,
+          color: COLORS.textSecondary,
           marginBottom: '2rem',
           maxWidth: '500px',
           marginLeft: 'auto',
@@ -187,7 +187,7 @@ export default function APIKeySetup({ onComplete, onDemo }) {
         }}>
           <p style={{
             fontSize: '0.875rem',
-            color: COLORS.darkGray,
+            color: COLORS.textPrimary,
             lineHeight: 1.5,
             marginBottom: '0.75rem'
           }}>
@@ -195,7 +195,7 @@ export default function APIKeySetup({ onComplete, onDemo }) {
           </p>
           <ul style={{
             fontSize: '0.875rem',
-            color: COLORS.darkGray,
+            color: COLORS.textPrimary,
             lineHeight: 1.6,
             margin: 0,
             paddingLeft: '1.25rem'
@@ -211,7 +211,7 @@ export default function APIKeySetup({ onComplete, onDemo }) {
             display: 'block',
             fontSize: '0.875rem',
             fontWeight: 500,
-            color: COLORS.darkGray,
+            color: COLORS.textPrimary,
             marginBottom: '0.5rem'
           }}>
             App Security Password
@@ -230,7 +230,7 @@ export default function APIKeySetup({ onComplete, onDemo }) {
                 width: '100%',
                 padding: '0.75rem 3rem 0.75rem 1rem',
                 fontSize: '1rem',
-                border: `2px solid ${mobileError ? COLORS.expenseColor : COLORS.lightGray}`,
+                border: `2px solid ${mobileError ? COLORS.expenseColor : COLORS.borderLight}`,
                 borderRadius: '8px',
                 outline: 'none',
                 transition: 'border-color 0.2s'
@@ -239,7 +239,7 @@ export default function APIKeySetup({ onComplete, onDemo }) {
                 if (!mobileError) e.target.style.borderColor = COLORS.slainteBlue;
               }}
               onBlur={(e) => {
-                if (!mobileError) e.target.style.borderColor = COLORS.lightGray;
+                if (!mobileError) e.target.style.borderColor = COLORS.borderLight;
               }}
             />
             <button
@@ -254,7 +254,7 @@ export default function APIKeySetup({ onComplete, onDemo }) {
                 border: 'none',
                 cursor: 'pointer',
                 padding: '0.25rem',
-                color: COLORS.mediumGray
+                color: COLORS.textSecondary
               }}
             >
               {showPassword ? <EyeOff style={{ width: '20px', height: '20px' }} /> : <Eye style={{ width: '20px', height: '20px' }} />}
@@ -268,7 +268,7 @@ export default function APIKeySetup({ onComplete, onDemo }) {
             display: 'block',
             fontSize: '0.875rem',
             fontWeight: 500,
-            color: COLORS.darkGray,
+            color: COLORS.textPrimary,
             marginBottom: '0.5rem'
           }}>
             Confirm Password
@@ -286,7 +286,7 @@ export default function APIKeySetup({ onComplete, onDemo }) {
               width: '100%',
               padding: '0.75rem 1rem',
               fontSize: '1rem',
-              border: `2px solid ${mobileError ? COLORS.expenseColor : COLORS.lightGray}`,
+              border: `2px solid ${mobileError ? COLORS.expenseColor : COLORS.borderLight}`,
               borderRadius: '8px',
               outline: 'none',
               transition: 'border-color 0.2s'
@@ -295,7 +295,7 @@ export default function APIKeySetup({ onComplete, onDemo }) {
               if (!mobileError) e.target.style.borderColor = COLORS.slainteBlue;
             }}
             onBlur={(e) => {
-              if (!mobileError) e.target.style.borderColor = COLORS.lightGray;
+              if (!mobileError) e.target.style.borderColor = COLORS.borderLight;
             }}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !isSavingMobile && mobilePassword && confirmPassword) {
@@ -369,7 +369,7 @@ export default function APIKeySetup({ onComplete, onDemo }) {
       <h2 style={{
         fontSize: '2rem',
         fontWeight: 700,
-        color: COLORS.darkGray,
+        color: COLORS.textPrimary,
         marginBottom: '1rem'
       }}>
         Welcome to Sláinte Finance App
@@ -377,7 +377,7 @@ export default function APIKeySetup({ onComplete, onDemo }) {
 
       <p style={{
         fontSize: '1.125rem',
-        color: COLORS.mediumGray,
+        color: COLORS.textSecondary,
         marginBottom: '2rem',
         maxWidth: '600px',
         marginLeft: 'auto',
@@ -404,7 +404,7 @@ export default function APIKeySetup({ onComplete, onDemo }) {
           <Key style={{
             width: '24px',
             height: '24px',
-            color: COLORS.darkGray,
+            color: COLORS.textPrimary,
             flexShrink: 0,
             marginTop: '2px'
           }} />
@@ -412,14 +412,14 @@ export default function APIKeySetup({ onComplete, onDemo }) {
             <h3 style={{
               fontSize: '1rem',
               fontWeight: 600,
-              color: COLORS.darkGray,
+              color: COLORS.textPrimary,
               marginBottom: '0.5rem'
             }}>
               Sláinte License Key Required
             </h3>
             <p style={{
               fontSize: '0.875rem',
-              color: COLORS.mediumGray,
+              color: COLORS.textSecondary,
               marginBottom: '0',
               lineHeight: 1.6
             }}>
@@ -436,7 +436,7 @@ export default function APIKeySetup({ onComplete, onDemo }) {
           display: 'block',
           fontSize: '0.875rem',
           fontWeight: 500,
-          color: COLORS.darkGray,
+          color: COLORS.textPrimary,
           marginBottom: '0.5rem'
         }}>
           Sláinte License Key
@@ -455,17 +455,17 @@ export default function APIKeySetup({ onComplete, onDemo }) {
             width: '100%',
             padding: '0.75rem 1rem',
             fontSize: '1rem',
-            border: `2px solid ${error ? COLORS.expenseColor : COLORS.lightGray}`,
+            border: `2px solid ${error ? COLORS.expenseColor : COLORS.borderLight}`,
             borderRadius: '8px',
             outline: 'none',
             transition: 'border-color 0.2s',
-            backgroundColor: isValidating ? COLORS.backgroundGray : COLORS.white
+            backgroundColor: isValidating ? COLORS.bgPage : COLORS.white
           }}
           onFocus={(e) => {
             if (!error) e.target.style.borderColor = COLORS.slainteBlue;
           }}
           onBlur={(e) => {
-            if (!error) e.target.style.borderColor = COLORS.lightGray;
+            if (!error) e.target.style.borderColor = COLORS.borderLight;
           }}
         />
 
@@ -508,7 +508,7 @@ export default function APIKeySetup({ onComplete, onDemo }) {
           }}
           onMouseEnter={(e) => {
             if (!isValidating && apiKey.trim()) {
-              e.target.style.backgroundColor = '#1e40af';
+              e.target.style.backgroundColor = COLORS.infoText;
             }
           }}
           onMouseLeave={(e) => {
@@ -527,7 +527,7 @@ export default function APIKeySetup({ onComplete, onDemo }) {
         <div style={{
           marginTop: '2rem',
           paddingTop: '1.5rem',
-          borderTop: `1px solid ${COLORS.lightGray}`,
+          borderTop: `1px solid ${COLORS.borderLight}`,
           textAlign: 'center'
         }}>
           <button
@@ -540,23 +540,23 @@ export default function APIKeySetup({ onComplete, onDemo }) {
               padding: '0.75rem 1.5rem',
               fontSize: '0.9375rem',
               fontWeight: 500,
-              color: COLORS.mediumGray,
+              color: COLORS.textSecondary,
               backgroundColor: 'transparent',
-              border: `1px solid ${COLORS.lightGray}`,
+              border: `1px solid ${COLORS.borderLight}`,
               borderRadius: '8px',
               cursor: isValidating ? 'not-allowed' : 'pointer',
               transition: 'all 0.2s'
             }}
             onMouseEnter={(e) => {
               if (!isValidating) {
-                e.currentTarget.style.backgroundColor = COLORS.backgroundGray;
-                e.currentTarget.style.borderColor = COLORS.mediumGray;
+                e.currentTarget.style.backgroundColor = COLORS.bgPage;
+                e.currentTarget.style.borderColor = COLORS.textSecondary;
               }
             }}
             onMouseLeave={(e) => {
               if (!isValidating) {
                 e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.borderColor = COLORS.lightGray;
+                e.currentTarget.style.borderColor = COLORS.borderLight;
               }
             }}
           >
@@ -566,7 +566,7 @@ export default function APIKeySetup({ onComplete, onDemo }) {
           </button>
           <p style={{
             fontSize: '0.75rem',
-            color: COLORS.mediumGray,
+            color: COLORS.textSecondary,
             marginTop: '0.5rem'
           }}>
             Take a quick tour with sample data before setting up your own practice.

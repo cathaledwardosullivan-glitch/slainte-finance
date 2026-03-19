@@ -10,6 +10,7 @@ import gmsRates, {
   detectPracticeSupportIssues,
   getCervicalCheckRate
 } from '../data/gmsRates';
+import COLORS from '../utils/colors';
 
 /**
  * Count unique doctors/panels from PCRS payment analysis data
@@ -1040,15 +1041,28 @@ export function calculatePracticeSupportPotential(healthCheckData, practiceProfi
     } : 0;
   }
 
-  // Calculate weighted panel: prefer manual demographics, fall back to PCRS PDF data
+  // Calculate weighted panel: use PCRS total panel + over70 (over 70s counted double)
+  // The health check form only collects under6, age6to7, over70, nursingHome — NOT age8to12 or age13to69,
+  // so calculateWeightedPanel(demographics) would miss most of the panel. Instead, use the
+  // authoritative PCRS total panel size and add over70 again for double-counting.
   let weightedPanel;
-  if (demographics) {
-    weightedPanel = calculateWeightedPanel(demographics);
+  const pcrsDemographics = aggregateGMSPayments(paymentAnalysisData)?.pcrsDemographics;
+  const totalPanelSize = pcrsDemographics?.panelSize || 0;
+  const over70Count = demographics?.over70
+    || pcrsDemographics?.total70PlusAllCategories
+    || pcrsDemographics?.total70Plus
+    || 0;
+
+  if (totalPanelSize > 0 && over70Count > 0) {
+    // Panel already includes over70 once; add again so they count double
+    weightedPanel = totalPanelSize + over70Count;
+  } else if (totalPanelSize > 0) {
+    weightedPanel = totalPanelSize;
   } else {
     // Fall back to the PCRS-extracted weighted panel (Total Average Weighted Panel from PDF)
     const psAggregated = aggregatePracticeSubsidyData(paymentAnalysisData);
     weightedPanel = psAggregated?.weightedPanel || 0;
-    console.log(`📋 No demographics entered — using PDF-extracted weighted panel: ${weightedPanel}`);
+    console.log(`📋 No panel size available — using PDF-extracted weighted panel: ${weightedPanel}`);
   }
 
   if (weightedPanel < 100) {
@@ -1295,60 +1309,122 @@ export function calculatePracticeSupportPotential(healthCheckData, practiceProfi
     }
   });
 
-  // Priority 2: UNCLAIMED HOURS (PCRS paying less than entitled, and you employ enough to claim more)
-  // The key is: PCRS < Entitled AND Employed >= PCRS (i.e., you have staff to support higher claims)
-  // Receptionists
+  // Priority 2: STAFF UNDERPAID (per-staff: actual hours worked > PCRS hours, valued at their increment rate)
+  // This matches the per-staff granular calculation in CategoryBreakdowns.jsx
   const employedNursesPMHours = employedNurseHours + employedPMHours;
   const pcrsNursesPMHours = pcrsNurseHours + pcrsPMHours;
 
-  if (pcrsSecretaryHours < entitledHours && employedSecretaryHours >= pcrsSecretaryHours) {
-    // Calculate how many more hours can be claimed
-    // Either up to what's employed, or up to entitlement, whichever is less
-    const maxClaimable = Math.min(employedSecretaryHours, entitledHours);
-    const unclaimedHours = maxClaimable - pcrsSecretaryHours;
-
-    if (unclaimedHours > 0) {
-      const avgRate = gmsRates.practiceSupport.secretary.default;
-      const potentialGain = Math.round((unclaimedHours / fullTimeHours) * avgRate);
-
-      issues.push({
-        type: 'UNCLAIMED_HOURS',
-        priority: 2,
-        severity: 'high',
-        category: 'receptionists',
-        employedHours: employedSecretaryHours,
-        claimedHours: pcrsSecretaryHours,
-        entitledHours: entitledHours,
-        unclaimedHours: unclaimedHours,
-        potentialGain: potentialGain,
-        message: `PCRS is paying for ${pcrsSecretaryHours} receptionist hours, but you employ ${employedSecretaryHours} hours and are entitled to claim ${entitledHours} hours.`,
-        action: `Update PCRS to claim ${unclaimedHours} additional hours (up to your ${entitledHours} hr entitlement). Potential gain: €${potentialGain.toLocaleString()}/year.`
+  const computePerStaffUnderpaid = (pcrsStaffList) => {
+    let totalUnderpaidValue = 0;
+    let totalUnderpaidHours = 0;
+    pcrsStaffList.forEach(staff => {
+      const staffName = `${staff.firstName} ${staff.surname}`;
+      const matchedDetail = healthCheckStaff.find(sd => {
+        const detailName = `${sd.firstName || ''} ${sd.surname || ''}`.trim();
+        return detailName.toLowerCase() === staffName.toLowerCase();
       });
-    }
+      const pcrsHrs = staff.weeklyHours || 0;
+      const actualHrs = matchedDetail ? (parseFloat(matchedDetail.actualHoursWorked) || 0) : 0;
+      const claimable = Math.min(actualHrs, fullTimeHours);
+      const gap = claimable > pcrsHrs ? claimable - pcrsHrs : 0;
+      if (gap > 0) {
+        totalUnderpaidHours += gap;
+        const point = Math.min(staff.incrementPoint || 1, gmsRates.practiceSupport[staff.staffType]?.maxIncrementPoint || 1);
+        const rate = getPracticeSupportRate(staff.staffType, point);
+        totalUnderpaidValue += Math.round((gap / fullTimeHours) * rate);
+      }
+    });
+    return { totalUnderpaidValue, totalUnderpaidHours };
+  };
+
+  const recUnderpaid = computePerStaffUnderpaid(pcrsSecretaries);
+  if (recUnderpaid.totalUnderpaidValue > 0) {
+    issues.push({
+      type: 'UNCLAIMED_HOURS',
+      priority: 2,
+      severity: 'high',
+      category: 'receptionists',
+      employedHours: employedSecretaryHours,
+      claimedHours: pcrsSecretaryHours,
+      entitledHours: entitledHours,
+      unclaimedHours: recUnderpaid.totalUnderpaidHours,
+      potentialGain: recUnderpaid.totalUnderpaidValue,
+      message: `PCRS is paying for ${pcrsSecretaryHours} receptionist hours, but you employ ${employedSecretaryHours} hours and are entitled to claim ${entitledHours} hours.`,
+      action: `Update PCRS to claim ${recUnderpaid.totalUnderpaidHours} additional hours (up to your ${entitledHours} hr entitlement). Potential gain: €${recUnderpaid.totalUnderpaidValue.toLocaleString()}/year.`
+    });
   }
 
-  // Nurses/PM
-  if (pcrsNursesPMHours < entitledHours && employedNursesPMHours >= pcrsNursesPMHours) {
-    // Calculate how many more hours can be claimed
-    const maxClaimable = Math.min(employedNursesPMHours, entitledHours);
-    const unclaimedHours = maxClaimable - pcrsNursesPMHours;
+  const nursePMUnderpaid = computePerStaffUnderpaid([...pcrsNurses, ...pcrsPM]);
+  if (nursePMUnderpaid.totalUnderpaidValue > 0) {
+    issues.push({
+      type: 'UNCLAIMED_HOURS',
+      priority: 2,
+      severity: 'high',
+      category: 'nurses/practiceManager',
+      employedHours: employedNursesPMHours,
+      claimedHours: pcrsNursesPMHours,
+      entitledHours: entitledHours,
+      unclaimedHours: nursePMUnderpaid.totalUnderpaidHours,
+      potentialGain: nursePMUnderpaid.totalUnderpaidValue,
+      message: `PCRS is paying for ${pcrsNursesPMHours} nurse/PM hours, but you employ ${employedNursesPMHours} hours and are entitled to claim ${entitledHours} hours.`,
+      action: `Update PCRS to claim ${nursePMUnderpaid.totalUnderpaidHours} additional hours (up to your ${entitledHours} hr entitlement). Potential gain: €${nursePMUnderpaid.totalUnderpaidValue.toLocaleString()}/year.`
+    });
+  }
 
-    if (unclaimedHours > 0) {
-      const avgRate = gmsRates.practiceSupport.nurse.default;
-      const potentialGain = Math.round((unclaimedHours / fullTimeHours) * avgRate);
+  // Priority 3: UNRECOGNISED STAFF (in Health Check but not on PCRS, capped by remaining entitlement)
+  const eligibleRoles = ['secretary', 'nurse', 'practiceManager'];
+  const unregisteredStaff = healthCheckStaff.filter(s =>
+    !s.fromPCRS && eligibleRoles.includes(s.staffType) && parseFloat(s.actualHoursWorked) > 0
+  );
 
+  if (unregisteredStaff.length > 0) {
+    const computeUnrecognised = (staffList, pcrsHrs, underpaidHrs) => {
+      const afterFix = pcrsHrs + underpaidHrs;
+      let remainingEntitlement = Math.max(0, entitledHours - afterFix);
+      let totalValue = 0;
+      let count = 0;
+      staffList.forEach(s => {
+        const hours = Math.min(parseFloat(s.actualHoursWorked) || 0, fullTimeHours);
+        const claimableHrs = Math.min(hours, remainingEntitlement);
+        if (claimableHrs > 0) {
+          count++;
+          remainingEntitlement -= claimableHrs;
+          const correctPt = getCorrectIncrementPoint(s.staffType, s.yearsExperience || 1);
+          const rate = getPracticeSupportRate(s.staffType, correctPt);
+          totalValue += Math.round((claimableHrs / fullTimeHours) * rate);
+        }
+      });
+      return { totalValue, count };
+    };
+
+    const unregRec = unregisteredStaff.filter(s => s.staffType === 'secretary');
+    const unregNurse = unregisteredStaff.filter(s => s.staffType === 'nurse' || s.staffType === 'practiceManager');
+
+    const recUnreg = computeUnrecognised(unregRec, pcrsSecretaryHours, recUnderpaid.totalUnderpaidHours);
+    const nurseUnreg = computeUnrecognised(unregNurse, pcrsNursesPMHours, nursePMUnderpaid.totalUnderpaidHours);
+
+    if (recUnreg.totalValue > 0) {
       issues.push({
-        type: 'UNCLAIMED_HOURS',
-        priority: 2,
+        type: 'UNRECOGNISED_STAFF',
+        priority: 3,
+        severity: 'high',
+        category: 'receptionists',
+        count: recUnreg.count,
+        potentialGain: recUnreg.totalValue,
+        message: `${recUnreg.count} receptionist(s) employed but not registered with PCRS.`,
+        action: `Register these staff with PCRS to claim subsidy. Potential gain: €${recUnreg.totalValue.toLocaleString()}/year.`
+      });
+    }
+    if (nurseUnreg.totalValue > 0) {
+      issues.push({
+        type: 'UNRECOGNISED_STAFF',
+        priority: 3,
         severity: 'high',
         category: 'nurses/practiceManager',
-        employedHours: employedNursesPMHours,
-        claimedHours: pcrsNursesPMHours,
-        entitledHours: entitledHours,
-        unclaimedHours: unclaimedHours,
-        potentialGain: potentialGain,
-        message: `PCRS is paying for ${pcrsNursesPMHours} nurse/PM hours, but you employ ${employedNursesPMHours} hours and are entitled to claim ${entitledHours} hours.`,
-        action: `Update PCRS to claim ${unclaimedHours} additional hours (up to your ${entitledHours} hr entitlement). Potential gain: €${potentialGain.toLocaleString()}/year.`
+        count: nurseUnreg.count,
+        potentialGain: nurseUnreg.totalValue,
+        message: `${nurseUnreg.count} nurse/PM(s) employed but not registered with PCRS.`,
+        action: `Register these staff with PCRS to claim subsidy. Potential gain: €${nurseUnreg.totalValue.toLocaleString()}/year.`
       });
     }
   }
@@ -1898,185 +1974,6 @@ export function calculateCervicalCheckPotential(healthCheckData, paymentAnalysis
 }
 
 /**
- * Calculate practice-specific STC benchmarks derived from disease registers,
- * demographics, and female age band data already collected in the health check.
- * Returns null for codes where insufficient data exists (caller falls back to flat rate).
- *
- * @param {number} panelSize - Total GMS panel size
- * @param {Object} healthCheckData - Health check data with diseaseRegisters, demographics, stcDemographics
- * @returns {Object} Map of { [stcCode]: { expected, basis, isDerived } } or null entries
- */
-export function calculateDerivedSTCBenchmarks(panelSize, healthCheckData) {
-  const derived = {};
-  const registers = healthCheckData?.diseaseRegisters || {};
-  const demographics = healthCheckData?.demographics || {};
-  const stcDemo = healthCheckData?.stcDemographics || {};
-
-  // Parse all register values as numbers
-  const heartFailure = parseInt(registers.heartFailure) || 0;
-  const af = parseInt(registers.atrialFibrillation) || 0;
-  const ihd = parseInt(registers.ihd) || 0;
-  const stroke = parseInt(registers.stroke) || parseInt(registers.strokeTIA) || 0;
-  const hypertension = parseInt(registers.hypertension) || 0;
-  const asthma = parseInt(registers.asthma) || 0;
-  const copd = parseInt(registers.copd) || 0;
-  const over70 = parseInt(demographics.over70) || 0;
-  const under6 = parseInt(demographics.under6) || 0;
-  const gmsFemale17to35 = parseInt(stcDemo.gmsFemale17to35) || 0;
-  const gmsFemale36to44 = parseInt(stcDemo.gmsFemale36to44) || 0;
-
-  // --- ECG (Code F) ---
-  // Per-condition annual ECG probability (evidence-based, not blanket rate)
-  // NICE: serial ECGs NOT recommended for routine monitoring; ECGs are for
-  // clinical indication (med changes, new symptoms, rhythm assessment)
-  const hfECG = heartFailure * 0.40;   // Medication changes, decompensation episodes
-  const afECG = af * 0.50;             // Rhythm/rate monitoring (strongest GP indication)
-  const ihdECG = ihd * 0.25;           // Symptom-driven, unstable angina workup
-  const strokeECG = stroke * 0.20;     // Post-event AF screening
-  const htnECG = hypertension * 0.10;  // Diagnosis workup + periodic LVH screening
-  const rawECGTotal = hfECG + afECG + ihdECG + strokeECG + htnECG;
-  if (rawECGTotal > 0) {
-    // Comorbidity overlap discount: patients appear in multiple registers
-    // (e.g., most IHD patients also coded for hypertension)
-    const overlapFactor = 0.65; // ~35% overlap discount
-    const expected = rawECGTotal * overlapFactor;
-    // Build descriptive basis text showing the weighted calculation
-    const parts = [];
-    if (heartFailure > 0) parts.push(`${heartFailure} HF×40%`);
-    if (af > 0) parts.push(`${af} AF×50%`);
-    if (ihd > 0) parts.push(`${ihd} IHD×25%`);
-    if (stroke > 0) parts.push(`${stroke} Stroke×20%`);
-    if (hypertension > 0) parts.push(`${hypertension} HTN×10%`);
-    derived['F'] = {
-      expected,
-      basis: `Weighted: ${parts.join(' + ')} (35% overlap discount)`,
-      isDerived: true
-    };
-  }
-
-  // --- ABPM (Code AD) ---
-  // Hypertension reassessment + elderly screening
-  if (hypertension > 0 || over70 > 0) {
-    const expected = (hypertension * 0.15) + (over70 * 0.05);
-    if (expected > 0) {
-      derived['AD'] = {
-        expected,
-        basis: `${hypertension > 0 ? hypertension + ' hypertension × 15%' : ''}${hypertension > 0 && over70 > 0 ? ' + ' : ''}${over70 > 0 ? over70 + ' over-70s × 5%' : ''}`,
-        isDerived: true
-      };
-    }
-  }
-
-  // --- Nebuliser (Code K) ---
-  // Acute exacerbation rate for respiratory patients
-  // Includes acute asthma attacks + COPD exacerbations managed with nebuliser in-surgery
-  const respiratoryTotal = asthma + copd;
-  if (respiratoryTotal > 0) {
-    const expected = respiratoryTotal * 0.05; // ~5% acute presentation rate
-    derived['K'] = {
-      expected,
-      basis: `${respiratoryTotal} respiratory patients × 5% acute presentation rate`,
-      isDerived: true
-    };
-  }
-
-  // --- Contraception benchmarks ---
-  // Two distinct schemes:
-  // 1. Free Contraception Scheme (CF/CG/CH): ALL women aged 17-35, regardless of GMS status
-  // 2. GMS/DVC Scheme (CL/CO/CM): GMS/DVC cardholders only, aged 36-44
-  const hasFemaleDemo = gmsFemale17to35 > 0 || gmsFemale36to44 > 0;
-  if (hasFemaleDemo) {
-    // CF/CL: Contraception consultations
-    if (gmsFemale17to35 > 0) {
-      derived['CF'] = {
-        expected: gmsFemale17to35 * 0.20,
-        basis: `Free Scheme: ${gmsFemale17to35} women 17-35 × 20% annual uptake`,
-        isDerived: true
-      };
-    }
-    if (gmsFemale36to44 > 0) {
-      derived['CL'] = {
-        expected: gmsFemale36to44 * 0.10,
-        basis: `GMS/DVC Scheme: ${gmsFemale36to44} GMS women 36-44 × 10% annual uptake`,
-        isDerived: true
-      };
-    }
-
-    // CG/CO: Implant fitting
-    const cgExpected = gmsFemale17to35 * 0.04;
-    const coExpected = gmsFemale36to44 * 0.02;
-    if (cgExpected > 0) {
-      derived['CG'] = {
-        expected: cgExpected,
-        basis: `Free Scheme: ${gmsFemale17to35} women 17-35 × 4% implant uptake`,
-        isDerived: true
-      };
-    }
-    if (coExpected > 0) {
-      derived['CO'] = {
-        expected: coExpected,
-        basis: `GMS/DVC Scheme: ${gmsFemale36to44} GMS women 36-44 × 2% implant uptake`,
-        isDerived: true
-      };
-    }
-
-    // CH/CM: Coil fitting
-    const chExpected = gmsFemale17to35 * 0.06;
-    const cmExpected = gmsFemale36to44 * 0.04;
-    if (chExpected > 0) {
-      derived['CH'] = {
-        expected: chExpected,
-        basis: `Free Scheme: ${gmsFemale17to35} women 17-35 × 6% coil uptake`,
-        isDerived: true
-      };
-    }
-    if (cmExpected > 0) {
-      derived['CM'] = {
-        expected: cmExpected,
-        basis: `GMS/DVC Scheme: ${gmsFemale36to44} GMS women 36-44 × 4% coil uptake`,
-        isDerived: true
-      };
-    }
-  }
-
-  // --- Skin excisions (Code A) ---
-  // Base population rate + higher rate for elderly
-  if (panelSize > 0) {
-    const baseExpected = panelSize * 0.015;
-    const elderlyExtra = over70 * 0.02;
-    const total = baseExpected + elderlyExtra;
-    derived['A'] = {
-      expected: total,
-      basis: `${panelSize.toLocaleString()} panel × 1.5%${over70 > 0 ? ` + ${over70} over-70s × 2%` : ''}`,
-      isDerived: true
-    };
-  }
-
-  // --- Paediatric (Codes X, Y, Z) ---
-  // Based on under-6 count (under-8 not separately available)
-  // Conservative rates - these are GP-managed cases only
-  if (under6 > 0) {
-    derived['X'] = {
-      expected: under6 * 0.005,
-      basis: `${under6} under-6s × 0.5% foreign body rate`,
-      isDerived: true
-    };
-    derived['Y'] = {
-      expected: under6 * 0.01,
-      basis: `${under6} under-6s × 1% suturing rate`,
-      isDerived: true
-    };
-    derived['Z'] = {
-      expected: under6 * 0.004,
-      basis: `${under6} under-6s × 0.4% abscess rate`,
-      isDerived: true
-    };
-  }
-
-  return derived;
-}
-
-/**
  * Analyze STC (Special Type Consultations) opportunities
  * Compares actual STC claims against benchmarks to identify growth opportunities
  *
@@ -2106,8 +2003,29 @@ export function analyzeSTCOpportunities(actualIncome, panelSize, healthCheckData
   const benchmarks = gmsRates.stc?.benchmarks || {};
   const categories = gmsRates.stc?.categories || {};
 
-  // Calculate practice-specific derived benchmarks from disease registers & demographics
-  const derivedBenchmarks = calculateDerivedSTCBenchmarks(panelSize, healthCheckData);
+  // Contraception benchmarks derived from collected demographic data
+  // These use specific eligible populations rather than whole-panel flat rates
+  //
+  // LARC rates based on UK OHID data (2022/23): 44.1 insertions per 1,000 women/year
+  //   - Coil (IUD/IUS): ~67.5% of LARC fittings → 30 per 1,000 (3.0%)
+  //   - Implant: ~32.5% of LARC fittings → 14 per 1,000 (1.4%)
+  // Age factor: over-25s skew ~75/25 toward coils; under-25s favour implants
+  // Ireland's Free Contraception Scheme (17-35) is driving uptake to match/exceed UK baseline
+  // CF consultation uptake: ~20% annual (covers all contraception consultations, not just LARC)
+  const stcDemo = healthCheckData?.stcDemographics || {};
+  const gmsFemale17to35 = parseInt(stcDemo.gmsFemale17to35) || 0;
+  const gmsFemale36to44 = parseInt(stcDemo.gmsFemale36to44) || 0;
+  const contraceptionBenchmarks = {};
+  if (gmsFemale17to35 > 0) {
+    contraceptionBenchmarks['CF'] = { expected: gmsFemale17to35 * 0.20, basis: `${gmsFemale17to35} women 17-35 × 20% consultation uptake` };
+    contraceptionBenchmarks['CG'] = { expected: gmsFemale17to35 * 0.014, basis: `${gmsFemale17to35} women 17-35 × 1.4% implant rate (UK OHID 2022/23)` };
+    contraceptionBenchmarks['CH'] = { expected: gmsFemale17to35 * 0.030, basis: `${gmsFemale17to35} women 17-35 × 3.0% coil rate (UK OHID 2022/23)` };
+  }
+  if (gmsFemale36to44 > 0) {
+    contraceptionBenchmarks['CL'] = { expected: gmsFemale36to44 * 0.10, basis: `${gmsFemale36to44} GMS women 36-44 × 10% consultation uptake` };
+    contraceptionBenchmarks['CO'] = { expected: gmsFemale36to44 * 0.011, basis: `${gmsFemale36to44} GMS women 36-44 × 1.1% implant rate (age-adjusted, UK OHID)` };
+    contraceptionBenchmarks['CM'] = { expected: gmsFemale36to44 * 0.033, basis: `${gmsFemale36to44} GMS women 36-44 × 3.3% coil rate (age-adjusted, UK OHID)` };
+  }
 
   // Check if we have detailed STC data (breakdown by code)
   const hasDetailedData = stcDetails.totalClaims > 0;
@@ -2154,13 +2072,13 @@ export function analyzeSTCOpportunities(actualIncome, panelSize, healthCheckData
   Object.entries(stcCodes).forEach(([code, codeInfo]) => {
     const actual = stcDetails.byCode[code] || { count: 0, total: 0 };
     const benchmark = benchmarks[code];
-    const derived = derivedBenchmarks[code];
+    const contraception = contraceptionBenchmarks[code];
 
-    // Use derived benchmark if available, otherwise fall back to flat rate
-    const expectedAnnual = derived
-      ? Math.round(derived.expected)
+    // Contraception codes use demographic-derived targets when available,
+    // all other codes use national flat-rate benchmarks (PCRS 2018 data)
+    const expectedAnnual = contraception
+      ? Math.round(contraception.expected)
       : benchmark ? Math.round((benchmark.ratePerThousand / 1000) * panelSize) : null;
-    const benchmarkIsDerived = !!derived;
 
     // Determine if practice has indicated they offer this service
     const serviceId = CODE_TO_SERVICE[code];
@@ -2172,13 +2090,12 @@ export function analyzeSTCOpportunities(actualIncome, panelSize, healthCheckData
       fee: codeInfo.fee,
       category: codeInfo.category,
       categoryName: categories[codeInfo.category]?.name || codeInfo.category,
-      categoryColor: categories[codeInfo.category]?.color || '#6B7280',
+      categoryColor: categories[codeInfo.category]?.color || COLORS.textMuted,
       actualCount: actual.count,
       actualTotal: Math.round(actual.total),
       expectedAnnual,
       benchmark: benchmark?.ratePerThousand || null,
-      benchmarkBasis: derived?.basis || benchmark?.basis || null,
-      benchmarkIsDerived,
+      benchmarkBasis: contraception?.basis || benchmark?.basis || null,
       performance: null,
       gap: null,
       potentialValue: 0,
@@ -2203,7 +2120,7 @@ export function analyzeSTCOpportunities(actualIncome, panelSize, healthCheckData
       categoryTotals[catKey] = {
         category: catKey,
         name: categories[catKey]?.name || catKey,
-        color: categories[catKey]?.color || '#6B7280',
+        color: categories[catKey]?.color || COLORS.textMuted,
         totalClaims: 0,
         totalAmount: 0,
         codes: []
@@ -2235,7 +2152,6 @@ export function analyzeSTCOpportunities(actualIncome, panelSize, healthCheckData
         potentialValue: opportunity.potentialValue,
         benchmark: opportunity.benchmark,
         benchmarkBasis: opportunity.benchmarkBasis,
-        benchmarkIsDerived: opportunity.benchmarkIsDerived,
         performance: opportunity.performance,
         serviceOffered: opportunity.serviceOffered
       });
@@ -2486,7 +2402,7 @@ export function analyzeCDMFromSTCDetails(actualIncome, healthCheckData = null) {
         description: codeInfo?.description || '',
         category: codeInfo?.category || 'cdm',
         categoryName: categories[codeInfo?.category]?.name || 'Chronic Disease Management',
-        categoryColor: categories[codeInfo?.category]?.color || '#EF4444'
+        categoryColor: categories[codeInfo?.category]?.color || COLORS.error
       };
 
       cdmAnalysis.claims.push(cdmAnalysis.byCode[code]);
@@ -2991,6 +2907,20 @@ export function generateRecommendations(analysisResults, practiceProfile, health
     });
   });
 
+  // Priority 3: Unrecognised staff (employed but not registered with PCRS)
+  const unrecognisedStaffIssues = psIssues.filter(i => i.type === 'UNRECOGNISED_STAFF');
+  unrecognisedStaffIssues.forEach(issue => {
+    const categoryLabel = issue.category === 'receptionists' ? 'receptionist' : 'nurse/practice manager';
+    const value = issue.potentialGain || 0;
+    priorityPSValue += value;
+    priorityPSActions.push({
+      action: `Register ${issue.count} ${categoryLabel} staff with PCRS: These staff are employed but not receiving any subsidy`,
+      value,
+      effort: 'Low',
+      detail: issue.action
+    });
+  });
+
   if (priorityPSActions.length > 0) {
     priorityRecommendations.push({
       id: 'practice-support-issues',
@@ -3125,7 +3055,10 @@ export function generateRecommendations(analysisResults, practiceProfile, health
   }
 
   // GROWTH: Disease Management (requires clinical activity increase)
-  if (unclaimed.diseaseManagement > threshold) {
+  // Skip this crude estimate when CDM analysis from PCRS data is available — it provides
+  // a more accurate breakdown and adding both would double-count the same opportunity.
+  const hasCDMGrowthData = analysisResults.potentialBreakdowns?.cdmAnalysis?.growthPotential?.hasData;
+  if (!hasCDMGrowthData && unclaimed.diseaseManagement > threshold) {
     const actions = [];
     const { diseaseRegisters } = healthCheckData;
 
@@ -3316,5 +3249,239 @@ export function generateRecommendations(analysisResults, practiceProfile, health
     growthOpportunities,
     // For backward compatibility, also return combined list
     all: [...priorityRecommendations, ...growthOpportunities].sort((a, b) => b.potential - a.potential)
+  };
+}
+
+
+// ============================================
+// IMPACT TRACKING — Metric Mapping & Snapshot Extraction
+// ============================================
+
+/**
+ * Maps recommendation IDs to the specific metric they target and their area.
+ * Used for (a) tagging projected savings with the right metric, and
+ * (b) verifying improvements in the comparison engine.
+ */
+export const RECOMMENDATION_METRIC_MAP = {
+  'capitation-registration': { metric: 'registrationGap', areaId: 'capitation' },
+  'capitation-growth':       { metric: 'panelGrowth', areaId: 'capitation' },
+  'practice-support-issues': { metric: 'psIssues', areaId: 'practiceSupport' },
+  'practice-support-growth': { metric: 'psHiring', areaId: 'practiceSupport' },
+  'leave-payments':          { metric: 'unclaimedDays', areaId: 'leave' },
+  'cervical-check-issues':   { metric: 'zeroPaymentSmears', areaId: 'cervicalCheck' },
+  'cervical-check-growth':   { metric: 'smearActivity', areaId: 'cervicalCheck' },
+  'stc-opportunities':       { metric: 'stcClaims', areaId: 'stc' },
+  'cdm-growth':              { metric: 'cdmRegistration', areaId: 'cdm' },
+  'disease-management':      { metric: 'cdmRegistration', areaId: 'cdm' },
+};
+
+/**
+ * Extract per-sector snapshot metrics from analyzeGMSIncome() results.
+ * Pure mapping function — no side effects. The returned object is stored
+ * as `sectorMetrics` inside a snapshot when a cycle is started.
+ *
+ * @param {Object} analysisResults - Return value of analyzeGMSIncome()
+ * @returns {Object} sectorMetrics keyed by areaId
+ */
+export function extractSnapshotMetrics(analysisResults) {
+  if (!analysisResults) return {};
+
+  const { actualIncome = {}, potentialBreakdowns = {}, unclaimed = {} } = analysisResults;
+
+  // --- Leave ---
+  const leaveDetails = potentialBreakdowns.leaveDetails || {};
+  const leave = {
+    unclaimedDays: leaveDetails.unclaimedDays || 0,
+    studyLeaveUnclaimedDays: leaveDetails.studyLeaveUnclaimedDays || 0,
+    annualLeaveUnclaimedDays: leaveDetails.annualLeaveUnclaimedDays || 0,
+    unclaimedValue: leaveDetails.unclaimedValue || 0,
+    actualTotal: leaveDetails.actualTotal || 0,
+  };
+
+  // --- Practice Support ---
+  const practiceSupport = {
+    totalRecoverable: potentialBreakdowns.totalRecoverable || 0,
+    issueCount: (potentialBreakdowns.issues || []).length,
+    issues: (potentialBreakdowns.issues || []).map(i => ({ type: i.type, staffName: i.staffName, annualLoss: i.annualLoss || i.potentialGain || 0 })),
+    actualIncome: actualIncome.practiceSupport || 0,
+  };
+
+  // --- Capitation ---
+  const capitationAnalysis = potentialBreakdowns.capitationAnalysis || {};
+  const capitation = {
+    registrationGapValue: capitationAnalysis.totalPotentialValue || 0,
+    registrationChecks: (capitationAnalysis.registrationChecks || [])
+      .filter(c => c.status === 'gap')
+      .map(c => ({ group: c.group, gap: c.gap, value: c.potentialValue || 0 })),
+    actualIncome: actualIncome.capitation || 0,
+    panelSize: actualIncome.pcrsDemographics?.panelSize || 0,
+  };
+
+  // --- Cervical Check ---
+  const cervicalAnalysis = potentialBreakdowns.cervicalScreeningAnalysis || {};
+  const cervicalCheck = {
+    totalSmears: cervicalAnalysis.totalSmears || 0,
+    smearsZeroPayment: cervicalAnalysis.smearsZeroPayment || 0,
+    lostIncome: cervicalAnalysis.lostIncome || 0,
+    actualIncome: actualIncome.cervicalCheck || 0,
+  };
+
+  // --- STC ---
+  const stcAnalysis = potentialBreakdowns.stcAnalysis || {};
+  const stcByCode = {};
+  if (stcAnalysis.activityByCode) {
+    Object.entries(stcAnalysis.activityByCode).forEach(([code, data]) => {
+      stcByCode[code] = { count: data.count || 0, total: data.total || 0 };
+    });
+  }
+  const stc = {
+    byCode: stcByCode,
+    totalClaims: stcAnalysis.totalClaims || 0,
+    totalAmount: actualIncome.stc || 0,
+  };
+
+  // --- CDM ---
+  const cdmAnalysis = potentialBreakdowns.cdmAnalysis || {};
+  const cdm = {
+    totalAmount: cdmAnalysis.totalAmount || 0,
+    growthPotentialValue: cdmAnalysis.growthPotential?.totalValue || 0,
+    claimsByType: {},
+  };
+  if (cdmAnalysis.byCode) {
+    Object.entries(cdmAnalysis.byCode).forEach(([code, data]) => {
+      cdm.claimsByType[code] = data.count || 0;
+    });
+  }
+
+  return { leave, practiceSupport, capitation, cervicalCheck, stc, cdm };
+}
+
+/**
+ * Calculate a summary of projected and verified savings from the ledger.
+ * @param {Array} savingsLedger - Array of savings entries
+ * @returns {Object} { totalProjected, totalVerified, totalCombined, bySector, timeline }
+ */
+export function calculateImpactSummary(savingsLedger) {
+  const AREA_IDS = ['leave', 'practiceSupport', 'capitation', 'cervicalCheck', 'stc', 'cdm'];
+
+  const bySector = {};
+  AREA_IDS.forEach(id => {
+    bySector[id] = { projected: 0, verified: 0 };
+  });
+
+  let totalProjected = 0;
+  let totalVerified = 0;
+
+  (savingsLedger || []).forEach(entry => {
+    const amount = entry.amount || 0;
+    if (entry.type === 'projected') {
+      totalProjected += amount;
+      if (bySector[entry.areaId]) bySector[entry.areaId].projected += amount;
+    } else if (entry.type === 'verified') {
+      totalVerified += amount;
+      if (bySector[entry.areaId]) bySector[entry.areaId].verified += amount;
+    }
+  });
+
+  // Timeline: entries sorted chronologically
+  const timeline = [...(savingsLedger || [])].sort(
+    (a, b) => new Date(a.createdDate) - new Date(b.createdDate)
+  );
+
+  return {
+    totalProjected: Math.round(totalProjected),
+    totalVerified: Math.round(totalVerified),
+    totalCombined: Math.round(totalProjected + totalVerified),
+    bySector,
+    timeline,
+  };
+}
+
+/**
+ * getHealthCheckSectionStatus — inspects profile and paymentAnalysisData to
+ * determine which of the 6 GMS Health Check analysis areas have usable data.
+ * Used by the GMS Optimisation Summary report to show partial-completion state.
+ */
+export function getHealthCheckSectionStatus(profile, paymentAnalysisData) {
+  const hc = profile?.healthCheckData || {};
+  const demographics = hc.demographics || {};
+  const staffDetails = hc.staffDetails || [];
+  const staff = hc.staff || {};
+  const leave = hc.leaveClaimed || {};
+  const disease = hc.diseaseRegisters || {};
+  const cervical = hc.cervicalCheckActivity || {};
+
+  const hasAnyValue = (obj) => Object.values(obj).some(v => v != null && v !== '' && v !== false && v !== 0);
+
+  // 1. PCRS payment data (uploaded PDFs)
+  const pcrsCount = paymentAnalysisData?.length || 0;
+  const pcrsYears = pcrsCount > 0
+    ? [...new Set(paymentAnalysisData.map(p => p.year))].sort()
+    : [];
+
+  // 2. Patient demographics (from Health Check form step 1)
+  const demoValues = [demographics.under6, demographics.age6to7, demographics.age8to12, demographics.age13to69, demographics.over70];
+  const demoFilledCount = demoValues.filter(v => v != null && v > 0).length;
+  const totalPanel = demoValues.reduce((sum, v) => sum + (Number(v) || 0), 0);
+
+  // 3. Practice support staff (from Health Check form step 2)
+  const hasStaffDetails = staffDetails.length > 0;
+  const hasLegacyStaff = hasAnyValue(staff.secretaries || {}) || hasAnyValue(staff.nurses || {}) || staff.practiceManager?.employed;
+
+  // 4. Leave entitlements — form data OR PCRS data (PCRS statements contain leave payments,
+  //    so calculateLeavePotential can derive unclaimed days from PCRS alone)
+  const leaveValues = [leave.studyLeave, leave.annualLeave, leave.sickLeave, leave.maternityLeave];
+  const leaveFilledCount = leaveValues.filter(v => v != null).length;
+
+  // 5. Disease registers (from Health Check form step 3)
+  const diseaseValues = [disease.asthmaUnder8, disease.type2Diabetes, disease.cvdRisk];
+  const diseaseFilledCount = diseaseValues.filter(v => v != null && v > 0).length;
+
+  // 6. Cervical screening activity
+  const cervicalValues = [cervical.eligibleWomen25to44, cervical.eligibleWomen45to65, cervical.smearsPerformed];
+  const cervicalFilledCount = cervicalValues.filter(v => v != null && v > 0).length;
+
+  const sections = {
+    pcrsData: {
+      available: pcrsCount > 0,
+      detail: pcrsCount > 0 ? `${pcrsCount} statements (${pcrsYears.join(', ')})` : null
+    },
+    demographics: {
+      available: demoFilledCount >= 2,
+      detail: demoFilledCount >= 2 ? `${totalPanel.toLocaleString()} patients across ${demoFilledCount} age bands` : null
+    },
+    practiceSupport: {
+      available: hasStaffDetails || hasLegacyStaff,
+      detail: hasStaffDetails ? `${staffDetails.length} staff members registered` : (hasLegacyStaff ? 'Staff data available' : null)
+    },
+    leaveEntitlements: {
+      available: leaveFilledCount >= 1 || pcrsCount > 0,
+      detail: leaveFilledCount >= 1
+        ? `${leaveFilledCount} leave categories recorded`
+        : (pcrsCount > 0 ? 'Derived from PCRS statements' : null)
+    },
+    diseaseRegisters: {
+      available: diseaseFilledCount >= 1,
+      detail: diseaseFilledCount >= 1
+        ? [disease.type2Diabetes && `${disease.type2Diabetes} diabetes`, disease.asthmaUnder8 && `${disease.asthmaUnder8} asthma`, disease.cvdRisk && `${disease.cvdRisk} CVD`].filter(Boolean).join(', ')
+        : null
+    },
+    cervicalScreening: {
+      available: cervicalFilledCount >= 1,
+      detail: cervicalFilledCount >= 1
+        ? (cervical.smearsPerformed ? `${cervical.smearsPerformed} smears performed` : 'Eligible population recorded')
+        : null
+    }
+  };
+
+  const sectionKeys = Object.keys(sections);
+  const sectionsComplete = sectionKeys.filter(k => sections[k].available).length;
+
+  return {
+    ...sections,
+    sectionsComplete,
+    sectionsTotal: sectionKeys.length,
+    // Minimum: PCRS data + at least 1 health check section
+    meetsMinimum: sections.pcrsData.available && sectionsComplete >= 2
   };
 }

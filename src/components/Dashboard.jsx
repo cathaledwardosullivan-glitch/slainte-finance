@@ -45,7 +45,7 @@ import CategoryRefinementWizard from './CategoryRefinementWizard';
 import { usePracticeProfile } from '../hooks/usePracticeProfile';
 import { analyzeGMSIncome } from '../utils/healthCheckCalculations';
 
-const CHART_COLORS = [COLORS.slainteBlue, COLORS.incomeColor, COLORS.highlightYellow, COLORS.expenseColor, '#8884D8', '#82CA9D'];
+const CHART_COLORS = [COLORS.slainteBlue, COLORS.incomeColor, COLORS.highlightYellow, COLORS.expenseColor, COLORS.chartViolet, COLORS.success];
 
 export default function Dashboard({ setCurrentView }) {
     const {
@@ -248,12 +248,12 @@ export default function Dashboard({ setCurrentView }) {
                     </div>
                     <div className="space-y-3 max-h-96 overflow-y-auto">
                         {incomeData.map((category, index) => (
-                            <div key={category.name} className="flex items-center justify-between p-3 rounded-lg transition-colors" style={{ backgroundColor: COLORS.backgroundGray }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.lightGray} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.backgroundGray}>
+                            <div key={category.name} className="flex items-center justify-between p-3 rounded-lg transition-colors" style={{ backgroundColor: COLORS.bgPage }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.borderLight} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.bgPage}>
                                 <div className="flex-1">
-                                    <div className="font-medium" style={{ color: COLORS.darkGray }}>{category.name}</div>
-                                    <div className="text-sm" style={{ color: COLORS.mediumGray }}>{category.percentage}% of total income</div>
+                                    <div className="font-medium" style={{ color: COLORS.textPrimary }}>{category.name}</div>
+                                    <div className="text-sm" style={{ color: COLORS.textSecondary }}>{category.percentage}% of total income</div>
                                     {category.code && (
-                                        <div className="text-xs" style={{ color: COLORS.mediumGray }}>
+                                        <div className="text-xs" style={{ color: COLORS.textSecondary }}>
                                             Code: {category.code}
                                         </div>
                                     )}
@@ -267,7 +267,7 @@ export default function Dashboard({ setCurrentView }) {
                         ))}
                     </div>
                     {incomeData.length === 0 && (
-                        <div className="text-center py-8" style={{ color: COLORS.mediumGray }}>
+                        <div className="text-center py-8" style={{ color: COLORS.textSecondary }}>
                             No income data available for {selectedYear}
                         </div>
                     )}
@@ -289,21 +289,21 @@ export default function Dashboard({ setCurrentView }) {
                 return (
                     <div>
                         <div className="flex items-center mb-4">
-                            <button onClick={() => setSelectedExpenseGroup(null)} className="mr-2 p-1 rounded-full" style={{ backgroundColor: 'transparent' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.lightGray} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
+                            <button onClick={() => setSelectedExpenseGroup(null)} className="mr-2 p-1 rounded-full" style={{ backgroundColor: 'transparent' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.borderLight} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
                                 &larr; Back
                             </button>
                             <h3 className="text-xl font-bold" style={{ color: COLORS.expenseColor }}>{selectedExpenseGroup} Details - {selectedYear}</h3>
                         </div>
                         <div className="space-y-3 max-h-96 overflow-y-auto">
                             {detailedCategories.map((category) => (
-                                <div key={category.name} className="flex items-center justify-between p-3 rounded-lg" style={{ backgroundColor: COLORS.backgroundGray }}>
+                                <div key={category.name} className="flex items-center justify-between p-3 rounded-lg" style={{ backgroundColor: COLORS.bgPage }}>
                                     <div className="flex-1">
-                                        <div className="font-medium" style={{ color: COLORS.darkGray }}>{category.name}</div>
-                                        <div className="text-sm" style={{ color: COLORS.mediumGray }}>
+                                        <div className="font-medium" style={{ color: COLORS.textPrimary }}>{category.name}</div>
+                                        <div className="text-sm" style={{ color: COLORS.textSecondary }}>
                                             {groupTotal > 0 ? ((category.value / groupTotal) * 100).toFixed(1) : 0}% of {selectedExpenseGroup}
                                         </div>
                                         {category.code && (
-                                            <div className="text-xs" style={{ color: COLORS.mediumGray }}>
+                                            <div className="text-xs" style={{ color: COLORS.textSecondary }}>
                                                 Code: {category.code}
                                             </div>
                                         )}
@@ -334,25 +334,25 @@ export default function Dashboard({ setCurrentView }) {
                                 key={group.name}
                                 onClick={() => setSelectedExpenseGroup(group.name)}
                                 className="flex items-center justify-between p-3 rounded-lg transition-colors cursor-pointer"
-                                style={{ backgroundColor: COLORS.backgroundGray }}
-                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.lightGray}
-                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.backgroundGray}
+                                style={{ backgroundColor: COLORS.bgPage }}
+                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.borderLight}
+                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.bgPage}
                             >
                                 <div className="flex-1">
-                                    <div className="font-medium" style={{ color: COLORS.darkGray }}>{group.name}</div>
-                                    <div className="text-sm" style={{ color: COLORS.mediumGray }}>{group.percentage}% of total expenses</div>
+                                    <div className="font-medium" style={{ color: COLORS.textPrimary }}>{group.name}</div>
+                                    <div className="text-sm" style={{ color: COLORS.textSecondary }}>{group.percentage}% of total expenses</div>
                                 </div>
                                 <div className="text-right flex items-center">
                                     <div className="font-bold" style={{ color: COLORS.expenseColor }}>
                                         {`€${group.value.toLocaleString()}`}
                                     </div>
-                                    <ChevronRight className="h-4 w-4 ml-2" style={{ color: COLORS.mediumGray }} />
+                                    <ChevronRight className="h-4 w-4 ml-2" style={{ color: COLORS.textSecondary }} />
                                 </div>
                             </div>
                         ))}
                     </div>
                     {expenseData.length === 0 && (
-                        <div className="text-center py-8" style={{ color: COLORS.mediumGray }}>
+                        <div className="text-center py-8" style={{ color: COLORS.textSecondary }}>
                             No expense data available for {selectedYear}
                         </div>
                     )}
@@ -370,21 +370,21 @@ export default function Dashboard({ setCurrentView }) {
                                 {`€${profit.toLocaleString()}`}
                             </div>
                             <div className="text-sm" style={{ color: COLORS.slainteBlue }}>Total Profit</div>
-                            <div className="text-xs mt-1" style={{ color: COLORS.mediumGray }}>Income - Expenses</div>
+                            <div className="text-xs mt-1" style={{ color: COLORS.textSecondary }}>Income - Expenses</div>
                         </div>
                         <div className="p-4 rounded-lg" style={{ backgroundColor: `${COLORS.incomeColor}15` }}>
                             <div className="text-xl font-bold" style={{ color: parseFloat(profitMargin) >= 0 ? COLORS.incomeColor : COLORS.expenseColor }}>
                                 {profitMargin}%
                             </div>
                             <div className="text-sm" style={{ color: COLORS.incomeColor }}>Profit Margin</div>
-                            <div className="text-xs mt-1" style={{ color: COLORS.mediumGray }}>Profit ÷ Income</div>
+                            <div className="text-xs mt-1" style={{ color: COLORS.textSecondary }}>Profit ÷ Income</div>
                         </div>
                         <div className="p-4 rounded-lg" style={{ backgroundColor: `${COLORS.slainteBlue}20` }}>
                             <div className="text-xl font-bold" style={{ color: profitData.averageMonthlyProfit >= 0 ? COLORS.slainteBlue : COLORS.expenseColor }}>
                                 {`€${Math.round(profitData.averageMonthlyProfit).toLocaleString()}`}
                             </div>
                             <div className="text-sm" style={{ color: COLORS.slainteBlue }}>Avg Monthly Profit</div>
-                            <div className="text-xs mt-1" style={{ color: COLORS.mediumGray }}>Per month average</div>
+                            <div className="text-xs mt-1" style={{ color: COLORS.textSecondary }}>Per month average</div>
                         </div>
                     </div>
 
@@ -399,7 +399,7 @@ export default function Dashboard({ setCurrentView }) {
                                 <div className="text-sm" style={{ color: COLORS.incomeColor }}>
                                     {`€${profitData.bestMonth.profit.toLocaleString()}`} profit
                                 </div>
-                                <div className="text-xs" style={{ color: COLORS.mediumGray }}>
+                                <div className="text-xs" style={{ color: COLORS.textSecondary }}>
                                     {profitData.bestMonth.margin}% margin
                                 </div>
                             </div>
@@ -411,7 +411,7 @@ export default function Dashboard({ setCurrentView }) {
                                 <div className="text-sm" style={{ color: COLORS.expenseColor }}>
                                     {`€${profitData.worstMonth.profit.toLocaleString()}`} profit
                                 </div>
-                                <div className="text-xs" style={{ color: COLORS.mediumGray }}>
+                                <div className="text-xs" style={{ color: COLORS.textSecondary }}>
                                     {profitData.worstMonth.margin}% margin
                                 </div>
                             </div>
@@ -421,16 +421,16 @@ export default function Dashboard({ setCurrentView }) {
                     <h4 className="font-semibold mb-3">Monthly Profit Trend</h4>
                     <div className="space-y-2 max-h-64 overflow-y-auto">
                         {profitData.monthlyProfits.map((month, index) => (
-                            <div key={month.month} className="flex items-center justify-between p-2 rounded transition-colors" style={{ backgroundColor: COLORS.backgroundGray }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.lightGray} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.backgroundGray}>
-                                <div className="font-medium" style={{ color: COLORS.darkGray }}>{month.month}</div>
+                            <div key={month.month} className="flex items-center justify-between p-2 rounded transition-colors" style={{ backgroundColor: COLORS.bgPage }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.borderLight} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.bgPage}>
+                                <div className="font-medium" style={{ color: COLORS.textPrimary }}>{month.month}</div>
                                 <div className="text-right">
                                     <div className="font-bold" style={{ color: month.profit >= 0 ? COLORS.incomeColor : COLORS.expenseColor }}>
                                         {`€${month.profit.toLocaleString()}`}
                                     </div>
-                                    <div className="text-xs" style={{ color: COLORS.mediumGray }}>
+                                    <div className="text-xs" style={{ color: COLORS.textSecondary }}>
                                         {month.margin}% margin
                                     </div>
-                                    <div className="text-xs" style={{ color: COLORS.mediumGray }}>
+                                    <div className="text-xs" style={{ color: COLORS.textSecondary }}>
                                         {`€${month.income.toLocaleString()} - €${month.expenses.toLocaleString()}`}
                                     </div>
                                 </div>
@@ -438,7 +438,7 @@ export default function Dashboard({ setCurrentView }) {
                         ))}
                     </div>
                     {profitData.monthlyProfits.length === 0 && (
-                        <div className="text-center py-8" style={{ color: COLORS.mediumGray }}>
+                        <div className="text-center py-8" style={{ color: COLORS.textSecondary }}>
                             No monthly data available for {selectedYear}
                         </div>
                     )}
@@ -456,34 +456,34 @@ export default function Dashboard({ setCurrentView }) {
                     {/* Summary Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                         <div className="p-4 rounded-lg" style={{ backgroundColor: `${COLORS.expenseColor}15` }}>
-                            <div className="text-sm mb-1" style={{ color: COLORS.mediumGray }}>
+                            <div className="text-sm mb-1" style={{ color: COLORS.textSecondary }}>
                                 GMS Withholding Tax
                             </div>
                             <div className="text-2xl font-bold" style={{ color: COLORS.expenseColor }}>
                                 {`€${withholdingTaxData.gmsWithholdingTax.toLocaleString()}`}
                             </div>
-                            <div className="text-xs mt-1" style={{ color: COLORS.mediumGray }}>
+                            <div className="text-xs mt-1" style={{ color: COLORS.textSecondary }}>
                                 From PCRS payments
                             </div>
                         </div>
 
                         <div className="p-4 rounded-lg" style={{ backgroundColor: `${COLORS.expenseColor}15` }}>
-                            <div className="text-sm mb-1" style={{ color: COLORS.mediumGray }}>
+                            <div className="text-sm mb-1" style={{ color: COLORS.textSecondary }}>
                                 State Contract Tax
                             </div>
                             <div className="text-2xl font-bold" style={{ color: COLORS.expenseColor }}>
                                 {`€${withholdingTaxData.stateContractTax.toLocaleString()}`}
                             </div>
-                            <div className="text-xs mt-1" style={{ color: COLORS.mediumGray }}>
+                            <div className="text-xs mt-1" style={{ color: COLORS.textSecondary }}>
                                 {withholdingTaxData.stateContractRate}% of €{withholdingTaxData.stateContractIncome.toLocaleString()}
                             </div>
                         </div>
                     </div>
 
                     {/* Total */}
-                    <div className="p-4 rounded-lg mb-6" style={{ backgroundColor: COLORS.backgroundGray, border: `2px solid ${COLORS.expenseColor}` }}>
+                    <div className="p-4 rounded-lg mb-6" style={{ backgroundColor: COLORS.bgPage, border: `2px solid ${COLORS.expenseColor}` }}>
                         <div className="flex justify-between items-center">
-                            <span className="font-semibold" style={{ color: COLORS.darkGray }}>
+                            <span className="font-semibold" style={{ color: COLORS.textPrimary }}>
                                 Total Withholding Tax:
                             </span>
                             <span className="text-2xl font-bold" style={{ color: COLORS.expenseColor }}>
@@ -495,7 +495,7 @@ export default function Dashboard({ setCurrentView }) {
                     {/* GMS Withholding Breakdown */}
                     {withholdingTaxData.breakdown.gmsWithholding.length > 0 && (
                         <div className="mb-6">
-                            <h4 className="font-semibold mb-3" style={{ color: COLORS.darkGray }}>
+                            <h4 className="font-semibold mb-3" style={{ color: COLORS.textPrimary }}>
                                 GMS Withholding Tax Transactions
                             </h4>
                             <div className="space-y-2 max-h-48 overflow-y-auto">
@@ -503,13 +503,13 @@ export default function Dashboard({ setCurrentView }) {
                                     <div
                                         key={idx}
                                         className="flex items-center justify-between p-3 rounded-lg"
-                                        style={{ backgroundColor: COLORS.backgroundGray }}
+                                        style={{ backgroundColor: COLORS.bgPage }}
                                     >
                                         <div className="flex-1">
-                                            <div className="font-medium text-sm" style={{ color: COLORS.darkGray }}>
+                                            <div className="font-medium text-sm" style={{ color: COLORS.textPrimary }}>
                                                 {item.details}
                                             </div>
-                                            <div className="text-xs" style={{ color: COLORS.mediumGray }}>
+                                            <div className="text-xs" style={{ color: COLORS.textSecondary }}>
                                                 {new Date(item.date).toLocaleDateString('en-IE')} • {item.category}
                                             </div>
                                         </div>
@@ -525,7 +525,7 @@ export default function Dashboard({ setCurrentView }) {
                     {/* State Contract Income Breakdown */}
                     {withholdingTaxData.breakdown.stateContracts.length > 0 && (
                         <div>
-                            <h4 className="font-semibold mb-3" style={{ color: COLORS.darkGray }}>
+                            <h4 className="font-semibold mb-3" style={{ color: COLORS.textPrimary }}>
                                 State Contract Income (Net of {withholdingTaxData.stateContractRate}% Withholding)
                             </h4>
                             <div className="space-y-2 max-h-48 overflow-y-auto">
@@ -533,13 +533,13 @@ export default function Dashboard({ setCurrentView }) {
                                     <div
                                         key={idx}
                                         className="flex items-center justify-between p-3 rounded-lg"
-                                        style={{ backgroundColor: COLORS.backgroundGray }}
+                                        style={{ backgroundColor: COLORS.bgPage }}
                                     >
                                         <div className="flex-1">
-                                            <div className="font-medium text-sm" style={{ color: COLORS.darkGray }}>
+                                            <div className="font-medium text-sm" style={{ color: COLORS.textPrimary }}>
                                                 {item.details}
                                             </div>
-                                            <div className="text-xs" style={{ color: COLORS.mediumGray }}>
+                                            <div className="text-xs" style={{ color: COLORS.textSecondary }}>
                                                 {new Date(item.date).toLocaleDateString('en-IE')} • {item.category}
                                             </div>
                                         </div>
@@ -604,10 +604,10 @@ export default function Dashboard({ setCurrentView }) {
             <div className="bg-white p-4 rounded-lg border">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <h3 className="text-lg font-semibold" style={{ color: COLORS.darkGray }}>Financial Overview</h3>
+                        <h3 className="text-lg font-semibold" style={{ color: COLORS.textPrimary }}>Financial Overview</h3>
                         <span
                             className="text-xs font-semibold px-3 py-1 rounded-full"
-                            style={{ backgroundColor: COLORS.highlightYellow, color: COLORS.darkGray }}
+                            style={{ backgroundColor: COLORS.highlightYellow, color: COLORS.textPrimary }}
                         >
                             {summaries.periodLabel || `${selectedYear} YTD`}
                         </span>
@@ -631,12 +631,12 @@ export default function Dashboard({ setCurrentView }) {
                         {/* Year Selector - only shown in calendar year mode */}
                         {!useRollingYear && (
                             <div className="flex items-center space-x-2">
-                                <Calendar className="h-4 w-4" style={{ color: COLORS.mediumGray }} />
+                                <Calendar className="h-4 w-4" style={{ color: COLORS.textSecondary }} />
                                 <select
                                     value={selectedYear}
                                     onChange={(e) => setSelectedYear(parseInt(e.target.value))}
                                     className="border rounded px-3 py-1"
-                                    style={{ borderColor: COLORS.lightGray }}
+                                    style={{ borderColor: COLORS.borderLight }}
                                 >
                                     {getAvailableYears().length > 0 ? getAvailableYears().map(year => (
                                         <option key={year} value={year}>{year}</option>
@@ -726,7 +726,7 @@ export default function Dashboard({ setCurrentView }) {
                 <div
                     onClick={() => setSelectedMetric('withholding')}
                     className="p-4 rounded-lg cursor-pointer transition-all shadow-md hover:shadow-lg"
-                    style={{ backgroundColor: '#F59E0B' }}
+                    style={{ backgroundColor: COLORS.warning }}
                     onMouseEnter={(e) => e.currentTarget.style.opacity = '0.95'}
                     onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                 >
@@ -776,7 +776,7 @@ export default function Dashboard({ setCurrentView }) {
                         currentKey: 'currentIncome',
                         previousKey: 'previousIncome',
                         currentColor: COLORS.incomeColor,
-                        previousColor: '#86EFAC', // Lighter green
+                        previousColor: COLORS.successLighter,
                         currentLabel: `${selectedYear}`,
                         previousLabel: `${selectedYear - 1}`,
                     },
@@ -785,7 +785,7 @@ export default function Dashboard({ setCurrentView }) {
                         currentKey: 'currentExpenses',
                         previousKey: 'previousExpenses',
                         currentColor: COLORS.expenseColor,
-                        previousColor: '#FCA5A5', // Lighter red
+                        previousColor: COLORS.errorLight,
                         currentLabel: `${selectedYear}`,
                         previousLabel: `${selectedYear - 1}`,
                     },
@@ -794,7 +794,7 @@ export default function Dashboard({ setCurrentView }) {
                         currentKey: 'currentProfit',
                         previousKey: 'previousProfit',
                         currentColor: COLORS.slainteBlue,
-                        previousColor: '#93C5FD', // Lighter blue
+                        previousColor: COLORS.infoLighter,
                         currentLabel: `${selectedYear}`,
                         previousLabel: `${selectedYear - 1}`,
                     },
@@ -803,20 +803,20 @@ export default function Dashboard({ setCurrentView }) {
                 const config = chartConfig[dashboardChartMode];
 
                 return (
-                    <div className="bg-white p-6 rounded-lg border" style={{ borderColor: COLORS.lightGray }} data-tour-id="dashboard-charts">
+                    <div className="bg-white p-6 rounded-lg border" style={{ borderColor: COLORS.borderLight }} data-tour-id="dashboard-charts">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold flex items-center" style={{ color: COLORS.darkGray }}>
+                            <h3 className="text-lg font-semibold flex items-center" style={{ color: COLORS.textPrimary }}>
                                 <TrendingUp className="h-5 w-5 mr-2" style={{ color: COLORS.slainteBlue }} />
                                 {config.title}: {selectedYear} vs {selectedYear - 1}
                             </h3>
                             {/* Toggle buttons */}
-                            <div className="flex rounded-lg overflow-hidden border" style={{ borderColor: COLORS.lightGray }}>
+                            <div className="flex rounded-lg overflow-hidden border" style={{ borderColor: COLORS.borderLight }}>
                                 <button
                                     onClick={() => setDashboardChartMode('income')}
                                     className="px-3 py-1.5 text-sm font-medium transition-colors"
                                     style={{
                                         backgroundColor: dashboardChartMode === 'income' ? COLORS.incomeColor : 'white',
-                                        color: dashboardChartMode === 'income' ? 'white' : COLORS.mediumGray,
+                                        color: dashboardChartMode === 'income' ? 'white' : COLORS.textSecondary,
                                     }}
                                 >
                                     Income
@@ -826,8 +826,8 @@ export default function Dashboard({ setCurrentView }) {
                                     className="px-3 py-1.5 text-sm font-medium transition-colors border-l border-r"
                                     style={{
                                         backgroundColor: dashboardChartMode === 'expenses' ? COLORS.expenseColor : 'white',
-                                        color: dashboardChartMode === 'expenses' ? 'white' : COLORS.mediumGray,
-                                        borderColor: COLORS.lightGray,
+                                        color: dashboardChartMode === 'expenses' ? 'white' : COLORS.textSecondary,
+                                        borderColor: COLORS.borderLight,
                                     }}
                                 >
                                     Expenses
@@ -837,7 +837,7 @@ export default function Dashboard({ setCurrentView }) {
                                     className="px-3 py-1.5 text-sm font-medium transition-colors"
                                     style={{
                                         backgroundColor: dashboardChartMode === 'profit' ? COLORS.slainteBlue : 'white',
-                                        color: dashboardChartMode === 'profit' ? 'white' : COLORS.mediumGray,
+                                        color: dashboardChartMode === 'profit' ? 'white' : COLORS.textSecondary,
                                     }}
                                 >
                                     Profit
@@ -846,15 +846,15 @@ export default function Dashboard({ setCurrentView }) {
                         </div>
                         <ResponsiveContainer width="100%" height={280}>
                             <LineChart data={comparisonData}>
-                                <CartesianGrid strokeDasharray="3 3" stroke={COLORS.lightGray} />
+                                <CartesianGrid strokeDasharray="3 3" stroke={COLORS.borderLight} />
                                 <XAxis
                                     dataKey="month"
-                                    tick={{ fill: COLORS.mediumGray, fontSize: 12 }}
-                                    axisLine={{ stroke: COLORS.lightGray }}
+                                    tick={{ fill: COLORS.textSecondary, fontSize: 12 }}
+                                    axisLine={{ stroke: COLORS.borderLight }}
                                 />
                                 <YAxis
-                                    tick={{ fill: COLORS.mediumGray, fontSize: 12 }}
-                                    axisLine={{ stroke: COLORS.lightGray }}
+                                    tick={{ fill: COLORS.textSecondary, fontSize: 12 }}
+                                    axisLine={{ stroke: COLORS.borderLight }}
                                     tickFormatter={(value) => `€${(value / 1000).toFixed(0)}k`}
                                 />
                                 <Tooltip
@@ -864,7 +864,7 @@ export default function Dashboard({ setCurrentView }) {
                                     ]}
                                     contentStyle={{
                                         backgroundColor: 'white',
-                                        border: `1px solid ${COLORS.lightGray}`,
+                                        border: `1px solid ${COLORS.borderLight}`,
                                         borderRadius: '8px',
                                         boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                                     }}
@@ -899,23 +899,23 @@ export default function Dashboard({ setCurrentView }) {
                             const isPositive = dashboardChartMode === 'expenses' ? change < 0 : change > 0;
 
                             return (
-                                <div className="mt-4 pt-4 border-t flex items-center justify-between" style={{ borderColor: COLORS.lightGray }}>
+                                <div className="mt-4 pt-4 border-t flex items-center justify-between" style={{ borderColor: COLORS.borderLight }}>
                                     <div className="flex items-center gap-6">
                                         <div>
-                                            <p className="text-xs" style={{ color: COLORS.mediumGray }}>{selectedYear} Total</p>
+                                            <p className="text-xs" style={{ color: COLORS.textSecondary }}>{selectedYear} Total</p>
                                             <p className="text-lg font-semibold" style={{ color: config.currentColor }}>
                                                 {`€${Math.round(currentTotal).toLocaleString()}`}
                                             </p>
                                         </div>
                                         <div>
-                                            <p className="text-xs" style={{ color: COLORS.mediumGray }}>{selectedYear - 1} Total</p>
+                                            <p className="text-xs" style={{ color: COLORS.textSecondary }}>{selectedYear - 1} Total</p>
                                             <p className="text-lg font-semibold" style={{ color: config.previousColor }}>
                                                 {`€${Math.round(previousTotal).toLocaleString()}`}
                                             </p>
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-xs" style={{ color: COLORS.mediumGray }}>Year-over-Year</p>
+                                        <p className="text-xs" style={{ color: COLORS.textSecondary }}>Year-over-Year</p>
                                         <p className={`text-lg font-semibold flex items-center justify-end gap-1`} style={{ color: isPositive ? COLORS.incomeColor : COLORS.expenseColor }}>
                                             {isPositive ? '↗' : '↘'} {`${Math.abs(change).toFixed(1)}%`}
                                         </p>

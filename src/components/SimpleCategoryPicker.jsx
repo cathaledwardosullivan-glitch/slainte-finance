@@ -78,7 +78,7 @@ export default function SimpleCategoryPicker({
         <div style={{
           marginBottom: '0.75rem',
           paddingBottom: '0.5rem',
-          borderBottom: `1px solid ${COLORS.lightGray}`,
+          borderBottom: `1px solid ${COLORS.borderLight}`,
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center'
@@ -86,7 +86,7 @@ export default function SimpleCategoryPicker({
           <h3 style={{
             fontSize: '0.875rem',
             fontWeight: 600,
-            color: COLORS.darkGray
+            color: COLORS.textPrimary
           }}>
             Which staff member?
           </h3>
@@ -125,7 +125,7 @@ export default function SimpleCategoryPicker({
                 style={{
                   padding: '0.5rem 0.625rem',
                   backgroundColor: isPending ? COLORS.incomeColor : COLORS.white,
-                  border: `2px solid ${isPending ? COLORS.incomeColor : COLORS.lightGray}`,
+                  border: `2px solid ${isPending ? COLORS.incomeColor : COLORS.borderLight}`,
                   borderRadius: '6px',
                   cursor: 'pointer',
                   textAlign: 'center',
@@ -139,7 +139,7 @@ export default function SimpleCategoryPicker({
                 }}
                 onMouseLeave={(e) => {
                   if (!isPending) {
-                    e.currentTarget.style.borderColor = COLORS.lightGray;
+                    e.currentTarget.style.borderColor = COLORS.borderLight;
                     e.currentTarget.style.backgroundColor = COLORS.white;
                   }
                 }}
@@ -147,7 +147,7 @@ export default function SimpleCategoryPicker({
                 <div style={{
                   fontSize: '0.75rem',
                   fontWeight: 600,
-                  color: isPending ? COLORS.white : COLORS.darkGray
+                  color: isPending ? COLORS.white : COLORS.textPrimary
                 }}>
                   {category.staffMember || category.name}
                 </div>
@@ -180,12 +180,12 @@ export default function SimpleCategoryPicker({
               style={{
                 width: '100%',
                 padding: '0.5rem',
-                backgroundColor: isPending ? COLORS.incomeColor : COLORS.backgroundGray,
-                border: `1px solid ${isPending ? COLORS.incomeColor : COLORS.lightGray}`,
+                backgroundColor: isPending ? COLORS.incomeColor : COLORS.bgPage,
+                border: `1px solid ${isPending ? COLORS.incomeColor : COLORS.borderLight}`,
                 borderRadius: '6px',
                 cursor: 'pointer',
                 fontSize: '0.75rem',
-                color: isPending ? COLORS.white : COLORS.mediumGray,
+                color: isPending ? COLORS.white : COLORS.textSecondary,
                 textAlign: 'center',
                 transition: 'all 0.15s'
               }}
@@ -212,12 +212,12 @@ export default function SimpleCategoryPicker({
       <div style={{
         marginBottom: '0.75rem',
         paddingBottom: '0.5rem',
-        borderBottom: `1px solid ${COLORS.lightGray}`
+        borderBottom: `1px solid ${COLORS.borderLight}`
       }}>
         <h3 style={{
           fontSize: '0.875rem',
           fontWeight: 600,
-          color: COLORS.darkGray
+          color: COLORS.textPrimary
         }}>
           Select a category:
         </h3>
@@ -239,7 +239,7 @@ export default function SimpleCategoryPicker({
               style={{
                 padding: isPending ? '0.625rem 0.5rem' : '0.75rem 0.5rem',
                 backgroundColor: isPending ? COLORS.incomeColor : COLORS.white,
-                border: `2px solid ${isPending ? COLORS.incomeColor : COLORS.lightGray}`,
+                border: `2px solid ${isPending ? COLORS.incomeColor : COLORS.borderLight}`,
                 borderRadius: '8px',
                 cursor: 'pointer',
                 transition: 'all 0.15s',
@@ -257,7 +257,7 @@ export default function SimpleCategoryPicker({
               }}
               onMouseLeave={(e) => {
                 if (!isPending) {
-                  e.currentTarget.style.borderColor = COLORS.lightGray;
+                  e.currentTarget.style.borderColor = COLORS.borderLight;
                   e.currentTarget.style.backgroundColor = COLORS.white;
                 }
               }}
@@ -273,7 +273,7 @@ export default function SimpleCategoryPicker({
               <div style={{
                 fontSize: '0.75rem',
                 fontWeight: 600,
-                color: isPending ? COLORS.white : COLORS.darkGray,
+                color: isPending ? COLORS.white : COLORS.textPrimary,
                 textAlign: 'center',
                 lineHeight: 1.2
               }}>

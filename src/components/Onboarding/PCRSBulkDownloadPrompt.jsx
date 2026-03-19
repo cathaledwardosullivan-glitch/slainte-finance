@@ -295,7 +295,7 @@ export default function PCRSBulkDownloadPrompt({ onComplete, onSkip }) {
     return (
       <div style={{ textAlign: 'center', padding: '3rem' }}>
         <Loader style={{ width: '32px', height: '32px', color: COLORS.slainteBlue, animation: 'spin 1s linear infinite', margin: '0 auto 1rem' }} />
-        <p style={{ color: COLORS.mediumGray }}>Preparing PCRS download...</p>
+        <p style={{ color: COLORS.textSecondary }}>Preparing PCRS download...</p>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
@@ -313,10 +313,10 @@ export default function PCRSBulkDownloadPrompt({ onComplete, onSkip }) {
         minHeight: '400px'
       }}>
         <Shield style={{ width: '48px', height: '48px', color: COLORS.slainteBlue, marginBottom: '1rem' }} />
-        <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: COLORS.darkGray, marginBottom: '0.5rem' }}>
+        <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: COLORS.textPrimary, marginBottom: '0.5rem' }}>
           Log in to PCRS Portal
         </h3>
-        <p style={{ color: COLORS.mediumGray, textAlign: 'center', marginBottom: '1.5rem' }}>
+        <p style={{ color: COLORS.textSecondary, textAlign: 'center', marginBottom: '1.5rem' }}>
           A login window has opened. Enter your PCRS credentials to continue.
           <br />
           Your login details are not stored by this app.
@@ -357,7 +357,7 @@ export default function PCRSBulkDownloadPrompt({ onComplete, onSkip }) {
         backgroundColor: COLORS.white,
         borderRadius: '0.75rem',
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-        border: `1px solid ${COLORS.lightGray}`,
+        border: `1px solid ${COLORS.borderLight}`,
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column'
@@ -404,7 +404,7 @@ export default function PCRSBulkDownloadPrompt({ onComplete, onSkip }) {
                 width: '32px',
                 height: '32px',
                 borderRadius: '50%',
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -413,7 +413,7 @@ export default function PCRSBulkDownloadPrompt({ onComplete, onSkip }) {
                 <MessageCircle style={{ width: '16px', height: '16px', color: COLORS.slainteBlue }} />
               </div>
               <div style={{
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 padding: '0.875rem 1rem',
                 borderRadius: '12px',
                 maxWidth: '85%'
@@ -421,7 +421,7 @@ export default function PCRSBulkDownloadPrompt({ onComplete, onSkip }) {
                 <div style={{
                   fontSize: '1.125rem',
                   fontWeight: 600,
-                  color: COLORS.darkGray
+                  color: COLORS.textPrimary
                 }}>
                   {greeting}
                 </div>
@@ -434,14 +434,14 @@ export default function PCRSBulkDownloadPrompt({ onComplete, onSkip }) {
             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
               <div style={{ width: '32px', flexShrink: 0 }} />
               <div style={{
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 padding: '0.875rem 1rem',
                 borderRadius: '12px',
                 maxWidth: '85%'
               }}>
                 <div style={{
                   fontSize: '0.9375rem',
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   lineHeight: 1.5
                 }}>
                   {message}
@@ -465,7 +465,7 @@ export default function PCRSBulkDownloadPrompt({ onComplete, onSkip }) {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem',
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   fontSize: '0.9375rem'
                 }}>
                   <Loader style={{ width: '18px', height: '18px', color: COLORS.slainteBlue, animation: 'spin 1s linear infinite' }} />
@@ -489,7 +489,7 @@ export default function PCRSBulkDownloadPrompt({ onComplete, onSkip }) {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem',
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   fontSize: '0.9375rem'
                 }}>
                   <Loader style={{ width: '18px', height: '18px', color: COLORS.slainteBlue, animation: 'spin 1s linear infinite' }} />
@@ -513,7 +513,7 @@ export default function PCRSBulkDownloadPrompt({ onComplete, onSkip }) {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem',
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   fontSize: '0.9375rem'
                 }}>
                   <CheckCircle style={{ width: '18px', height: '18px', color: COLORS.incomeColor }} />
@@ -533,7 +533,7 @@ export default function PCRSBulkDownloadPrompt({ onComplete, onSkip }) {
                 maxWidth: '85%',
                 border: `1px solid ${COLORS.expenseColor}`
               }}>
-                <div style={{ fontSize: '0.875rem', color: COLORS.darkGray }}>
+                <div style={{ fontSize: '0.875rem', color: COLORS.textPrimary }}>
                   {errorMessage}
                 </div>
               </div>
@@ -544,12 +544,12 @@ export default function PCRSBulkDownloadPrompt({ onComplete, onSkip }) {
             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
               <div style={{ width: '32px', flexShrink: 0 }} />
               <div style={{
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 padding: '0.875rem 1rem',
                 borderRadius: '12px',
                 maxWidth: '85%'
               }}>
-                <div style={{ fontSize: '0.875rem', color: COLORS.darkGray }}>
+                <div style={{ fontSize: '0.875rem', color: COLORS.textPrimary }}>
                   PCRS download is only available in the desktop app. You can access this feature later from Settings.
                 </div>
               </div>
@@ -560,7 +560,7 @@ export default function PCRSBulkDownloadPrompt({ onComplete, onSkip }) {
         {/* Action Button at bottom */}
         <div style={{
           padding: '1rem',
-          borderTop: `1px solid ${COLORS.lightGray}`,
+          borderTop: `1px solid ${COLORS.borderLight}`,
           backgroundColor: COLORS.white
         }}>
           {status === 'complete' ? (
@@ -649,14 +649,14 @@ export default function PCRSBulkDownloadPrompt({ onComplete, onSkip }) {
               <h3 style={{
                 fontSize: '1.25rem',
                 fontWeight: 700,
-                color: COLORS.darkGray,
+                color: COLORS.textPrimary,
                 marginBottom: '0.25rem'
               }}>
                 PCRS Statement Download
               </h3>
               <p style={{
                 fontSize: '0.875rem',
-                color: COLORS.mediumGray,
+                color: COLORS.textSecondary,
                 lineHeight: 1.5
               }}>
                 Download your payment statements directly from the PCRS portal
@@ -670,7 +670,7 @@ export default function PCRSBulkDownloadPrompt({ onComplete, onSkip }) {
               {/* Panel selection */}
               {panels.length > 1 && (
                 <div style={{ marginBottom: '1.25rem' }}>
-                  <label style={{ display: 'block', fontWeight: 500, color: COLORS.darkGray, marginBottom: '0.5rem' }}>
+                  <label style={{ display: 'block', fontWeight: 500, color: COLORS.textPrimary, marginBottom: '0.5rem' }}>
                     Select Panels
                   </label>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -681,7 +681,7 @@ export default function PCRSBulkDownloadPrompt({ onComplete, onSkip }) {
                           display: 'flex',
                           alignItems: 'center',
                           padding: '0.75rem',
-                          backgroundColor: COLORS.backgroundGray,
+                          backgroundColor: COLORS.bgPage,
                           borderRadius: '8px',
                           cursor: 'pointer'
                         }}
@@ -692,7 +692,7 @@ export default function PCRSBulkDownloadPrompt({ onComplete, onSkip }) {
                           onChange={() => togglePanel(panel.id)}
                           style={{ width: '16px', height: '16px', marginRight: '0.75rem' }}
                         />
-                        <span style={{ color: COLORS.darkGray }}>
+                        <span style={{ color: COLORS.textPrimary }}>
                           {panel.displayName || panel.fullName || `Panel ${panel.id}`}
                         </span>
                       </label>
@@ -703,7 +703,7 @@ export default function PCRSBulkDownloadPrompt({ onComplete, onSkip }) {
 
               {/* Month range selection */}
               <div style={{ marginBottom: '1.25rem' }}>
-                <label style={{ display: 'block', fontWeight: 500, color: COLORS.darkGray, marginBottom: '0.5rem' }}>
+                <label style={{ display: 'block', fontWeight: 500, color: COLORS.textPrimary, marginBottom: '0.5rem' }}>
                   <Calendar style={{ width: '14px', height: '14px', display: 'inline', marginRight: '0.5rem' }} />
                   Download Range
                 </label>
@@ -721,13 +721,13 @@ export default function PCRSBulkDownloadPrompt({ onComplete, onSkip }) {
                         borderRadius: '8px',
                         border: quickSelect === option.value
                           ? `2px solid ${COLORS.slainteBlue}`
-                          : `1px solid ${COLORS.lightGray}`,
+                          : `1px solid ${COLORS.borderLight}`,
                         backgroundColor: quickSelect === option.value
                           ? `${COLORS.slainteBlue}15`
                           : COLORS.white,
                         color: quickSelect === option.value
                           ? COLORS.slainteBlue
-                          : COLORS.darkGray,
+                          : COLORS.textPrimary,
                         cursor: 'pointer',
                         fontWeight: quickSelect === option.value ? '600' : '400',
                         fontSize: '0.875rem'
@@ -744,11 +744,11 @@ export default function PCRSBulkDownloadPrompt({ onComplete, onSkip }) {
                   borderRadius: '8px',
                   fontSize: '0.8125rem'
                 }}>
-                  <div style={{ color: COLORS.darkGray, marginBottom: '0.25rem' }}>
+                  <div style={{ color: COLORS.textPrimary, marginBottom: '0.25rem' }}>
                     <strong>{selectedMonths.length}</strong> months
                     ({formatMonth(selectedMonths[selectedMonths.length - 1])} to {formatMonth(selectedMonths[0])})
                   </div>
-                  <div style={{ color: COLORS.mediumGray, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <div style={{ color: COLORS.textSecondary, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                     <Clock style={{ width: '12px', height: '12px' }} />
                     Estimated time: {getTimeEstimate()}
                   </div>
@@ -762,7 +762,7 @@ export default function PCRSBulkDownloadPrompt({ onComplete, onSkip }) {
                 style={{
                   width: '100%',
                   padding: '1rem',
-                  backgroundColor: selectedPanels.length === 0 ? COLORS.lightGray : COLORS.incomeColor,
+                  backgroundColor: selectedPanels.length === 0 ? COLORS.borderLight : COLORS.incomeColor,
                   color: COLORS.white,
                   border: 'none',
                   borderRadius: '8px',
@@ -785,7 +785,7 @@ export default function PCRSBulkDownloadPrompt({ onComplete, onSkip }) {
           {status === 'checking' && (
             <div style={{ textAlign: 'center', padding: '2rem' }}>
               <Loader style={{ width: '32px', height: '32px', color: COLORS.slainteBlue, animation: 'spin 1s linear infinite', margin: '0 auto 1rem' }} />
-              <p style={{ color: COLORS.mediumGray }}>{currentAction || 'Connecting to PCRS...'}</p>
+              <p style={{ color: COLORS.textSecondary }}>{currentAction || 'Connecting to PCRS...'}</p>
             </div>
           )}
 
@@ -793,8 +793,8 @@ export default function PCRSBulkDownloadPrompt({ onComplete, onSkip }) {
           {status === 'downloading' && (
             <div style={{ textAlign: 'center', padding: '2rem' }}>
               <Loader style={{ width: '32px', height: '32px', color: COLORS.slainteBlue, animation: 'spin 1s linear infinite', margin: '0 auto 1rem' }} />
-              <p style={{ color: COLORS.darkGray, fontWeight: 500, marginBottom: '0.5rem' }}>{currentAction}</p>
-              <p style={{ color: COLORS.mediumGray, fontSize: '0.875rem' }}>This may take a few minutes...</p>
+              <p style={{ color: COLORS.textPrimary, fontWeight: 500, marginBottom: '0.5rem' }}>{currentAction}</p>
+              <p style={{ color: COLORS.textSecondary, fontSize: '0.875rem' }}>This may take a few minutes...</p>
             </div>
           )}
 
@@ -802,18 +802,18 @@ export default function PCRSBulkDownloadPrompt({ onComplete, onSkip }) {
           {status === 'complete' && (
             <div>
               <div style={{
-                backgroundColor: '#D1FAE5',
-                border: '1px solid #10B981',
+                backgroundColor: COLORS.successLighter,
+                border: `1px solid ${COLORS.success}`,
                 borderRadius: '8px',
                 padding: '1rem',
                 marginBottom: '1rem'
               }}>
                 <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <CheckCircle style={{ width: '20px', height: '20px', color: '#059669', marginRight: '0.5rem' }} />
-                  <span style={{ color: '#065F46', fontWeight: '500' }}>Download Complete</span>
+                  <CheckCircle style={{ width: '20px', height: '20px', color: COLORS.successDark, marginRight: '0.5rem' }} />
+                  <span style={{ color: COLORS.successText, fontWeight: '500' }}>Download Complete</span>
                 </div>
               </div>
-              <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>
+              <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>
                 {downloadResults.filter(r => r.success).length} of {downloadResults.length} statements downloaded successfully.
               </p>
             </div>
@@ -823,17 +823,17 @@ export default function PCRSBulkDownloadPrompt({ onComplete, onSkip }) {
           {status === 'error' && (
             <div>
               <div style={{
-                backgroundColor: '#FEE2E2',
-                border: '1px solid #DC2626',
+                backgroundColor: COLORS.errorLight,
+                border: `1px solid ${COLORS.error}`,
                 borderRadius: '8px',
                 padding: '1rem',
                 marginBottom: '1rem'
               }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-                  <AlertCircle style={{ width: '20px', height: '20px', color: '#DC2626', marginRight: '0.5rem', marginTop: '2px' }} />
+                  <AlertCircle style={{ width: '20px', height: '20px', color: COLORS.error, marginRight: '0.5rem', marginTop: '2px' }} />
                   <div>
-                    <h4 style={{ fontWeight: '500', color: '#991B1B', margin: 0 }}>Error</h4>
-                    <p style={{ fontSize: '0.875rem', color: '#B91C1C', marginTop: '0.25rem', marginBottom: 0 }}>
+                    <h4 style={{ fontWeight: '500', color: COLORS.errorText, margin: 0 }}>Error</h4>
+                    <p style={{ fontSize: '0.875rem', color: COLORS.errorDark, marginTop: '0.25rem', marginBottom: 0 }}>
                       {errorMessage}
                     </p>
                   </div>
@@ -844,7 +844,7 @@ export default function PCRSBulkDownloadPrompt({ onComplete, onSkip }) {
                 style={{
                   width: '100%',
                   padding: '0.75rem',
-                  border: `1px solid ${COLORS.lightGray}`,
+                  border: `1px solid ${COLORS.borderLight}`,
                   borderRadius: '8px',
                   backgroundColor: COLORS.white,
                   cursor: 'pointer'
@@ -860,11 +860,11 @@ export default function PCRSBulkDownloadPrompt({ onComplete, onSkip }) {
             <div style={{
               textAlign: 'center',
               padding: '2rem',
-              backgroundColor: COLORS.backgroundGray,
+              backgroundColor: COLORS.bgPage,
               borderRadius: '8px'
             }}>
-              <Shield style={{ width: '32px', height: '32px', color: COLORS.mediumGray, margin: '0 auto 1rem' }} />
-              <p style={{ color: COLORS.mediumGray }}>
+              <Shield style={{ width: '32px', height: '32px', color: COLORS.textSecondary, margin: '0 auto 1rem' }} />
+              <p style={{ color: COLORS.textSecondary }}>
                 PCRS download requires the desktop app.
                 <br />
                 You can access this later from Settings.
@@ -876,7 +876,7 @@ export default function PCRSBulkDownloadPrompt({ onComplete, onSkip }) {
           {status === 'idle' && (
             <div style={{ textAlign: 'center', padding: '2rem' }}>
               <Loader style={{ width: '32px', height: '32px', color: COLORS.slainteBlue, animation: 'spin 1s linear infinite', margin: '0 auto 1rem' }} />
-              <p style={{ color: COLORS.mediumGray }}>Initializing...</p>
+              <p style={{ color: COLORS.textSecondary }}>Initializing...</p>
             </div>
           )}
         </div>
@@ -884,14 +884,14 @@ export default function PCRSBulkDownloadPrompt({ onComplete, onSkip }) {
         {/* Info Card */}
         <div style={{
           backgroundColor: COLORS.white,
-          border: `1px solid ${COLORS.lightGray}`,
+          border: `1px solid ${COLORS.borderLight}`,
           borderRadius: '12px',
           padding: '1rem'
         }}>
-          <h4 style={{ fontSize: '0.875rem', fontWeight: 600, color: COLORS.darkGray, marginBottom: '0.5rem' }}>
+          <h4 style={{ fontSize: '0.875rem', fontWeight: 600, color: COLORS.textPrimary, marginBottom: '0.5rem' }}>
             Why download PCRS statements?
           </h4>
-          <ul style={{ margin: 0, paddingLeft: '1.25rem', fontSize: '0.8125rem', color: COLORS.mediumGray, lineHeight: 1.6 }}>
+          <ul style={{ margin: 0, paddingLeft: '1.25rem', fontSize: '0.8125rem', color: COLORS.textSecondary, lineHeight: 1.6 }}>
             <li>Automatic GMS payment analysis and reconciliation</li>
             <li>Track capitation, fee items, and special items by panel</li>
             <li>Comprehensive Health Check metrics powered by real data</li>

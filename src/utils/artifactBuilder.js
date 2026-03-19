@@ -3,6 +3,7 @@
  * Generates structured, exportable reports and analyses
  */
 import DOMPurify from 'dompurify';
+import COLORS from '../utils/colors';
 
 /**
  * Parse response for artifact tags and separate intro/conclusion from content
@@ -290,11 +291,11 @@ export function exportArtifactPDF(artifact) {
           margin: 40px auto;
           padding: 20px;
           line-height: 1.6;
-          color: #333;
+          color: ${COLORS.textPrimary};
         }
-        h1 { color: #1e40af; border-bottom: 3px solid #1e40af; padding-bottom: 10px; }
+        h1 { color: ${COLORS.infoText}; border-bottom: 3px solid ${COLORS.infoText}; padding-bottom: 10px; }
         h2 { color: #2563eb; margin-top: 30px; }
-        h3 { color: #3b82f6; margin-top: 20px; }
+        h3 { color: ${COLORS.slainteBlue}; margin-top: 20px; }
         table.artifact-table {
           width: 100%;
           border-collapse: collapse;
@@ -307,11 +308,11 @@ export function exportArtifactPDF(artifact) {
           text-align: left;
         }
         table.artifact-table th {
-          background-color: #f3f4f6;
+          background-color: ${COLORS.bgHover};
           font-weight: 600;
         }
         table.artifact-table tr:nth-child(even) {
-          background-color: #f9fafb;
+          background-color: ${COLORS.bgPage};
         }
         .chart-placeholder {
           border: 2px dashed #93c5fd;
@@ -319,7 +320,7 @@ export function exportArtifactPDF(artifact) {
           padding: 24px;
           margin: 20px 0;
           text-align: center;
-          background-color: #eff6ff;
+          background-color: ${COLORS.slainteBlueLight};
         }
         .chart-placeholder-icon {
           font-size: 32px;
@@ -327,17 +328,17 @@ export function exportArtifactPDF(artifact) {
         }
         .chart-placeholder-title {
           font-weight: 600;
-          color: #1e40af;
+          color: ${COLORS.infoText};
           font-size: 16px;
           margin-bottom: 4px;
         }
         .chart-placeholder-note {
-          color: #6b7280;
+          color: ${COLORS.textMuted};
           font-size: 13px;
         }
         pre.artifact-code {
-          background-color: #f3f4f6;
-          border: 1px solid #e5e7eb;
+          background-color: ${COLORS.bgHover};
+          border: 1px solid ${COLORS.borderLight};
           border-radius: 6px;
           padding: 16px;
           overflow-x: auto;
@@ -351,11 +352,11 @@ export function exportArtifactPDF(artifact) {
         ul { margin-left: 20px; }
         li { margin: 8px 0; }
         .meta {
-          color: #6b7280;
+          color: ${COLORS.textMuted};
           font-size: 14px;
           margin-top: 40px;
           padding-top: 20px;
-          border-top: 1px solid #e5e7eb;
+          border-top: 1px solid ${COLORS.borderLight};
         }
         @media print {
           body { margin: 0; padding: 20px; }

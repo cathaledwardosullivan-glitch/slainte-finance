@@ -2,9 +2,8 @@ import React, { useEffect } from 'react';
 import { useFinn } from '../../context/FinnContext';
 import { useTour } from '../Tour';
 import FinnChatPanel from './FinnChatPanel';
-import FinnReportsPanel from './FinnReportsPanel';
 import FinnTourMode from './FinnTourMode';
-import { MessageCircle, X, FileText, MessagesSquare, Minus } from 'lucide-react';
+import { MessageCircle, X, Minus } from 'lucide-react';
 import COLORS from '../../utils/colors';
 
 /**
@@ -14,8 +13,6 @@ import COLORS from '../../utils/colors';
 const UnifiedFinnWidget = ({ currentView = 'dashboard' }) => {
   const {
     isOpen,
-    activeTab,
-    setActiveTab,
     openWidget,
     closeWidget,
     backgroundTask,
@@ -65,7 +62,7 @@ const UnifiedFinnWidget = ({ currentView = 'dashboard' }) => {
             position: 'relative'
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = COLORS.slainteBlueDark || '#3D7BC7';
+            e.currentTarget.style.backgroundColor = COLORS.slainteBlueDark;
             e.currentTarget.style.transform = 'scale(1.05)';
           }}
           onMouseLeave={(e) => {
@@ -121,7 +118,7 @@ const UnifiedFinnWidget = ({ currentView = 'dashboard' }) => {
         backgroundColor: COLORS.white,
         borderRadius: '0.75rem',
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-        border: `1px solid ${COLORS.lightGray}`,
+        border: `1px solid ${COLORS.borderLight}`,
         width: 'min(400px, calc(100vw - 3rem))', // Match Tasks Widget width
         maxHeight: 'calc(100vh - 7rem)',
         display: 'flex',
@@ -147,7 +144,7 @@ const UnifiedFinnWidget = ({ currentView = 'dashboard' }) => {
             style={{
               width: '2rem',
               height: '2rem',
-              backgroundColor: COLORS.slainteBlueDark || '#3D7BC7',
+              backgroundColor: COLORS.slainteBlueDark,
               borderRadius: '9999px',
               display: 'flex',
               alignItems: 'center',
@@ -199,69 +196,9 @@ const UnifiedFinnWidget = ({ currentView = 'dashboard' }) => {
         </div>
       </div>
 
-      {/* Tab Navigation */}
-      <div
-        style={{
-          display: 'flex',
-          borderBottom: `1px solid ${COLORS.lightGray}`,
-          backgroundColor: COLORS.backgroundGray,
-          flexShrink: 0
-        }}
-      >
-        <button
-          onClick={() => setActiveTab('chat')}
-          style={{
-            flex: 1,
-            padding: '0.75rem',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0.5rem',
-            border: 'none',
-            background: activeTab === 'chat' ? COLORS.white : 'transparent',
-            color: activeTab === 'chat' ? COLORS.slainteBlue : COLORS.mediumGray,
-            fontWeight: activeTab === 'chat' ? 600 : 400,
-            fontSize: '0.875rem',
-            cursor: 'pointer',
-            borderBottom: activeTab === 'chat' ? `2px solid ${COLORS.slainteBlue}` : '2px solid transparent',
-            transition: 'all 0.2s'
-          }}
-        >
-          <MessagesSquare style={{ height: '1rem', width: '1rem' }} />
-          Chat
-        </button>
-
-        <button
-          onClick={() => setActiveTab('reports')}
-          style={{
-            flex: 1,
-            padding: '0.75rem',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0.5rem',
-            border: 'none',
-            background: activeTab === 'reports' ? COLORS.white : 'transparent',
-            color: activeTab === 'reports' ? COLORS.slainteBlue : COLORS.mediumGray,
-            fontWeight: activeTab === 'reports' ? 600 : 400,
-            fontSize: '0.875rem',
-            cursor: 'pointer',
-            borderBottom: activeTab === 'reports' ? `2px solid ${COLORS.slainteBlue}` : '2px solid transparent',
-            transition: 'all 0.2s'
-          }}
-        >
-          <FileText style={{ height: '1rem', width: '1rem' }} />
-          Reports
-        </button>
-      </div>
-
       {/* Content Area */}
       <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-        {activeTab === 'chat' ? (
-          <FinnChatPanel currentView={currentView} />
-        ) : (
-          <FinnReportsPanel />
-        )}
+        <FinnChatPanel currentView={currentView} />
       </div>
 
     </div>

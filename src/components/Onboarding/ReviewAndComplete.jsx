@@ -28,7 +28,7 @@ export default function ReviewAndComplete({ profile, onComplete, onBack }) {
         <h2 style={{
           fontSize: '2rem',
           fontWeight: 700,
-          color: COLORS.darkGray,
+          color: COLORS.textPrimary,
           marginBottom: '0.5rem'
         }}>
           Setup Complete!
@@ -36,7 +36,7 @@ export default function ReviewAndComplete({ profile, onComplete, onBack }) {
 
         <p style={{
           fontSize: '1rem',
-          color: COLORS.mediumGray,
+          color: COLORS.textSecondary,
           maxWidth: '600px',
           marginLeft: 'auto',
           marginRight: 'auto'
@@ -55,14 +55,14 @@ export default function ReviewAndComplete({ profile, onComplete, onBack }) {
         {/* Practice Details Card */}
         <div style={{
           padding: '1.5rem',
-          backgroundColor: COLORS.backgroundGray,
+          backgroundColor: COLORS.bgPage,
           borderRadius: '12px',
-          border: `1px solid ${COLORS.lightGray}`
+          border: `1px solid ${COLORS.borderLight}`
         }}>
           <h3 style={{
             fontSize: '0.875rem',
             fontWeight: 600,
-            color: COLORS.mediumGray,
+            color: COLORS.textSecondary,
             textTransform: 'uppercase',
             letterSpacing: '0.5px',
             marginBottom: '1rem'
@@ -73,7 +73,7 @@ export default function ReviewAndComplete({ profile, onComplete, onBack }) {
             <div>
               <p style={{
                 fontSize: '0.75rem',
-                color: COLORS.mediumGray,
+                color: COLORS.textSecondary,
                 marginBottom: '0.25rem'
               }}>
                 Name
@@ -81,7 +81,7 @@ export default function ReviewAndComplete({ profile, onComplete, onBack }) {
               <p style={{
                 fontSize: '1rem',
                 fontWeight: 500,
-                color: COLORS.darkGray
+                color: COLORS.textPrimary
               }}>
                 {profile.practiceDetails.practiceName}
               </p>
@@ -90,14 +90,14 @@ export default function ReviewAndComplete({ profile, onComplete, onBack }) {
               <div>
                 <p style={{
                   fontSize: '0.75rem',
-                  color: COLORS.mediumGray,
+                  color: COLORS.textSecondary,
                   marginBottom: '0.25rem'
                 }}>
                   Location{profile.practiceDetails.locations.length > 1 ? 's' : ''}
                 </p>
                 <p style={{
                   fontSize: '0.875rem',
-                  color: COLORS.darkGray
+                  color: COLORS.textPrimary
                 }}>
                   {profile.practiceDetails.locations.join(', ')}
                 </p>
@@ -109,14 +109,14 @@ export default function ReviewAndComplete({ profile, onComplete, onBack }) {
         {/* GPs Card */}
         <div style={{
           padding: '1.5rem',
-          backgroundColor: COLORS.backgroundGray,
+          backgroundColor: COLORS.bgPage,
           borderRadius: '12px',
-          border: `1px solid ${COLORS.lightGray}`
+          border: `1px solid ${COLORS.borderLight}`
         }}>
           <h3 style={{
             fontSize: '0.875rem',
             fontWeight: 600,
-            color: COLORS.mediumGray,
+            color: COLORS.textSecondary,
             textTransform: 'uppercase',
             letterSpacing: '0.5px',
             marginBottom: '1rem'
@@ -127,7 +127,7 @@ export default function ReviewAndComplete({ profile, onComplete, onBack }) {
             <div>
               <p style={{
                 fontSize: '0.75rem',
-                color: COLORS.mediumGray,
+                color: COLORS.textSecondary,
                 marginBottom: '0.25rem'
               }}>
                 Partners
@@ -135,14 +135,14 @@ export default function ReviewAndComplete({ profile, onComplete, onBack }) {
               <p style={{
                 fontSize: '1rem',
                 fontWeight: 500,
-                color: COLORS.darkGray
+                color: COLORS.textPrimary
               }}>
                 {profile.gps.partners?.length || 0}
               </p>
               {profile.gps.partners?.length > 0 && (
                 <p style={{
                   fontSize: '0.75rem',
-                  color: COLORS.mediumGray,
+                  color: COLORS.textSecondary,
                   marginTop: '0.25rem'
                 }}>
                   {profile.gps.partners.map(p => p.name).join(', ')}
@@ -153,7 +153,7 @@ export default function ReviewAndComplete({ profile, onComplete, onBack }) {
               <div>
                 <p style={{
                   fontSize: '0.75rem',
-                  color: COLORS.mediumGray,
+                  color: COLORS.textSecondary,
                   marginBottom: '0.25rem'
                 }}>
                   Salaried GPs
@@ -161,7 +161,7 @@ export default function ReviewAndComplete({ profile, onComplete, onBack }) {
                 <p style={{
                   fontSize: '1rem',
                   fontWeight: 500,
-                  color: COLORS.darkGray
+                  color: COLORS.textPrimary
                 }}>
                   {profile.gps.salaried.length}
                 </p>
@@ -173,14 +173,14 @@ export default function ReviewAndComplete({ profile, onComplete, onBack }) {
         {/* Staff Card */}
         <div style={{
           padding: '1.5rem',
-          backgroundColor: COLORS.backgroundGray,
+          backgroundColor: COLORS.bgPage,
           borderRadius: '12px',
-          border: `1px solid ${COLORS.lightGray}`
+          border: `1px solid ${COLORS.borderLight}`
         }}>
           <h3 style={{
             fontSize: '0.875rem',
             fontWeight: 600,
-            color: COLORS.mediumGray,
+            color: COLORS.textSecondary,
             textTransform: 'uppercase',
             letterSpacing: '0.5px',
             marginBottom: '1rem'
@@ -191,7 +191,7 @@ export default function ReviewAndComplete({ profile, onComplete, onBack }) {
             {totalStaff === 0 ? (
               <p style={{
                 fontSize: '0.875rem',
-                color: COLORS.mediumGray
+                color: COLORS.textSecondary
               }}>
                 No staff members added
               </p>
@@ -199,40 +199,40 @@ export default function ReviewAndComplete({ profile, onComplete, onBack }) {
               <>
                 {staffCounts.reception > 0 && (
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: '0.875rem', color: COLORS.darkGray }}>Reception</span>
-                    <span style={{ fontSize: '0.875rem', fontWeight: 500, color: COLORS.darkGray }}>
+                    <span style={{ fontSize: '0.875rem', color: COLORS.textPrimary }}>Reception</span>
+                    <span style={{ fontSize: '0.875rem', fontWeight: 500, color: COLORS.textPrimary }}>
                       {staffCounts.reception}
                     </span>
                   </div>
                 )}
                 {staffCounts.nursing > 0 && (
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: '0.875rem', color: COLORS.darkGray }}>Nursing</span>
-                    <span style={{ fontSize: '0.875rem', fontWeight: 500, color: COLORS.darkGray }}>
+                    <span style={{ fontSize: '0.875rem', color: COLORS.textPrimary }}>Nursing</span>
+                    <span style={{ fontSize: '0.875rem', fontWeight: 500, color: COLORS.textPrimary }}>
                       {staffCounts.nursing}
                     </span>
                   </div>
                 )}
                 {staffCounts.phlebotomy > 0 && (
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: '0.875rem', color: COLORS.darkGray }}>Phlebotomy</span>
-                    <span style={{ fontSize: '0.875rem', fontWeight: 500, color: COLORS.darkGray }}>
+                    <span style={{ fontSize: '0.875rem', color: COLORS.textPrimary }}>Phlebotomy</span>
+                    <span style={{ fontSize: '0.875rem', fontWeight: 500, color: COLORS.textPrimary }}>
                       {staffCounts.phlebotomy}
                     </span>
                   </div>
                 )}
                 {staffCounts.gp_assistant > 0 && (
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: '0.875rem', color: COLORS.darkGray }}>GP Assistants</span>
-                    <span style={{ fontSize: '0.875rem', fontWeight: 500, color: COLORS.darkGray }}>
+                    <span style={{ fontSize: '0.875rem', color: COLORS.textPrimary }}>GP Assistants</span>
+                    <span style={{ fontSize: '0.875rem', fontWeight: 500, color: COLORS.textPrimary }}>
                       {staffCounts.gp_assistant}
                     </span>
                   </div>
                 )}
                 {staffCounts.management > 0 && (
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: '0.875rem', color: COLORS.darkGray }}>Management</span>
-                    <span style={{ fontSize: '0.875rem', fontWeight: 500, color: COLORS.darkGray }}>
+                    <span style={{ fontSize: '0.875rem', color: COLORS.textPrimary }}>Management</span>
+                    <span style={{ fontSize: '0.875rem', fontWeight: 500, color: COLORS.textPrimary }}>
                       {staffCounts.management}
                     </span>
                   </div>
@@ -240,11 +240,11 @@ export default function ReviewAndComplete({ profile, onComplete, onBack }) {
                 <div style={{
                   marginTop: '0.5rem',
                   paddingTop: '0.5rem',
-                  borderTop: `1px solid ${COLORS.lightGray}`,
+                  borderTop: `1px solid ${COLORS.borderLight}`,
                   display: 'flex',
                   justifyContent: 'space-between'
                 }}>
-                  <span style={{ fontSize: '0.875rem', fontWeight: 500, color: COLORS.darkGray }}>Total</span>
+                  <span style={{ fontSize: '0.875rem', fontWeight: 500, color: COLORS.textPrimary }}>Total</span>
                   <span style={{ fontSize: '0.875rem', fontWeight: 600, color: COLORS.slainteBlue }}>
                     {totalStaff}
                   </span>
@@ -257,14 +257,14 @@ export default function ReviewAndComplete({ profile, onComplete, onBack }) {
         {/* Operational Details Card */}
         <div style={{
           padding: '1.5rem',
-          backgroundColor: COLORS.backgroundGray,
+          backgroundColor: COLORS.bgPage,
           borderRadius: '12px',
-          border: `1px solid ${COLORS.lightGray}`
+          border: `1px solid ${COLORS.borderLight}`
         }}>
           <h3 style={{
             fontSize: '0.875rem',
             fontWeight: 600,
-            color: COLORS.mediumGray,
+            color: COLORS.textSecondary,
             textTransform: 'uppercase',
             letterSpacing: '0.5px',
             marginBottom: '1rem'
@@ -276,14 +276,14 @@ export default function ReviewAndComplete({ profile, onComplete, onBack }) {
               <div>
                 <p style={{
                   fontSize: '0.75rem',
-                  color: COLORS.mediumGray,
+                  color: COLORS.textSecondary,
                   marginBottom: '0.25rem'
                 }}>
                   Accountant
                 </p>
                 <p style={{
                   fontSize: '0.875rem',
-                  color: COLORS.darkGray
+                  color: COLORS.textPrimary
                 }}>
                   {profile.practiceDetails.accountant}
                 </p>
@@ -293,14 +293,14 @@ export default function ReviewAndComplete({ profile, onComplete, onBack }) {
               <div>
                 <p style={{
                   fontSize: '0.75rem',
-                  color: COLORS.mediumGray,
+                  color: COLORS.textSecondary,
                   marginBottom: '0.25rem'
                 }}>
                   Year-End Date
                 </p>
                 <p style={{
                   fontSize: '0.875rem',
-                  color: COLORS.darkGray
+                  color: COLORS.textPrimary
                 }}>
                   {profile.practiceDetails.yearEndDate}
                 </p>
@@ -310,14 +310,14 @@ export default function ReviewAndComplete({ profile, onComplete, onBack }) {
               <div>
                 <p style={{
                   fontSize: '0.75rem',
-                  color: COLORS.mediumGray,
+                  color: COLORS.textSecondary,
                   marginBottom: '0.25rem'
                 }}>
                   Superannuation
                 </p>
                 <p style={{
                   fontSize: '0.875rem',
-                  color: COLORS.darkGray
+                  color: COLORS.textPrimary
                 }}>
                   {profile.practiceDetails.superannuationAllocation}
                 </p>
@@ -345,7 +345,7 @@ export default function ReviewAndComplete({ profile, onComplete, onBack }) {
           <h3 style={{
             fontSize: '1.125rem',
             fontWeight: 600,
-            color: COLORS.darkGray,
+            color: COLORS.textPrimary,
             margin: 0
           }}>
             What happens next?
@@ -360,7 +360,7 @@ export default function ReviewAndComplete({ profile, onComplete, onBack }) {
         }}>
           <li style={{
             fontSize: '0.875rem',
-            color: COLORS.darkGray,
+            color: COLORS.textPrimary,
             lineHeight: 1.6
           }}>
             We've created <strong>{profile.gps.partners?.length || 0} partner drawing categories</strong> and{' '}
@@ -368,21 +368,21 @@ export default function ReviewAndComplete({ profile, onComplete, onBack }) {
           </li>
           <li style={{
             fontSize: '0.875rem',
-            color: COLORS.darkGray,
+            color: COLORS.textPrimary,
             lineHeight: 1.6
           }}>
             Your transaction categories are personalized with automatic pattern matching
           </li>
           <li style={{
             fontSize: '0.875rem',
-            color: COLORS.darkGray,
+            color: COLORS.textPrimary,
             lineHeight: 1.6
           }}>
             You can start uploading transactions immediately
           </li>
           <li style={{
             fontSize: '0.875rem',
-            color: COLORS.darkGray,
+            color: COLORS.textPrimary,
             lineHeight: 1.6
           }}>
             All settings can be updated anytime in Admin Settings
@@ -402,9 +402,9 @@ export default function ReviewAndComplete({ profile, onComplete, onBack }) {
             padding: '0.875rem 1.5rem',
             fontSize: '1rem',
             fontWeight: 500,
-            color: COLORS.mediumGray,
+            color: COLORS.textSecondary,
             backgroundColor: 'transparent',
-            border: `2px solid ${COLORS.lightGray}`,
+            border: `2px solid ${COLORS.borderLight}`,
             borderRadius: '8px',
             cursor: 'pointer',
             display: 'flex',
@@ -433,7 +433,7 @@ export default function ReviewAndComplete({ profile, onComplete, onBack }) {
             boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)'
           }}
           onMouseEnter={(e) => {
-            e.target.style.backgroundColor = '#15803d';
+            e.target.style.backgroundColor = COLORS.incomeColorDark;
             e.target.style.transform = 'translateY(-2px)';
             e.target.style.boxShadow = '0 6px 16px rgba(34, 197, 94, 0.4)';
           }}

@@ -16,6 +16,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   setMobilePassword: (password) => ipcRenderer.invoke('set-mobile-password', password),
   getMobileAccessStatus: () => ipcRenderer.invoke('get-mobile-access-status'),
   verifyPassword: (password) => ipcRenderer.invoke('verify-password', password),
+  getLanIP: () => ipcRenderer.invoke('get-lan-ip'),
 
   // LocalStorage sync (for reading/writing from main process)
   getLocalStorage: (key) => ipcRenderer.invoke('get-localStorage', key),
@@ -105,6 +106,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   submitFeedback: (data) => ipcRenderer.invoke('submit-feedback', data),
   submitRegistration: (data) => ipcRenderer.invoke('submit-registration', data),
   submitErrorReport: (data) => ipcRenderer.invoke('submit-error-report', data),
+  submitReportFeedback: (data) => ipcRenderer.invoke('submit-report-feedback', data),
   getErrorReportingSetting: () => ipcRenderer.invoke('get-error-reporting-setting'),
   setErrorReportingSetting: (enabled) => ipcRenderer.invoke('set-error-reporting-setting', enabled),
 

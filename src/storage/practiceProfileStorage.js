@@ -335,10 +335,23 @@ export function createEmpty() {
             lastHealthCheck: null,  // Date of last health check
             healthCheckComplete: false,
         },
+        // Operational data for report calculations
+        operations: {
+            appointmentDuration: null,      // minutes per consultation, e.g. 15
+            workingWeeksPerYear: null,       // e.g. 48
+            gpClinicalHoursPerWeek: null,    // default clinical hours per GP per week, e.g. 40
+        },
         // Action Plan - converted recommendations with assignments and tracking
         actionPlan: {
             actions: [], // Array of action items (see createActionItem for structure)
             lastUpdated: null,
+        },
+        // Impact Tracking - savings ledger and analysis snapshots across Health Check cycles
+        impactTracking: {
+            savingsLedger: [],    // Individual savings entries (projected + verified)
+            snapshots: [],        // Analysis snapshots at cycle boundaries
+            lastSnapshotDate: null,
+            cycleCount: 0,
         },
         metadata: {
             setupComplete: false,
@@ -500,6 +513,133 @@ export function getActionsDueSoon() {
 }
 
 // ============================================
+// IMPACT TRACKING FUNCTIONS
+// ============================================
+
+const IMPACT_TRACKING_DEFAULTS = {
+    savingsLedger: [],
+    snapshots: [],
+    lastSnapshotDate: null,
+    cycleCount: 0,
+};
+
+/**
+ * Get impact tracking data from the practice profile
+ * @returns {Object} Impact tracking object with defaults
+ */
+export function getImpactTracking() {
+    const profile = get();
+    return { ...IMPACT_TRACKING_DEFAULTS, ...(profile?.impactTracking || {}) };
+}
+
+/**
+ * Save impact tracking data to the practice profile
+ * @param {Object} impactTracking - The full impact tracking object
+ * @returns {boolean} True if save was successful
+ */
+export function saveImpactTracking(impactTracking) {
+    return update({ impactTracking });
+}
+
+/**
+ * Get the savings ledger
+ * @returns {Array} Array of savings entries
+ */
+export function getSavingsLedger() {
+    return getImpactTracking().savingsLedger;
+}
+
+/**
+ * Add a savings entry to the ledger
+ * @param {Object} entry - Savings entry { taskId, recommendationId, category, areaId, type, amount, description, metric, cycleId }
+ * @returns {boolean} True if save was successful
+ */
+export function addSavingsEntry(entry) {
+    const tracking = getImpactTracking();
+    const now = new Date();
+    const fullEntry = {
+        id: `saving_${now.getTime()}_${Math.random().toString(36).substr(2, 9)}`,
+        taskId: null,
+        recommendationId: null,
+        category: '',
+        areaId: '',
+        type: 'projected',
+        amount: 0,
+        description: '',
+        createdDate: now.toISOString(),
+        cycleId: null,
+        verifiedDate: null,
+        verifiedFromSnapshot: null,
+        metric: null,
+        ...entry,
+    };
+    tracking.savingsLedger.push(fullEntry);
+    return saveImpactTracking(tracking);
+}
+
+/**
+ * Update a savings entry by ID
+ * @param {string} entryId - The savings entry ID
+ * @param {Object} updates - Fields to update (e.g. promoting projected → verified)
+ * @returns {boolean} True if save was successful
+ */
+export function updateSavingsEntry(entryId, updates) {
+    const tracking = getImpactTracking();
+    tracking.savingsLedger = tracking.savingsLedger.map(entry =>
+        entry.id === entryId ? { ...entry, ...updates } : entry
+    );
+    return saveImpactTracking(tracking);
+}
+
+/**
+ * Remove savings entries by taskId (used when un-completing a task)
+ * @param {string} taskId - The action item ID whose savings entries should be removed
+ * @returns {boolean} True if save was successful
+ */
+export function removeSavingsEntryByTaskId(taskId) {
+    const tracking = getImpactTracking();
+    tracking.savingsLedger = tracking.savingsLedger.filter(entry => entry.taskId !== taskId);
+    return saveImpactTracking(tracking);
+}
+
+/**
+ * Get all analysis snapshots
+ * @returns {Array} Array of snapshot objects
+ */
+export function getSnapshots() {
+    return getImpactTracking().snapshots;
+}
+
+/**
+ * Get the most recent snapshot
+ * @returns {Object|null} The latest snapshot or null
+ */
+export function getLatestSnapshot() {
+    const snapshots = getSnapshots();
+    return snapshots.length > 0 ? snapshots[snapshots.length - 1] : null;
+}
+
+/**
+ * Add an analysis snapshot (called on cycle start)
+ * @param {Object} snapshot - Snapshot with sectorMetrics, totals, and tasks state
+ * @returns {boolean} True if save was successful
+ */
+export function addSnapshot(snapshot) {
+    const tracking = getImpactTracking();
+    const now = new Date();
+    const fullSnapshot = {
+        id: `snapshot_${now.getTime()}`,
+        createdDate: now.toISOString(),
+        cycleNumber: tracking.cycleCount + 1,
+        ...snapshot,
+    };
+    tracking.snapshots.push(fullSnapshot);
+    tracking.lastSnapshotDate = now.toISOString();
+    tracking.cycleCount += 1;
+    return saveImpactTracking(tracking);
+}
+
+// ============================================
 // FINANCIAL ACTION PLAN FUNCTIONS
 // ============================================
 
@@ -615,6 +755,73 @@ export function getActiveFinancialTasks() {
         if (!a.dueDate && b.dueDate) return 1;
         return 0;
     });
+}
+
+/**
+ * Sync GMS panel numbers from uploaded PCRS payment data into the practice profile.
+ * Matches doctorNumber from parsed PDFs to GP partners by fuzzy name matching.
+ * Only updates partners that don't already have a panelNumber set.
+ * @param {Array} paymentAnalysisData - Array of parsed PCRS payment objects
+ * @returns {boolean} True if any updates were made
+ */
+export function syncPanelNumbersFromPaymentData(paymentAnalysisData) {
+    if (!paymentAnalysisData || paymentAnalysisData.length === 0) return false;
+
+    const profile = get();
+    if (!profile?.gps?.partners || profile.gps.partners.length === 0) return false;
+
+    // Extract unique doctor entries from payment data
+    const doctorEntries = new Map();
+    paymentAnalysisData.forEach(d => {
+        if (d.doctorNumber && d.doctor) {
+            doctorEntries.set(d.doctorNumber, d.doctor);
+        }
+    });
+
+    if (doctorEntries.size === 0) return false;
+
+    // Normalize name for fuzzy matching (strip titles, lowercase)
+    const normalizeName = (name) => {
+        return (name || '')
+            .toLowerCase()
+            .replace(/^(dr\.?\s*|doctor\s*)/i, '')
+            .replace(/[^a-z\s]/g, '')
+            .trim();
+    };
+
+    let updated = false;
+    const updatedPartners = profile.gps.partners.map(partner => {
+        // Skip if already has a panel number
+        if (partner.panelNumber) return partner;
+
+        const partnerNorm = normalizeName(partner.name);
+        if (!partnerNorm) return partner;
+
+        // Try to find a matching doctor entry
+        for (const [docNum, docName] of doctorEntries) {
+            const docNorm = normalizeName(docName);
+            // Match if either name contains the other (handles "Karen Aylward" matching "KAREN AYLWARD")
+            if (partnerNorm.includes(docNorm) || docNorm.includes(partnerNorm)) {
+                updated = true;
+                return { ...partner, panelNumber: docNum };
+            }
+            // Also try matching just the surname (last word)
+            const partnerSurname = partnerNorm.split(/\s+/).pop();
+            const docSurname = docNorm.split(/\s+/).pop();
+            if (partnerSurname && docSurname && partnerSurname === docSurname && partnerSurname.length > 2) {
+                updated = true;
+                return { ...partner, panelNumber: docNum };
+            }
+        }
+        return partner;
+    });
+
+    if (updated) {
+        update({ gps: { ...profile.gps, partners: updatedPartners } });
+        console.log('[PracticeProfile] Synced panel numbers from PCRS data');
+    }
+
+    return updated;
 }
 
 /**

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Stethoscope, Euro } from 'lucide-react';
+import { Stethoscope, Euro, Sparkles } from 'lucide-react';
 
 // Import the AppProvider to make the context available
 import { AppProvider, useAppContext } from './context/AppContext';
@@ -26,6 +26,8 @@ import ModuleSelector from './components/ModuleSelector';
 import UnifiedOnboarding from './components/UnifiedOnboarding';
 import BusinessOverview from './components/BusinessOverview';
 import NewGMSHealthCheck from './components/NewGMSHealthCheck';
+import GMSHealthCheckV2 from './components/GMSHealthCheckV2';
+import AdvancedInsightsV2 from './components/AdvancedInsightsV2';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import PWAUpdateNotification from './components/PWAUpdateNotification';
 import LoginScreen from './components/LoginScreen';
@@ -54,10 +56,13 @@ const mapLegacyView = (viewId) => {
     'gms-health-check': 'gms-health-check',
     'interactive-health-check': 'gms-health-check',
     'new-health-check': 'gms-health-check',
+    'gms-health-check-v2': 'gms-health-check',
     // Admin -> Opens Settings modal (handled separately)
     'admin': 'business-overview', // Default to business, settings modal opens via callback
     // Upload -> Business Overview (upload is in Settings now)
     'upload': 'business-overview',
+    // Advanced Insights -> passes through
+    'advanced-insights': 'advanced-insights',
     // Dara EHR Support -> passes through
     'dara-support': 'dara-support'
   };
@@ -95,7 +100,7 @@ function ConnectedPracticeBanner() {
       padding: '0.5rem 1rem',
       textAlign: 'center',
       fontSize: '0.8125rem',
-      color: '#8B6914'
+      color: COLORS.warningText
     }}>
       Practice data from {practiceName || address} last refreshed {timeLabel} — open Settings &rarr; Connected Practice to refresh
     </div>
@@ -135,7 +140,8 @@ function AppLayout() {
         unidentifiedTransactions = [],
         paymentAnalysisData = [],
         selectedYear = new Date().getFullYear(),
-        categoryMapping = []
+        categoryMapping = [],
+        localOnlyMode = false
     } = contextData;
 
     // Safely get other functions/data
@@ -221,6 +227,13 @@ function AppLayout() {
         return () => window.removeEventListener('tour:switchToHealthCheck', handleSwitchToHealthCheck);
     }, [setCurrentView]);
 
+    // Listen for Advanced Insights navigation events (from Finn navigate tool)
+    useEffect(() => {
+        const handleSwitchToAdvancedInsights = () => setCurrentView('advanced-insights');
+        window.addEventListener('navigate:advancedInsights', handleSwitchToAdvancedInsights);
+        return () => window.removeEventListener('navigate:advancedInsights', handleSwitchToAdvancedInsights);
+    }, [setCurrentView]);
+
     // Handle onboarding completion
     const handleOnboardingComplete = (result) => {
         console.log('Onboarding completed:', result);
@@ -252,34 +265,35 @@ function AppLayout() {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: COLORS.backgroundGray }}>
+            <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: COLORS.bgPage }}>
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: COLORS.slainteBlue }}></div>
-                    <p style={{ color: COLORS.mediumGray }}>Loading your financial data...</p>
+                    <p style={{ color: COLORS.textSecondary }}>Loading your financial data...</p>
                 </div>
             </div>
         );
     }
 
-    // Mobile layout - uses LANMobileWrapper for LAN mode support
-    if (isMobile) {
+    // Companion/mobile layout - LAN devices always use companion regardless of screen size
+    if (isMobile || isLANMode()) {
         return <LANMobileWrapper />;
     }
 
     // Desktop layout (your existing layout)
     return (
+        <FinnProvider>
         <TourProvider setCurrentView={setCurrentView} currentView={currentView} onTourStart={() => setShowSettings(false)}>
         <ProcessingFlowProvider>
         <div className="min-h-screen" style={{
-            backgroundColor: COLORS.backgroundGray,
+            backgroundColor: COLORS.bgPage,
             ...(currentView === 'dara-support' ? { height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' } : {})
         }}>
-            <header className="shadow-sm" style={{ backgroundColor: COLORS.white, borderBottom: `1px solid ${COLORS.lightGray}` }}>
+            <header className="shadow-sm" style={{ backgroundColor: COLORS.white, borderBottom: `1px solid ${COLORS.borderLight}` }}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center py-4">
                         <div className="flex items-center space-x-4">
                             <SlainteLogo size="normal" showFinance={true} />
-                            <span className="text-sm font-medium" style={{ color: COLORS.mediumGray }}>
+                            <span className="text-sm font-medium" style={{ color: COLORS.textSecondary }}>
                                 Putting Ai at the Heart of Healthcare
                             </span>
                         </div>
@@ -288,24 +302,25 @@ function AppLayout() {
                 </div>
             </header>
 
-            {currentView !== 'dara-support' && <nav style={{ backgroundColor: COLORS.white, borderBottom: `1px solid ${COLORS.lightGray}` }} data-tour-id="nav-tabs">
+            {currentView !== 'dara-support' && <nav style={{ backgroundColor: COLORS.white, borderBottom: `1px solid ${COLORS.borderLight}` }} data-tour-id="nav-tabs">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex space-x-8 justify-center">
                             {[
                                 { id: 'business-overview', label: 'Business Overview', icon: Euro },
-                                { id: 'gms-health-check', label: 'GMS Health Check', icon: Stethoscope }
+                                { id: 'gms-health-check', label: 'GMS Health Check', icon: Stethoscope },
+                                { id: 'advanced-insights', label: 'Advanced Insights', icon: Sparkles }
                             ].map((item) => (
                                 <button
                                     key={item.id}
                                     onClick={() => setCurrentView(item.id)}
                                     className="flex items-center space-x-2 py-4 border-b-2 transition-colors"
                                     style={{
-                                        color: currentView === item.id ? COLORS.slainteBlue : COLORS.mediumGray,
+                                        color: currentView === item.id ? COLORS.slainteBlue : COLORS.textSecondary,
                                         borderColor: currentView === item.id ? COLORS.slainteBlue : 'transparent'
                                     }}
                                     onMouseEnter={(e) => {
                                         if (currentView !== item.id) {
-                                            e.currentTarget.style.borderColor = COLORS.lightGray;
+                                            e.currentTarget.style.borderColor = COLORS.borderLight;
                                         }
                                     }}
                                     onMouseLeave={(e) => {
@@ -332,16 +347,17 @@ function AppLayout() {
             ) : (
               <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {currentView === 'business-overview' && <BusinessOverview setCurrentView={setCurrentView} />}
-                {currentView === 'gms-health-check' && <NewGMSHealthCheck />}
+                {currentView === 'advanced-insights' && <AdvancedInsightsV2 setCurrentView={setCurrentView} />}
+                {currentView === 'gms-health-check' && (localOnlyMode ? <NewGMSHealthCheck /> : <GMSHealthCheckV2 />)}
               </main>
             )}
 
             {/* Chat Widget - Conditionally render unified Finn or legacy Cara */}
             {useUnifiedFinn ? (
-              <FinnProvider>
+              <>
                 <UnifiedFinnWidget currentView={currentView} />
                 <FloatingFeedbackButton />
-              </FinnProvider>
+              </>
             ) : (
               <FloatingFinancialChat currentView={currentView} />
             )}
@@ -360,14 +376,14 @@ function AppLayout() {
             <PWAUpdateNotification />
 
             {/* Footer — hidden on Dara view to preserve fixed layout */}
-            <footer className="mt-12" style={{ backgroundColor: COLORS.white, borderTop: `1px solid ${COLORS.lightGray}`, ...(currentView === 'dara-support' ? { display: 'none' } : {}) }}>
+            <footer className="mt-12" style={{ backgroundColor: COLORS.white, borderTop: `1px solid ${COLORS.borderLight}`, ...(currentView === 'dara-support' ? { display: 'none' } : {}) }}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2 text-sm" style={{ color: COLORS.mediumGray }}>
+                        <div className="flex items-center space-x-2 text-sm" style={{ color: COLORS.textSecondary }}>
                             <SlainteLogo size="small" showFinance={false} />
                             <span>© 2025 Slainte. All rights reserved.</span>
                         </div>
-                        <div className="text-sm" style={{ color: COLORS.mediumGray }}>
+                        <div className="text-sm" style={{ color: COLORS.textSecondary }}>
                             Putting Ai at the Heart of Healthcare
                         </div>
                     </div>
@@ -379,6 +395,7 @@ function AppLayout() {
         <TourOverlay />
         </ProcessingFlowProvider>
         </TourProvider>
+        </FinnProvider>
     );
 }
 
@@ -568,10 +585,10 @@ export default function App() {
     // Show loading while checking auth or license
     if (isCheckingAuth || !licenseCheckComplete) {
         return (
-            <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: COLORS.backgroundGray }}>
+            <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: COLORS.bgPage }}>
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: COLORS.slainteBlue }}></div>
-                    <p style={{ color: COLORS.mediumGray }}>Loading...</p>
+                    <p style={{ color: COLORS.textSecondary }}>Loading...</p>
                 </div>
             </div>
         );

@@ -265,6 +265,10 @@ export default function UnifiedOnboarding({ onComplete, onSkip }) {
         partners: websiteResult.data.gpNames.map(name => ({ name }))
       };
     }
+    if (websiteResult.data.consultationFee) {
+      if (!merged.privatePatients) merged.privatePatients = {};
+      merged.privatePatients.averageConsultationFee = websiteResult.data.consultationFee;
+    }
     merged.practiceDetails.website = websiteResult.data.url || '';
     merged.metadata.websiteAnalyzed = true;
     merged.metadata.websiteAnalyzedAt = new Date().toISOString();
@@ -485,7 +489,7 @@ export default function UnifiedOnboarding({ onComplete, onSkip }) {
     return (
       <div style={{
         minHeight: '100vh',
-        backgroundColor: COLORS.backgroundGray,
+        backgroundColor: COLORS.bgPage,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center'
@@ -494,13 +498,13 @@ export default function UnifiedOnboarding({ onComplete, onSkip }) {
           <div style={{
             width: '48px',
             height: '48px',
-            border: `3px solid ${COLORS.lightGray}`,
+            border: `3px solid ${COLORS.borderLight}`,
             borderTopColor: COLORS.slainteBlue,
             borderRadius: '50%',
             animation: 'spin 1s linear infinite',
             margin: '0 auto 1rem'
           }} />
-          <p style={{ color: COLORS.mediumGray }}>Loading...</p>
+          <p style={{ color: COLORS.textSecondary }}>Loading...</p>
           <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
       </div>
@@ -518,7 +522,7 @@ export default function UnifiedOnboarding({ onComplete, onSkip }) {
   return (
     <div style={{
       minHeight: '100vh',
-      backgroundColor: COLORS.backgroundGray,
+      backgroundColor: COLORS.bgPage,
       padding: '2rem 1rem'
     }}>
       <div style={{
@@ -534,7 +538,7 @@ export default function UnifiedOnboarding({ onComplete, onSkip }) {
               justifyContent: 'space-between',
               marginBottom: '0.5rem',
               fontSize: '0.875rem',
-              color: COLORS.mediumGray
+              color: COLORS.textSecondary
             }}>
               <span>Setup Progress</span>
               <span>{progressInfo.label}</span>
@@ -542,7 +546,7 @@ export default function UnifiedOnboarding({ onComplete, onSkip }) {
             <div style={{
               width: '100%',
               height: '8px',
-              backgroundColor: COLORS.lightGray,
+              backgroundColor: COLORS.borderLight,
               borderRadius: '4px',
               overflow: 'hidden'
             }}>
@@ -590,7 +594,7 @@ export default function UnifiedOnboarding({ onComplete, onSkip }) {
                 <h2 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '0.5rem' }}>
                   How would you like to use Sláinte?
                 </h2>
-                <p style={{ color: COLORS.darkGray, fontSize: '0.95rem' }}>
+                <p style={{ color: COLORS.textPrimary, fontSize: '0.95rem' }}>
                   You can change this at any time in Settings &gt; Privacy &amp; AI.
                 </p>
               </div>
@@ -625,7 +629,7 @@ export default function UnifiedOnboarding({ onComplete, onSkip }) {
                       fontWeight: 600
                     }}>RECOMMENDED</span>
                   </div>
-                  <p style={{ margin: 0, fontSize: '0.85rem', color: COLORS.darkGray, lineHeight: 1.5 }}>
+                  <p style={{ margin: 0, fontSize: '0.85rem', color: COLORS.textPrimary, lineHeight: 1.5 }}>
                     Finn helps categorise transactions, generate reports, and answer questions.
                     Data is sent securely and never stored externally.
                   </p>
@@ -638,13 +642,13 @@ export default function UnifiedOnboarding({ onComplete, onSkip }) {
                     flex: 1,
                     padding: '1.25rem',
                     borderRadius: '0.75rem',
-                    border: `1px solid ${COLORS.lightGray}`,
+                    border: `1px solid ${COLORS.borderLight}`,
                     backgroundColor: COLORS.white,
                     cursor: 'pointer',
                     textAlign: 'left',
                     transition: 'all 0.2s'
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.backgroundGray || '#f8f9fa'}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.bgPage}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.white}
                 >
                   <div style={{ marginBottom: '0.5rem' }}>
@@ -652,7 +656,7 @@ export default function UnifiedOnboarding({ onComplete, onSkip }) {
                       Local Only Mode
                     </span>
                   </div>
-                  <p style={{ margin: 0, fontSize: '0.85rem', color: COLORS.darkGray, lineHeight: 1.5 }}>
+                  <p style={{ margin: 0, fontSize: '0.85rem', color: COLORS.textPrimary, lineHeight: 1.5 }}>
                     No data leaves your computer. AI features are disabled but all core features work.
                     You can enable AI later in Settings.
                   </p>
@@ -661,7 +665,7 @@ export default function UnifiedOnboarding({ onComplete, onSkip }) {
 
               {/* Comparison Table */}
               <div style={{
-                border: `1px solid ${COLORS.lightGray}`,
+                border: `1px solid ${COLORS.borderLight}`,
                 borderRadius: '0.75rem',
                 overflow: 'hidden'
               }}>
@@ -671,10 +675,10 @@ export default function UnifiedOnboarding({ onComplete, onSkip }) {
                   fontSize: '0.8125rem'
                 }}>
                   <thead>
-                    <tr style={{ backgroundColor: COLORS.backgroundGray }}>
-                      <th style={{ padding: '0.625rem 1rem', textAlign: 'left', fontWeight: 600, color: COLORS.darkGray, borderBottom: `1px solid ${COLORS.lightGray}` }}>Feature</th>
-                      <th style={{ padding: '0.625rem 1rem', textAlign: 'center', fontWeight: 600, color: COLORS.slainteBlue, borderBottom: `1px solid ${COLORS.lightGray}`, width: '140px' }}>AI-Powered</th>
-                      <th style={{ padding: '0.625rem 1rem', textAlign: 'center', fontWeight: 600, color: COLORS.darkGray, borderBottom: `1px solid ${COLORS.lightGray}`, width: '140px' }}>Local Only</th>
+                    <tr style={{ backgroundColor: COLORS.bgPage }}>
+                      <th style={{ padding: '0.625rem 1rem', textAlign: 'left', fontWeight: 600, color: COLORS.textPrimary, borderBottom: `1px solid ${COLORS.borderLight}` }}>Feature</th>
+                      <th style={{ padding: '0.625rem 1rem', textAlign: 'center', fontWeight: 600, color: COLORS.slainteBlue, borderBottom: `1px solid ${COLORS.borderLight}`, width: '140px' }}>AI-Powered</th>
+                      <th style={{ padding: '0.625rem 1rem', textAlign: 'center', fontWeight: 600, color: COLORS.textPrimary, borderBottom: `1px solid ${COLORS.borderLight}`, width: '140px' }}>Local Only</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -691,14 +695,14 @@ export default function UnifiedOnboarding({ onComplete, onSkip }) {
                       ['Data stored externally', 'Never', 'Never'],
                     ].map(([feature, ai, local], idx) => (
                       <tr key={idx} style={{
-                        borderBottom: idx < 9 ? `1px solid ${COLORS.lightGray}20` : 'none',
-                        backgroundColor: idx % 2 === 0 ? COLORS.white : `${COLORS.backgroundGray}80`
+                        borderBottom: idx < 9 ? `1px solid ${COLORS.borderLight}20` : 'none',
+                        backgroundColor: idx % 2 === 0 ? COLORS.white : `${COLORS.bgPage}80`
                       }}>
-                        <td style={{ padding: '0.5rem 1rem', color: COLORS.darkGray }}>{feature}</td>
-                        <td style={{ padding: '0.5rem 1rem', textAlign: 'center', color: ai === true ? COLORS.incomeColor : ai === false ? COLORS.expenseColor : COLORS.darkGray }}>
+                        <td style={{ padding: '0.5rem 1rem', color: COLORS.textPrimary }}>{feature}</td>
+                        <td style={{ padding: '0.5rem 1rem', textAlign: 'center', color: ai === true ? COLORS.incomeColor : ai === false ? COLORS.expenseColor : COLORS.textPrimary }}>
                           {ai === true ? 'Yes' : ai === false ? 'No' : ai}
                         </td>
-                        <td style={{ padding: '0.5rem 1rem', textAlign: 'center', color: local === true ? COLORS.incomeColor : local === false ? COLORS.expenseColor : COLORS.darkGray }}>
+                        <td style={{ padding: '0.5rem 1rem', textAlign: 'center', color: local === true ? COLORS.incomeColor : local === false ? COLORS.expenseColor : COLORS.textPrimary }}>
                           {local === true ? 'Yes' : local === false ? 'No' : local}
                         </td>
                       </tr>
@@ -765,16 +769,16 @@ export default function UnifiedOnboarding({ onComplete, onSkip }) {
                   <div style={{
                     width: '48px',
                     height: '48px',
-                    border: `3px solid ${COLORS.lightGray}`,
+                    border: `3px solid ${COLORS.borderLight}`,
                     borderTopColor: COLORS.slainteBlue,
                     borderRadius: '50%',
                     animation: 'spin 1s linear infinite',
                     margin: '0 auto 1rem'
                   }} />
-                  <p style={{ color: COLORS.darkGray, fontSize: '1rem', fontWeight: 500 }}>
+                  <p style={{ color: COLORS.textPrimary, fontSize: '1rem', fontWeight: 500 }}>
                     Finishing up transaction analysis...
                   </p>
-                  <p style={{ color: COLORS.mediumGray, fontSize: '0.875rem' }}>
+                  <p style={{ color: COLORS.textSecondary, fontSize: '0.875rem' }}>
                     This should only take a moment.
                   </p>
                   <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>

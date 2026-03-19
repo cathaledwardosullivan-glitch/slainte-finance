@@ -7,13 +7,14 @@
  * This maintains backward compatibility with the full category system while
  * simplifying initial data entry for new users.
  */
+import COLORS from '../utils/colors';
 
 export const PARENT_CATEGORIES = {
   INCOME: {
     id: 'INCOME',
     name: 'Income',
     icon: '💰',
-    color: '#10B981', // incomeColor
+    color: COLORS.success,
     sections: ['INCOME'],
     defaultCategory: '1.0', // Income Unclassified
     description: 'All revenue and income sources'
@@ -22,7 +23,7 @@ export const PARENT_CATEGORIES = {
     id: 'STAFF',
     name: 'Staff Costs',
     icon: '👥',
-    color: '#F59E0B', // highlightYellow
+    color: COLORS.warning,
     sections: ['DIRECT STAFF COSTS'],
     defaultCategory: '2.0', // Staff Costs Unclassified
     description: 'Salaries and staff-related payments',
@@ -32,7 +33,7 @@ export const PARENT_CATEGORIES = {
     id: 'MEDICAL',
     name: 'Medical Supplies',
     icon: '💉',
-    color: '#8B5CF6',
+    color: COLORS.chartViolet,
     sections: ['MEDICAL SUPPLIES'],
     defaultCategory: '10.0', // Medical Supplies Unclassified
     description: 'Vaccines, drugs, medical equipment, staff uniforms, workwear, PPE, scrubs'
@@ -41,7 +42,7 @@ export const PARENT_CATEGORIES = {
     id: 'PREMISES',
     name: 'Premises',
     icon: '🏢',
-    color: '#3B82F6',
+    color: COLORS.slainteBlue,
     sections: ['PREMISES COSTS'],
     defaultCategory: '20.0', // Premises Unclassified
     description: 'Rent, utilities, maintenance, cleaning'
@@ -50,7 +51,7 @@ export const PARENT_CATEGORIES = {
     id: 'OFFICE_IT',
     name: 'Office & IT',
     icon: '💻',
-    color: '#06B6D4',
+    color: COLORS.slainteBlue,
     sections: ['OFFICE & IT'],
     defaultCategory: '30.0', // Office & Admin Unclassified
     description: 'Stationery, software, phones, internet'
@@ -59,7 +60,7 @@ export const PARENT_CATEGORIES = {
     id: 'PROFESSIONAL',
     name: 'Professional',
     icon: '📚',
-    color: '#EC4899',
+    color: COLORS.chartPink,
     sections: ['PROFESSIONAL FEES', 'PROFESSIONAL DEV'],
     defaultCategory: '40.0', // Professional Fees Unclassified
     description: 'Accountants, subscriptions, training, conferences'
@@ -68,7 +69,7 @@ export const PARENT_CATEGORIES = {
     id: 'OTHER',
     name: 'Petty Cash / Other',
     icon: '📊',
-    color: '#6B7280',
+    color: COLORS.textMuted,
     sections: ['MOTOR & TRANSPORT', 'CAPITAL & DEPRECIATION', 'PETTY CASH / OTHER EXPENSES'],
     defaultCategory: '80.0', // Petty Cash / Other Unclassified
     description: 'Motor costs, equipment purchases, miscellaneous'
@@ -77,7 +78,7 @@ export const PARENT_CATEGORIES = {
     id: 'NON_BUSINESS',
     name: 'Non-Business / Drawings',
     icon: '🏦',
-    color: '#9CA3AF',
+    color: COLORS.textSecondary,
     sections: ['NON-BUSINESS'],
     defaultCategory: '90.0', // Partner Drawings
     description: 'Partner drawings, personal expenses, non-deductible items'

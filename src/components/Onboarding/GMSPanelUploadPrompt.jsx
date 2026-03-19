@@ -3,6 +3,7 @@ import { Activity, SkipForward, ArrowRight, CheckCircle, Loader, User, MessageCi
 import { useAppContext } from '../../context/AppContext';
 import { usePracticeProfile } from '../../hooks/usePracticeProfile';
 import { parsePCRSPaymentPDF, validateExtractedData } from '../../utils/pdfParser';
+import { syncPanelNumbersFromPaymentData } from '../../storage/practiceProfileStorage';
 import COLORS from '../../utils/colors';
 
 // Instant text display (typing animation disabled)
@@ -81,6 +82,7 @@ export default function GMSPanelUploadPrompt({ onUpload, onSkip }) {
     const errors = [];
     let successCount = 0;
     const newUploadedFiles = [];
+    const allExtractedData = [];
 
     // Process each file
     for (let i = 0; i < files.length; i++) {
@@ -129,6 +131,7 @@ export default function GMSPanelUploadPrompt({ onUpload, onSkip }) {
           month: extractedData.month,
           year: extractedData.year
         });
+        allExtractedData.push(extractedData);
 
         successCount++;
         setFilesProcessed(i + 1);
@@ -141,6 +144,11 @@ export default function GMSPanelUploadPrompt({ onUpload, onSkip }) {
     }
 
     setUploadedFiles(prev => [...prev, ...newUploadedFiles]);
+
+    // Sync panel numbers from extracted PCRS data to practice profile
+    if (allExtractedData.length > 0) {
+      syncPanelNumbersFromPaymentData(allExtractedData);
+    }
 
     // Show final status
     if (errors.length > 0 && successCount === 0) {
@@ -177,7 +185,7 @@ export default function GMSPanelUploadPrompt({ onUpload, onSkip }) {
     return (
       <div style={{ textAlign: 'center', padding: '3rem' }}>
         <Loader style={{ width: '32px', height: '32px', color: COLORS.slainteBlue, animation: 'spin 1s linear infinite', margin: '0 auto 1rem' }} />
-        <p style={{ color: COLORS.mediumGray }}>Preparing GMS panel upload...</p>
+        <p style={{ color: COLORS.textSecondary }}>Preparing GMS panel upload...</p>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
@@ -201,7 +209,7 @@ export default function GMSPanelUploadPrompt({ onUpload, onSkip }) {
         backgroundColor: COLORS.white,
         borderRadius: '0.75rem',
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-        border: `1px solid ${COLORS.lightGray}`,
+        border: `1px solid ${COLORS.borderLight}`,
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column'
@@ -248,7 +256,7 @@ export default function GMSPanelUploadPrompt({ onUpload, onSkip }) {
                 width: '32px',
                 height: '32px',
                 borderRadius: '50%',
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -257,7 +265,7 @@ export default function GMSPanelUploadPrompt({ onUpload, onSkip }) {
                 <MessageCircle style={{ width: '16px', height: '16px', color: COLORS.slainteBlue }} />
               </div>
               <div style={{
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 padding: '0.875rem 1rem',
                 borderRadius: '12px',
                 maxWidth: '85%'
@@ -265,7 +273,7 @@ export default function GMSPanelUploadPrompt({ onUpload, onSkip }) {
                 <div style={{
                   fontSize: '1.125rem',
                   fontWeight: 600,
-                  color: COLORS.darkGray
+                  color: COLORS.textPrimary
                 }}>
                   {greeting}
                 </div>
@@ -278,14 +286,14 @@ export default function GMSPanelUploadPrompt({ onUpload, onSkip }) {
             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
               <div style={{ width: '32px', flexShrink: 0 }} />
               <div style={{
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 padding: '0.875rem 1rem',
                 borderRadius: '12px',
                 maxWidth: '85%'
               }}>
                 <div style={{
                   fontSize: '0.9375rem',
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   lineHeight: 1.5
                 }}>
                   {message}
@@ -309,7 +317,7 @@ export default function GMSPanelUploadPrompt({ onUpload, onSkip }) {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem',
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   fontSize: '0.9375rem'
                 }}>
                   <Loader style={{ width: '18px', height: '18px', color: COLORS.slainteBlue, animation: 'spin 1s linear infinite' }} />
@@ -334,7 +342,7 @@ export default function GMSPanelUploadPrompt({ onUpload, onSkip }) {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem',
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   fontSize: '0.9375rem'
                 }}>
                   <CheckCircle style={{ width: '18px', height: '18px', color: COLORS.incomeColor }} />
@@ -357,7 +365,7 @@ export default function GMSPanelUploadPrompt({ onUpload, onSkip }) {
                 maxWidth: '85%',
                 border: `1px solid ${COLORS.expenseColor}`
               }}>
-                <div style={{ fontSize: '0.875rem', color: COLORS.darkGray }}>
+                <div style={{ fontSize: '0.875rem', color: COLORS.textPrimary }}>
                   {errorMessage}
                 </div>
               </div>
@@ -368,7 +376,7 @@ export default function GMSPanelUploadPrompt({ onUpload, onSkip }) {
         {/* Continue Button at bottom of chat */}
         <div style={{
           padding: '1rem',
-          borderTop: `1px solid ${COLORS.lightGray}`,
+          borderTop: `1px solid ${COLORS.borderLight}`,
           backgroundColor: COLORS.white
         }}>
           <button
@@ -434,7 +442,7 @@ export default function GMSPanelUploadPrompt({ onUpload, onSkip }) {
               <h3 style={{
                 fontSize: '1.25rem',
                 fontWeight: 700,
-                color: COLORS.darkGray,
+                color: COLORS.textPrimary,
                 marginBottom: '0.25rem'
               }}>
                 GMS Panel Upload
@@ -442,7 +450,7 @@ export default function GMSPanelUploadPrompt({ onUpload, onSkip }) {
 
               <p style={{
                 fontSize: '0.875rem',
-                color: COLORS.mediumGray,
+                color: COLORS.textSecondary,
                 lineHeight: 1.5
               }}>
                 {partnerCount > 0
@@ -466,12 +474,12 @@ export default function GMSPanelUploadPrompt({ onUpload, onSkip }) {
           <div
             onClick={handleUploadClick}
             style={{
-              border: `2px dashed ${COLORS.lightGray}`,
+              border: `2px dashed ${COLORS.borderLight}`,
               borderRadius: '12px',
               padding: '2rem',
               textAlign: 'center',
               cursor: isProcessing ? 'not-allowed' : 'pointer',
-              backgroundColor: COLORS.backgroundGray,
+              backgroundColor: COLORS.bgPage,
               transition: 'all 0.2s',
               opacity: isProcessing ? 0.6 : 1
             }}
@@ -482,27 +490,27 @@ export default function GMSPanelUploadPrompt({ onUpload, onSkip }) {
               }
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = COLORS.lightGray;
-              e.currentTarget.style.backgroundColor = COLORS.backgroundGray;
+              e.currentTarget.style.borderColor = COLORS.borderLight;
+              e.currentTarget.style.backgroundColor = COLORS.bgPage;
             }}
           >
             {isProcessing ? (
               <>
                 <Loader style={{ width: '32px', height: '32px', color: COLORS.slainteBlue, margin: '0 auto 0.75rem', animation: 'spin 1s linear infinite' }} />
-                <p style={{ fontSize: '1rem', fontWeight: 600, color: COLORS.darkGray, marginBottom: '0.25rem' }}>
+                <p style={{ fontSize: '1rem', fontWeight: 600, color: COLORS.textPrimary, marginBottom: '0.25rem' }}>
                   Processing...
                 </p>
-                <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>
+                <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>
                   File {filesProcessed} of {totalFiles}
                 </p>
               </>
             ) : (
               <>
                 <Upload style={{ width: '32px', height: '32px', color: COLORS.slainteBlue, margin: '0 auto 0.75rem' }} />
-                <p style={{ fontSize: '1rem', fontWeight: 600, color: COLORS.darkGray, marginBottom: '0.25rem' }}>
+                <p style={{ fontSize: '1rem', fontWeight: 600, color: COLORS.textPrimary, marginBottom: '0.25rem' }}>
                   Click to upload PCRS PDFs
                 </p>
-                <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>
+                <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>
                   Select one or multiple PDF files
                 </p>
               </>
@@ -516,9 +524,9 @@ export default function GMSPanelUploadPrompt({ onUpload, onSkip }) {
             backgroundColor: `${COLORS.slainteBlue}08`,
             borderRadius: '8px',
             fontSize: '0.8125rem',
-            color: COLORS.mediumGray
+            color: COLORS.textSecondary
           }}>
-            <strong style={{ color: COLORS.darkGray }}>How to get your PCRS PDFs:</strong>
+            <strong style={{ color: COLORS.textPrimary }}>How to get your PCRS PDFs:</strong>
             <ol style={{ marginLeft: '1.25rem', marginTop: '0.5rem', lineHeight: 1.6 }}>
               <li>Log in to your PCRS portal</li>
               <li>Navigate to "Payment Reports"</li>
@@ -531,7 +539,7 @@ export default function GMSPanelUploadPrompt({ onUpload, onSkip }) {
         {uploadedFiles.length > 0 && (
           <div style={{
             backgroundColor: COLORS.white,
-            border: `2px solid ${COLORS.lightGray}`,
+            border: `2px solid ${COLORS.borderLight}`,
             borderRadius: '16px',
             padding: '1.25rem',
             flex: 1,
@@ -540,7 +548,7 @@ export default function GMSPanelUploadPrompt({ onUpload, onSkip }) {
             <h4 style={{
               fontSize: '1rem',
               fontWeight: 600,
-              color: COLORS.darkGray,
+              color: COLORS.textPrimary,
               marginBottom: '1rem',
               display: 'flex',
               alignItems: 'center',
@@ -569,14 +577,14 @@ export default function GMSPanelUploadPrompt({ onUpload, onSkip }) {
                     <p style={{
                       fontSize: '0.875rem',
                       fontWeight: 500,
-                      color: COLORS.darkGray,
+                      color: COLORS.textPrimary,
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis'
                     }}>
                       {file.name}
                     </p>
-                    <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray }}>
+                    <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary }}>
                       Panel: {file.doctorNumber} | {file.month}/{file.year}
                     </p>
                   </div>
@@ -587,7 +595,7 @@ export default function GMSPanelUploadPrompt({ onUpload, onSkip }) {
                       backgroundColor: 'transparent',
                       border: 'none',
                       cursor: 'pointer',
-                      color: COLORS.mediumGray,
+                      color: COLORS.textSecondary,
                       borderRadius: '4px'
                     }}
                   >

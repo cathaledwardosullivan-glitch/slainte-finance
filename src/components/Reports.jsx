@@ -160,10 +160,10 @@ export default function Reports({ setCurrentView }) {
       return (
         <>
         <div className="bg-white rounded-lg shadow p-6" data-tour-id="reports-home">
-        <h2 className="text-2xl font-semibold mb-2" style={{ color: COLORS.darkGray }}>
+        <h2 className="text-2xl font-semibold mb-2" style={{ color: COLORS.textPrimary }}>
           Reports
         </h2>
-        <p className="text-sm mb-8" style={{ color: COLORS.mediumGray }}>
+        <p className="text-sm mb-8" style={{ color: COLORS.textSecondary }}>
           Generate new reports or view previously saved reports
         </p>
 
@@ -172,9 +172,9 @@ export default function Reports({ setCurrentView }) {
           <button
             onClick={() => setView('generate')}
             className="p-8 border-2 rounded-lg hover:shadow-md transition-all text-left"
-            style={{ borderColor: COLORS.lightGray }}
+            style={{ borderColor: COLORS.borderLight }}
             onMouseEnter={(e) => e.currentTarget.style.borderColor = COLORS.slainteBlue}
-            onMouseLeave={(e) => e.currentTarget.style.borderColor = COLORS.lightGray}
+            onMouseLeave={(e) => e.currentTarget.style.borderColor = COLORS.borderLight}
             data-tour-id="reports-generate-button"
           >
             <div className="flex items-center space-x-4 mb-4">
@@ -182,14 +182,14 @@ export default function Reports({ setCurrentView }) {
                 <FilePlus size={32} className="text-white" />
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-semibold mb-1" style={{ color: COLORS.darkGray }}>
+                <h3 className="text-lg font-semibold mb-1" style={{ color: COLORS.textPrimary }}>
                   Generate New Report
                 </h3>
-                <p className="text-sm" style={{ color: COLORS.mediumGray }}>
+                <p className="text-sm" style={{ color: COLORS.textSecondary }}>
                   P&L reports, tax returns, and financial calculators
                 </p>
               </div>
-              <ChevronRight size={24} style={{ color: COLORS.mediumGray }} />
+              <ChevronRight size={24} style={{ color: COLORS.textSecondary }} />
             </div>
           </button>
 
@@ -197,35 +197,35 @@ export default function Reports({ setCurrentView }) {
           <button
             onClick={() => setView('view')}
             className="p-8 border-2 rounded-lg hover:shadow-md transition-all text-left"
-            style={{ borderColor: COLORS.lightGray }}
+            style={{ borderColor: COLORS.borderLight }}
             onMouseEnter={(e) => e.currentTarget.style.borderColor = COLORS.incomeColor}
-            onMouseLeave={(e) => e.currentTarget.style.borderColor = COLORS.lightGray}
+            onMouseLeave={(e) => e.currentTarget.style.borderColor = COLORS.borderLight}
           >
             <div className="flex items-center space-x-4 mb-4">
               <div className="p-3 rounded-lg" style={{ backgroundColor: COLORS.incomeColor }}>
                 <FileText size={32} className="text-white" />
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-semibold mb-1" style={{ color: COLORS.darkGray }}>
+                <h3 className="text-lg font-semibold mb-1" style={{ color: COLORS.textPrimary }}>
                   View Saved Reports
                 </h3>
-                <p className="text-sm" style={{ color: COLORS.mediumGray }}>
+                <p className="text-sm" style={{ color: COLORS.textSecondary }}>
                   Access previously generated reports
                 </p>
               </div>
-              <ChevronRight size={24} style={{ color: COLORS.mediumGray }} />
+              <ChevronRight size={24} style={{ color: COLORS.textSecondary }} />
             </div>
           </button>
         </div>
 
         {/* Quick Stats */}
-        <div className="mt-8 p-4 rounded-lg" style={{ backgroundColor: COLORS.backgroundGray }}>
+        <div className="mt-8 p-4 rounded-lg" style={{ backgroundColor: COLORS.bgPage }}>
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
               <div className="text-2xl font-bold mb-1" style={{ color: COLORS.slainteBlue }}>
                 {savedReports.length}
               </div>
-              <div className="text-sm" style={{ color: COLORS.mediumGray }}>
+              <div className="text-sm" style={{ color: COLORS.textSecondary }}>
                 Saved Reports
               </div>
             </div>
@@ -233,7 +233,7 @@ export default function Reports({ setCurrentView }) {
               <div className="text-2xl font-bold mb-1" style={{ color: COLORS.incomeColor }}>
                 0
               </div>
-              <div className="text-sm" style={{ color: COLORS.mediumGray }}>
+              <div className="text-sm" style={{ color: COLORS.textSecondary }}>
                 This Month
               </div>
             </div>
@@ -241,7 +241,7 @@ export default function Reports({ setCurrentView }) {
               <div className="text-2xl font-bold mb-1" style={{ color: COLORS.highlightYellow }}>
                 P&L
               </div>
-              <div className="text-sm" style={{ color: COLORS.mediumGray }}>
+              <div className="text-sm" style={{ color: COLORS.textSecondary }}>
                 Most Common
               </div>
             </div>
@@ -282,15 +282,15 @@ export default function Reports({ setCurrentView }) {
         <button
           onClick={() => setView('home')}
           className="mb-6 px-4 py-2 border rounded flex items-center gap-2 hover:bg-gray-50"
-          style={{ borderColor: COLORS.lightGray, color: COLORS.mediumGray }}
+          style={{ borderColor: COLORS.borderLight, color: COLORS.textSecondary }}
         >
           ← Back to Reports Home
         </button>
 
-        <h2 className="text-2xl font-semibold mb-2" style={{ color: COLORS.darkGray }}>
+        <h2 className="text-2xl font-semibold mb-2" style={{ color: COLORS.textPrimary }}>
           Select Report Type
         </h2>
-        <p className="text-sm mb-8" style={{ color: COLORS.mediumGray }}>
+        <p className="text-sm mb-8" style={{ color: COLORS.textSecondary }}>
           Choose the type of report or calculator you want to generate
         </p>
 
@@ -299,20 +299,20 @@ export default function Reports({ setCurrentView }) {
           <button
             onClick={handlePLReportClick}
             className="p-6 border-2 rounded-lg hover:shadow-md transition-all text-left"
-            style={{ borderColor: COLORS.lightGray }}
+            style={{ borderColor: COLORS.borderLight }}
             onMouseEnter={(e) => e.currentTarget.style.borderColor = COLORS.slainteBlue}
-            onMouseLeave={(e) => e.currentTarget.style.borderColor = COLORS.lightGray}
+            onMouseLeave={(e) => e.currentTarget.style.borderColor = COLORS.borderLight}
           >
             <div className="p-3 rounded-lg mb-4 inline-block" style={{ backgroundColor: COLORS.slainteBlue }}>
               <FileText size={28} className="text-white" />
             </div>
-            <h3 className="text-lg font-semibold mb-2" style={{ color: COLORS.darkGray }}>
+            <h3 className="text-lg font-semibold mb-2" style={{ color: COLORS.textPrimary }}>
               Profit & Loss Report
             </h3>
-            <p className="text-sm" style={{ color: COLORS.mediumGray }}>
+            <p className="text-sm" style={{ color: COLORS.textSecondary }}>
               Professional accountant format P&L for your practice
             </p>
-            <div className="mt-3 text-xs px-2 py-1 rounded inline-block" style={{ backgroundColor: COLORS.highlightYellow, color: COLORS.darkGray }}>
+            <div className="mt-3 text-xs px-2 py-1 rounded inline-block" style={{ backgroundColor: COLORS.highlightYellow, color: COLORS.textPrimary }}>
               Step 1
             </div>
           </button>
@@ -321,20 +321,20 @@ export default function Reports({ setCurrentView }) {
           <button
             onClick={() => setView('partner-capital')}
             className="p-6 border-2 rounded-lg hover:shadow-md transition-all text-left"
-            style={{ borderColor: COLORS.lightGray }}
-            onMouseEnter={(e) => e.currentTarget.style.borderColor = '#9C27B0'}
-            onMouseLeave={(e) => e.currentTarget.style.borderColor = COLORS.lightGray}
+            style={{ borderColor: COLORS.borderLight }}
+            onMouseEnter={(e) => e.currentTarget.style.borderColor = COLORS.accentPurple}
+            onMouseLeave={(e) => e.currentTarget.style.borderColor = COLORS.borderLight}
           >
-            <div className="p-3 rounded-lg mb-4 inline-block" style={{ backgroundColor: '#9C27B0' }}>
+            <div className="p-3 rounded-lg mb-4 inline-block" style={{ backgroundColor: COLORS.accentPurple }}>
               <Users size={28} className="text-white" />
             </div>
-            <h3 className="text-lg font-semibold mb-2" style={{ color: COLORS.darkGray }}>
+            <h3 className="text-lg font-semibold mb-2" style={{ color: COLORS.textPrimary }}>
               Partner's Capital Accounts
             </h3>
-            <p className="text-sm" style={{ color: COLORS.mediumGray }}>
+            <p className="text-sm" style={{ color: COLORS.textSecondary }}>
               Allocate profit to partners and track capital balances
             </p>
-            <div className="mt-3 text-xs px-2 py-1 rounded inline-block" style={{ backgroundColor: '#F3E5F5', color: '#9C27B0' }}>
+            <div className="mt-3 text-xs px-2 py-1 rounded inline-block" style={{ backgroundColor: COLORS.accentPurpleLight, color: COLORS.accentPurple }}>
               Step 2
             </div>
           </button>
@@ -343,20 +343,20 @@ export default function Reports({ setCurrentView }) {
           <button
             onClick={() => setView('tax-return')}
             className="p-6 border-2 rounded-lg hover:shadow-md transition-all text-left"
-            style={{ borderColor: COLORS.lightGray }}
+            style={{ borderColor: COLORS.borderLight }}
             onMouseEnter={(e) => e.currentTarget.style.borderColor = COLORS.incomeColor}
-            onMouseLeave={(e) => e.currentTarget.style.borderColor = COLORS.lightGray}
+            onMouseLeave={(e) => e.currentTarget.style.borderColor = COLORS.borderLight}
           >
             <div className="p-3 rounded-lg mb-4 inline-block" style={{ backgroundColor: COLORS.incomeColor }}>
               <Calculator size={28} className="text-white" />
             </div>
-            <h3 className="text-lg font-semibold mb-2" style={{ color: COLORS.darkGray }}>
+            <h3 className="text-lg font-semibold mb-2" style={{ color: COLORS.textPrimary }}>
               Personal Tax Return Form
             </h3>
-            <p className="text-sm" style={{ color: COLORS.mediumGray }}>
+            <p className="text-sm" style={{ color: COLORS.textSecondary }}>
               Comprehensive tax information checklist for self-employed GPs
             </p>
-            <div className="mt-3 text-xs px-2 py-1 rounded inline-block" style={{ backgroundColor: '#E8F5E9', color: COLORS.incomeColor }}>
+            <div className="mt-3 text-xs px-2 py-1 rounded inline-block" style={{ backgroundColor: COLORS.incomeColorLight, color: COLORS.incomeColor }}>
               Step 3
             </div>
           </button>
@@ -365,20 +365,20 @@ export default function Reports({ setCurrentView }) {
           <button
             onClick={() => setCurrentView('gms-health-check')}
             className="p-6 border-2 rounded-lg hover:shadow-md transition-all text-left"
-            style={{ borderColor: COLORS.lightGray }}
-            onMouseEnter={(e) => e.currentTarget.style.borderColor = '#FF6B6B'}
-            onMouseLeave={(e) => e.currentTarget.style.borderColor = COLORS.lightGray}
+            style={{ borderColor: COLORS.borderLight }}
+            onMouseEnter={(e) => e.currentTarget.style.borderColor = COLORS.expenseColor}
+            onMouseLeave={(e) => e.currentTarget.style.borderColor = COLORS.borderLight}
           >
-            <div className="p-3 rounded-lg mb-4 inline-block" style={{ backgroundColor: '#FF6B6B' }}>
+            <div className="p-3 rounded-lg mb-4 inline-block" style={{ backgroundColor: COLORS.expenseColor }}>
               <Activity size={28} className="text-white" />
             </div>
-            <h3 className="text-lg font-semibold mb-2" style={{ color: COLORS.darkGray }}>
+            <h3 className="text-lg font-semibold mb-2" style={{ color: COLORS.textPrimary }}>
               GMS Health Check Report
             </h3>
-            <p className="text-sm" style={{ color: COLORS.mediumGray }}>
+            <p className="text-sm" style={{ color: COLORS.textSecondary }}>
               Analyze GMS payment patterns and identify issues
             </p>
-            <div className="mt-3 text-xs px-2 py-1 rounded inline-block" style={{ backgroundColor: '#FFE5E5', color: '#FF6B6B' }}>
+            <div className="mt-3 text-xs px-2 py-1 rounded inline-block" style={{ backgroundColor: COLORS.expenseColorLight, color: COLORS.expenseColor }}>
               Health Check
             </div>
           </button>
@@ -386,18 +386,18 @@ export default function Reports({ setCurrentView }) {
           {/* AVC Calculator - Coming Soon */}
           <div
             className="p-6 border-2 rounded-lg text-left opacity-50"
-            style={{ borderColor: COLORS.lightGray }}
+            style={{ borderColor: COLORS.borderLight }}
           >
-            <div className="p-3 rounded-lg mb-4 inline-block" style={{ backgroundColor: COLORS.mediumGray }}>
+            <div className="p-3 rounded-lg mb-4 inline-block" style={{ backgroundColor: COLORS.textSecondary }}>
               <PiggyBank size={28} className="text-white" />
             </div>
-            <h3 className="text-lg font-semibold mb-2" style={{ color: COLORS.darkGray }}>
+            <h3 className="text-lg font-semibold mb-2" style={{ color: COLORS.textPrimary }}>
               AVC Calculator
             </h3>
-            <p className="text-sm" style={{ color: COLORS.mediumGray }}>
+            <p className="text-sm" style={{ color: COLORS.textSecondary }}>
               Calculate maximum Additional Voluntary Contributions
             </p>
-            <div className="mt-3 text-xs px-2 py-1 rounded inline-block" style={{ backgroundColor: COLORS.backgroundGray, color: COLORS.mediumGray }}>
+            <div className="mt-3 text-xs px-2 py-1 rounded inline-block" style={{ backgroundColor: COLORS.bgPage, color: COLORS.textSecondary }}>
               🚧 Coming Soon
             </div>
           </div>
@@ -413,7 +413,7 @@ export default function Reports({ setCurrentView }) {
         <button
           onClick={() => setView('generate')}
           className="mb-4 px-4 py-2 border rounded flex items-center gap-2 hover:bg-gray-50"
-          style={{ borderColor: COLORS.lightGray, color: COLORS.mediumGray }}
+          style={{ borderColor: COLORS.borderLight, color: COLORS.textSecondary }}
         >
           ← Back to Report Selection
         </button>
@@ -429,7 +429,7 @@ export default function Reports({ setCurrentView }) {
         <button
           onClick={() => setView('generate')}
           className="mb-4 px-4 py-2 border rounded flex items-center gap-2 hover:bg-gray-50"
-          style={{ borderColor: COLORS.lightGray, color: COLORS.mediumGray }}
+          style={{ borderColor: COLORS.borderLight, color: COLORS.textSecondary }}
         >
           ← Back to Report Selection
         </button>
@@ -445,7 +445,7 @@ export default function Reports({ setCurrentView }) {
         <button
           onClick={() => setView('generate')}
           className="mb-4 px-4 py-2 border rounded flex items-center gap-2 hover:bg-gray-50"
-          style={{ borderColor: COLORS.lightGray, color: COLORS.mediumGray }}
+          style={{ borderColor: COLORS.borderLight, color: COLORS.textSecondary }}
         >
           ← Back to Report Selection
         </button>
@@ -460,17 +460,17 @@ export default function Reports({ setCurrentView }) {
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-2xl font-semibold" style={{ color: COLORS.darkGray }}>
+            <h2 className="text-2xl font-semibold" style={{ color: COLORS.textPrimary }}>
               Saved Reports
             </h2>
-            <p className="text-sm mt-1" style={{ color: COLORS.mediumGray }}>
+            <p className="text-sm mt-1" style={{ color: COLORS.textSecondary }}>
               View and download previously generated reports
             </p>
           </div>
           <button
             onClick={() => setView('home')}
             className="px-4 py-2 border rounded hover:bg-gray-50"
-            style={{ borderColor: COLORS.lightGray, color: COLORS.mediumGray }}
+            style={{ borderColor: COLORS.borderLight, color: COLORS.textSecondary }}
           >
             ← Back
           </button>
@@ -478,11 +478,11 @@ export default function Reports({ setCurrentView }) {
 
         {savedReports.length === 0 ? (
           <div className="text-center py-12">
-            <FileText size={48} className="mx-auto mb-4" style={{ color: COLORS.lightGray }} />
-            <h3 className="text-lg font-semibold mb-2" style={{ color: COLORS.darkGray }}>
+            <FileText size={48} className="mx-auto mb-4" style={{ color: COLORS.borderLight }} />
+            <h3 className="text-lg font-semibold mb-2" style={{ color: COLORS.textPrimary }}>
               No Saved Reports
             </h3>
-            <p className="text-sm mb-4" style={{ color: COLORS.mediumGray }}>
+            <p className="text-sm mb-4" style={{ color: COLORS.textSecondary }}>
               Generate your first report to see it here
             </p>
             <button
@@ -499,14 +499,14 @@ export default function Reports({ setCurrentView }) {
               <div
                 key={report.id}
                 className="p-4 border rounded-lg hover:shadow-md transition-all"
-                style={{ borderColor: COLORS.lightGray }}
+                style={{ borderColor: COLORS.borderLight }}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <FileText size={24} style={{ color: COLORS.slainteBlue }} />
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-semibold" style={{ color: COLORS.darkGray }}>
+                        <h4 className="font-semibold" style={{ color: COLORS.textPrimary }}>
                           {report.title}
                         </h4>
                         {/* Type badge */}
@@ -514,19 +514,19 @@ export default function Reports({ setCurrentView }) {
                           <span
                             className="text-xs px-2 py-0.5 rounded font-medium"
                             style={{
-                              backgroundColor: report.type === 'AI Report' ? '#3b82f620' :
-                                              report.type === 'GMS Health Check' ? '#10b98120' :
-                                              '#f59e0b20',
-                              color: report.type === 'AI Report' ? '#3b82f6' :
-                                    report.type === 'GMS Health Check' ? '#10b981' :
-                                    '#f59e0b'
+                              backgroundColor: report.type === 'AI Report' ? `${COLORS.slainteBlue}20` :
+                                              report.type === 'GMS Health Check' ? `${COLORS.success}20` :
+                                              `${COLORS.warning}20`,
+                              color: report.type === 'AI Report' ? COLORS.slainteBlue :
+                                    report.type === 'GMS Health Check' ? COLORS.success :
+                                    COLORS.warning
                             }}
                           >
                             {report.type}
                           </span>
                         )}
                       </div>
-                      <p className="text-sm" style={{ color: COLORS.mediumGray }}>
+                      <p className="text-sm" style={{ color: COLORS.textSecondary }}>
                         Generated {formatReportDate(report.generatedDate)}
                       </p>
                     </div>

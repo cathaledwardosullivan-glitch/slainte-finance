@@ -76,7 +76,7 @@ export default function PathSelection({ onSelectSetup, onSelectDemo, onSelectQui
         backgroundColor: COLORS.white,
         borderRadius: '0.75rem',
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-        border: `1px solid ${COLORS.lightGray}`,
+        border: `1px solid ${COLORS.borderLight}`,
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column'
@@ -122,7 +122,7 @@ export default function PathSelection({ onSelectSetup, onSelectDemo, onSelectQui
                 width: '32px',
                 height: '32px',
                 borderRadius: '50%',
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -131,7 +131,7 @@ export default function PathSelection({ onSelectSetup, onSelectDemo, onSelectQui
                 <MessageCircle style={{ width: '16px', height: '16px', color: COLORS.slainteBlue }} />
               </div>
               <div style={{
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 padding: '0.875rem 1rem',
                 borderRadius: '12px',
                 maxWidth: '85%'
@@ -139,7 +139,7 @@ export default function PathSelection({ onSelectSetup, onSelectDemo, onSelectQui
                 <div style={{
                   fontSize: '1rem',
                   fontWeight: 600,
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   marginBottom: '0.5rem'
                 }}>
                   {greeting}
@@ -153,14 +153,14 @@ export default function PathSelection({ onSelectSetup, onSelectDemo, onSelectQui
             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
               <div style={{ width: '32px', flexShrink: 0 }} /> {/* Spacer for alignment */}
               <div style={{
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 padding: '0.875rem 1rem',
                 borderRadius: '12px',
                 maxWidth: '85%'
               }}>
                 <div style={{
                   fontSize: '0.9375rem',
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   lineHeight: 1.5
                 }}>
                   {para1}
@@ -174,14 +174,14 @@ export default function PathSelection({ onSelectSetup, onSelectDemo, onSelectQui
             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
               <div style={{ width: '32px', flexShrink: 0 }} />
               <div style={{
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 padding: '0.875rem 1rem',
                 borderRadius: '12px',
                 maxWidth: '85%'
               }}>
                 <div style={{
                   fontSize: '0.9375rem',
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   lineHeight: 1.5
                 }}>
                   {para2}
@@ -195,7 +195,7 @@ export default function PathSelection({ onSelectSetup, onSelectDemo, onSelectQui
             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
               <div style={{ width: '32px', flexShrink: 0 }} />
               <div style={{
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 padding: '0.875rem 1rem',
                 borderRadius: '12px',
                 maxWidth: '85%'
@@ -203,7 +203,7 @@ export default function PathSelection({ onSelectSetup, onSelectDemo, onSelectQui
                 <div style={{
                   fontSize: '1rem',
                   fontWeight: 600,
-                  color: COLORS.darkGray
+                  color: COLORS.textPrimary
                 }}>
                   {question}
                 </div>
@@ -283,7 +283,7 @@ export default function PathSelection({ onSelectSetup, onSelectDemo, onSelectQui
               <h3 style={{
                 fontSize: '1.5rem',
                 fontWeight: 700,
-                color: COLORS.darkGray,
+                color: COLORS.textPrimary,
                 marginBottom: '0.75rem'
               }}>
                 Set Up My Practice
@@ -291,7 +291,7 @@ export default function PathSelection({ onSelectSetup, onSelectDemo, onSelectQui
 
               <p style={{
                 fontSize: '1rem',
-                color: COLORS.mediumGray,
+                color: COLORS.textSecondary,
                 marginBottom: '1.25rem',
                 lineHeight: 1.6
               }}>
@@ -300,7 +300,7 @@ export default function PathSelection({ onSelectSetup, onSelectDemo, onSelectQui
 
               <div style={{
                 fontSize: '0.875rem',
-                color: COLORS.mediumGray,
+                color: COLORS.textSecondary,
                 marginBottom: '1rem'
               }}>
                 <span style={{ marginRight: '1.5rem' }}>⏱️ 5-7 minutes</span>
@@ -327,7 +327,7 @@ export default function PathSelection({ onSelectSetup, onSelectDemo, onSelectQui
           onClick={onSelectDemo}
           style={{
             backgroundColor: COLORS.white,
-            border: `2px solid ${COLORS.lightGray}`,
+            border: `2px solid ${COLORS.borderLight}`,
             borderRadius: '16px',
             padding: '2rem',
             textAlign: 'left',
@@ -337,12 +337,12 @@ export default function PathSelection({ onSelectSetup, onSelectDemo, onSelectQui
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = 'translateY(-4px)';
             e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.1)';
-            e.currentTarget.style.borderColor = COLORS.mediumGray;
+            e.currentTarget.style.borderColor = COLORS.textSecondary;
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = 'translateY(0)';
             e.currentTarget.style.boxShadow = 'none';
-            e.currentTarget.style.borderColor = COLORS.lightGray;
+            e.currentTarget.style.borderColor = COLORS.borderLight;
           }}
         >
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
@@ -350,20 +350,20 @@ export default function PathSelection({ onSelectSetup, onSelectDemo, onSelectQui
               width: '48px',
               height: '48px',
               borderRadius: '12px',
-              backgroundColor: COLORS.backgroundGray,
+              backgroundColor: COLORS.bgPage,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0
             }}>
-              <Play style={{ width: '24px', height: '24px', color: COLORS.mediumGray }} />
+              <Play style={{ width: '24px', height: '24px', color: COLORS.textSecondary }} />
             </div>
 
             <div style={{ flex: 1 }}>
               <h3 style={{
                 fontSize: '1.5rem',
                 fontWeight: 700,
-                color: COLORS.darkGray,
+                color: COLORS.textPrimary,
                 marginBottom: '0.75rem'
               }}>
                 Explore with Demo Data
@@ -371,7 +371,7 @@ export default function PathSelection({ onSelectSetup, onSelectDemo, onSelectQui
 
               <p style={{
                 fontSize: '1rem',
-                color: COLORS.mediumGray,
+                color: COLORS.textSecondary,
                 marginBottom: '1.25rem',
                 lineHeight: 1.6
               }}>
@@ -380,7 +380,7 @@ export default function PathSelection({ onSelectSetup, onSelectDemo, onSelectQui
 
               <div style={{
                 fontSize: '0.875rem',
-                color: COLORS.mediumGray,
+                color: COLORS.textSecondary,
                 marginBottom: '1rem'
               }}>
                 <span style={{ marginRight: '1.5rem' }}>⏱️ 3 minutes</span>
@@ -391,7 +391,7 @@ export default function PathSelection({ onSelectSetup, onSelectDemo, onSelectQui
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.5rem',
-                color: COLORS.mediumGray,
+                color: COLORS.textSecondary,
                 fontWeight: 600,
                 fontSize: '1rem'
               }}>
@@ -408,7 +408,7 @@ export default function PathSelection({ onSelectSetup, onSelectDemo, onSelectQui
             onClick={onSelectQuickConnect}
             style={{
               backgroundColor: COLORS.white,
-              border: `2px solid ${COLORS.lightGray}`,
+              border: `2px solid ${COLORS.borderLight}`,
               borderRadius: '16px',
               padding: '1.25rem 2rem',
               textAlign: 'left',
@@ -418,12 +418,12 @@ export default function PathSelection({ onSelectSetup, onSelectDemo, onSelectQui
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-2px)';
               e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.1)';
-              e.currentTarget.style.borderColor = COLORS.mediumGray;
+              e.currentTarget.style.borderColor = COLORS.textSecondary;
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
               e.currentTarget.style.boxShadow = 'none';
-              e.currentTarget.style.borderColor = COLORS.lightGray;
+              e.currentTarget.style.borderColor = COLORS.borderLight;
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -431,33 +431,33 @@ export default function PathSelection({ onSelectSetup, onSelectDemo, onSelectQui
                 width: '40px',
                 height: '40px',
                 borderRadius: '10px',
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexShrink: 0
               }}>
-                <Wifi style={{ width: '20px', height: '20px', color: COLORS.mediumGray }} />
+                <Wifi style={{ width: '20px', height: '20px', color: COLORS.textSecondary }} />
               </div>
               <div style={{ flex: 1 }}>
                 <h3 style={{
                   fontSize: '1.125rem',
                   fontWeight: 600,
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   marginBottom: '0.25rem'
                 }}>
                   Connect to Practice Computer
                 </h3>
                 <p style={{
                   fontSize: '0.875rem',
-                  color: COLORS.mediumGray,
+                  color: COLORS.textSecondary,
                   margin: 0,
                   lineHeight: 1.5
                 }}>
                   Pull data from another computer on your network — ~1 minute
                 </p>
               </div>
-              <ArrowRight style={{ width: '20px', height: '20px', color: COLORS.mediumGray, flexShrink: 0 }} />
+              <ArrowRight style={{ width: '20px', height: '20px', color: COLORS.textSecondary, flexShrink: 0 }} />
             </div>
           </button>
         )}
@@ -465,7 +465,7 @@ export default function PathSelection({ onSelectSetup, onSelectDemo, onSelectQui
         {/* Helper Text */}
         <p style={{
           fontSize: '0.8125rem',
-          color: COLORS.mediumGray,
+          color: COLORS.textSecondary,
           textAlign: 'center'
         }}>
           Don't worry - you can always set up your real practice later!
@@ -475,7 +475,7 @@ export default function PathSelection({ onSelectSetup, onSelectDemo, onSelectQui
         <div style={{
           textAlign: 'center',
           paddingTop: '1rem',
-          borderTop: `1px solid ${COLORS.lightGray}`
+          borderTop: `1px solid ${COLORS.borderLight}`
         }}>
           <label
             style={{
@@ -487,18 +487,18 @@ export default function PathSelection({ onSelectSetup, onSelectDemo, onSelectQui
               fontSize: '0.8125rem',
               fontWeight: 500,
               cursor: 'pointer',
-              border: `1px solid ${COLORS.lightGray}`,
-              color: COLORS.mediumGray,
+              border: `1px solid ${COLORS.borderLight}`,
+              color: COLORS.textSecondary,
               backgroundColor: 'transparent',
               transition: 'all 0.2s'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = COLORS.backgroundGray;
-              e.currentTarget.style.borderColor = COLORS.mediumGray;
+              e.currentTarget.style.backgroundColor = COLORS.bgPage;
+              e.currentTarget.style.borderColor = COLORS.textSecondary;
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.borderColor = COLORS.lightGray;
+              e.currentTarget.style.borderColor = COLORS.borderLight;
             }}
           >
             <Upload style={{ width: '14px', height: '14px' }} />

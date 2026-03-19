@@ -138,7 +138,7 @@ const CategoriesSection = () => {
         key={category.code}
         style={{
           backgroundColor: COLORS.white,
-          border: `1px solid ${COLORS.lightGray}`,
+          border: `1px solid ${COLORS.borderLight}`,
           borderRadius: '0.375rem',
           marginBottom: '0.5rem'
         }}
@@ -152,7 +152,7 @@ const CategoriesSection = () => {
             alignItems: 'center',
             justifyContent: 'space-between',
             padding: '0.625rem 0.75rem',
-            backgroundColor: isExpanded ? COLORS.backgroundGray : 'transparent',
+            backgroundColor: isExpanded ? COLORS.bgPage : 'transparent',
             border: 'none',
             cursor: 'pointer',
             textAlign: 'left'
@@ -160,17 +160,17 @@ const CategoriesSection = () => {
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             {isExpanded ? (
-              <ChevronDown style={{ width: '0.875rem', height: '0.875rem', color: COLORS.mediumGray }} />
+              <ChevronDown style={{ width: '0.875rem', height: '0.875rem', color: COLORS.textSecondary }} />
             ) : (
-              <ChevronRight style={{ width: '0.875rem', height: '0.875rem', color: COLORS.mediumGray }} />
+              <ChevronRight style={{ width: '0.875rem', height: '0.875rem', color: COLORS.textSecondary }} />
             )}
-            <span style={{ fontSize: '0.875rem', fontWeight: 500, color: COLORS.darkGray }}>{category.name}</span>
+            <span style={{ fontSize: '0.875rem', fontWeight: 500, color: COLORS.textPrimary }}>{category.name}</span>
           </div>
           <span
             style={{
               fontSize: '0.6875rem',
-              color: COLORS.mediumGray,
-              backgroundColor: COLORS.backgroundGray,
+              color: COLORS.textSecondary,
+              backgroundColor: COLORS.bgPage,
               padding: '0.125rem 0.5rem',
               borderRadius: '9999px'
             }}
@@ -181,7 +181,7 @@ const CategoriesSection = () => {
 
         {/* Identifiers Content */}
         {isExpanded && (
-          <div style={{ padding: '0.75rem', borderTop: `1px solid ${COLORS.lightGray}` }}>
+          <div style={{ padding: '0.75rem', borderTop: `1px solid ${COLORS.borderLight}` }}>
             {/* Identifiers List */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem', marginBottom: '0.75rem' }}>
               {(category.identifiers || []).map((identifier, idx) => (
@@ -192,10 +192,10 @@ const CategoriesSection = () => {
                     alignItems: 'center',
                     gap: '0.375rem',
                     padding: '0.25rem 0.5rem',
-                    backgroundColor: COLORS.backgroundGray,
+                    backgroundColor: COLORS.bgPage,
                     borderRadius: '0.25rem',
                     fontSize: '0.75rem',
-                    color: COLORS.darkGray
+                    color: COLORS.textPrimary
                   }}
                 >
                   {identifier}
@@ -210,12 +210,12 @@ const CategoriesSection = () => {
                     }}
                     title="Remove identifier"
                   >
-                    <X style={{ width: '0.75rem', height: '0.75rem', color: COLORS.mediumGray }} />
+                    <X style={{ width: '0.75rem', height: '0.75rem', color: COLORS.textSecondary }} />
                   </button>
                 </span>
               ))}
               {identifierCount === 0 && (
-                <span style={{ fontSize: '0.75rem', color: COLORS.mediumGray, fontStyle: 'italic' }}>
+                <span style={{ fontSize: '0.75rem', color: COLORS.textSecondary, fontStyle: 'italic' }}>
                   No identifiers set
                 </span>
               )}
@@ -232,7 +232,7 @@ const CategoriesSection = () => {
                   style={{
                     flex: 1,
                     padding: '0.375rem 0.5rem',
-                    border: `1px solid ${COLORS.lightGray}`,
+                    border: `1px solid ${COLORS.borderLight}`,
                     borderRadius: '0.25rem',
                     fontSize: '0.75rem'
                   }}
@@ -266,9 +266,9 @@ const CategoriesSection = () => {
                   }}
                   style={{
                     padding: '0.375rem 0.75rem',
-                    backgroundColor: COLORS.backgroundGray,
-                    color: COLORS.darkGray,
-                    border: `1px solid ${COLORS.lightGray}`,
+                    backgroundColor: COLORS.bgPage,
+                    color: COLORS.textPrimary,
+                    border: `1px solid ${COLORS.borderLight}`,
                     borderRadius: '0.25rem',
                     fontSize: '0.75rem',
                     cursor: 'pointer'
@@ -313,7 +313,7 @@ const CategoriesSection = () => {
         key={broadName}
         style={{
           backgroundColor: COLORS.white,
-          border: `1px solid ${COLORS.lightGray}`,
+          border: `1px solid ${COLORS.borderLight}`,
           borderRadius: '0.5rem',
           marginBottom: '0.75rem'
         }}
@@ -340,17 +340,17 @@ const CategoriesSection = () => {
             ) : (
               <ChevronRight style={{ width: '1rem', height: '1rem', color: COLORS.expenseColor }} />
             )}
-            <span style={{ fontSize: '0.9375rem', fontWeight: 600, color: COLORS.darkGray }}>{broadName}</span>
+            <span style={{ fontSize: '0.9375rem', fontWeight: 600, color: COLORS.textPrimary }}>{broadName}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span style={{ fontSize: '0.75rem', color: COLORS.mediumGray }}>
+            <span style={{ fontSize: '0.75rem', color: COLORS.textSecondary }}>
               {categories.length} categories
             </span>
             <span
               style={{
                 fontSize: '0.6875rem',
-                color: COLORS.mediumGray,
-                backgroundColor: COLORS.backgroundGray,
+                color: COLORS.textSecondary,
+                backgroundColor: COLORS.bgPage,
                 padding: '0.125rem 0.5rem',
                 borderRadius: '9999px'
               }}
@@ -362,9 +362,9 @@ const CategoriesSection = () => {
 
         {/* Subcategories */}
         {isExpanded && (
-          <div style={{ padding: '0.75rem', borderTop: `1px solid ${COLORS.lightGray}` }}>
+          <div style={{ padding: '0.75rem', borderTop: `1px solid ${COLORS.borderLight}` }}>
             {categories.length === 0 ? (
-              <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray, fontStyle: 'italic', margin: 0 }}>
+              <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary, fontStyle: 'italic', margin: 0 }}>
                 No categories
               </p>
             ) : (
@@ -390,11 +390,11 @@ const CategoriesSection = () => {
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <h3 style={{ margin: '0 0 0.5rem', fontSize: '1rem', fontWeight: 600, color: COLORS.darkGray, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <h3 style={{ margin: '0 0 0.5rem', fontSize: '1rem', fontWeight: 600, color: COLORS.textPrimary, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Wand2 style={{ width: '1.25rem', height: '1.25rem', color: COLORS.slainteBlue }} />
               Category Refinement Wizard
             </h3>
-            <p style={{ margin: 0, fontSize: '0.875rem', color: COLORS.mediumGray }}>
+            <p style={{ margin: 0, fontSize: '0.875rem', color: COLORS.textSecondary }}>
               Quickly categorise partially classified transactions with AI-powered suggestions
             </p>
           </div>
@@ -451,7 +451,7 @@ const CategoriesSection = () => {
               <ChevronRight style={{ width: '1.25rem', height: '1.25rem', color: COLORS.incomeColor }} />
             )}
             <DollarSign style={{ width: '1.25rem', height: '1.25rem', color: COLORS.incomeColor }} />
-            <span style={{ fontSize: '1.0625rem', fontWeight: 600, color: COLORS.darkGray }}>Income</span>
+            <span style={{ fontSize: '1.0625rem', fontWeight: 600, color: COLORS.textPrimary }}>Income</span>
           </div>
           <span style={{ fontSize: '0.875rem', color: COLORS.incomeColor, fontWeight: 500 }}>
             {categoriesByType.income.length} categories
@@ -461,7 +461,7 @@ const CategoriesSection = () => {
         {incomeExpanded && (
           <div style={{ padding: '1rem', backgroundColor: COLORS.white }}>
             {categoriesByType.income.length === 0 ? (
-              <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray, fontStyle: 'italic', margin: 0 }}>
+              <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary, fontStyle: 'italic', margin: 0 }}>
                 No income categories
               </p>
             ) : (
@@ -503,7 +503,7 @@ const CategoriesSection = () => {
               <ChevronRight style={{ width: '1.25rem', height: '1.25rem', color: COLORS.expenseColor }} />
             )}
             <Receipt style={{ width: '1.25rem', height: '1.25rem', color: COLORS.expenseColor }} />
-            <span style={{ fontSize: '1.0625rem', fontWeight: 600, color: COLORS.darkGray }}>Expenses</span>
+            <span style={{ fontSize: '1.0625rem', fontWeight: 600, color: COLORS.textPrimary }}>Expenses</span>
           </div>
           <span style={{ fontSize: '0.875rem', color: COLORS.expenseColor, fontWeight: 500 }}>
             {categoriesByType.expense.length} categories
@@ -524,7 +524,7 @@ const CategoriesSection = () => {
         style={{
           marginBottom: '1rem',
           borderRadius: '0.75rem',
-          border: `2px solid ${COLORS.mediumGray}`,
+          border: `2px solid ${COLORS.textSecondary}`,
           overflow: 'hidden'
         }}
       >
@@ -536,7 +536,7 @@ const CategoriesSection = () => {
             alignItems: 'center',
             justifyContent: 'space-between',
             padding: '1rem 1.25rem',
-            backgroundColor: `${COLORS.mediumGray}15`,
+            backgroundColor: `${COLORS.textSecondary}15`,
             border: 'none',
             cursor: 'pointer',
             textAlign: 'left'
@@ -544,14 +544,14 @@ const CategoriesSection = () => {
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             {nonBusinessExpanded ? (
-              <ChevronDown style={{ width: '1.25rem', height: '1.25rem', color: COLORS.mediumGray }} />
+              <ChevronDown style={{ width: '1.25rem', height: '1.25rem', color: COLORS.textSecondary }} />
             ) : (
-              <ChevronRight style={{ width: '1.25rem', height: '1.25rem', color: COLORS.mediumGray }} />
+              <ChevronRight style={{ width: '1.25rem', height: '1.25rem', color: COLORS.textSecondary }} />
             )}
-            <Ban style={{ width: '1.25rem', height: '1.25rem', color: COLORS.mediumGray }} />
-            <span style={{ fontSize: '1.0625rem', fontWeight: 600, color: COLORS.darkGray }}>Non-Business Items</span>
+            <Ban style={{ width: '1.25rem', height: '1.25rem', color: COLORS.textSecondary }} />
+            <span style={{ fontSize: '1.0625rem', fontWeight: 600, color: COLORS.textPrimary }}>Non-Business Items</span>
           </div>
-          <span style={{ fontSize: '0.875rem', color: COLORS.mediumGray, fontWeight: 500 }}>
+          <span style={{ fontSize: '0.875rem', color: COLORS.textSecondary, fontWeight: 500 }}>
             {categoriesByType['non-business'].length} categories
           </span>
         </button>
@@ -559,7 +559,7 @@ const CategoriesSection = () => {
         {nonBusinessExpanded && (
           <div style={{ padding: '1rem', backgroundColor: COLORS.white }}>
             {categoriesByType['non-business'].length === 0 ? (
-              <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray, fontStyle: 'italic', margin: 0 }}>
+              <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary, fontStyle: 'italic', margin: 0 }}>
                 No non-business categories
               </p>
             ) : (

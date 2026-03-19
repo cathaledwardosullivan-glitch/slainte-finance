@@ -80,7 +80,7 @@ export default function WebsiteAnalysis({ onComplete, onSkip, onBack }) {
         backgroundColor: COLORS.white,
         borderRadius: '0.75rem',
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-        border: `1px solid ${COLORS.lightGray}`,
+        border: `1px solid ${COLORS.borderLight}`,
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column'
@@ -126,7 +126,7 @@ export default function WebsiteAnalysis({ onComplete, onSkip, onBack }) {
                 width: '32px',
                 height: '32px',
                 borderRadius: '50%',
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -135,7 +135,7 @@ export default function WebsiteAnalysis({ onComplete, onSkip, onBack }) {
                 <MessageCircle style={{ width: '16px', height: '16px', color: COLORS.slainteBlue }} />
               </div>
               <div style={{
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 padding: '0.875rem 1rem',
                 borderRadius: '12px',
                 maxWidth: '85%'
@@ -143,7 +143,7 @@ export default function WebsiteAnalysis({ onComplete, onSkip, onBack }) {
                 <div style={{
                   fontSize: '1.125rem',
                   fontWeight: 600,
-                  color: COLORS.darkGray
+                  color: COLORS.textPrimary
                 }}>
                   {greeting}
                 </div>
@@ -156,14 +156,14 @@ export default function WebsiteAnalysis({ onComplete, onSkip, onBack }) {
             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
               <div style={{ width: '32px', flexShrink: 0 }} />
               <div style={{
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 padding: '0.875rem 1rem',
                 borderRadius: '12px',
                 maxWidth: '85%'
               }}>
                 <div style={{
                   fontSize: '0.9375rem',
-                  color: COLORS.darkGray,
+                  color: COLORS.textPrimary,
                   lineHeight: 1.5
                 }}>
                   {message}
@@ -236,7 +236,7 @@ export default function WebsiteAnalysis({ onComplete, onSkip, onBack }) {
               <h3 style={{
                 fontSize: '1.5rem',
                 fontWeight: 700,
-                color: COLORS.darkGray,
+                color: COLORS.textPrimary,
                 marginBottom: '0.5rem'
               }}>
                 Enter Your Website
@@ -244,7 +244,7 @@ export default function WebsiteAnalysis({ onComplete, onSkip, onBack }) {
 
               <p style={{
                 fontSize: '1rem',
-                color: COLORS.mediumGray,
+                color: COLORS.textSecondary,
                 marginBottom: '1.5rem',
                 lineHeight: 1.6
               }}>
@@ -267,7 +267,7 @@ export default function WebsiteAnalysis({ onComplete, onSkip, onBack }) {
                       flex: 1,
                       padding: '0.875rem 1rem',
                       fontSize: '1rem',
-                      border: `2px solid ${error ? COLORS.expenseColor : COLORS.lightGray}`,
+                      border: `2px solid ${error ? COLORS.expenseColor : COLORS.borderLight}`,
                       borderRadius: '8px',
                       outline: 'none',
                       backgroundColor: COLORS.white
@@ -301,7 +301,7 @@ export default function WebsiteAnalysis({ onComplete, onSkip, onBack }) {
               {/* Background note */}
               <p style={{
                 fontSize: '0.8125rem',
-                color: COLORS.mediumGray,
+                color: COLORS.textSecondary,
                 fontStyle: 'italic',
                 margin: 0
               }}>
@@ -315,11 +315,11 @@ export default function WebsiteAnalysis({ onComplete, onSkip, onBack }) {
         <div style={{
           textAlign: 'center',
           paddingTop: '1rem',
-          borderTop: `1px solid ${COLORS.lightGray}`
+          borderTop: `1px solid ${COLORS.borderLight}`
         }}>
           <p style={{
             fontSize: '0.875rem',
-            color: COLORS.mediumGray,
+            color: COLORS.textSecondary,
             marginBottom: '0.75rem'
           }}>
             Don't have a website?
@@ -335,8 +335,8 @@ export default function WebsiteAnalysis({ onComplete, onSkip, onBack }) {
               fontSize: '0.875rem',
               fontWeight: 500,
               cursor: 'pointer',
-              border: `1px solid ${COLORS.lightGray}`,
-              color: COLORS.mediumGray,
+              border: `1px solid ${COLORS.borderLight}`,
+              color: COLORS.textSecondary,
               backgroundColor: 'transparent',
               transition: 'all 0.2s'
             }}
@@ -358,7 +358,7 @@ export default function WebsiteAnalysis({ onComplete, onSkip, onBack }) {
                 padding: '0.5rem 1rem',
                 fontSize: '0.875rem',
                 fontWeight: 500,
-                color: COLORS.mediumGray,
+                color: COLORS.textSecondary,
                 backgroundColor: 'transparent',
                 border: 'none',
                 cursor: 'pointer'

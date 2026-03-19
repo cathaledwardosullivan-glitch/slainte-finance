@@ -32,7 +32,7 @@ export default function CategoryPreferences({ profile, onComplete, onBack }) {
         <h2 style={{
           fontSize: '2rem',
           fontWeight: 700,
-          color: COLORS.darkGray,
+          color: COLORS.textPrimary,
           marginBottom: '0.5rem'
         }}>
           Category Preferences
@@ -40,7 +40,7 @@ export default function CategoryPreferences({ profile, onComplete, onBack }) {
 
         <p style={{
           fontSize: '1rem',
-          color: COLORS.mediumGray,
+          color: COLORS.textSecondary,
           maxWidth: '600px',
           marginLeft: 'auto',
           marginRight: 'auto'
@@ -57,7 +57,7 @@ export default function CategoryPreferences({ profile, onComplete, onBack }) {
           onClick={() => setMode('all')}
           style={{
             padding: '1.5rem',
-            border: `2px solid ${mode === 'all' ? COLORS.slainteBlue : COLORS.lightGray}`,
+            border: `2px solid ${mode === 'all' ? COLORS.slainteBlue : COLORS.borderLight}`,
             borderRadius: '12px',
             cursor: 'pointer',
             backgroundColor: mode === 'all' ? `${COLORS.slainteBlue}05` : COLORS.white,
@@ -78,14 +78,14 @@ export default function CategoryPreferences({ profile, onComplete, onBack }) {
           <h3 style={{
             fontSize: '1.125rem',
             fontWeight: 600,
-            color: COLORS.darkGray,
+            color: COLORS.textPrimary,
             marginBottom: '0.5rem'
           }}>
             Show All Categories
           </h3>
           <p style={{
             fontSize: '0.875rem',
-            color: COLORS.mediumGray,
+            color: COLORS.textSecondary,
             lineHeight: 1.6
           }}>
             Recommended for detailed tracking. You'll see all income and expense categories,
@@ -97,7 +97,7 @@ export default function CategoryPreferences({ profile, onComplete, onBack }) {
             backgroundColor: `${COLORS.incomeColor}15`,
             borderRadius: '6px',
             fontSize: '0.75rem',
-            color: COLORS.darkGray,
+            color: COLORS.textPrimary,
             display: 'inline-block'
           }}>
             ✓ Best for comprehensive financial management
@@ -109,7 +109,7 @@ export default function CategoryPreferences({ profile, onComplete, onBack }) {
           onClick={() => setMode('common')}
           style={{
             padding: '1.5rem',
-            border: `2px solid ${mode === 'common' ? COLORS.slainteBlue : COLORS.lightGray}`,
+            border: `2px solid ${mode === 'common' ? COLORS.slainteBlue : COLORS.borderLight}`,
             borderRadius: '12px',
             cursor: 'pointer',
             backgroundColor: mode === 'common' ? `${COLORS.slainteBlue}05` : COLORS.white,
@@ -130,14 +130,14 @@ export default function CategoryPreferences({ profile, onComplete, onBack }) {
           <h3 style={{
             fontSize: '1.125rem',
             fontWeight: 600,
-            color: COLORS.darkGray,
+            color: COLORS.textPrimary,
             marginBottom: '0.5rem'
           }}>
             Show Commonly Used Only
           </h3>
           <p style={{
             fontSize: '0.875rem',
-            color: COLORS.mediumGray,
+            color: COLORS.textSecondary,
             lineHeight: 1.6
           }}>
             Simpler interface with only the most frequently used categories visible.
@@ -149,7 +149,7 @@ export default function CategoryPreferences({ profile, onComplete, onBack }) {
             backgroundColor: `${COLORS.highlightYellow}15`,
             borderRadius: '6px',
             fontSize: '0.75rem',
-            color: COLORS.darkGray,
+            color: COLORS.textPrimary,
             display: 'inline-block'
           }}>
             ✓ Cleaner interface, easier to navigate
@@ -160,13 +160,13 @@ export default function CategoryPreferences({ profile, onComplete, onBack }) {
       {/* Info Box */}
       <div style={{
         padding: '1rem',
-        backgroundColor: COLORS.backgroundGray,
+        backgroundColor: COLORS.bgPage,
         borderRadius: '8px',
         marginBottom: '2rem'
       }}>
         <p style={{
           fontSize: '0.875rem',
-          color: COLORS.mediumGray,
+          color: COLORS.textSecondary,
           margin: 0
         }}>
           💡 <strong>Don't worry!</strong> You can change this anytime in Settings,
@@ -186,9 +186,9 @@ export default function CategoryPreferences({ profile, onComplete, onBack }) {
             padding: '0.875rem 1.5rem',
             fontSize: '1rem',
             fontWeight: 500,
-            color: COLORS.mediumGray,
+            color: COLORS.textSecondary,
             backgroundColor: 'transparent',
-            border: `2px solid ${COLORS.lightGray}`,
+            border: `2px solid ${COLORS.borderLight}`,
             borderRadius: '8px',
             cursor: 'pointer',
             display: 'flex',
@@ -215,7 +215,7 @@ export default function CategoryPreferences({ profile, onComplete, onBack }) {
             alignItems: 'center',
             gap: '0.5rem'
           }}
-          onMouseEnter={(e) => e.target.style.backgroundColor = '#1e40af'}
+          onMouseEnter={(e) => e.target.style.backgroundColor = COLORS.infoText}
           onMouseLeave={(e) => e.target.style.backgroundColor = COLORS.slainteBlue}
         >
           Continue

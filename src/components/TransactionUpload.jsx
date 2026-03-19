@@ -488,9 +488,9 @@ export default function TransactionUpload() {
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            <div style={{ backgroundColor: COLORS.white, padding: '1.5rem', borderRadius: '0.5rem', border: `1px solid ${COLORS.lightGray}` }}>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '0.5rem', color: COLORS.darkGray }}>Upload Data</h2>
-                <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray, marginBottom: '1.5rem' }}>
+            <div style={{ backgroundColor: COLORS.white, padding: '1.5rem', borderRadius: '0.5rem', border: `1px solid ${COLORS.borderLight}` }}>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '0.5rem', color: COLORS.textPrimary }}>Upload Data</h2>
+                <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary, marginBottom: '1.5rem' }}>
                     Import financial data and upload PCRS PDFs
                 </p>
 
@@ -499,8 +499,8 @@ export default function TransactionUpload() {
                     {/* Column 1: Bank Transactions */}
                     <div style={{ border: `2px dashed ${COLORS.slainteBlue}`, borderRadius: '0.5rem', padding: '1.5rem', textAlign: 'center' }}>
                         <Upload style={{ margin: '0 auto 0.75rem', height: '2.5rem', width: '2.5rem', color: COLORS.slainteBlue }} />
-                        <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: COLORS.darkGray }}>Bank Transactions</h3>
-                        <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginBottom: '1rem' }}>
+                        <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: COLORS.textPrimary }}>Bank Transactions</h3>
+                        <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginBottom: '1rem' }}>
                             CSV files from your bank
                         </p>
                         <input
@@ -515,8 +515,8 @@ export default function TransactionUpload() {
                     {/* Column 2: Training Data */}
                     <div style={{ border: `2px dashed ${COLORS.highlightYellow}`, borderRadius: '0.5rem', padding: '1.5rem', textAlign: 'center' }}>
                         <FileText style={{ margin: '0 auto 0.75rem', height: '2.5rem', width: '2.5rem', color: COLORS.highlightYellow }} />
-                        <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: COLORS.darkGray }}>Training Data</h3>
-                        <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginBottom: '1rem' }}>
+                        <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: COLORS.textPrimary }}>Training Data</h3>
+                        <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginBottom: '1rem' }}>
                             Pre-categorized JSON backup files
                         </p>
                         <input
@@ -531,8 +531,8 @@ export default function TransactionUpload() {
                     {/* Column 3: Bank Statement PDFs */}
                     <div style={{ border: `2px dashed ${COLORS.incomeColor}`, borderRadius: '0.5rem', padding: '1.5rem', textAlign: 'center' }}>
                         <Building2 style={{ margin: '0 auto 0.75rem', height: '2.5rem', width: '2.5rem', color: COLORS.incomeColor }} />
-                        <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: COLORS.darkGray }}>Bank Statement PDFs</h3>
-                        <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginBottom: '1rem' }}>
+                        <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: COLORS.textPrimary }}>Bank Statement PDFs</h3>
+                        <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginBottom: '1rem' }}>
                             BOI statement PDFs (beta)
                         </p>
                         <input
@@ -549,8 +549,8 @@ export default function TransactionUpload() {
                     {/* Column 4: PCRS Payment PDFs */}
                     <div style={{ border: `2px dashed ${COLORS.expenseColor}`, borderRadius: '0.5rem', padding: '1.5rem', textAlign: 'center' }}>
                         <Activity style={{ margin: '0 auto 0.75rem', height: '2.5rem', width: '2.5rem', color: COLORS.expenseColor }} />
-                        <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: COLORS.darkGray }}>PCRS Payments</h3>
-                        <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginBottom: '1rem' }}>
+                        <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: COLORS.textPrimary }}>PCRS Payments</h3>
+                        <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginBottom: '1rem' }}>
                             GMS payment statement PDFs
                         </p>
                         <input
@@ -577,7 +577,7 @@ export default function TransactionUpload() {
                             borderTopColor: 'transparent',
                             margin: '0 auto'
                         }}></div>
-                        <p style={{ fontSize: '0.875rem', color: COLORS.darkGray, marginTop: '0.5rem' }}>
+                        <p style={{ fontSize: '0.875rem', color: COLORS.textPrimary, marginTop: '0.5rem' }}>
                             Processing {selectedFile?.name.endsWith('.json') ? 'training data' : 'transactions'}...
                         </p>
                     </div>
@@ -595,7 +595,7 @@ export default function TransactionUpload() {
                             borderTopColor: 'transparent',
                             margin: '0 auto'
                         }}></div>
-                        <p style={{ fontSize: '0.875rem', color: COLORS.darkGray, marginTop: '0.5rem' }}>
+                        <p style={{ fontSize: '0.875rem', color: COLORS.textPrimary, marginTop: '0.5rem' }}>
                             Extracting transactions from bank statement PDF...
                         </p>
                     </div>
@@ -615,16 +615,16 @@ export default function TransactionUpload() {
                             ) : (
                                 <AlertTriangle style={{ height: '1.25rem', width: '1.25rem', color: COLORS.expenseColor, marginRight: '0.5rem' }} />
                             )}
-                            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: COLORS.darkGray }}>
+                            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: COLORS.textPrimary }}>
                                 {bankPdfResult.success > 0 ? 'Bank Statement PDF Processed' : 'Error Processing PDF'}
                             </span>
                         </div>
                         {bankPdfResult.success > 0 ? (
                             <>
-                                <p style={{ fontSize: '0.875rem', color: COLORS.darkGray }}>
+                                <p style={{ fontSize: '0.875rem', color: COLORS.textPrimary }}>
                                     {bankPdfResult.transactionCount} transactions extracted from {bankPdfResult.bank === 'boi' ? 'Bank of Ireland' : bankPdfResult.bank} statement
                                 </p>
-                                <p style={{ fontSize: '0.875rem', color: COLORS.darkGray }}>
+                                <p style={{ fontSize: '0.875rem', color: COLORS.textPrimary }}>
                                     {bankPdfResult.categorized} categorized, {bankPdfResult.unidentified} need review
                                 </p>
                             </>
@@ -641,20 +641,20 @@ export default function TransactionUpload() {
                     <div style={{ marginTop: '1.5rem', padding: '1rem', backgroundColor: `${COLORS.incomeColor}20`, borderRadius: '0.5rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
                             <CheckCircle style={{ height: '1.25rem', width: '1.25rem', color: COLORS.incomeColor, marginRight: '0.5rem' }} />
-                            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: COLORS.darkGray }}>
+                            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: COLORS.textPrimary }}>
                                 Processed {selectedFile.name}
                             </span>
                         </div>
                         {uploadResult.type === 'training' ? (
-                            <p style={{ fontSize: '0.875rem', color: COLORS.darkGray }}>
+                            <p style={{ fontSize: '0.875rem', color: COLORS.textPrimary }}>
                                 {uploadResult.categorized} pre-categorized transactions imported
                             </p>
                         ) : (
                             <>
-                                <p style={{ fontSize: '0.875rem', color: COLORS.darkGray, marginBottom: '0.75rem' }}>
+                                <p style={{ fontSize: '0.875rem', color: COLORS.textPrimary, marginBottom: '0.75rem' }}>
                                     {uploadResult.categorized} categorized, {uploadResult.unidentified} need review
                                     {uploadResult.skippedDuplicates > 0 && (
-                                        <span style={{ color: COLORS.mediumGray }}>
+                                        <span style={{ color: COLORS.textSecondary }}>
                                             {' '}({uploadResult.skippedDuplicates} duplicates skipped)
                                         </span>
                                     )}
@@ -699,16 +699,16 @@ export default function TransactionUpload() {
                                 color: pcrsUploadResult.success > 0 ? COLORS.incomeColor : COLORS.expenseColor,
                                 marginRight: '0.5rem'
                             }} />
-                            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: COLORS.darkGray }}>
+                            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: COLORS.textPrimary }}>
                                 PCRS PDF Processing Complete
                             </span>
                         </div>
-                        <p style={{ fontSize: '0.875rem', color: COLORS.darkGray }}>
+                        <p style={{ fontSize: '0.875rem', color: COLORS.textPrimary }}>
                             {pcrsUploadResult.success} uploaded successfully
                             {pcrsUploadResult.error > 0 && `, ${pcrsUploadResult.error} failed`}
                         </p>
                         {pcrsUploadResult.success > 0 && (
-                            <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginTop: '0.5rem' }}>
+                            <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginTop: '0.5rem' }}>
                                 View extracted data in GMS Panel Analysis tab
                             </p>
                         )}
@@ -727,7 +727,7 @@ export default function TransactionUpload() {
                             borderTopColor: 'transparent',
                             margin: '0 auto'
                         }}></div>
-                        <p style={{ fontSize: '0.875rem', color: COLORS.darkGray, marginTop: '0.5rem' }}>
+                        <p style={{ fontSize: '0.875rem', color: COLORS.textPrimary, marginTop: '0.5rem' }}>
                             Processing PCRS payment PDFs...
                         </p>
                     </div>
@@ -752,7 +752,7 @@ export default function TransactionUpload() {
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    backgroundColor: COLORS.overlayDark,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -777,23 +777,23 @@ export default function TransactionUpload() {
                             }}>
                                 <AlertTriangle style={{ width: '1.5rem', height: '1.5rem', color: COLORS.highlightYellow }} />
                             </div>
-                            <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: COLORS.darkGray, margin: 0 }}>
+                            <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: COLORS.textPrimary, margin: 0 }}>
                                 Duplicate Transactions Detected
                             </h3>
                         </div>
 
                         {/* Summary */}
                         <div style={{
-                            backgroundColor: COLORS.backgroundGray,
+                            backgroundColor: COLORS.bgPage,
                             borderRadius: '0.5rem',
                             padding: '1rem',
                             marginBottom: '1rem'
                         }}>
-                            <p style={{ fontSize: '0.875rem', color: COLORS.darkGray, margin: 0 }}>
+                            <p style={{ fontSize: '0.875rem', color: COLORS.textPrimary, margin: 0 }}>
                                 <strong>{duplicateInfo.duplicateCount}</strong> of {duplicateInfo.totalCount} transactions appear to already exist in your data.
                             </p>
                             {duplicateInfo.uniqueCount > 0 && (
-                                <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray, margin: '0.5rem 0 0 0' }}>
+                                <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary, margin: '0.5rem 0 0 0' }}>
                                     {duplicateInfo.uniqueCount} new transactions can be added.
                                 </p>
                             )}
@@ -802,23 +802,23 @@ export default function TransactionUpload() {
                         {/* Sample duplicates */}
                         {duplicateInfo.sampleDuplicates && duplicateInfo.sampleDuplicates.length > 0 && (
                             <div style={{ marginBottom: '1rem' }}>
-                                <p style={{ fontSize: '0.75rem', fontWeight: 500, color: COLORS.mediumGray, marginBottom: '0.5rem' }}>
+                                <p style={{ fontSize: '0.75rem', fontWeight: 500, color: COLORS.textSecondary, marginBottom: '0.5rem' }}>
                                     Example duplicates:
                                 </p>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                     {duplicateInfo.sampleDuplicates.map((t, i) => (
                                         <div key={i} style={{
                                             fontSize: '0.75rem',
-                                            color: COLORS.darkGray,
+                                            color: COLORS.textPrimary,
                                             backgroundColor: COLORS.white,
-                                            border: `1px solid ${COLORS.lightGray}`,
+                                            border: `1px solid ${COLORS.borderLight}`,
                                             borderRadius: '0.25rem',
                                             padding: '0.5rem'
                                         }}>
                                             <div style={{ fontWeight: 500 }}>
                                                 {new Date(t.date).toLocaleDateString()} - €{(t.debit || t.credit || 0).toFixed(2)}
                                             </div>
-                                            <div style={{ color: COLORS.mediumGray, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                            <div style={{ color: COLORS.textSecondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                                 {t.details}
                                             </div>
                                         </div>
@@ -857,8 +857,8 @@ export default function TransactionUpload() {
                                     width: '100%',
                                     padding: '0.75rem 1rem',
                                     backgroundColor: 'transparent',
-                                    color: COLORS.darkGray,
-                                    border: `1px solid ${COLORS.lightGray}`,
+                                    color: COLORS.textPrimary,
+                                    border: `1px solid ${COLORS.borderLight}`,
                                     borderRadius: '0.5rem',
                                     fontSize: '0.875rem',
                                     fontWeight: 500,
@@ -880,7 +880,7 @@ export default function TransactionUpload() {
                                     width: '100%',
                                     padding: '0.75rem 1rem',
                                     backgroundColor: 'transparent',
-                                    color: COLORS.mediumGray,
+                                    color: COLORS.textSecondary,
                                     border: 'none',
                                     borderRadius: '0.5rem',
                                     fontSize: '0.875rem',

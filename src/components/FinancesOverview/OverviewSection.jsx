@@ -133,13 +133,13 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
                   justifyContent: 'space-between',
                   padding: '0.75rem',
                   borderRadius: '0.5rem',
-                  backgroundColor: COLORS.backgroundGray,
+                  backgroundColor: COLORS.bgPage,
                   marginBottom: '0.5rem'
                 }}
               >
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 500, color: COLORS.darkGray }}>{category.name}</div>
-                  <div style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>{category.percentage}% of total income</div>
+                  <div style={{ fontWeight: 500, color: COLORS.textPrimary }}>{category.name}</div>
+                  <div style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>{category.percentage}% of total income</div>
                 </div>
                 <div style={{ fontWeight: 'bold', color: COLORS.incomeColor }}>
                   {`€${category.value.toLocaleString()}`}
@@ -147,7 +147,7 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
               </div>
             ))}
             {incomeData.length === 0 && (
-              <div style={{ textAlign: 'center', padding: '2rem', color: COLORS.mediumGray }}>
+              <div style={{ textAlign: 'center', padding: '2rem', color: COLORS.textSecondary }}>
                 No income data available for {selectedYear}
               </div>
             )}
@@ -176,7 +176,7 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
                   border: 'none',
                   background: 'transparent',
                   cursor: 'pointer',
-                  color: COLORS.mediumGray
+                  color: COLORS.textSecondary
                 }}
               >
                 &larr; Back
@@ -195,13 +195,13 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
                     justifyContent: 'space-between',
                     padding: '0.75rem',
                     borderRadius: '0.5rem',
-                    backgroundColor: COLORS.backgroundGray,
+                    backgroundColor: COLORS.bgPage,
                     marginBottom: '0.5rem'
                   }}
                 >
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 500, color: COLORS.darkGray }}>{category.name}</div>
-                    <div style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>
+                    <div style={{ fontWeight: 500, color: COLORS.textPrimary }}>{category.name}</div>
+                    <div style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>
                       {groupTotal > 0 ? ((category.value / groupTotal) * 100).toFixed(1) : 0}% of {selectedExpenseGroup}
                     </div>
                   </div>
@@ -237,25 +237,25 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
                   justifyContent: 'space-between',
                   padding: '0.75rem',
                   borderRadius: '0.5rem',
-                  backgroundColor: COLORS.backgroundGray,
+                  backgroundColor: COLORS.bgPage,
                   marginBottom: '0.5rem',
                   cursor: 'pointer'
                 }}
               >
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 500, color: COLORS.darkGray }}>{group.name}</div>
-                  <div style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>{group.percentage}% of total expenses</div>
+                  <div style={{ fontWeight: 500, color: COLORS.textPrimary }}>{group.name}</div>
+                  <div style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>{group.percentage}% of total expenses</div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center' }}>
                   <div style={{ fontWeight: 'bold', color: COLORS.expenseColor }}>
                     {`€${group.value.toLocaleString()}`}
                   </div>
-                  <ChevronRight style={{ height: '1rem', width: '1rem', marginLeft: '0.5rem', color: COLORS.mediumGray }} />
+                  <ChevronRight style={{ height: '1rem', width: '1rem', marginLeft: '0.5rem', color: COLORS.textSecondary }} />
                 </div>
               </div>
             ))}
             {expenseData.length === 0 && (
-              <div style={{ textAlign: 'center', padding: '2rem', color: COLORS.mediumGray }}>
+              <div style={{ textAlign: 'center', padding: '2rem', color: COLORS.textSecondary }}>
                 No expense data available for {selectedYear}
               </div>
             )}
@@ -322,16 +322,16 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
                   justifyContent: 'space-between',
                   padding: '0.5rem',
                   borderRadius: '0.25rem',
-                  backgroundColor: COLORS.backgroundGray,
+                  backgroundColor: COLORS.bgPage,
                   marginBottom: '0.25rem'
                 }}
               >
-                <div style={{ fontWeight: 500, color: COLORS.darkGray }}>{month.month}</div>
+                <div style={{ fontWeight: 500, color: COLORS.textPrimary }}>{month.month}</div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontWeight: 'bold', color: month.profit >= 0 ? COLORS.incomeColor : COLORS.expenseColor }}>
                     {`€${month.profit.toLocaleString()}`}
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: COLORS.mediumGray }}>{month.margin}% margin</div>
+                  <div style={{ fontSize: '0.75rem', color: COLORS.textSecondary }}>{month.margin}% margin</div>
                 </div>
               </div>
             ))}
@@ -349,36 +349,36 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
             <div style={{ padding: '1rem', borderRadius: '0.5rem', backgroundColor: `${COLORS.expenseColor}15` }}>
-              <div style={{ fontSize: '0.875rem', marginBottom: '0.25rem', color: COLORS.mediumGray }}>GMS Withholding Tax</div>
+              <div style={{ fontSize: '0.875rem', marginBottom: '0.25rem', color: COLORS.textSecondary }}>GMS Withholding Tax</div>
               <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: COLORS.expenseColor }}>
                 {`€${withholdingTaxData.gmsWithholdingTax.toLocaleString()}`}
               </div>
-              <div style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: COLORS.mediumGray }}>From PCRS payments</div>
+              <div style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: COLORS.textSecondary }}>From PCRS payments</div>
             </div>
             <div style={{ padding: '1rem', borderRadius: '0.5rem', backgroundColor: `${COLORS.expenseColor}15` }}>
-              <div style={{ fontSize: '0.875rem', marginBottom: '0.25rem', color: COLORS.mediumGray }}>State Contract Tax</div>
+              <div style={{ fontSize: '0.875rem', marginBottom: '0.25rem', color: COLORS.textSecondary }}>State Contract Tax</div>
               <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: COLORS.expenseColor }}>
                 {`€${withholdingTaxData.stateContractTax.toLocaleString()}`}
               </div>
-              <div style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: COLORS.mediumGray }}>
+              <div style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: COLORS.textSecondary }}>
                 {withholdingTaxData.stateContractRate}% of €{withholdingTaxData.stateContractIncome.toLocaleString()}
               </div>
             </div>
           </div>
 
-          <div style={{ padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem', backgroundColor: COLORS.backgroundGray, border: `2px solid ${COLORS.expenseColor}` }}>
+          <div style={{ padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem', backgroundColor: COLORS.bgPage, border: `2px solid ${COLORS.expenseColor}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontWeight: 600, color: COLORS.darkGray }}>Total Withholding Tax:</span>
+              <span style={{ fontWeight: 600, color: COLORS.textPrimary }}>Total Withholding Tax:</span>
               <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: COLORS.expenseColor }}>
                 {`€${withholdingTaxData.total.toLocaleString()}`}
               </span>
             </div>
           </div>
 
-          <div style={{ marginTop: '1.5rem', padding: '1rem', backgroundColor: '#EFF6FF', borderRadius: '0.5rem', border: '1px solid #BFDBFE' }}>
+          <div style={{ marginTop: '1.5rem', padding: '1rem', backgroundColor: COLORS.slainteBlueLight, borderRadius: '0.5rem', border: `1px solid ${COLORS.infoLighter}` }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-              <Info style={{ height: '1.25rem', width: '1.25rem', color: '#2563EB', flexShrink: 0, marginTop: '0.125rem' }} />
-              <div style={{ fontSize: '0.875rem', color: '#1E40AF' }}>
+              <Info style={{ height: '1.25rem', width: '1.25rem', color: COLORS.slainteBlue, flexShrink: 0, marginTop: '0.125rem' }} />
+              <div style={{ fontSize: '0.875rem', color: COLORS.infoText }}>
                 <p style={{ fontWeight: 500, marginBottom: '0.25rem' }}>About Withholding Tax</p>
                 <ul style={{ fontSize: '0.75rem', margin: 0, paddingLeft: '1rem' }}>
                   <li><strong>GMS Withholding:</strong> Tax deducted from GMS payments by PCRS</li>
@@ -397,7 +397,7 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
         style={{
           position: 'fixed',
           inset: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          backgroundColor: COLORS.overlayDark,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -415,11 +415,11 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
             overflow: 'hidden'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', borderBottom: `1px solid ${COLORS.lightGray}` }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', borderBottom: `1px solid ${COLORS.borderLight}` }}>
             <h2 style={{ fontSize: '1.125rem', fontWeight: 600 }}>Detailed Breakdown</h2>
             <button
               onClick={onClose}
-              style={{ padding: '0.25rem', cursor: 'pointer', border: 'none', background: 'none', color: COLORS.mediumGray }}
+              style={{ padding: '0.25rem', cursor: 'pointer', border: 'none', background: 'none', color: COLORS.textSecondary }}
             >
               <X style={{ height: '1.25rem', width: '1.25rem' }} />
             </button>
@@ -525,7 +525,7 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
             padding: '1rem',
             borderRadius: '0.5rem',
             cursor: 'pointer',
-            backgroundColor: '#F59E0B',
+            backgroundColor: COLORS.warning,
             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
           }}
         >
@@ -570,7 +570,7 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
             currentKey: 'currentIncome',
             previousKey: 'previousIncome',
             currentColor: COLORS.incomeColor,
-            previousColor: '#86EFAC',
+            previousColor: COLORS.successLighter,
             currentLabel: `${selectedYear}`,
             previousLabel: `${selectedYear - 1}`
           },
@@ -579,7 +579,7 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
             currentKey: 'currentExpenses',
             previousKey: 'previousExpenses',
             currentColor: COLORS.expenseColor,
-            previousColor: '#FCA5A5',
+            previousColor: COLORS.errorLight,
             currentLabel: `${selectedYear}`,
             previousLabel: `${selectedYear - 1}`
           },
@@ -588,7 +588,7 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
             currentKey: 'currentProfit',
             previousKey: 'previousProfit',
             currentColor: COLORS.slainteBlue,
-            previousColor: '#93C5FD',
+            previousColor: COLORS.infoLighter,
             currentLabel: `${selectedYear}`,
             previousLabel: `${selectedYear - 1}`
           }
@@ -597,14 +597,14 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
         const config = chartConfig[dashboardChartMode];
 
         return (
-          <div data-tour-id="finance-chart" style={{ backgroundColor: 'white', padding: '1.5rem', borderRadius: '0.5rem', border: `1px solid ${COLORS.lightGray}` }}>
+          <div data-tour-id="finance-chart" style={{ backgroundColor: 'white', padding: '1.5rem', borderRadius: '0.5rem', border: `1px solid ${COLORS.borderLight}` }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-              <h3 style={{ fontSize: '1.125rem', fontWeight: 600, display: 'flex', alignItems: 'center', color: COLORS.darkGray }}>
+              <h3 style={{ fontSize: '1.125rem', fontWeight: 600, display: 'flex', alignItems: 'center', color: COLORS.textPrimary }}>
                 <TrendingUp style={{ height: '1.25rem', width: '1.25rem', marginRight: '0.5rem', color: COLORS.slainteBlue }} />
                 {config.title}: {selectedYear} vs {selectedYear - 1}
               </h3>
               {/* Toggle buttons */}
-              <div style={{ display: 'flex', borderRadius: '0.5rem', overflow: 'hidden', border: `1px solid ${COLORS.lightGray}` }}>
+              <div style={{ display: 'flex', borderRadius: '0.5rem', overflow: 'hidden', border: `1px solid ${COLORS.borderLight}` }}>
                 <button
                   onClick={() => setDashboardChartMode('income')}
                   style={{
@@ -614,7 +614,7 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
                     border: 'none',
                     cursor: 'pointer',
                     backgroundColor: dashboardChartMode === 'income' ? COLORS.incomeColor : 'white',
-                    color: dashboardChartMode === 'income' ? 'white' : COLORS.mediumGray
+                    color: dashboardChartMode === 'income' ? 'white' : COLORS.textSecondary
                   }}
                 >
                   Income
@@ -626,11 +626,11 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
                     fontSize: '0.875rem',
                     fontWeight: 500,
                     border: 'none',
-                    borderLeft: `1px solid ${COLORS.lightGray}`,
-                    borderRight: `1px solid ${COLORS.lightGray}`,
+                    borderLeft: `1px solid ${COLORS.borderLight}`,
+                    borderRight: `1px solid ${COLORS.borderLight}`,
                     cursor: 'pointer',
                     backgroundColor: dashboardChartMode === 'expenses' ? COLORS.expenseColor : 'white',
-                    color: dashboardChartMode === 'expenses' ? 'white' : COLORS.mediumGray
+                    color: dashboardChartMode === 'expenses' ? 'white' : COLORS.textSecondary
                   }}
                 >
                   Expenses
@@ -644,7 +644,7 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
                     border: 'none',
                     cursor: 'pointer',
                     backgroundColor: dashboardChartMode === 'profit' ? COLORS.slainteBlue : 'white',
-                    color: dashboardChartMode === 'profit' ? 'white' : COLORS.mediumGray
+                    color: dashboardChartMode === 'profit' ? 'white' : COLORS.textSecondary
                   }}
                 >
                   Profit
@@ -653,15 +653,15 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
             </div>
             <ResponsiveContainer width="100%" height={280}>
               <LineChart data={comparisonData}>
-                <CartesianGrid strokeDasharray="3 3" stroke={COLORS.lightGray} />
+                <CartesianGrid strokeDasharray="3 3" stroke={COLORS.borderLight} />
                 <XAxis
                   dataKey="month"
-                  tick={{ fill: COLORS.mediumGray, fontSize: 12 }}
-                  axisLine={{ stroke: COLORS.lightGray }}
+                  tick={{ fill: COLORS.textSecondary, fontSize: 12 }}
+                  axisLine={{ stroke: COLORS.borderLight }}
                 />
                 <YAxis
-                  tick={{ fill: COLORS.mediumGray, fontSize: 12 }}
-                  axisLine={{ stroke: COLORS.lightGray }}
+                  tick={{ fill: COLORS.textSecondary, fontSize: 12 }}
+                  axisLine={{ stroke: COLORS.borderLight }}
                   tickFormatter={(value) => `€${(value / 1000).toFixed(0)}k`}
                 />
                 <Tooltip
@@ -671,7 +671,7 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
                   ]}
                   contentStyle={{
                     backgroundColor: 'white',
-                    border: `1px solid ${COLORS.lightGray}`,
+                    border: `1px solid ${COLORS.borderLight}`,
                     borderRadius: '8px',
                     boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                   }}
@@ -706,23 +706,23 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
               const isPositive = dashboardChartMode === 'expenses' ? change < 0 : change > 0;
 
               return (
-                <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: `1px solid ${COLORS.lightGray}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: `1px solid ${COLORS.borderLight}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
                     <div>
-                      <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray }}>{selectedYear} Total</p>
+                      <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary }}>{selectedYear} Total</p>
                       <p style={{ fontSize: '1.125rem', fontWeight: 600, color: config.currentColor }}>
                         {`€${Math.round(currentTotal).toLocaleString()}`}
                       </p>
                     </div>
                     <div>
-                      <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray }}>{selectedYear - 1} Total</p>
+                      <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary }}>{selectedYear - 1} Total</p>
                       <p style={{ fontSize: '1.125rem', fontWeight: 600, color: config.previousColor }}>
                         {`€${Math.round(previousTotal).toLocaleString()}`}
                       </p>
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray }}>Year-over-Year</p>
+                    <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary }}>Year-over-Year</p>
                     <p style={{ fontSize: '1.125rem', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.25rem', color: isPositive ? COLORS.incomeColor : COLORS.expenseColor }}>
                       {isPositive ? '↗' : '↘'} {`${Math.abs(change).toFixed(1)}%`}
                     </p>
@@ -745,7 +745,7 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
             borderRadius: '0.5rem',
             cursor: 'pointer',
             backgroundColor: COLORS.white,
-            border: `1px solid ${COLORS.lightGray}`,
+            border: `1px solid ${COLORS.borderLight}`,
             boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
             transition: 'transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease'
           }}
@@ -757,16 +757,16 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = 'translateY(0)';
             e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.08)';
-            e.currentTarget.style.borderColor = COLORS.lightGray;
+            e.currentTarget.style.borderColor = COLORS.borderLight;
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <p style={{ fontSize: '0.875rem', fontWeight: 500, color: COLORS.mediumGray }}>Generate & View</p>
-              <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: COLORS.darkGray, marginTop: '0.25rem' }}>
+              <p style={{ fontSize: '0.875rem', fontWeight: 500, color: COLORS.textSecondary }}>Generate & View</p>
+              <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: COLORS.textPrimary, marginTop: '0.25rem' }}>
                 Reports
               </p>
-              <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginTop: '0.25rem' }}>
+              <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginTop: '0.25rem' }}>
                 P&L, Tax Returns, Partner Accounts
               </p>
             </div>
@@ -785,7 +785,7 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
             borderRadius: '0.5rem',
             cursor: 'pointer',
             backgroundColor: COLORS.white,
-            border: `1px solid ${COLORS.lightGray}`,
+            border: `1px solid ${COLORS.borderLight}`,
             boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
             transition: 'transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease'
           }}
@@ -797,16 +797,16 @@ const OverviewSection = ({ onOpenReports, onOpenTransactions }) => {
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = 'translateY(0)';
             e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.08)';
-            e.currentTarget.style.borderColor = COLORS.lightGray;
+            e.currentTarget.style.borderColor = COLORS.borderLight;
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <p style={{ fontSize: '0.875rem', fontWeight: 500, color: COLORS.mediumGray }}>Manage & Categorise</p>
-              <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: COLORS.darkGray, marginTop: '0.25rem' }}>
+              <p style={{ fontSize: '0.875rem', fontWeight: 500, color: COLORS.textSecondary }}>Manage & Categorise</p>
+              <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: COLORS.textPrimary, marginTop: '0.25rem' }}>
                 Transactions
               </p>
-              <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginTop: '0.25rem' }}>
+              <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginTop: '0.25rem' }}>
                 View, edit, and categorise entries
               </p>
             </div>

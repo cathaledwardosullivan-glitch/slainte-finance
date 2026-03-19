@@ -147,7 +147,7 @@ const TasksPanel = ({ onManageFinancialTasks, onManageGMSTasks, onEditTask }) =>
           style={{
             padding: '2rem 1rem',
             textAlign: 'center',
-            color: COLORS.mediumGray
+            color: COLORS.textSecondary
           }}
         >
           <p style={{ fontSize: '0.875rem', marginBottom: '0.5rem' }}>
@@ -171,7 +171,7 @@ const EmptyState = ({ type }) => {
       style={{
         padding: '1rem',
         textAlign: 'center',
-        color: COLORS.mediumGray,
+        color: COLORS.textSecondary,
         fontSize: '0.8125rem'
       }}
     >

@@ -164,10 +164,10 @@ export default function QuickConnectSetup({ onComplete, onBack }) {
         }}>
           <Wifi size={32} color={COLORS.slainteBlue} />
         </div>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: COLORS.darkGray, marginBottom: '0.5rem' }}>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: COLORS.textPrimary, marginBottom: '0.5rem' }}>
           Connect to Your Practice
         </h2>
-        <p style={{ fontSize: '0.95rem', color: COLORS.mediumGray, lineHeight: 1.6 }}>
+        <p style={{ fontSize: '0.95rem', color: COLORS.textSecondary, lineHeight: 1.6 }}>
           Enter the IP address of the main practice computer to pull all your practice data automatically.
         </p>
       </div>
@@ -175,7 +175,7 @@ export default function QuickConnectSetup({ onComplete, onBack }) {
       {/* Form */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         <div>
-          <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 500, marginBottom: '0.375rem', color: COLORS.darkGray }}>
+          <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 500, marginBottom: '0.375rem', color: COLORS.textPrimary }}>
             Practice Computer IP Address
           </label>
           <input
@@ -186,7 +186,7 @@ export default function QuickConnectSetup({ onComplete, onBack }) {
             style={{
               width: '100%',
               padding: '0.75rem',
-              border: `1px solid ${COLORS.lightGray}`,
+              border: `1px solid ${COLORS.borderLight}`,
               borderRadius: '0.5rem',
               fontSize: '1rem',
               boxSizing: 'border-box'
@@ -196,7 +196,7 @@ export default function QuickConnectSetup({ onComplete, onBack }) {
         </div>
 
         <div>
-          <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 500, marginBottom: '0.375rem', color: COLORS.darkGray }}>
+          <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 500, marginBottom: '0.375rem', color: COLORS.textPrimary }}>
             Partner Password
           </label>
           <input
@@ -207,7 +207,7 @@ export default function QuickConnectSetup({ onComplete, onBack }) {
             style={{
               width: '100%',
               padding: '0.75rem',
-              border: `1px solid ${COLORS.lightGray}`,
+              border: `1px solid ${COLORS.borderLight}`,
               borderRadius: '0.5rem',
               fontSize: '1rem',
               boxSizing: 'border-box'
@@ -261,9 +261,9 @@ export default function QuickConnectSetup({ onComplete, onBack }) {
               borderRadius: '0.5rem',
               fontSize: '0.9rem',
               fontWeight: 500,
-              color: COLORS.darkGray,
+              color: COLORS.textPrimary,
               backgroundColor: COLORS.white,
-              border: `1px solid ${COLORS.lightGray}`,
+              border: `1px solid ${COLORS.borderLight}`,
               cursor: !hubAddress.trim() || isTesting ? 'not-allowed' : 'pointer',
               opacity: !hubAddress.trim() ? 0.5 : 1
             }}
@@ -281,7 +281,7 @@ export default function QuickConnectSetup({ onComplete, onBack }) {
               fontSize: '0.9rem',
               fontWeight: 600,
               color: COLORS.white,
-              backgroundColor: (!hubAddress.trim() || !password || isPulling) ? COLORS.lightGray : COLORS.slainteBlue,
+              backgroundColor: (!hubAddress.trim() || !password || isPulling) ? COLORS.borderLight : COLORS.slainteBlue,
               border: 'none',
               cursor: (!hubAddress.trim() || !password || isPulling) ? 'not-allowed' : 'pointer',
               display: 'flex',
@@ -307,7 +307,7 @@ export default function QuickConnectSetup({ onComplete, onBack }) {
             border: 'none',
             background: 'none',
             cursor: isPulling ? 'not-allowed' : 'pointer',
-            color: COLORS.mediumGray,
+            color: COLORS.textSecondary,
             fontSize: '0.875rem',
             marginTop: '0.5rem'
           }}

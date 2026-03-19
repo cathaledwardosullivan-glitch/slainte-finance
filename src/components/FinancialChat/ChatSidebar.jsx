@@ -38,8 +38,8 @@ export function ChatSidebar({ currentChatId, onSelectChat, onNewChat, onDeleteCh
       <div
         style={{
           width: showSidebar ? '20rem' : '0',
-          backgroundColor: COLORS.backgroundGray,
-          borderRight: `1px solid ${COLORS.lightGray}`,
+          backgroundColor: COLORS.bgPage,
+          borderRight: `1px solid ${COLORS.borderLight}`,
           display: 'flex',
           flexDirection: 'column',
           transition: 'all 0.3s',
@@ -47,16 +47,16 @@ export function ChatSidebar({ currentChatId, onSelectChat, onNewChat, onDeleteCh
         }}
       >
         {/* Header */}
-        <div style={{ padding: '1rem', borderBottom: `1px solid ${COLORS.lightGray}` }}>
+        <div style={{ padding: '1rem', borderBottom: `1px solid ${COLORS.borderLight}` }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-            <h3 style={{ fontWeight: 600, color: COLORS.darkGray }}>Conversations</h3>
+            <h3 style={{ fontWeight: 600, color: COLORS.textPrimary }}>Conversations</h3>
             <button
               onClick={() => setShowSidebar(false)}
               style={{ padding: '0.25rem', background: 'none', border: 'none', cursor: 'pointer' }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.lightGray}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.borderLight}
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             >
-              <X style={{ height: '1rem', width: '1rem', color: COLORS.mediumGray }} />
+              <X style={{ height: '1rem', width: '1rem', color: COLORS.textSecondary }} />
             </button>
           </div>
 
@@ -77,7 +77,7 @@ export function ChatSidebar({ currentChatId, onSelectChat, onNewChat, onDeleteCh
               fontWeight: 500,
               cursor: 'pointer'
             }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1e40af'}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.infoText}
             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.slainteBlue}
           >
             <Plus style={{ height: '1rem', width: '1rem' }} />
@@ -94,7 +94,7 @@ export function ChatSidebar({ currentChatId, onSelectChat, onNewChat, onDeleteCh
                 transform: 'translateY(-50%)',
                 height: '1rem',
                 width: '1rem',
-                color: COLORS.mediumGray
+                color: COLORS.textSecondary
               }}
             />
             <input
@@ -108,7 +108,7 @@ export function ChatSidebar({ currentChatId, onSelectChat, onNewChat, onDeleteCh
                 paddingRight: '0.75rem',
                 paddingTop: '0.5rem',
                 paddingBottom: '0.5rem',
-                border: `1px solid ${COLORS.lightGray}`,
+                border: `1px solid ${COLORS.borderLight}`,
                 borderRadius: '0.5rem',
                 fontSize: '0.875rem',
                 outline: 'none'
@@ -125,7 +125,7 @@ export function ChatSidebar({ currentChatId, onSelectChat, onNewChat, onDeleteCh
                 padding: '0.5rem 1rem',
                 fontSize: '0.75rem',
                 fontWeight: 600,
-                color: COLORS.mediumGray,
+                color: COLORS.textSecondary,
                 textTransform: 'uppercase'
               }}>
                 {group}
@@ -145,7 +145,7 @@ export function ChatSidebar({ currentChatId, onSelectChat, onNewChat, onDeleteCh
                   }}
                   onMouseEnter={(e) => {
                     if (chat.id !== currentChatId) {
-                      e.currentTarget.style.backgroundColor = COLORS.lightGray;
+                      e.currentTarget.style.backgroundColor = COLORS.borderLight;
                     }
                   }}
                   onMouseLeave={(e) => {
@@ -159,18 +159,18 @@ export function ChatSidebar({ currentChatId, onSelectChat, onNewChat, onDeleteCh
                       <p style={{
                         fontWeight: 500,
                         fontSize: '0.875rem',
-                        color: COLORS.darkGray,
+                        color: COLORS.textPrimary,
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap'
                       }}>
                         {chat.title}
                       </p>
-                      <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginTop: '0.25rem' }}>
+                      <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginTop: '0.25rem' }}>
                         {chat.messages.length} messages
                         {chat.artifacts?.length > 0 && ` • ${chat.artifacts.length} artifacts`}
                       </p>
-                      <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginTop: '0.25rem' }}>
+                      <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginTop: '0.25rem' }}>
                         {formatTimestamp(chat.updated_at)}
                       </p>
                     </div>
@@ -181,7 +181,7 @@ export function ChatSidebar({ currentChatId, onSelectChat, onNewChat, onDeleteCh
                         background: 'none',
                         border: 'none',
                         borderRadius: '0.25rem',
-                        color: COLORS.mediumGray,
+                        color: COLORS.textSecondary,
                         cursor: 'pointer'
                       }}
                       onMouseEnter={(e) => {
@@ -190,7 +190,7 @@ export function ChatSidebar({ currentChatId, onSelectChat, onNewChat, onDeleteCh
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.backgroundColor = 'transparent';
-                        e.currentTarget.style.color = COLORS.mediumGray;
+                        e.currentTarget.style.color = COLORS.textSecondary;
                       }}
                     >
                       <Trash2 style={{ height: '1rem', width: '1rem' }} />
@@ -207,7 +207,7 @@ export function ChatSidebar({ currentChatId, onSelectChat, onNewChat, onDeleteCh
               paddingTop: '2rem',
               paddingBottom: '2rem',
               textAlign: 'center',
-              color: COLORS.mediumGray,
+              color: COLORS.textSecondary,
               fontSize: '0.875rem'
             }}>
               {searchTerm ? 'No chats found' : 'No conversations yet'}
@@ -226,16 +226,16 @@ export function ChatSidebar({ currentChatId, onSelectChat, onNewChat, onDeleteCh
             top: '1rem',
             padding: '0.5rem',
             backgroundColor: COLORS.white,
-            border: `1px solid ${COLORS.lightGray}`,
+            border: `1px solid ${COLORS.borderLight}`,
             borderRadius: '0.5rem',
             boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
             cursor: 'pointer',
             zIndex: 10
           }}
-          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.backgroundGray}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.bgPage}
           onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.white}
         >
-          <Menu style={{ height: '1.25rem', width: '1.25rem', color: COLORS.mediumGray }} />
+          <Menu style={{ height: '1.25rem', width: '1.25rem', color: COLORS.textSecondary }} />
         </button>
       )}
     </>

@@ -44,16 +44,16 @@ const PracticeProfileSection = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       {/* Edit Button and Status at Top */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', backgroundColor: COLORS.backgroundGray, borderRadius: '0.5rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', backgroundColor: COLORS.bgPage, borderRadius: '0.5rem' }}>
         <div>
-          <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>
+          <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>
             Setup Status:{' '}
-            <span style={{ fontWeight: 500, color: profile?.metadata?.setupComplete ? '#16A34A' : '#CA8A04' }}>
+            <span style={{ fontWeight: 500, color: profile?.metadata?.setupComplete ? COLORS.successDark : COLORS.warningDark }}>
               {profile?.metadata?.setupComplete ? '✓ Complete' : '⏳ In Progress'}
             </span>
           </p>
           {profile?.metadata?.lastUpdated && (
-            <p style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: COLORS.mediumGray }}>
+            <p style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: COLORS.textSecondary }}>
               Last updated: {new Date(profile.metadata.lastUpdated).toLocaleDateString('en-IE', {
                 day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
               })}
@@ -82,32 +82,32 @@ const PracticeProfileSection = () => {
       </div>
 
       {/* Practice Details */}
-      <div style={{ padding: '1rem', borderRadius: '0.5rem', backgroundColor: COLORS.white, border: `1px solid ${COLORS.lightGray}` }}>
-        <h4 style={{ fontWeight: 600, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: COLORS.darkGray }}>
+      <div style={{ padding: '1rem', borderRadius: '0.5rem', backgroundColor: COLORS.white, border: `1px solid ${COLORS.borderLight}` }}>
+        <h4 style={{ fontWeight: 600, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: COLORS.textPrimary }}>
           <Building2 style={{ height: '1rem', width: '1rem', color: COLORS.slainteBlue }} />
           Practice Details
         </h4>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem' }}>
           <div>
-            <span style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>Practice Name:</span>
-            <p style={{ fontWeight: 500, color: COLORS.darkGray }}>
-              {profile?.practiceDetails?.practiceName || <em style={{ color: '#9CA3AF' }}>Not set</em>}
+            <span style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>Practice Name:</span>
+            <p style={{ fontWeight: 500, color: COLORS.textPrimary }}>
+              {profile?.practiceDetails?.practiceName || <em style={{ color: COLORS.textSecondary }}>Not set</em>}
             </p>
           </div>
           <div>
-            <span style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>Location:</span>
-            <p style={{ fontWeight: 500, color: COLORS.darkGray }}>
+            <span style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>Location:</span>
+            <p style={{ fontWeight: 500, color: COLORS.textPrimary }}>
               {(() => {
                 if (profile?.practiceDetails?.locations?.length > 0) {
                   return profile.practiceDetails.locations.join(', ');
                 }
-                return profile?.practiceDetails?.location || <em style={{ color: '#9CA3AF' }}>Not set</em>;
+                return profile?.practiceDetails?.location || <em style={{ color: COLORS.textSecondary }}>Not set</em>;
               })()}
             </p>
           </div>
           <div>
-            <span style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>Number of GPs:</span>
-            <p style={{ fontWeight: 500, color: COLORS.darkGray }}>
+            <span style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>Number of GPs:</span>
+            <p style={{ fontWeight: 500, color: COLORS.textPrimary }}>
               {(() => {
                 const partners = profile?.gps?.partners?.length || 0;
                 const salaried = profile?.gps?.salaried?.length || 0;
@@ -115,24 +115,24 @@ const PracticeProfileSection = () => {
                 if (total > 0) {
                   return `${total} (${partners} partner${partners !== 1 ? 's' : ''}, ${salaried} salaried)`;
                 }
-                return profile?.practiceDetails?.numberOfGPs ?? <em style={{ color: '#9CA3AF' }}>Not set</em>;
+                return profile?.practiceDetails?.numberOfGPs ?? <em style={{ color: COLORS.textSecondary }}>Not set</em>;
               })()}
             </p>
           </div>
           <div>
-            <span style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>Practice Type:</span>
-            <p style={{ fontWeight: 500, color: COLORS.darkGray }}>
+            <span style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>Practice Type:</span>
+            <p style={{ fontWeight: 500, color: COLORS.textPrimary }}>
               {(() => {
                 const partners = profile?.gps?.partners?.length || 0;
                 if (partners > 1) return 'Partnership';
                 if (partners === 1) return 'Single-Handed';
-                return profile?.practiceDetails?.practiceType || <em style={{ color: '#9CA3AF' }}>Not set</em>;
+                return profile?.practiceDetails?.practiceType || <em style={{ color: COLORS.textSecondary }}>Not set</em>;
               })()}
             </p>
           </div>
           <div>
-            <span style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>Electronic Health Record (EHR):</span>
-            <p style={{ fontWeight: 500, color: COLORS.darkGray }}>
+            <span style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>Electronic Health Record (EHR):</span>
+            <p style={{ fontWeight: 500, color: COLORS.textPrimary }}>
               {(() => {
                 const ehrLabels = {
                   socrates: 'Socrates',
@@ -142,7 +142,7 @@ const PracticeProfileSection = () => {
                   other: 'Other'
                 };
                 const ehr = profile?.practiceDetails?.ehrSystem;
-                return ehr ? (ehrLabels[ehr] || ehr) : <em style={{ color: '#9CA3AF' }}>Not set</em>;
+                return ehr ? (ehrLabels[ehr] || ehr) : <em style={{ color: COLORS.textSecondary }}>Not set</em>;
               })()}
             </p>
           </div>
@@ -151,16 +151,16 @@ const PracticeProfileSection = () => {
 
       {/* GP Partners */}
       {profile?.gps?.partners && profile.gps.partners.length > 0 && (
-        <div style={{ padding: '1rem', borderRadius: '0.5rem', backgroundColor: COLORS.white, border: `1px solid ${COLORS.lightGray}` }}>
-          <h4 style={{ fontWeight: 600, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: COLORS.darkGray }}>
+        <div style={{ padding: '1rem', borderRadius: '0.5rem', backgroundColor: COLORS.white, border: `1px solid ${COLORS.borderLight}` }}>
+          <h4 style={{ fontWeight: 600, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: COLORS.textPrimary }}>
             <UserCog style={{ height: '1rem', width: '1rem', color: COLORS.slainteBlue }} />
             GP Partners ({profile.gps.partners.length})
           </h4>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.5rem' }}>
             {profile.gps.partners.map((partner, idx) => (
-              <div key={idx} style={{ padding: '0.5rem', borderRadius: '0.25rem', backgroundColor: COLORS.backgroundGray, border: `1px solid ${COLORS.lightGray}` }}>
-                <p style={{ fontWeight: 500, color: COLORS.darkGray }}>{partner.name || `Partner ${idx + 1}`}</p>
-                {partner.profitShare && <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray }}>{partner.profitShare}% profit share</p>}
+              <div key={idx} style={{ padding: '0.5rem', borderRadius: '0.25rem', backgroundColor: COLORS.bgPage, border: `1px solid ${COLORS.borderLight}` }}>
+                <p style={{ fontWeight: 500, color: COLORS.textPrimary }}>{partner.name || `Partner ${idx + 1}`}</p>
+                {partner.profitShare && <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary }}>{partner.profitShare}% profit share</p>}
               </div>
             ))}
           </div>
@@ -169,16 +169,16 @@ const PracticeProfileSection = () => {
 
       {/* Salaried GPs */}
       {profile?.gps?.salaried && profile.gps.salaried.length > 0 && (
-        <div style={{ padding: '1rem', borderRadius: '0.5rem', backgroundColor: COLORS.white, border: `1px solid ${COLORS.lightGray}` }}>
-          <h4 style={{ fontWeight: 600, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: COLORS.darkGray }}>
+        <div style={{ padding: '1rem', borderRadius: '0.5rem', backgroundColor: COLORS.white, border: `1px solid ${COLORS.borderLight}` }}>
+          <h4 style={{ fontWeight: 600, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: COLORS.textPrimary }}>
             <UserCog style={{ height: '1rem', width: '1rem', color: COLORS.slainteBlue }} />
             Salaried GPs ({profile.gps.salaried.length})
           </h4>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.5rem' }}>
             {profile.gps.salaried.map((gp, idx) => (
-              <div key={idx} style={{ padding: '0.5rem', borderRadius: '0.25rem', backgroundColor: COLORS.backgroundGray, border: `1px solid ${COLORS.lightGray}` }}>
-                <p style={{ fontWeight: 500, color: COLORS.darkGray }}>{gp.name || `Salaried GP ${idx + 1}`}</p>
-                <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray }}>Salaried GP</p>
+              <div key={idx} style={{ padding: '0.5rem', borderRadius: '0.25rem', backgroundColor: COLORS.bgPage, border: `1px solid ${COLORS.borderLight}` }}>
+                <p style={{ fontWeight: 500, color: COLORS.textPrimary }}>{gp.name || `Salaried GP ${idx + 1}`}</p>
+                <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary }}>Salaried GP</p>
               </div>
             ))}
           </div>
@@ -187,17 +187,17 @@ const PracticeProfileSection = () => {
 
       {/* Staff Members */}
       {profile?.staff && profile.staff.length > 0 && (
-        <div style={{ padding: '1rem', borderRadius: '0.5rem', backgroundColor: COLORS.white, border: `1px solid ${COLORS.lightGray}` }}>
-          <h4 style={{ fontWeight: 600, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: COLORS.darkGray }}>
+        <div style={{ padding: '1rem', borderRadius: '0.5rem', backgroundColor: COLORS.white, border: `1px solid ${COLORS.borderLight}` }}>
+          <h4 style={{ fontWeight: 600, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: COLORS.textPrimary }}>
             <UserCog style={{ height: '1rem', width: '1rem', color: COLORS.slainteBlue }} />
             Staff Members ({profile.staff.length})
           </h4>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.5rem' }}>
             {profile.staff.map((staff, idx) => (
-              <div key={idx} style={{ padding: '0.5rem', borderRadius: '0.25rem', backgroundColor: COLORS.backgroundGray, border: `1px solid ${COLORS.lightGray}` }}>
-                <p style={{ fontWeight: 500, color: COLORS.darkGray }}>{staff.name || `Staff ${idx + 1}`}</p>
+              <div key={idx} style={{ padding: '0.5rem', borderRadius: '0.25rem', backgroundColor: COLORS.bgPage, border: `1px solid ${COLORS.borderLight}` }}>
+                <p style={{ fontWeight: 500, color: COLORS.textPrimary }}>{staff.name || `Staff ${idx + 1}`}</p>
                 {staff.role && (
-                  <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, textTransform: 'capitalize' }}>
+                  <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, textTransform: 'capitalize' }}>
                     {staff.role.replace(/_/g, ' ')}
                   </p>
                 )}
@@ -209,28 +209,28 @@ const PracticeProfileSection = () => {
 
       {/* GMS Contract Info */}
       {(profile?.gmsContract?.panelSize || profile?.gmsContract?.gmsIncomePercentage) && (
-        <div style={{ padding: '1rem', borderRadius: '0.5rem', backgroundColor: COLORS.white, border: `1px solid ${COLORS.lightGray}` }}>
-          <h4 style={{ fontWeight: 600, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: COLORS.darkGray }}>
+        <div style={{ padding: '1rem', borderRadius: '0.5rem', backgroundColor: COLORS.white, border: `1px solid ${COLORS.borderLight}` }}>
+          <h4 style={{ fontWeight: 600, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: COLORS.textPrimary }}>
             <Activity style={{ height: '1rem', width: '1rem', color: COLORS.slainteBlue }} />
             GMS Contract
           </h4>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.75rem' }}>
             {profile.gmsContract.panelSize && (
               <div>
-                <span style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>Panel Size:</span>
-                <p style={{ fontWeight: 500, color: COLORS.darkGray }}>{profile.gmsContract.panelSize.toLocaleString()} patients</p>
+                <span style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>Panel Size:</span>
+                <p style={{ fontWeight: 500, color: COLORS.textPrimary }}>{profile.gmsContract.panelSize.toLocaleString()} patients</p>
               </div>
             )}
             {profile.gmsContract.averageCapitationRate && (
               <div>
-                <span style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>Avg Capitation Rate:</span>
-                <p style={{ fontWeight: 500, color: COLORS.darkGray }}>€{profile.gmsContract.averageCapitationRate}/patient/year</p>
+                <span style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>Avg Capitation Rate:</span>
+                <p style={{ fontWeight: 500, color: COLORS.textPrimary }}>€{profile.gmsContract.averageCapitationRate}/patient/year</p>
               </div>
             )}
             {profile.gmsContract.gmsIncomePercentage && (
               <div>
-                <span style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>GMS % of Income:</span>
-                <p style={{ fontWeight: 500, color: COLORS.darkGray }}>{profile.gmsContract.gmsIncomePercentage}%</p>
+                <span style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>GMS % of Income:</span>
+                <p style={{ fontWeight: 500, color: COLORS.textPrimary }}>{profile.gmsContract.gmsIncomePercentage}%</p>
               </div>
             )}
           </div>
@@ -254,7 +254,7 @@ const PracticeProfileSection = () => {
         >
           <div
             style={{
-              backgroundColor: COLORS.backgroundGray,
+              backgroundColor: COLORS.bgPage,
               borderRadius: '16px',
               maxWidth: '1400px',
               width: '100%',

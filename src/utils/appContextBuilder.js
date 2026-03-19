@@ -95,7 +95,8 @@ export function isAppHelpQuestion(message) {
         'import', 'upload', 'export', 'categories',
         'widget', 'pcrs download', 'health check',
         'p&l', 'profit and loss', 'report modal', 'transaction list',
-        'local only', 'privacy mode', 'api key'
+        'local only', 'privacy mode', 'api key',
+        'advanced insights', 'insights tab', 'analysis tab'
     ];
 
     const hasHelpPattern = helpPatterns.some(p => lowerMsg.includes(p));

@@ -4,7 +4,7 @@ import COLORS from '../../../utils/colors';
 import { useTour } from '../../Tour';
 import PrintableGuide from '../../PrintableGuide';
 
-const GMS_PINK = '#E91E63';
+const GMS_PINK = COLORS.chartPink;
 
 /**
  * TourOnboardingSection - App Tour, User Guide, and Health Check Tour
@@ -15,11 +15,11 @@ const TourOnboardingSection = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      <div style={{ backgroundColor: COLORS.white, padding: '1.5rem', borderRadius: '0.5rem', border: `1px solid ${COLORS.lightGray}` }}>
-        <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.darkGray, marginBottom: '1rem' }}>
+      <div style={{ backgroundColor: COLORS.white, padding: '1.5rem', borderRadius: '0.5rem', border: `1px solid ${COLORS.borderLight}` }}>
+        <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.textPrimary, marginBottom: '1rem' }}>
           Getting Started
         </h3>
-        <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray, marginBottom: '1.5rem' }}>
+        <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary, marginBottom: '1.5rem' }}>
           Learn how to use Sláinte Finance with our guided tour and comprehensive user guide.
         </p>
 
@@ -32,7 +32,7 @@ const TourOnboardingSection = () => {
               </div>
               <h4 style={{ fontWeight: 600, color: COLORS.slainteBlue }}>App Tour</h4>
             </div>
-            <p style={{ fontSize: '0.875rem', color: COLORS.darkGray, marginBottom: '1rem' }}>
+            <p style={{ fontSize: '0.875rem', color: COLORS.textPrimary, marginBottom: '1rem' }}>
               Take a guided tour through the key features of Sláinte Finance. Perfect for new users or a quick refresher.
             </p>
             <button
@@ -56,7 +56,7 @@ const TourOnboardingSection = () => {
               Start Tour
             </button>
             {getTourCompletionDate() && (
-              <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginTop: '0.75rem' }}>
+              <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginTop: '0.75rem' }}>
                 Last completed: {getTourCompletionDate().toLocaleDateString()}
               </p>
             )}
@@ -70,7 +70,7 @@ const TourOnboardingSection = () => {
               </div>
               <h4 style={{ fontWeight: 600, color: COLORS.incomeColor }}>User Guide</h4>
             </div>
-            <p style={{ fontSize: '0.875rem', color: COLORS.darkGray, marginBottom: '1rem' }}>
+            <p style={{ fontSize: '0.875rem', color: COLORS.textPrimary, marginBottom: '1rem' }}>
               View or print a comprehensive guide to all features in Sláinte Finance. Perfect for training or reference.
             </p>
             <button
@@ -103,7 +103,7 @@ const TourOnboardingSection = () => {
               </div>
               <h4 style={{ fontWeight: 600, color: GMS_PINK }}>Health Check Tour</h4>
             </div>
-            <p style={{ fontSize: '0.875rem', color: COLORS.darkGray, marginBottom: '1rem' }}>
+            <p style={{ fontSize: '0.875rem', color: COLORS.textPrimary, marginBottom: '1rem' }}>
               A guided walkthrough of the GMS Health Check report, explaining each income category and what to look for.
             </p>
             <button
@@ -127,7 +127,7 @@ const TourOnboardingSection = () => {
               Start Health Check Tour
             </button>
             {getGMSHCTourCompletionDate() && (
-              <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray, marginTop: '0.75rem' }}>
+              <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginTop: '0.75rem' }}>
                 Last completed: {getGMSHCTourCompletionDate().toLocaleDateString()}
               </p>
             )}

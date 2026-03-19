@@ -142,10 +142,10 @@ export default function SyncManager() {
               <AlertTriangle className="h-6 w-6" style={{ color: COLORS.highlightYellow }} />
             </div>
             <div>
-              <h2 className="text-xl font-bold" style={{ color: COLORS.darkGray }}>
+              <h2 className="text-xl font-bold" style={{ color: COLORS.textPrimary }}>
                 Data Sync Conflicts Detected
               </h2>
-              <p className="text-sm mt-1" style={{ color: COLORS.mediumGray }}>
+              <p className="text-sm mt-1" style={{ color: COLORS.textSecondary }}>
                 The imported data differs from your current data. Choose how to resolve:
               </p>
             </div>
@@ -158,15 +158,15 @@ export default function SyncManager() {
                 key={index}
                 className="p-4 rounded-lg border"
                 style={{
-                  backgroundColor: COLORS.backgroundGray,
-                  borderColor: COLORS.lightGray
+                  backgroundColor: COLORS.bgPage,
+                  borderColor: COLORS.borderLight
                 }}
               >
-                <p className="text-sm font-medium" style={{ color: COLORS.darkGray }}>
+                <p className="text-sm font-medium" style={{ color: COLORS.textPrimary }}>
                   {conflict.message}
                 </p>
                 {conflict.current !== undefined && conflict.imported !== undefined && (
-                  <div className="mt-2 text-xs space-y-1" style={{ color: COLORS.mediumGray }}>
+                  <div className="mt-2 text-xs space-y-1" style={{ color: COLORS.textSecondary }}>
                     <p>Current: {conflict.current}</p>
                     <p>Imported: {conflict.imported}</p>
                   </div>
@@ -185,10 +185,10 @@ export default function SyncManager() {
               <div className="flex items-center gap-3">
                 <RefreshCw className="h-5 w-5" style={{ color: COLORS.slainteBlue }} />
                 <div>
-                  <p className="font-semibold" style={{ color: COLORS.darkGray }}>
+                  <p className="font-semibold" style={{ color: COLORS.textPrimary }}>
                     Merge Data (Recommended)
                   </p>
-                  <p className="text-sm" style={{ color: COLORS.mediumGray }}>
+                  <p className="text-sm" style={{ color: COLORS.textSecondary }}>
                     Combine both datasets, keeping all transactions and newest reports
                   </p>
                 </div>
@@ -198,15 +198,15 @@ export default function SyncManager() {
             <button
               onClick={() => handleResolveConflict('useImported')}
               className="w-full p-4 rounded-lg border text-left hover:bg-gray-50 transition-colors"
-              style={{ borderColor: COLORS.lightGray }}
+              style={{ borderColor: COLORS.borderLight }}
             >
               <div className="flex items-center gap-3">
-                <Download className="h-5 w-5" style={{ color: COLORS.mediumGray }} />
+                <Download className="h-5 w-5" style={{ color: COLORS.textSecondary }} />
                 <div>
-                  <p className="font-semibold" style={{ color: COLORS.darkGray }}>
+                  <p className="font-semibold" style={{ color: COLORS.textPrimary }}>
                     Use Imported Data
                   </p>
-                  <p className="text-sm" style={{ color: COLORS.mediumGray }}>
+                  <p className="text-sm" style={{ color: COLORS.textSecondary }}>
                     Replace current data with imported data
                   </p>
                 </div>
@@ -219,15 +219,15 @@ export default function SyncManager() {
                 setImportData(null);
               }}
               className="w-full p-4 rounded-lg border text-left hover:bg-gray-50 transition-colors"
-              style={{ borderColor: COLORS.lightGray }}
+              style={{ borderColor: COLORS.borderLight }}
             >
               <div className="flex items-center gap-3">
-                <Check className="h-5 w-5" style={{ color: COLORS.mediumGray }} />
+                <Check className="h-5 w-5" style={{ color: COLORS.textSecondary }} />
                 <div>
-                  <p className="font-semibold" style={{ color: COLORS.darkGray }}>
+                  <p className="font-semibold" style={{ color: COLORS.textPrimary }}>
                     Keep Current Data
                   </p>
-                  <p className="text-sm" style={{ color: COLORS.mediumGray }}>
+                  <p className="text-sm" style={{ color: COLORS.textSecondary }}>
                     Cancel import and keep existing data
                   </p>
                 </div>
@@ -243,10 +243,10 @@ export default function SyncManager() {
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold mb-2" style={{ color: COLORS.darkGray }}>
+        <h2 className="text-2xl font-bold mb-2" style={{ color: COLORS.textPrimary }}>
           Data Sync
         </h2>
-        <p style={{ color: COLORS.mediumGray }}>
+        <p style={{ color: COLORS.textSecondary }}>
           Sync your data between desktop and mobile using cloud storage
         </p>
       </div>
@@ -256,45 +256,45 @@ export default function SyncManager() {
         <div
           className="rounded-lg p-6 mb-6 border"
           style={{
-            backgroundColor: COLORS.backgroundGray,
-            borderColor: COLORS.lightGray
+            backgroundColor: COLORS.bgPage,
+            borderColor: COLORS.borderLight
           }}
         >
           <div className="flex items-center gap-3 mb-4">
             <Cloud className="h-6 w-6" style={{ color: COLORS.slainteBlue }} />
-            <h3 className="text-lg font-semibold" style={{ color: COLORS.darkGray }}>
+            <h3 className="text-lg font-semibold" style={{ color: COLORS.textPrimary }}>
               Sync Status
             </h3>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-sm font-medium mb-1" style={{ color: COLORS.mediumGray }}>
+              <p className="text-sm font-medium mb-1" style={{ color: COLORS.textSecondary }}>
                 Current Device
               </p>
               <div className="flex items-center gap-2">
                 {syncStatus.deviceName === 'Desktop' ? (
-                  <Monitor className="h-4 w-4" style={{ color: COLORS.darkGray }} />
+                  <Monitor className="h-4 w-4" style={{ color: COLORS.textPrimary }} />
                 ) : (
-                  <Smartphone className="h-4 w-4" style={{ color: COLORS.darkGray }} />
+                  <Smartphone className="h-4 w-4" style={{ color: COLORS.textPrimary }} />
                 )}
-                <p className="font-semibold" style={{ color: COLORS.darkGray }}>
+                <p className="font-semibold" style={{ color: COLORS.textPrimary }}>
                   {syncStatus.deviceName}
                 </p>
               </div>
             </div>
 
             <div>
-              <p className="text-sm font-medium mb-1" style={{ color: COLORS.mediumGray }}>
+              <p className="text-sm font-medium mb-1" style={{ color: COLORS.textSecondary }}>
                 Last Sync
               </p>
-              <p className="font-semibold" style={{ color: COLORS.darkGray }}>
+              <p className="font-semibold" style={{ color: COLORS.textPrimary }}>
                 {syncStatus.lastSync
                   ? new Date(syncStatus.lastSync).toLocaleString('en-IE')
                   : 'Never'}
               </p>
               {syncStatus.lastSyncDevice && (
-                <p className="text-xs" style={{ color: COLORS.mediumGray }}>
+                <p className="text-xs" style={{ color: COLORS.textSecondary }}>
                   from {syncStatus.lastSyncDevice}
                 </p>
               )}
@@ -308,10 +308,10 @@ export default function SyncManager() {
         className="rounded-lg p-6 mb-6 border"
         style={{
           backgroundColor: COLORS.white,
-          borderColor: COLORS.lightGray
+          borderColor: COLORS.borderLight
         }}
       >
-        <h3 className="text-lg font-semibold mb-4" style={{ color: COLORS.darkGray }}>
+        <h3 className="text-lg font-semibold mb-4" style={{ color: COLORS.textPrimary }}>
           How Cloud Sync Works
         </h3>
         <ol className="space-y-3">
@@ -322,7 +322,7 @@ export default function SyncManager() {
             >
               1
             </span>
-            <p style={{ color: COLORS.darkGray }}>
+            <p style={{ color: COLORS.textPrimary }}>
               <strong>Export</strong> your data on your desktop
             </p>
           </li>
@@ -333,7 +333,7 @@ export default function SyncManager() {
             >
               2
             </span>
-            <p style={{ color: COLORS.darkGray }}>
+            <p style={{ color: COLORS.textPrimary }}>
               <strong>Save</strong> the file to your cloud storage (OneDrive, Dropbox, iCloud, Google Drive)
             </p>
           </li>
@@ -344,7 +344,7 @@ export default function SyncManager() {
             >
               3
             </span>
-            <p style={{ color: COLORS.darkGray }}>
+            <p style={{ color: COLORS.textPrimary }}>
               <strong>Import</strong> the file on your mobile device from the same cloud folder
             </p>
           </li>
@@ -364,11 +364,11 @@ export default function SyncManager() {
         >
           <div className="flex items-center gap-3 mb-2">
             <Download className="h-6 w-6" style={{ color: COLORS.incomeColor }} />
-            <h3 className="text-lg font-semibold" style={{ color: COLORS.darkGray }}>
+            <h3 className="text-lg font-semibold" style={{ color: COLORS.textPrimary }}>
               Export Data
             </h3>
           </div>
-          <p className="text-sm" style={{ color: COLORS.mediumGray }}>
+          <p className="text-sm" style={{ color: COLORS.textSecondary }}>
             Download a file to save to cloud storage
           </p>
         </button>
@@ -383,11 +383,11 @@ export default function SyncManager() {
           />
           <div className="flex items-center gap-3 mb-2">
             <Upload className="h-6 w-6" style={{ color: COLORS.slainteBlue }} />
-            <h3 className="text-lg font-semibold" style={{ color: COLORS.darkGray }}>
+            <h3 className="text-lg font-semibold" style={{ color: COLORS.textPrimary }}>
               Import Data
             </h3>
           </div>
-          <p className="text-sm" style={{ color: COLORS.mediumGray }}>
+          <p className="text-sm" style={{ color: COLORS.textSecondary }}>
             Load data from cloud storage
           </p>
         </label>

@@ -162,7 +162,7 @@ const AreaDataCollector = ({ areaId, readiness, healthCheckData, paymentAnalysis
   const numInput = (section, field, label, helpText) => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-        <label style={{ fontSize: '0.8rem', fontWeight: 500, color: COLORS.darkGray }}>{label}</label>
+        <label style={{ fontSize: '0.8rem', fontWeight: 500, color: COLORS.textPrimary }}>{label}</label>
         {helpText && (
           <button
             onClick={() => setShowHelp(showHelp === field ? null : field)}
@@ -176,7 +176,7 @@ const AreaDataCollector = ({ areaId, readiness, healthCheckData, paymentAnalysis
         )}
       </div>
       {showHelp === field && helpText && (
-        <p style={{ margin: 0, fontSize: '0.75rem', color: COLORS.mediumGray, fontStyle: 'italic' }}>
+        <p style={{ margin: 0, fontSize: '0.75rem', color: COLORS.textSecondary, fontStyle: 'italic' }}>
           {helpText}
         </p>
       )}
@@ -188,7 +188,7 @@ const AreaDataCollector = ({ areaId, readiness, healthCheckData, paymentAnalysis
         style={{
           padding: '0.4rem 0.6rem',
           borderRadius: '0.375rem',
-          border: `1px solid ${COLORS.lightGray}`,
+          border: `1px solid ${COLORS.borderLight}`,
           fontSize: '0.875rem',
           width: '100%',
           boxSizing: 'border-box'
@@ -200,17 +200,17 @@ const AreaDataCollector = ({ areaId, readiness, healthCheckData, paymentAnalysis
   // --- Leave ---
   if (areaId === 'leave') {
     return (
-      <div style={{ padding: '1rem', backgroundColor: '#FAFAFA', borderRadius: '0.5rem', border: `1px solid ${COLORS.lightGray}` }}>
-        <p style={{ margin: '0 0 0.5rem', fontSize: '0.875rem', color: COLORS.darkGray }}>
+      <div style={{ padding: '1rem', backgroundColor: COLORS.bgPage, borderRadius: '0.5rem', border: `1px solid ${COLORS.borderLight}` }}>
+        <p style={{ margin: '0 0 0.5rem', fontSize: '0.875rem', color: COLORS.textPrimary }}>
           Leave data is extracted automatically from your GMS PDFs.
         </p>
         {readiness.status === 'no-data' ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: COLORS.mediumGray, fontSize: '0.85rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: COLORS.textSecondary, fontSize: '0.85rem' }}>
             <Upload size={16} />
             Upload GMS PDFs from the GMS Dashboard to populate leave data.
           </div>
         ) : (
-          <p style={{ margin: 0, fontSize: '0.85rem', color: '#22C55E', fontWeight: 500 }}>
+          <p style={{ margin: 0, fontSize: '0.85rem', color: COLORS.success, fontWeight: 500 }}>
             Leave data available from uploaded PDFs.
           </p>
         )}
@@ -252,8 +252,8 @@ const AreaDataCollector = ({ areaId, readiness, healthCheckData, paymentAnalysis
     const isSocrates = profile?.practiceDetails?.ehrSystem === 'socrates';
     const hasCervicalData = (healthCheckData?.cervicalCheckActivity?.eligibleWomen25to44 || 0) > 0;
     return (
-      <div style={{ padding: '1rem', backgroundColor: '#FAFAFA', borderRadius: '0.5rem', border: `1px solid ${COLORS.lightGray}` }}>
-        <p style={{ margin: '0 0 0.75rem', fontSize: '0.875rem', fontWeight: 500, color: COLORS.darkGray }}>
+      <div style={{ padding: '1rem', backgroundColor: COLORS.bgPage, borderRadius: '0.5rem', border: `1px solid ${COLORS.borderLight}` }}>
+        <p style={{ margin: '0 0 0.75rem', fontSize: '0.875rem', fontWeight: 500, color: COLORS.textPrimary }}>
           Eligible women counts from your EHR
         </p>
         {isSocrates && !hasCervicalData && (
@@ -278,20 +278,20 @@ const AreaDataCollector = ({ areaId, readiness, healthCheckData, paymentAnalysis
         <div style={{
           display: 'flex', alignItems: 'center', gap: '0.5rem',
           padding: '0.5rem 0.75rem', backgroundColor: COLORS.white, borderRadius: '0.25rem',
-          border: `1px solid ${COLORS.lightGray}`, fontSize: '0.8rem'
+          border: `1px solid ${COLORS.borderLight}`, fontSize: '0.8rem'
         }}>
           <div style={{
-            flex: 1, height: '6px', backgroundColor: '#E0E0E0', borderRadius: '3px', overflow: 'hidden'
+            flex: 1, height: '6px', backgroundColor: COLORS.borderLight, borderRadius: '3px', overflow: 'hidden'
           }}>
             <div style={{
               width: `${Math.min(100, (monthsAvailable / 12) * 100)}%`,
               height: '100%',
-              backgroundColor: monthsAvailable >= 12 ? '#22C55E' : '#F59E0B',
+              backgroundColor: monthsAvailable >= 12 ? COLORS.success : COLORS.warning,
               borderRadius: '3px',
               transition: 'width 0.3s ease'
             }} />
           </div>
-          <span style={{ color: COLORS.mediumGray, whiteSpace: 'nowrap' }}>
+          <span style={{ color: COLORS.textSecondary, whiteSpace: 'nowrap' }}>
             {monthsAvailable}/12 months
           </span>
         </div>
@@ -318,8 +318,8 @@ const AreaDataCollector = ({ areaId, readiness, healthCheckData, paymentAnalysis
     const cdmContext = useMemo(() => estimateCDMContextFromClaims(paymentAnalysisData), [paymentAnalysisData]);
 
     return (
-      <div style={{ padding: '1rem', backgroundColor: '#FAFAFA', borderRadius: '0.5rem', border: `1px solid ${COLORS.lightGray}` }}>
-        <p style={{ margin: '0 0 0.75rem', fontSize: '0.875rem', fontWeight: 500, color: COLORS.darkGray }}>
+      <div style={{ padding: '1rem', backgroundColor: COLORS.bgPage, borderRadius: '0.5rem', border: `1px solid ${COLORS.borderLight}` }}>
+        <p style={{ margin: '0 0 0.75rem', fontSize: '0.875rem', fontWeight: 500, color: COLORS.textPrimary }}>
           Enter disease register counts from your EHR
         </p>
 
@@ -332,7 +332,7 @@ const AreaDataCollector = ({ areaId, readiness, healthCheckData, paymentAnalysis
             border: `1px solid ${COLORS.slainteBlue}25`
           }}>
             <Info size={15} color={COLORS.slainteBlue} style={{ marginTop: '1px', flexShrink: 0 }} />
-            <div style={{ fontSize: '0.78rem', color: COLORS.darkGray }}>
+            <div style={{ fontSize: '0.78rem', color: COLORS.textPrimary }}>
               <span>Your PCRS data shows <strong>{cdmContext.totalCDMReviews}</strong> CDM review claim{cdmContext.totalCDMReviews !== 1 ? 's' : ''}</span>
               {cdmContext.estimatedEnrolled > 0 && (
                 <span>, suggesting at least <strong>~{cdmContext.estimatedEnrolled}</strong> patients enrolled</span>
@@ -341,7 +341,7 @@ const AreaDataCollector = ({ areaId, readiness, healthCheckData, paymentAnalysis
               {cdmContext.ppReviews > 0 && (
                 <span> Plus <strong>{cdmContext.ppReviews}</strong> Prevention Programme review{cdmContext.ppReviews !== 1 ? 's' : ''}.</span>
               )}
-              <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: COLORS.mediumGray }}>
+              <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: COLORS.textSecondary }}>
                 Enter your disease register counts below to identify specific growth opportunities.
               </p>
             </div>
@@ -353,7 +353,7 @@ const AreaDataCollector = ({ areaId, readiness, healthCheckData, paymentAnalysis
             Tap <span style={{ display: 'inline-flex', verticalAlign: 'middle' }}><Info size={10} /></span> on each field for {ehrLabel}-specific guidance on finding the data
           </p>
         )}
-        <p style={{ margin: '0 0 0.75rem', fontSize: '0.8rem', color: COLORS.mediumGray }}>
+        <p style={{ margin: '0 0 0.75rem', fontSize: '0.8rem', color: COLORS.textSecondary }}>
           CDM Treatment Programme conditions
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>
@@ -365,7 +365,7 @@ const AreaDataCollector = ({ areaId, readiness, healthCheckData, paymentAnalysis
           {numInput('diseaseRegisters', 'ihd', 'IHD', getCDMHelpText('ihd', ehr))}
           {numInput('diseaseRegisters', 'strokeTIA', 'Stroke/TIA', getCDMHelpText('strokeTIA', ehr))}
         </div>
-        <p style={{ margin: '0.5rem 0 0.75rem', fontSize: '0.8rem', color: COLORS.mediumGray }}>
+        <p style={{ margin: '0.5rem 0 0.75rem', fontSize: '0.8rem', color: COLORS.textSecondary }}>
           Prevention Programme conditions
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>
@@ -386,7 +386,7 @@ const AreaDataCollector = ({ areaId, readiness, healthCheckData, paymentAnalysis
 const STC_SERVICE_GROUPS = [
   {
     heading: 'Diagnostics',
-    color: '#8B5CF6',
+    color: COLORS.chartViolet,
     services: [
       { id: 'ecg', label: 'ECG', codes: ['F'] },
       { id: 'abpm', label: '24hr ABPM', codes: ['AD'] }
@@ -394,7 +394,7 @@ const STC_SERVICE_GROUPS = [
   },
   {
     heading: 'Minor Surgery & Procedures',
-    color: '#3B82F6',
+    color: COLORS.slainteBlue,
     services: [
       { id: 'skinExcision', label: 'Skin excisions / cryotherapy', codes: ['A'] },
       { id: 'suturing', label: 'Suturing', codes: ['B'] },
@@ -405,7 +405,7 @@ const STC_SERVICE_GROUPS = [
   },
   {
     heading: 'Contraception & LARC',
-    color: '#EC4899',
+    color: COLORS.chartPink,
     services: [
       { id: 'contraceptionConsult', label: 'Contraception consultations', codes: ['CF', 'CL'] },
       { id: 'larcImplantFitting', label: 'LARC implant fitting', codes: ['CG', 'CO'] },
@@ -416,7 +416,7 @@ const STC_SERVICE_GROUPS = [
   },
   {
     heading: 'Paediatric (Under 8s)',
-    color: '#F59E0B',
+    color: COLORS.warning,
     services: [
       { id: 'paediatricForeignBody', label: 'Foreign body removal', codes: ['X'] },
       { id: 'paediatricSuturing', label: 'Suturing', codes: ['Y'] },
@@ -438,17 +438,17 @@ const CapitationCollector = ({ readiness, healthCheckData, onUpdate, profile, nu
       {/* Non-Socrates EHR note */}
       {!isSocrates && ehrSystem && (
         <div style={{
-          padding: '0.5rem 0.75rem', backgroundColor: '#FAFAFA',
-          borderRadius: '0.375rem', border: `1px solid ${COLORS.lightGray}`,
-          fontSize: '0.78rem', color: COLORS.mediumGray
+          padding: '0.5rem 0.75rem', backgroundColor: COLORS.bgPage,
+          borderRadius: '0.375rem', border: `1px solid ${COLORS.borderLight}`,
+          fontSize: '0.78rem', color: COLORS.textSecondary
         }}>
           Manual entry required — see the help icons for guidance on finding this data in your EHR.
         </div>
       )}
 
       {/* Demographics form */}
-      <div style={{ padding: '1rem', backgroundColor: '#FAFAFA', borderRadius: '0.5rem', border: `1px solid ${COLORS.lightGray}` }}>
-        <p style={{ margin: '0 0 0.75rem', fontSize: '0.875rem', fontWeight: 500, color: COLORS.darkGray }}>
+      <div style={{ padding: '1rem', backgroundColor: COLORS.bgPage, borderRadius: '0.5rem', border: `1px solid ${COLORS.borderLight}` }}>
+        <p style={{ margin: '0 0 0.75rem', fontSize: '0.875rem', fontWeight: 500, color: COLORS.textPrimary }}>
           Patient demographics from your EHR system
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
@@ -489,19 +489,19 @@ const STCDemographicsSection = ({ healthCheckData, onUpdate }) => {
   return (
     <div style={{
       padding: '0.6rem 0.75rem',
-      backgroundColor: '#FDF8F0',
+      backgroundColor: COLORS.warningLighter,
       borderRadius: '0.375rem',
-      border: `1px solid #FDE68A`
+      border: `1px solid ${COLORS.warningLight}`
     }}>
-      <p style={{ margin: '0 0 0.25rem', fontSize: '0.8rem', fontWeight: 500, color: COLORS.darkGray }}>
+      <p style={{ margin: '0 0 0.25rem', fontSize: '0.8rem', fontWeight: 500, color: COLORS.textPrimary }}>
         Female patient demographics (optional)
       </p>
-      <p style={{ margin: '0 0 0.5rem', fontSize: '0.75rem', color: COLORS.mediumGray }}>
+      <p style={{ margin: '0 0 0.5rem', fontSize: '0.75rem', color: COLORS.textSecondary }}>
         Two contraception schemes with different eligibility: Free Contraception Scheme (all women 17-35) and GMS/DVC scheme (GMS cardholders 36-44).
       </p>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
         <div>
-          <label style={{ display: 'block', fontSize: '0.75rem', color: COLORS.mediumGray, marginBottom: '0.2rem' }}>
+          <label style={{ display: 'block', fontSize: '0.75rem', color: COLORS.textSecondary, marginBottom: '0.2rem' }}>
             All women 17-35
           </label>
           <input
@@ -515,13 +515,13 @@ const STCDemographicsSection = ({ healthCheckData, onUpdate }) => {
               padding: '0.35rem 0.5rem',
               fontSize: '0.85rem',
               borderRadius: '0.3rem',
-              border: `1px solid ${COLORS.lightGray}`,
+              border: `1px solid ${COLORS.borderLight}`,
               boxSizing: 'border-box'
             }}
           />
         </div>
         <div>
-          <label style={{ display: 'block', fontSize: '0.75rem', color: COLORS.mediumGray, marginBottom: '0.2rem' }}>
+          <label style={{ display: 'block', fontSize: '0.75rem', color: COLORS.textSecondary, marginBottom: '0.2rem' }}>
             GMS women 36-44
           </label>
           <input
@@ -535,14 +535,14 @@ const STCDemographicsSection = ({ healthCheckData, onUpdate }) => {
               padding: '0.35rem 0.5rem',
               fontSize: '0.85rem',
               borderRadius: '0.3rem',
-              border: `1px solid ${COLORS.lightGray}`,
+              border: `1px solid ${COLORS.borderLight}`,
               boxSizing: 'border-box'
             }}
           />
         </div>
       </div>
       {hasData && (
-        <p style={{ margin: '0.35rem 0 0', fontSize: '0.75rem', color: '#92400E' }}>
+        <p style={{ margin: '0.35rem 0 0', fontSize: '0.75rem', color: COLORS.warningText }}>
           These demographics will be used for practice-specific contraception benchmarks.
         </p>
       )}
@@ -599,7 +599,7 @@ const STCServicesCollector = ({ readiness, healthCheckData, paymentAnalysisData,
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-      <p style={{ margin: 0, fontSize: '0.85rem', color: COLORS.darkGray }}>
+      <p style={{ margin: 0, fontSize: '0.85rem', color: COLORS.textPrimary }}>
         Which of these services does your practice currently provide?
       </p>
 
@@ -645,23 +645,23 @@ const STCServicesCollector = ({ readiness, healthCheckData, paymentAnalysisData,
                     alignItems: 'center',
                     gap: '0.5rem',
                     padding: '0.45rem 0.6rem',
-                    backgroundColor: isChecked ? '#F0FDF4' : COLORS.white,
+                    backgroundColor: isChecked ? COLORS.successLight : COLORS.white,
                     borderRadius: '0.375rem',
-                    border: `1px solid ${isChecked ? '#BBF7D0' : COLORS.lightGray}`,
+                    border: `1px solid ${isChecked ? COLORS.successLighter : COLORS.borderLight}`,
                     cursor: 'pointer',
                     transition: 'all 0.15s',
                     textAlign: 'left'
                   }}
                 >
                   {isChecked ? (
-                    <CheckSquare size={15} color="#22C55E" style={{ flexShrink: 0 }} />
+                    <CheckSquare size={15} color={COLORS.success} style={{ flexShrink: 0 }} />
                   ) : (
-                    <Square size={15} color={COLORS.mediumGray} style={{ flexShrink: 0 }} />
+                    <Square size={15} color={COLORS.textSecondary} style={{ flexShrink: 0 }} />
                   )}
                   <span style={{
                     fontSize: '0.825rem',
                     fontWeight: isChecked ? 600 : 400,
-                    color: isChecked ? '#166534' : COLORS.darkGray,
+                    color: isChecked ? COLORS.successText : COLORS.textPrimary,
                     flex: 1
                   }}>
                     {service.label}
@@ -683,7 +683,7 @@ const STCServicesCollector = ({ readiness, healthCheckData, paymentAnalysisData,
       ))}
 
       {checkedCount > 0 && (
-        <p style={{ margin: 0, fontSize: '0.8rem', color: '#15803D', fontWeight: 500 }}>
+        <p style={{ margin: 0, fontSize: '0.8rem', color: COLORS.successText, fontWeight: 500 }}>
           {checkedCount} of {allServices.length} services selected
         </p>
       )}
@@ -694,11 +694,11 @@ const STCServicesCollector = ({ readiness, healthCheckData, paymentAnalysisData,
       {/* PCRS data progress bar */}
       <div style={{
         padding: '0.6rem 0.75rem',
-        backgroundColor: '#FAFAFA',
+        backgroundColor: COLORS.bgPage,
         borderRadius: '0.375rem',
-        border: `1px solid ${COLORS.lightGray}`
+        border: `1px solid ${COLORS.borderLight}`
       }}>
-        <p style={{ margin: '0 0 0.4rem', fontSize: '0.8rem', fontWeight: 500, color: COLORS.darkGray }}>
+        <p style={{ margin: '0 0 0.4rem', fontSize: '0.8rem', fontWeight: 500, color: COLORS.textPrimary }}>
           PCRS claim data
         </p>
         <div style={{
@@ -706,22 +706,22 @@ const STCServicesCollector = ({ readiness, healthCheckData, paymentAnalysisData,
           fontSize: '0.8rem'
         }}>
           <div style={{
-            flex: 1, height: '6px', backgroundColor: '#E0E0E0', borderRadius: '3px', overflow: 'hidden'
+            flex: 1, height: '6px', backgroundColor: COLORS.borderLight, borderRadius: '3px', overflow: 'hidden'
           }}>
             <div style={{
               width: `${Math.min(100, (monthsAvailable / 12) * 100)}%`,
               height: '100%',
-              backgroundColor: monthsAvailable >= 12 ? '#22C55E' : '#F59E0B',
+              backgroundColor: monthsAvailable >= 12 ? COLORS.success : COLORS.warning,
               borderRadius: '3px',
               transition: 'width 0.3s ease'
             }} />
           </div>
-          <span style={{ color: COLORS.mediumGray, whiteSpace: 'nowrap' }}>
+          <span style={{ color: COLORS.textSecondary, whiteSpace: 'nowrap' }}>
             {monthsAvailable}/12 months
           </span>
         </div>
         {monthsAvailable < 12 && (
-          <p style={{ margin: '0.35rem 0 0', fontSize: '0.75rem', color: '#F59E0B' }}>
+          <p style={{ margin: '0.35rem 0 0', fontSize: '0.75rem', color: COLORS.warning }}>
             Upload more GMS PDFs for full benchmarking analysis.
           </p>
         )}
@@ -819,9 +819,9 @@ const PracticeSupportCollector = ({
           width: '100%',
           textAlign: 'left',
           padding: '1rem',
-          backgroundColor: '#FAFAFA',
+          backgroundColor: COLORS.bgPage,
           borderRadius: '0.5rem',
-          border: `1px solid ${readiness.dataAvailable?.hasStaffExperience ? '#BBF7D0' : COLORS.slainteBlue}`,
+          border: `1px solid ${readiness.dataAvailable?.hasStaffExperience ? COLORS.successLighter : COLORS.slainteBlue}`,
           cursor: 'pointer',
           transition: 'border-color 0.15s, box-shadow 0.15s'
         }}
@@ -830,7 +830,7 @@ const PracticeSupportCollector = ({
           e.currentTarget.style.boxShadow = `0 0 0 2px ${COLORS.slainteBlue}30`;
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.borderColor = readiness.dataAvailable?.hasStaffExperience ? '#BBF7D0' : COLORS.slainteBlue;
+          e.currentTarget.style.borderColor = readiness.dataAvailable?.hasStaffExperience ? COLORS.successLighter : COLORS.slainteBlue;
           e.currentTarget.style.boxShadow = 'none';
         }}
       >
@@ -838,17 +838,17 @@ const PracticeSupportCollector = ({
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <Users size={20} color={COLORS.slainteBlue} />
             <div>
-              <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 600, color: COLORS.darkGray }}>
+              <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 600, color: COLORS.textPrimary }}>
                 {staffSummary}
               </p>
-              <p style={{ margin: '0.15rem 0 0', fontSize: '0.8rem', color: COLORS.mediumGray }}>
+              <p style={{ margin: '0.15rem 0 0', fontSize: '0.8rem', color: COLORS.textSecondary }}>
                 {allFilled
                   ? 'Experience and hours entered for all staff'
                   : `${filledCount}/${totalCount} staff members have experience/hours entered`
                 }
               </p>
               {notOnPCRSCount > 0 && (
-                <p style={{ margin: '0.15rem 0 0', fontSize: '0.75rem', color: '#D97706', fontWeight: 500 }}>
+                <p style={{ margin: '0.15rem 0 0', fontSize: '0.75rem', color: COLORS.warningDark, fontWeight: 500 }}>
                   {notOnPCRSCount} staff not currently receiving PCRS subsidy
                 </p>
               )}
@@ -931,7 +931,7 @@ const StaffEditModal = ({ staff, pcrsStaff, otherStaff, onUpdateField, onAddStaf
       alignItems: 'center',
       justifyContent: 'center',
       padding: '1rem',
-      backgroundColor: 'rgba(0, 0, 0, 0.5)'
+      backgroundColor: COLORS.overlayDark
     }}>
       <div style={{
         backgroundColor: COLORS.white,
@@ -942,7 +942,7 @@ const StaffEditModal = ({ staff, pcrsStaff, otherStaff, onUpdateField, onAddStaf
         maxHeight: '85vh',
         display: 'flex',
         flexDirection: 'column',
-        border: `1px solid ${COLORS.lightGray}`
+        border: `1px solid ${COLORS.borderLight}`
       }}>
         {/* Modal Header */}
         <div style={{
@@ -950,14 +950,14 @@ const StaffEditModal = ({ staff, pcrsStaff, otherStaff, onUpdateField, onAddStaf
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '1rem 1.25rem',
-          borderBottom: `1px solid ${COLORS.lightGray}`,
+          borderBottom: `1px solid ${COLORS.borderLight}`,
           flexShrink: 0
         }}>
           <div>
-            <h3 style={{ margin: 0, fontWeight: 600, fontSize: '1.05rem', color: COLORS.darkGray }}>
+            <h3 style={{ margin: 0, fontWeight: 600, fontSize: '1.05rem', color: COLORS.textPrimary }}>
               Staff Details
             </h3>
-            <p style={{ margin: '0.15rem 0 0', fontSize: '0.8rem', color: COLORS.mediumGray }}>
+            <p style={{ margin: '0.15rem 0 0', fontSize: '0.8rem', color: COLORS.textSecondary }}>
               Review all staff to identify unclaimed subsidies and missed income
             </p>
           </div>
@@ -969,7 +969,7 @@ const StaffEditModal = ({ staff, pcrsStaff, otherStaff, onUpdateField, onAddStaf
               background: 'none',
               cursor: 'pointer',
               borderRadius: '0.25rem',
-              color: COLORS.mediumGray
+              color: COLORS.textSecondary
             }}
           >
             <X size={20} />
@@ -986,9 +986,9 @@ const StaffEditModal = ({ staff, pcrsStaff, otherStaff, onUpdateField, onAddStaf
             <div style={{
               padding: '2rem',
               textAlign: 'center',
-              color: COLORS.mediumGray,
+              color: COLORS.textSecondary,
               fontSize: '0.875rem',
-              border: `1px dashed ${COLORS.lightGray}`,
+              border: `1px dashed ${COLORS.borderLight}`,
               borderRadius: '0.5rem'
             }}>
               <p style={{ margin: '0 0 0.75rem' }}>No staff members detected.</p>
@@ -1009,7 +1009,7 @@ const StaffEditModal = ({ staff, pcrsStaff, otherStaff, onUpdateField, onAddStaf
                       width: '6px', height: '6px', borderRadius: '50%',
                       backgroundColor: COLORS.slainteBlue
                     }} />
-                    <h4 style={{ margin: 0, fontSize: '0.85rem', fontWeight: 600, color: COLORS.darkGray }}>
+                    <h4 style={{ margin: 0, fontSize: '0.85rem', fontWeight: 600, color: COLORS.textPrimary }}>
                       Staff Receiving PCRS Subsidies
                     </h4>
                     <span style={{
@@ -1019,7 +1019,7 @@ const StaffEditModal = ({ staff, pcrsStaff, otherStaff, onUpdateField, onAddStaf
                       {pcrsStaff.length}
                     </span>
                   </div>
-                  <p style={{ margin: '0 0 0.5rem', fontSize: '0.75rem', color: COLORS.mediumGray }}>
+                  <p style={{ margin: '0 0 0.5rem', fontSize: '0.75rem', color: COLORS.textSecondary }}>
                     Verify experience and hours to check increment points and identify unclaimed hours.
                   </p>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
@@ -1044,14 +1044,14 @@ const StaffEditModal = ({ staff, pcrsStaff, otherStaff, onUpdateField, onAddStaf
                   }}>
                     <div style={{
                       width: '6px', height: '6px', borderRadius: '50%',
-                      backgroundColor: '#F59E0B'
+                      backgroundColor: COLORS.warning
                     }} />
-                    <h4 style={{ margin: 0, fontSize: '0.85rem', fontWeight: 600, color: COLORS.darkGray }}>
+                    <h4 style={{ margin: 0, fontSize: '0.85rem', fontWeight: 600, color: COLORS.textPrimary }}>
                       Other Practice Staff
                     </h4>
                     <span style={{
-                      padding: '0.1rem 0.4rem', backgroundColor: '#FEF3C7',
-                      borderRadius: '0.25rem', fontSize: '0.7rem', color: '#D97706', fontWeight: 500
+                      padding: '0.1rem 0.4rem', backgroundColor: COLORS.warningLight,
+                      borderRadius: '0.25rem', fontSize: '0.7rem', color: COLORS.warningDark, fontWeight: 500
                     }}>
                       {otherStaff.length}
                     </span>
@@ -1061,8 +1061,8 @@ const StaffEditModal = ({ staff, pcrsStaff, otherStaff, onUpdateField, onAddStaf
                   <div style={{
                     display: 'flex', alignItems: 'flex-start', gap: '0.5rem',
                     padding: '0.6rem 0.75rem', marginBottom: '0.5rem',
-                    backgroundColor: '#FFFBEB', borderRadius: '0.375rem',
-                    border: '1px solid #FDE68A', fontSize: '0.78rem', color: '#92400E'
+                    backgroundColor: COLORS.warningLighter, borderRadius: '0.375rem',
+                    border: `1px solid ${COLORS.warningLight}`, fontSize: '0.78rem', color: COLORS.warningText
                   }}>
                     <AlertCircle size={15} style={{ marginTop: '1px', flexShrink: 0 }} />
                     <span>
@@ -1097,15 +1097,15 @@ const StaffEditModal = ({ staff, pcrsStaff, otherStaff, onUpdateField, onAddStaf
           {showAddForm ? (
             <div style={{
               padding: '0.75rem 1rem', marginTop: '0.75rem',
-              backgroundColor: '#F0F9FF', borderRadius: '0.5rem',
+              backgroundColor: COLORS.slainteBlueLight, borderRadius: '0.5rem',
               border: `1px solid ${COLORS.slainteBlue}40`
             }}>
-              <p style={{ margin: '0 0 0.5rem', fontSize: '0.8rem', fontWeight: 600, color: COLORS.darkGray }}>
+              <p style={{ margin: '0 0 0.5rem', fontSize: '0.8rem', fontWeight: 600, color: COLORS.textPrimary }}>
                 Add Staff Member
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem', marginBottom: '0.5rem' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.7rem', marginBottom: '0.15rem', color: COLORS.mediumGray }}>
+                  <label style={{ display: 'block', fontSize: '0.7rem', marginBottom: '0.15rem', color: COLORS.textSecondary }}>
                     First Name
                   </label>
                   <input
@@ -1115,12 +1115,12 @@ const StaffEditModal = ({ staff, pcrsStaff, otherStaff, onUpdateField, onAddStaf
                     placeholder="e.g. Mary"
                     style={{
                       width: '100%', padding: '0.4rem 0.6rem', borderRadius: '0.375rem',
-                      border: `1px solid ${COLORS.lightGray}`, fontSize: '0.85rem', boxSizing: 'border-box'
+                      border: `1px solid ${COLORS.borderLight}`, fontSize: '0.85rem', boxSizing: 'border-box'
                     }}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.7rem', marginBottom: '0.15rem', color: COLORS.mediumGray }}>
+                  <label style={{ display: 'block', fontSize: '0.7rem', marginBottom: '0.15rem', color: COLORS.textSecondary }}>
                     Surname
                   </label>
                   <input
@@ -1130,12 +1130,12 @@ const StaffEditModal = ({ staff, pcrsStaff, otherStaff, onUpdateField, onAddStaf
                     placeholder="e.g. Murphy"
                     style={{
                       width: '100%', padding: '0.4rem 0.6rem', borderRadius: '0.375rem',
-                      border: `1px solid ${COLORS.lightGray}`, fontSize: '0.85rem', boxSizing: 'border-box'
+                      border: `1px solid ${COLORS.borderLight}`, fontSize: '0.85rem', boxSizing: 'border-box'
                     }}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.7rem', marginBottom: '0.15rem', color: COLORS.mediumGray }}>
+                  <label style={{ display: 'block', fontSize: '0.7rem', marginBottom: '0.15rem', color: COLORS.textSecondary }}>
                     Role
                   </label>
                   <select
@@ -1143,7 +1143,7 @@ const StaffEditModal = ({ staff, pcrsStaff, otherStaff, onUpdateField, onAddStaf
                     onChange={(e) => setNewRole(e.target.value)}
                     style={{
                       width: '100%', padding: '0.4rem 0.6rem', borderRadius: '0.375rem',
-                      border: `1px solid ${COLORS.lightGray}`, fontSize: '0.85rem',
+                      border: `1px solid ${COLORS.borderLight}`, fontSize: '0.85rem',
                       boxSizing: 'border-box', cursor: 'pointer'
                     }}
                   >
@@ -1159,8 +1159,8 @@ const StaffEditModal = ({ staff, pcrsStaff, otherStaff, onUpdateField, onAddStaf
                   onClick={() => { setShowAddForm(false); setNewFirstName(''); setNewSurname(''); setNewRole(''); }}
                   style={{
                     padding: '0.35rem 0.75rem', borderRadius: '0.375rem', fontSize: '0.8rem',
-                    border: `1px solid ${COLORS.lightGray}`, backgroundColor: COLORS.white,
-                    color: COLORS.mediumGray, cursor: 'pointer'
+                    border: `1px solid ${COLORS.borderLight}`, backgroundColor: COLORS.white,
+                    color: COLORS.textSecondary, cursor: 'pointer'
                   }}
                 >
                   Cancel
@@ -1170,7 +1170,7 @@ const StaffEditModal = ({ staff, pcrsStaff, otherStaff, onUpdateField, onAddStaf
                   disabled={!newFirstName.trim() || !newSurname.trim() || !newRole}
                   style={{
                     padding: '0.35rem 0.75rem', borderRadius: '0.375rem', fontSize: '0.8rem',
-                    border: 'none', backgroundColor: (newFirstName.trim() && newSurname.trim() && newRole) ? COLORS.slainteBlue : '#E0E0E0',
+                    border: 'none', backgroundColor: (newFirstName.trim() && newSurname.trim() && newRole) ? COLORS.slainteBlue : COLORS.borderLight,
                     color: COLORS.white, cursor: (newFirstName.trim() && newSurname.trim() && newRole) ? 'pointer' : 'default',
                     fontWeight: 500
                   }}
@@ -1199,7 +1199,7 @@ const StaffEditModal = ({ staff, pcrsStaff, otherStaff, onUpdateField, onAddStaf
           <p style={{
             margin: '1rem 0 0',
             fontSize: '0.75rem',
-            color: COLORS.mediumGray,
+            color: COLORS.textSecondary,
             fontStyle: 'italic'
           }}>
             * Years of experience checks if staff are on the correct PCRS increment point.
@@ -1213,7 +1213,7 @@ const StaffEditModal = ({ staff, pcrsStaff, otherStaff, onUpdateField, onAddStaf
           alignItems: 'center',
           justifyContent: 'flex-end',
           padding: '0.75rem 1.25rem',
-          borderTop: `1px solid ${COLORS.lightGray}`,
+          borderTop: `1px solid ${COLORS.borderLight}`,
           flexShrink: 0
         }}>
           <button
@@ -1260,22 +1260,22 @@ const StaffMemberCard = ({ member, index, onUpdateField, canRemove, onRemove, sh
   return (
     <div style={{
       padding: '0.75rem 1rem',
-      backgroundColor: member.fromPCRS ? `${COLORS.slainteBlue}06` : (isNotOnPCRS ? '#FFFBEB' : COLORS.white),
+      backgroundColor: member.fromPCRS ? `${COLORS.slainteBlue}06` : (isNotOnPCRS ? COLORS.warningLighter : COLORS.white),
       borderRadius: '0.5rem',
-      border: `1px solid ${member.fromPCRS ? `${COLORS.slainteBlue}40` : (isNotOnPCRS ? '#FDE68A' : COLORS.lightGray)}`
+      border: `1px solid ${member.fromPCRS ? `${COLORS.slainteBlue}40` : (isNotOnPCRS ? COLORS.warningLight : COLORS.borderLight)}`
     }}>
       {/* Staff identity row */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '0.9rem', fontWeight: 600, color: COLORS.darkGray }}>{name}</span>
+          <span style={{ fontSize: '0.9rem', fontWeight: 600, color: COLORS.textPrimary }}>{name}</span>
           {showRoleSelect ? (
             <select
               value={member.staffType || ''}
               onChange={(e) => onUpdateField(index, 'staffType', e.target.value)}
               style={{
                 padding: '0.1rem 0.4rem', borderRadius: '0.25rem',
-                border: `2px solid #F59E0B`, fontSize: '0.75rem',
-                backgroundColor: '#FFFBEB', cursor: 'pointer'
+                border: `2px solid ${COLORS.warning}`, fontSize: '0.75rem',
+                backgroundColor: COLORS.warningLighter, cursor: 'pointer'
               }}
             >
               <option value="unknown">Select role...</option>
@@ -1286,10 +1286,10 @@ const StaffMemberCard = ({ member, index, onUpdateField, canRemove, onRemove, sh
           ) : (
             <span style={{
               padding: '0.1rem 0.5rem',
-              backgroundColor: COLORS.backgroundGray,
+              backgroundColor: COLORS.bgPage,
               borderRadius: '0.25rem',
               fontSize: '0.7rem',
-              color: COLORS.mediumGray,
+              color: COLORS.textSecondary,
               fontWeight: 500
             }}>
               {roleLabel}
@@ -1316,7 +1316,7 @@ const StaffMemberCard = ({ member, index, onUpdateField, canRemove, onRemove, sh
           )}
           {isNotOnPCRS && (
             <span style={{
-              padding: '0.1rem 0.4rem', backgroundColor: '#F59E0B',
+              padding: '0.1rem 0.4rem', backgroundColor: COLORS.warning,
               color: COLORS.white, borderRadius: '0.25rem', fontSize: '0.65rem', fontWeight: 500
             }}>
               Not on PCRS
@@ -1328,7 +1328,7 @@ const StaffMemberCard = ({ member, index, onUpdateField, canRemove, onRemove, sh
               title="Remove staff member"
               style={{
                 padding: '0.2rem', border: 'none', background: 'none',
-                cursor: 'pointer', color: COLORS.mediumGray, display: 'flex'
+                cursor: 'pointer', color: COLORS.textSecondary, display: 'flex'
               }}
             >
               <Trash2 size={14} />
@@ -1344,7 +1344,7 @@ const StaffMemberCard = ({ member, index, onUpdateField, canRemove, onRemove, sh
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
             {/* Increment Point (read-only for PCRS, N/A for non-PCRS) */}
             <div>
-              <label style={{ display: 'block', fontSize: '0.7rem', marginBottom: '0.2rem', color: COLORS.mediumGray }}>
+              <label style={{ display: 'block', fontSize: '0.7rem', marginBottom: '0.2rem', color: COLORS.textSecondary }}>
                 {member.fromPCRS ? 'Increment Point (PCRS)' : 'Increment Point'}
               </label>
               <input
@@ -1353,15 +1353,15 @@ const StaffMemberCard = ({ member, index, onUpdateField, canRemove, onRemove, sh
                 disabled
                 style={{
                   width: '100%', padding: '0.4rem 0.6rem', borderRadius: '0.375rem',
-                  border: `1px solid ${COLORS.lightGray}`, fontSize: '0.85rem',
-                  backgroundColor: '#F3F4F6', color: COLORS.mediumGray, boxSizing: 'border-box'
+                  border: `1px solid ${COLORS.borderLight}`, fontSize: '0.85rem',
+                  backgroundColor: COLORS.bgHover, color: COLORS.textSecondary, boxSizing: 'border-box'
                 }}
               />
             </div>
 
             {/* Years Experience (editable) */}
             <div>
-              <label style={{ display: 'block', fontSize: '0.7rem', marginBottom: '0.2rem', color: COLORS.darkGray, fontWeight: 600 }}>
+              <label style={{ display: 'block', fontSize: '0.7rem', marginBottom: '0.2rem', color: COLORS.textPrimary, fontWeight: 600 }}>
                 Years Exp. *
               </label>
               {isPM ? (
@@ -1369,8 +1369,8 @@ const StaffMemberCard = ({ member, index, onUpdateField, canRemove, onRemove, sh
                   type="text" value="1" disabled title="Practice Manager has a single rate"
                   style={{
                     width: '100%', padding: '0.4rem 0.6rem', borderRadius: '0.375rem',
-                    border: `1px solid ${COLORS.lightGray}`, fontSize: '0.85rem',
-                    backgroundColor: '#F3F4F6', color: COLORS.mediumGray, boxSizing: 'border-box'
+                    border: `1px solid ${COLORS.borderLight}`, fontSize: '0.85rem',
+                    backgroundColor: COLORS.bgHover, color: COLORS.textSecondary, boxSizing: 'border-box'
                   }}
                 />
               ) : (
@@ -1380,7 +1380,7 @@ const StaffMemberCard = ({ member, index, onUpdateField, canRemove, onRemove, sh
                   style={{
                     width: '100%', padding: '0.4rem 0.6rem', borderRadius: '0.375rem',
                     border: `2px solid ${COLORS.slainteBlue}`, fontSize: '0.85rem',
-                    backgroundColor: COLORS.white, color: COLORS.darkGray,
+                    backgroundColor: COLORS.white, color: COLORS.textPrimary,
                     boxSizing: 'border-box', cursor: 'pointer'
                   }}
                 >
@@ -1405,7 +1405,7 @@ const StaffMemberCard = ({ member, index, onUpdateField, canRemove, onRemove, sh
 
             {/* Actual Hours Worked (editable) */}
             <div>
-              <label style={{ display: 'block', fontSize: '0.7rem', marginBottom: '0.2rem', color: COLORS.darkGray, fontWeight: 600 }}>
+              <label style={{ display: 'block', fontSize: '0.7rem', marginBottom: '0.2rem', color: COLORS.textPrimary, fontWeight: 600 }}>
                 Hrs/Week *
               </label>
               <input
@@ -1416,7 +1416,7 @@ const StaffMemberCard = ({ member, index, onUpdateField, canRemove, onRemove, sh
                 style={{
                   width: '100%', padding: '0.4rem 0.6rem', borderRadius: '0.375rem',
                   border: `2px solid ${COLORS.slainteBlue}`, fontSize: '0.85rem',
-                  backgroundColor: COLORS.white, color: COLORS.darkGray, boxSizing: 'border-box'
+                  backgroundColor: COLORS.white, color: COLORS.textPrimary, boxSizing: 'border-box'
                 }}
               />
               {member._suggestedHours && member.actualHoursWorked == member._suggestedHours && (
@@ -1432,8 +1432,8 @@ const StaffMemberCard = ({ member, index, onUpdateField, canRemove, onRemove, sh
             <div style={{
               display: 'flex', alignItems: 'center', gap: '0.4rem',
               marginTop: '0.5rem', padding: '0.35rem 0.6rem',
-              backgroundColor: '#FFF7ED', borderRadius: '0.25rem',
-              border: '1px solid #FDBA74', fontSize: '0.75rem', color: '#D97706'
+              backgroundColor: COLORS.warningLighter, borderRadius: '0.25rem',
+              border: `1px solid ${COLORS.warningLight}`, fontSize: '0.75rem', color: COLORS.warningDark
             }}>
               <AlertCircle size={14} />
               <span>
@@ -1444,7 +1444,7 @@ const StaffMemberCard = ({ member, index, onUpdateField, canRemove, onRemove, sh
           )}
         </>
       ) : (
-        <p style={{ margin: 0, fontSize: '0.75rem', color: '#F59E0B', fontStyle: 'italic' }}>
+        <p style={{ margin: 0, fontSize: '0.75rem', color: COLORS.warning, fontStyle: 'italic' }}>
           Select a role above to enter experience and hours
         </p>
       )}

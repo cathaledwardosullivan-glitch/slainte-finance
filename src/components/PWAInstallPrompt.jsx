@@ -96,7 +96,7 @@ export default function PWAInstallPrompt() {
         <button
           onClick={handleDismiss}
           className="absolute top-2 right-2 p-1 rounded"
-          style={{ color: COLORS.mediumGray }}
+          style={{ color: COLORS.textSecondary }}
         >
           <X className="h-4 w-4" />
         </button>
@@ -109,16 +109,16 @@ export default function PWAInstallPrompt() {
             <Smartphone className="h-5 w-5" style={{ color: COLORS.slainteBlue }} />
           </div>
           <div>
-            <h3 className="font-semibold text-sm mb-1" style={{ color: COLORS.darkGray }}>
+            <h3 className="font-semibold text-sm mb-1" style={{ color: COLORS.textPrimary }}>
               Install Sláinte Finance
             </h3>
-            <p className="text-xs" style={{ color: COLORS.mediumGray }}>
+            <p className="text-xs" style={{ color: COLORS.textSecondary }}>
               Add to your home screen for quick access
             </p>
           </div>
         </div>
 
-        <div className="text-xs space-y-2" style={{ color: COLORS.darkGray }}>
+        <div className="text-xs space-y-2" style={{ color: COLORS.textPrimary }}>
           <p className="font-medium">To install:</p>
           <ol className="list-decimal list-inside space-y-1 ml-2">
             <li>Tap the Share button <span className="inline-block">📤</span></li>
@@ -143,7 +143,7 @@ export default function PWAInstallPrompt() {
       <button
         onClick={handleDismiss}
         className="absolute top-2 right-2 p-1 rounded"
-        style={{ color: COLORS.mediumGray }}
+        style={{ color: COLORS.textSecondary }}
       >
         <X className="h-4 w-4" />
       </button>
@@ -156,10 +156,10 @@ export default function PWAInstallPrompt() {
           <Download className="h-5 w-5" style={{ color: COLORS.slainteBlue }} />
         </div>
         <div>
-          <h3 className="font-semibold mb-1" style={{ color: COLORS.darkGray }}>
+          <h3 className="font-semibold mb-1" style={{ color: COLORS.textPrimary }}>
             Install Sláinte Finance
           </h3>
-          <p className="text-sm" style={{ color: COLORS.mediumGray }}>
+          <p className="text-sm" style={{ color: COLORS.textSecondary }}>
             Install the app for offline access and a better experience
           </p>
         </div>
@@ -177,8 +177,8 @@ export default function PWAInstallPrompt() {
           onClick={handleDismiss}
           className="px-4 py-2 rounded-lg text-sm font-medium"
           style={{
-            color: COLORS.mediumGray,
-            border: `1px solid ${COLORS.lightGray}`
+            color: COLORS.textSecondary,
+            border: `1px solid ${COLORS.borderLight}`
           }}
         >
           Not now

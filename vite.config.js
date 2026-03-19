@@ -14,5 +14,11 @@ export default defineConfig({
     port: 5173,
     strictPort: true, // Fail if port is already in use
     hmr: false, // Disable HMR for Electron - use manual reload instead
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true
+      }
+    }
   }
 })

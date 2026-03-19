@@ -47,9 +47,9 @@ const SlainteLogo = ({ size = 'normal', showFinance = true }) => {
         fontWeight="700"
         letterSpacing="-1"
       >
-        <tspan fill={COLORS.darkGray}>sl</tspan>
+        <tspan fill={COLORS.textPrimary}>sl</tspan>
         <tspan fill={COLORS.slainteBlue}>[Ai]</tspan>
-        <tspan fill={COLORS.darkGray}>nte</tspan>
+        <tspan fill={COLORS.textPrimary}>nte</tspan>
       </text>
 
       {/* Finance subtitle - conditional */}

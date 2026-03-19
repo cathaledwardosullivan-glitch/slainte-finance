@@ -1,21 +1,32 @@
 /**
  * LANMobileWrapper Component
- * Handles authentication and data loading for mobile devices
- * accessing the app via LAN
+ * Handles authentication and data loading for devices
+ * accessing the app via LAN (mobile phones and desktop companions)
  */
 import React, { useState, useEffect, useRef } from 'react';
-import { Lock, Wifi, RefreshCw, AlertCircle } from 'lucide-react';
+import { Lock, Wifi, RefreshCw, AlertCircle, Euro, Stethoscope, Sparkles } from 'lucide-react';
 import useLANMode, { isLANMode } from '../hooks/useLANMode';
 import { useAppContext } from '../context/AppContext';
+import { FinnProvider } from '../context/FinnContext';
 import COLORS from '../utils/colors';
 import SlainteLogo from './SlainteLogo';
 import MobileLayout from './MobileLayout';
+import PWAInstallPrompt from './PWAInstallPrompt';
+import BusinessOverview from './BusinessOverview';
+import NewGMSHealthCheck from './NewGMSHealthCheck';
+import AdvancedInsightsV2 from './AdvancedInsightsV2';
+import UnifiedFinnWidget from './UnifiedFinnWidget';
+import FloatingFeedbackButton from './UnifiedFinnWidget/FloatingFeedbackButton';
+import { TourProvider } from './Tour';
+import { TasksProvider } from '../context/TasksContext';
+import TasksWidget from './TasksWidget';
 
 export default function LANMobileWrapper() {
   const {
     isLAN,
     isAuthenticated,
     isLoading: authLoading,
+    isOffline,
     error: authError,
     login,
     fetchAllData
@@ -34,11 +45,52 @@ export default function LANMobileWrapper() {
   const [dataLoaded, setDataLoaded] = useState(false);
   const [dataLoading, setDataLoading] = useState(false);
   const [dataError, setDataError] = useState(null);
+  const [lastSynced, setLastSynced] = useState(null);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 768);
+  const [currentView, setCurrentView] = useState('business-overview');
 
   // Use ref to prevent duplicate API calls
   const loadingStarted = useRef(false);
 
-  // Load data from API when authenticated (must be before any conditional returns)
+  // Track online/offline status
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // Track screen size for desktop vs mobile layout
+  useEffect(() => {
+    const checkSize = () => setIsDesktop(window.innerWidth >= 768);
+    window.addEventListener('resize', checkSize);
+    return () => window.removeEventListener('resize', checkSize);
+  }, []);
+
+  // Auto-refresh data when app returns to foreground (stale > 5 min)
+  useEffect(() => {
+    if (!dataLoaded || !isAuthenticated) return;
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && lastSynced) {
+        const staleMs = Date.now() - lastSynced;
+        if (staleMs > 5 * 60 * 1000) { // 5 minutes
+          console.log('[LAN] Data stale, auto-refreshing...');
+          retryLoadData();
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [dataLoaded, isAuthenticated, lastSynced]);
+
+  // Load data when authenticated — from API (online) or localStorage (offline demo)
   useEffect(() => {
     // Only run once when authenticated and not already loading/loaded
     if (!isLAN || !isAuthenticated || dataLoaded || loadingStarted.current) {
@@ -49,6 +101,37 @@ export default function LANMobileWrapper() {
     loadingStarted.current = true;
     setDataLoading(true);
     setDataError(null);
+
+    // Offline demo mode: load from localStorage cache instead of API
+    if (isOffline) {
+      console.log('[LAN] Offline demo mode — loading from localStorage cache');
+      try {
+        const loadCached = (key, setter) => {
+          const raw = localStorage.getItem(key);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (setter && parsed) setter(parsed);
+          }
+        };
+
+        loadCached('gp_finance_transactions', setTransactions);
+        loadCached('gp_finance_unidentified', setUnidentifiedTransactions);
+        loadCached('gp_finance_category_mapping', setCategoryMapping);
+        loadCached('gp_finance_payment_analysis', setPaymentAnalysisData);
+        // These don't have context setters but are in localStorage for components to read
+        // loadCached('gp_finance_saved_reports');
+        // loadCached('slainte_practice_profile');
+
+        console.log('[LAN] Offline data loaded from cache');
+        setDataLoaded(true);
+      } catch (err) {
+        console.error('[LAN] Failed to load cached data:', err);
+        setDataError('Failed to load cached data');
+        loadingStarted.current = false;
+      }
+      setDataLoading(false);
+      return;
+    }
 
     const loadData = async () => {
       try {
@@ -102,6 +185,7 @@ export default function LANMobileWrapper() {
             reports: data.savedReports?.length || 0
           });
 
+          setLastSynced(Date.now());
           setDataLoaded(true);
           setDataLoading(false);
         } else {
@@ -117,7 +201,7 @@ export default function LANMobileWrapper() {
     };
 
     loadData();
-  }, [isLAN, isAuthenticated, dataLoaded, fetchAllData, setTransactions, setUnidentifiedTransactions, setCategoryMapping, setPaymentAnalysisData]);
+  }, [isLAN, isAuthenticated, isOffline, dataLoaded, fetchAllData, setTransactions, setUnidentifiedTransactions, setCategoryMapping, setPaymentAnalysisData]);
 
   // Function for manual retry
   const retryLoadData = async () => {
@@ -159,6 +243,7 @@ export default function LANMobileWrapper() {
           localStorage.setItem('gp_finance_settings', JSON.stringify(data.settings));
         }
 
+        setLastSynced(Date.now());
         setDataLoaded(true);
       } else {
         throw new Error(response?.error || 'Invalid response from server');
@@ -193,10 +278,10 @@ export default function LANMobileWrapper() {
   // Show loading spinner while checking auth
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: COLORS.backgroundGray }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: COLORS.bgPage }}>
         <div className="text-center">
           <RefreshCw className="h-12 w-12 mx-auto mb-4 animate-spin" style={{ color: COLORS.slainteBlue }} />
-          <p style={{ color: COLORS.mediumGray }}>Connecting to desktop...</p>
+          <p style={{ color: COLORS.textSecondary }}>Connecting to desktop...</p>
         </div>
       </div>
     );
@@ -205,7 +290,7 @@ export default function LANMobileWrapper() {
   // Show login screen if not authenticated
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: COLORS.backgroundGray }}>
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: COLORS.bgPage }}>
         <div className="w-full max-w-sm">
           <div className="rounded-lg shadow-lg p-6" style={{ backgroundColor: COLORS.white }}>
             {/* Logo */}
@@ -234,18 +319,18 @@ export default function LANMobileWrapper() {
             {/* Login form */}
             <form onSubmit={handleLogin}>
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-2" style={{ color: COLORS.darkGray }}>
+                <label className="block text-sm font-medium mb-2" style={{ color: COLORS.textPrimary }}>
                   App Security Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5" style={{ color: COLORS.mediumGray }} />
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5" style={{ color: COLORS.textSecondary }} />
                   <input
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter password"
                     className="w-full pl-10 pr-4 py-3 rounded-lg border"
-                    style={{ borderColor: COLORS.lightGray }}
+                    style={{ borderColor: COLORS.borderLight }}
                     autoComplete="current-password"
                     required
                   />
@@ -262,7 +347,7 @@ export default function LANMobileWrapper() {
               </button>
             </form>
 
-            <p className="text-xs text-center mt-4" style={{ color: COLORS.mediumGray }}>
+            <p className="text-xs text-center mt-4" style={{ color: COLORS.textSecondary }}>
               Enter the App Security Password set during desktop setup
             </p>
           </div>
@@ -274,10 +359,10 @@ export default function LANMobileWrapper() {
   // Show data loading screen
   if (dataLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: COLORS.backgroundGray }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: COLORS.bgPage }}>
         <div className="text-center">
           <RefreshCw className="h-12 w-12 mx-auto mb-4 animate-spin" style={{ color: COLORS.slainteBlue }} />
-          <p style={{ color: COLORS.mediumGray }}>Loading your financial data...</p>
+          <p style={{ color: COLORS.textSecondary }}>Loading your financial data...</p>
         </div>
       </div>
     );
@@ -286,14 +371,14 @@ export default function LANMobileWrapper() {
   // Show data error with retry option
   if (dataError) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: COLORS.backgroundGray }}>
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: COLORS.bgPage }}>
         <div className="w-full max-w-sm text-center">
           <div className="rounded-lg shadow-lg p-6" style={{ backgroundColor: COLORS.white }}>
             <AlertCircle className="h-12 w-12 mx-auto mb-4" style={{ color: COLORS.expenseColor }} />
-            <h2 className="text-lg font-bold mb-2" style={{ color: COLORS.darkGray }}>
+            <h2 className="text-lg font-bold mb-2" style={{ color: COLORS.textPrimary }}>
               Failed to Load Data
             </h2>
-            <p className="text-sm mb-4" style={{ color: COLORS.mediumGray }}>
+            <p className="text-sm mb-4" style={{ color: COLORS.textSecondary }}>
               {dataError}
             </p>
             <button
@@ -309,6 +394,115 @@ export default function LANMobileWrapper() {
     );
   }
 
-  // Data loaded - show the mobile app
-  return <MobileLayout />;
+  // Data loaded - show the companion app wrapped in FinnProvider
+  // Use desktop layout for large screens (Chromebooks, tablets in landscape, etc.)
+  return (
+    <FinnProvider>
+      <PWAInstallPrompt />
+      {/* Offline banner */}
+      {!isOnline && (
+        <div className="fixed top-0 left-0 right-0 z-50 px-3 py-1.5 text-center text-xs font-medium"
+             style={{ backgroundColor: COLORS.highlightYellow, color: COLORS.textPrimary }}>
+          Offline — showing cached data
+        </div>
+      )}
+      {isDesktop ? (
+        <TourProvider setCurrentView={setCurrentView} currentView={currentView}>
+        <LANDesktopLayout
+          currentView={currentView}
+          setCurrentView={setCurrentView}
+          lastSynced={lastSynced}
+          onRefresh={retryLoadData}
+          isOffline={isOffline || !isOnline}
+        />
+        </TourProvider>
+      ) : (
+        <MobileLayout isOffline={isOffline || !isOnline} mode="companion" lastSynced={lastSynced} onRefresh={retryLoadData} />
+      )}
+    </FinnProvider>
+  );
+}
+
+/**
+ * Desktop layout for LAN companion devices (Chromebooks, large tablets, etc.)
+ * Read-only view of the practice data with full desktop navigation.
+ */
+function LANDesktopLayout({ currentView, setCurrentView, lastSynced, onRefresh, isOffline }) {
+  return (
+    <div className="min-h-screen" style={{ backgroundColor: COLORS.bgPage }}>
+      <header className="shadow-sm" style={{ backgroundColor: COLORS.white, borderBottom: `1px solid ${COLORS.borderLight}` }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center space-x-4">
+              <SlainteLogo size="normal" showFinance={true} />
+              <span className="text-sm font-medium" style={{ color: COLORS.textSecondary }}>
+                Companion View
+              </span>
+            </div>
+            <div className="flex items-center space-x-3">
+              {lastSynced && (
+                <span className="text-xs" style={{ color: COLORS.textSecondary }}>
+                  Synced {new Date(lastSynced).toLocaleTimeString()}
+                </span>
+              )}
+              <button
+                onClick={onRefresh}
+                className="p-2 rounded-lg hover:opacity-80 transition-opacity"
+                style={{ color: COLORS.slainteBlue }}
+                title="Refresh data from desktop"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <nav style={{ backgroundColor: COLORS.white, borderBottom: `1px solid ${COLORS.borderLight}` }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex space-x-8 justify-center">
+            {[
+              { id: 'business-overview', label: 'Business Overview', icon: Euro },
+              { id: 'gms-health-check', label: 'GMS Health Check', icon: Stethoscope },
+              { id: 'advanced-insights', label: 'Advanced Insights', icon: Sparkles }
+            ].map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setCurrentView(item.id)}
+                className="flex items-center space-x-2 py-4 border-b-2 transition-colors"
+                style={{
+                  color: currentView === item.id ? COLORS.slainteBlue : COLORS.textSecondary,
+                  borderColor: currentView === item.id ? COLORS.slainteBlue : 'transparent'
+                }}
+              >
+                <item.icon className="h-5 w-5" />
+                <span className="font-medium">{item.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </nav>
+
+      {isOffline && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-2">
+          <div className="px-3 py-1.5 rounded text-center text-xs font-medium"
+               style={{ backgroundColor: COLORS.highlightYellow, color: COLORS.textPrimary }}>
+            Offline — showing cached data
+          </div>
+        </div>
+      )}
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {currentView === 'business-overview' && <BusinessOverview setCurrentView={setCurrentView} />}
+        {currentView === 'gms-health-check' && <NewGMSHealthCheck />}
+        {currentView === 'advanced-insights' && <AdvancedInsightsV2 setCurrentView={setCurrentView} />}
+      </main>
+
+      <UnifiedFinnWidget currentView={currentView} />
+      <FloatingFeedbackButton />
+      <TasksProvider>
+        <TasksWidget />
+      </TasksProvider>
+    </div>
+  );
 }

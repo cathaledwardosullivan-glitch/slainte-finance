@@ -7,7 +7,7 @@ import GMSHealthCheck from '../GMSHealthCheck';
 import NewGMSHealthCheck from '../NewGMSHealthCheck';
 
 // Pink color for GMS theme
-const GMS_PINK = '#E91E63';
+const GMS_PINK = COLORS.chartPink;
 
 /**
  * GMSOverview - Consolidated GMS management tab
@@ -57,7 +57,7 @@ const GMSOverview = ({ setCurrentView }) => {
           padding: '1rem',
           backgroundColor: COLORS.white,
           borderRadius: '0.5rem',
-          border: `1px solid ${COLORS.lightGray}`,
+          border: `1px solid ${COLORS.borderLight}`,
           flexShrink: 0
         }}
       >
@@ -79,7 +79,7 @@ const GMSOverview = ({ setCurrentView }) => {
                   borderRadius: '0.5rem',
                   border: 'none',
                   backgroundColor: isActive ? GMS_PINK : 'transparent',
-                  color: isActive ? COLORS.white : COLORS.darkGray,
+                  color: isActive ? COLORS.white : COLORS.textPrimary,
                   fontWeight: isActive ? 600 : 400,
                   fontSize: '0.875rem',
                   cursor: 'pointer',
@@ -87,7 +87,7 @@ const GMSOverview = ({ setCurrentView }) => {
                 }}
                 onMouseEnter={(e) => {
                   if (!isActive) {
-                    e.currentTarget.style.backgroundColor = COLORS.backgroundGray;
+                    e.currentTarget.style.backgroundColor = COLORS.bgPage;
                   }
                 }}
                 onMouseLeave={(e) => {
@@ -142,17 +142,17 @@ const GMSOverview = ({ setCurrentView }) => {
             {/* Year Selector - only shown in calendar year mode */}
             {!useRollingYear && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Calendar style={{ height: '1rem', width: '1rem', color: COLORS.mediumGray }} />
+                <Calendar style={{ height: '1rem', width: '1rem', color: COLORS.textSecondary }} />
                 <select
                   value={selectedYear}
                   onChange={(e) => setSelectedYear(parseInt(e.target.value))}
                   style={{
                     padding: '0.375rem 0.75rem',
                     borderRadius: '0.5rem',
-                    border: `1px solid ${COLORS.lightGray}`,
+                    border: `1px solid ${COLORS.borderLight}`,
                     backgroundColor: COLORS.white,
                     fontSize: '0.875rem',
-                    color: COLORS.darkGray,
+                    color: COLORS.textPrimary,
                     cursor: 'pointer',
                     outline: 'none'
                   }}
@@ -174,7 +174,7 @@ const GMSOverview = ({ setCurrentView }) => {
         style={{
           flex: 1,
           overflow: 'auto',
-          backgroundColor: COLORS.backgroundGray
+          backgroundColor: COLORS.bgPage
         }}
       >
         {activeSubView === 'dashboard' && (

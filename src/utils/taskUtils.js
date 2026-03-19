@@ -2,6 +2,7 @@
  * Task Utilities
  * Normalizers and helpers for unifying GMS Action Items and Financial Tasks
  */
+import COLORS from '../utils/colors';
 
 /**
  * Normalize a GMS Action Item to unified task format
@@ -220,9 +221,9 @@ export function formatDate(date) {
  */
 export function getPriorityColor(priority) {
   const colors = {
-    high: { bg: '#FEE2E2', text: '#DC2626', border: '#FECACA' },
-    medium: { bg: '#FEF3C7', text: '#D97706', border: '#FDE68A' },
-    low: { bg: '#DCFCE7', text: '#16A34A', border: '#BBF7D0' }
+    high: { bg: COLORS.errorLight, text: COLORS.error, border: COLORS.errorLight },
+    medium: { bg: COLORS.warningLight, text: COLORS.warningDark, border: COLORS.warningLight },
+    low: { bg: COLORS.successLighter, text: COLORS.success, border: COLORS.successLighter }
   };
   return colors[priority] || colors.medium;
 }
@@ -234,9 +235,9 @@ export function getPriorityColor(priority) {
  */
 export function getStatusColor(status) {
   const colors = {
-    pending: { bg: '#F3F4F6', text: '#6B7280', border: '#E5E7EB' },
-    in_progress: { bg: '#DBEAFE', text: '#2563EB', border: '#BFDBFE' },
-    completed: { bg: '#DCFCE7', text: '#16A34A', border: '#BBF7D0' }
+    pending: { bg: COLORS.bgHover, text: COLORS.textMuted, border: COLORS.borderLight },
+    in_progress: { bg: COLORS.infoLighter, text: COLORS.slainteBlue, border: COLORS.infoLighter },
+    completed: { bg: COLORS.successLighter, text: COLORS.success, border: COLORS.successLighter }
   };
   return colors[status] || colors.pending;
 }
@@ -248,8 +249,8 @@ export function getStatusColor(status) {
  */
 export function getTypeColor(type) {
   const colors = {
-    gms: { bg: '#EEF2FF', text: '#4F46E5', border: '#C7D2FE' },
-    financial: { bg: '#FDF4FF', text: '#A855F7', border: '#E9D5FF' }
+    gms: { bg: COLORS.slainteBlueLight, text: COLORS.accentPurple, border: COLORS.infoLighter },
+    financial: { bg: COLORS.accentPurpleLight, text: COLORS.chartViolet, border: COLORS.accentPurpleLight }
   };
   return colors[type] || colors.financial;
 }

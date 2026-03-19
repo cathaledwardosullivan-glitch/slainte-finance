@@ -275,6 +275,29 @@ export const APP_KNOWLEDGE = {
 - Finn and AI features are available
 - Financial data is sent to Claude API only when you actively use AI features (asking Finn questions, generating reports, AI categorization)
 - Your API key is stored securely in the Electron userData directory, never in browser storage`
+    },
+    {
+      id: 'app_advanced_insights',
+      title: 'Advanced Insights & Analysis',
+      keywords: ['advanced insights', 'insights', 'analysis', 'suggested analysis',
+                 'report gallery', 'ai report', 'generated report', 'expense deep dive',
+                 'practice health', 'five year', 'tax planning', 'seasonal', 'cash flow',
+                 'staffing', 'hire', 'revenue per gp', 'gms optimisation', 'vendor review',
+                 'income source', 'operating cost', 'growth', 'strategy'],
+      content: `Advanced Insights is the third main tab, dedicated to AI-powered analysis reports.
+
+**Layout:** The tab is organised into 5 category banners, each containing related analyses:
+- **Business Overview** — Income Source Analysis, Practice Operating Cost, Practice Health Check
+- **GMS & PCRS** — GMS Optimisation Summary, PCRS Payment Trends
+- **Growth & Strategy** — Should We Hire?, Revenue Per GP, Five-Year Financial Outlook
+- **Costs & Cash Flow** — Expense Deep Dive, Seasonal Cash Flow, Supplier & Vendor Review
+- **Tax & Compliance** — Tax Planning Checkpoint, Year-End Tax Planning
+
+**How to use:** Click a category banner's "Explore" button to see all analyses in that category. Each analysis card shows what the report covers and what data it needs. Click "Generate" to create the report — it typically takes 30–60 seconds.
+
+**Custom Reports** appear at the bottom of the page. These are freeform reports generated through Finn chat that don't match a pre-defined analysis.
+
+**Navigation:** You can ask Finn to navigate directly to a specific category (e.g. "take me to the growth analyses") and the relevant category will open automatically.`
     }
   ]
 };

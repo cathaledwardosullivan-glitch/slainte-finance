@@ -37,7 +37,7 @@ const FinancesOverview = ({ setCurrentView }) => {
         style={{
           flex: 1,
           overflow: 'auto',
-          backgroundColor: COLORS.backgroundGray
+          backgroundColor: COLORS.bgPage
         }}
       >
         <OverviewSection

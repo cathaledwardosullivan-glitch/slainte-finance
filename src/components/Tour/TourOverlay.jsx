@@ -1,4 +1,5 @@
 import React from 'react';
+import COLORS from '../../utils/colors';
 import { useTour } from './TourProvider';
 import TourHighlight from './TourHighlight';
 import TourTooltip from './TourTooltip';
@@ -18,7 +19,7 @@ const TourOverlay = () => {
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          backgroundColor: COLORS.overlayDark,
           zIndex: 10000,
           pointerEvents: 'auto',
           opacity: isTransitioning ? 0.3 : 1,

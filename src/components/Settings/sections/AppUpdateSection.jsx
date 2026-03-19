@@ -80,30 +80,30 @@ const AppUpdateSection = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       {/* App Updates Section */}
-      <div style={{ backgroundColor: COLORS.white, padding: '1.5rem', borderRadius: '0.5rem', border: `1px solid ${COLORS.lightGray}` }}>
-        <h3 style={{ fontSize: '1.125rem', fontWeight: 600, display: 'flex', alignItems: 'center', color: COLORS.darkGray, marginBottom: '1rem' }}>
+      <div style={{ backgroundColor: COLORS.white, padding: '1.5rem', borderRadius: '0.5rem', border: `1px solid ${COLORS.borderLight}` }}>
+        <h3 style={{ fontSize: '1.125rem', fontWeight: 600, display: 'flex', alignItems: 'center', color: COLORS.textPrimary, marginBottom: '1rem' }}>
           <Download style={{ height: '1.25rem', width: '1.25rem', marginRight: '0.5rem', color: COLORS.slainteBlue }} />
           App Update
         </h3>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {/* Current Version */}
-          <div style={{ padding: '1rem', border: `1px solid ${COLORS.lightGray}`, borderRadius: '0.5rem', backgroundColor: COLORS.backgroundGray }}>
+          <div style={{ padding: '1rem', border: `1px solid ${COLORS.borderLight}`, borderRadius: '0.5rem', backgroundColor: COLORS.bgPage }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>Current Version</p>
-                <p style={{ fontSize: '1.25rem', fontWeight: 600, color: COLORS.darkGray }}>
+                <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>Current Version</p>
+                <p style={{ fontSize: '1.25rem', fontWeight: 600, color: COLORS.textPrimary }}>
                   {appVersion || 'Loading...'}
                 </p>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <p style={{ fontSize: '0.875rem', color: COLORS.mediumGray }}>Status</p>
+                <p style={{ fontSize: '0.875rem', color: COLORS.textSecondary }}>Status</p>
                 <p style={{
                   fontWeight: 500,
                   color: updateStatus === 'ready' ? COLORS.incomeColor :
                          updateStatus === 'available' ? COLORS.highlightYellow :
                          updateStatus === 'error' ? COLORS.expenseColor :
-                         COLORS.darkGray
+                         COLORS.textPrimary
                 }}>
                   {updateStatus === 'idle' && 'Up to date'}
                   {updateStatus === 'checking' && 'Checking...'}
@@ -118,7 +118,7 @@ const AppUpdateSection = () => {
             {/* Download Progress Bar */}
             {updateStatus === 'downloading' && (
               <div style={{ marginTop: '0.75rem' }}>
-                <div style={{ height: '0.5rem', backgroundColor: '#E5E7EB', borderRadius: '9999px', overflow: 'hidden' }}>
+                <div style={{ height: '0.5rem', backgroundColor: COLORS.borderLight, borderRadius: '9999px', overflow: 'hidden' }}>
                   <div
                     style={{
                       width: `${downloadProgress}%`,
@@ -213,7 +213,7 @@ const AppUpdateSection = () => {
           </div>
 
           {/* Update Note */}
-          <p style={{ fontSize: '0.75rem', color: COLORS.mediumGray }}>
+          <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary }}>
             Updates are downloaded automatically when available. Your data is preserved during updates.
           </p>
         </div>

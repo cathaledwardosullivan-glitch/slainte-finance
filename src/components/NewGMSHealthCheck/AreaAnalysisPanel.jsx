@@ -44,7 +44,7 @@ function renderCategoryBreakdown(areaId, breakdown, healthCheckData) {
     case 'cdm':
       return <CDMBreakdown cdmAnalysis={breakdown.cdmAnalysis} />;
     default:
-      return <p style={{ margin: 0, color: COLORS.mediumGray }}>Calculation details not available for this area.</p>;
+      return <p style={{ margin: 0, color: COLORS.textSecondary }}>Calculation details not available for this area.</p>;
   }
 }
 
@@ -57,17 +57,17 @@ const AreaAnalysisPanel = ({ areaId, analysis, canAnalyze, readiness, healthChec
     return (
       <div style={{
         padding: '1.5rem',
-        backgroundColor: '#FAFAFA',
+        backgroundColor: COLORS.bgPage,
         borderRadius: '0.5rem',
-        border: `1px solid ${COLORS.lightGray}`,
+        border: `1px solid ${COLORS.borderLight}`,
         textAlign: 'center'
       }}>
-        <AlertCircle style={{ width: '2rem', height: '2rem', color: COLORS.mediumGray, margin: '0 auto 0.75rem' }} />
-        <p style={{ margin: 0, color: COLORS.mediumGray, fontSize: '0.9rem' }}>
+        <AlertCircle style={{ width: '2rem', height: '2rem', color: COLORS.textSecondary, margin: '0 auto 0.75rem' }} />
+        <p style={{ margin: 0, color: COLORS.textSecondary, fontSize: '0.9rem' }}>
           More data needed to run analysis
         </p>
         {readiness?.missingData?.length > 0 && (
-          <ul style={{ margin: '0.75rem 0 0', padding: '0 1rem', textAlign: 'left', fontSize: '0.85rem', color: COLORS.darkGray }}>
+          <ul style={{ margin: '0.75rem 0 0', padding: '0 1rem', textAlign: 'left', fontSize: '0.85rem', color: COLORS.textPrimary }}>
             {readiness.missingData.map((item, i) => (
               <li key={i} style={{ marginBottom: '0.25rem' }}>{item}</li>
             ))}
@@ -110,19 +110,19 @@ const AreaAnalysisPanel = ({ areaId, analysis, canAnalyze, readiness, healthChec
           alignItems: 'center',
           gap: '0.75rem',
           padding: '1rem',
-          backgroundColor: '#FFF7ED',
+          backgroundColor: COLORS.warningLighter,
           borderRadius: '0.5rem',
-          border: '1px solid #FDBA74'
+          border: `1px solid ${COLORS.warningLight}`
         }}>
-          <TrendingUp style={{ width: '1.25rem', height: '1.25rem', color: '#EA580C', flexShrink: 0 }} />
+          <TrendingUp style={{ width: '1.25rem', height: '1.25rem', color: COLORS.warningDark, flexShrink: 0 }} />
           <div>
-            <p style={{ margin: 0, fontWeight: 600, fontSize: '0.95rem', color: '#9A3412' }}>
+            <p style={{ margin: 0, fontWeight: 600, fontSize: '0.95rem', color: COLORS.warningText }}>
               {areaId === 'cdm'
                 ? `Potential Additional CDM Income: \u20AC${Math.round(unclaimed).toLocaleString()}`
                 : `\u20AC${Math.round(unclaimed).toLocaleString()} potential unclaimed`
               }
             </p>
-            <p style={{ margin: '0.25rem 0 0', fontSize: '0.8rem', color: '#C2410C' }}>
+            <p style={{ margin: '0.25rem 0 0', fontSize: '0.8rem', color: COLORS.warningDark }}>
               {areaId === 'cdm'
                 ? 'Based on disease register patients and 75% target uptake rate'
                 : 'Difference between current income and estimated potential'
@@ -138,7 +138,7 @@ const AreaAnalysisPanel = ({ areaId, analysis, canAnalyze, readiness, healthChec
           padding: '1rem',
           backgroundColor: COLORS.white,
           borderRadius: '0.5rem',
-          border: `1px solid ${COLORS.lightGray}`
+          border: `1px solid ${COLORS.borderLight}`
         }}>
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={chartData} margin={{ top: 10, right: 30, left: 10, bottom: 5 }}>
@@ -168,9 +168,9 @@ const AreaAnalysisPanel = ({ areaId, analysis, canAnalyze, readiness, healthChec
           padding: '1rem',
           backgroundColor: COLORS.white,
           borderRadius: '0.5rem',
-          border: `1px solid ${COLORS.lightGray}`
+          border: `1px solid ${COLORS.borderLight}`
         }}>
-          <h4 style={{ margin: '0 0 0.75rem', fontSize: '0.9rem', fontWeight: 600, color: COLORS.darkGray }}>
+          <h4 style={{ margin: '0 0 0.75rem', fontSize: '0.9rem', fontWeight: 600, color: COLORS.textPrimary }}>
             Key Findings
           </h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -180,7 +180,7 @@ const AreaAnalysisPanel = ({ areaId, analysis, canAnalyze, readiness, healthChec
                 alignItems: 'flex-start',
                 gap: '0.5rem',
                 fontSize: '0.85rem',
-                color: COLORS.darkGray
+                color: COLORS.textPrimary
               }}>
                 <span style={{ color: finding.type === 'issue' ? COLORS.expenseColor : COLORS.incomeColor, fontWeight: 600 }}>
                   {finding.type === 'issue' ? '!' : '\u2713'}
@@ -201,9 +201,9 @@ const AreaAnalysisPanel = ({ areaId, analysis, canAnalyze, readiness, healthChec
       {breakdown && (
         <div style={{
           padding: '1rem',
-          backgroundColor: '#FAFAFA',
+          backgroundColor: COLORS.bgPage,
           borderRadius: '0.5rem',
-          border: `1px solid ${COLORS.lightGray}`
+          border: `1px solid ${COLORS.borderLight}`
         }}>
           {renderCategoryBreakdown(areaId, breakdown, healthCheckData)}
         </div>

@@ -1,8 +1,9 @@
-// Sláinte Finance Service Worker
-// Provides offline functionality and app-like experience
+// Sláinte Finance Companion Service Worker
+// Provides offline functionality and app-like experience for PWA companion
 
-const CACHE_NAME = 'slainte-finance-v1.0.0';
-const RUNTIME_CACHE = 'slainte-runtime-v1';
+const CACHE_NAME = 'slainte-finance-v2.0.0';
+const RUNTIME_CACHE = 'slainte-runtime-v2';
+const API_CACHE = 'slainte-api-v1';
 
 // Assets to cache on install
 const PRECACHE_ASSETS = [
@@ -11,14 +12,33 @@ const PRECACHE_ASSETS = [
   '/manifest.json'
 ];
 
+// API routes to cache for offline companion access (read-only endpoints)
+const CACHEABLE_API_ROUTES = [
+  '/api/sync/data',
+  '/api/dashboard',
+  '/api/reports',
+  '/api/gms-health-check',
+  '/api/transactions',
+  '/api/categories',
+  '/api/payment-analysis'
+];
+
 // Install event - cache essential assets
 self.addEventListener('install', (event) => {
   console.log('[SW] Installing service worker...');
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => {
+      .then(async cache => {
         console.log('[SW] Precaching assets');
-        return cache.addAll(PRECACHE_ASSETS);
+        // Cache each asset individually so one failure doesn't block the entire install
+        for (const asset of PRECACHE_ASSETS) {
+          try {
+            await cache.add(asset);
+            console.log('[SW] Cached:', asset);
+          } catch (err) {
+            console.warn('[SW] Failed to cache:', asset, err.message);
+          }
+        }
       })
       .then(() => self.skipWaiting()) // Activate immediately
   );
@@ -27,11 +47,12 @@ self.addEventListener('install', (event) => {
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
   console.log('[SW] Activating service worker...');
+  const currentCaches = [CACHE_NAME, RUNTIME_CACHE, API_CACHE];
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames
-          .filter(name => name !== CACHE_NAME && name !== RUNTIME_CACHE)
+          .filter(name => !currentCaches.includes(name))
           .map(name => {
             console.log('[SW] Deleting old cache:', name);
             return caches.delete(name);
@@ -51,8 +72,33 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Skip API calls to proxy server (always fetch fresh)
-  if (url.pathname.includes('/api/')) {
+  // API routes: network-first with cache fallback for read-only endpoints
+  if (url.pathname.startsWith('/api/')) {
+    const isCacheable = CACHEABLE_API_ROUTES.some(route => url.pathname === route);
+
+    if (isCacheable && request.method === 'GET') {
+      event.respondWith(
+        fetch(request)
+          .then(response => {
+            // Cache successful responses
+            if (response.ok) {
+              const responseClone = response.clone();
+              caches.open(API_CACHE).then(cache => {
+                cache.put(request, responseClone);
+              });
+            }
+            return response;
+          })
+          .catch(() => {
+            // Offline: serve from API cache
+            console.log('[SW] API offline fallback:', url.pathname);
+            return caches.match(request);
+          })
+      );
+      return;
+    }
+
+    // Non-cacheable API routes (chat, auth, POST) — always fetch, no cache
     return;
   }
 
@@ -61,16 +107,21 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request)
         .then(response => {
-          // Cache the new version
+          // Cache the new version — always cache as both the request URL and /index.html
           const responseClone = response.clone();
+          const responseClone2 = response.clone();
           caches.open(RUNTIME_CACHE).then(cache => {
             cache.put(request, responseClone);
+            // Also cache as /index.html so SPA fallback always works
+            cache.put(new Request('/index.html'), responseClone2);
           });
           return response;
         })
         .catch(() => {
-          // Fallback to cache if offline
-          return caches.match(request);
+          // Offline: try exact match first, then fall back to /index.html (SPA shell)
+          return caches.match(request)
+            .then(cached => cached || caches.match('/index.html'))
+            .then(cached => cached || caches.match('/'));
         })
     );
     return;
@@ -132,7 +183,7 @@ self.addEventListener('message', (event) => {
   }
 });
 
-// Background sync for data export/import
+// Background sync for data refresh
 self.addEventListener('sync', (event) => {
   if (event.tag === 'sync-data') {
     event.waitUntil(syncData());

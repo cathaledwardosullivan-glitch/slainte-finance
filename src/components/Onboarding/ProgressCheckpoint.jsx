@@ -92,7 +92,7 @@ export default function ProgressCheckpoint({ profile, onContinue, onSkipToUpload
         <h2 style={{
           fontSize: '2rem',
           fontWeight: 700,
-          color: COLORS.darkGray,
+          color: COLORS.textPrimary,
           marginBottom: '1rem',
           minHeight: '3rem'
         }}>
@@ -101,7 +101,7 @@ export default function ProgressCheckpoint({ profile, onContinue, onSkipToUpload
 
         <p style={{
           fontSize: '1.125rem',
-          color: COLORS.mediumGray,
+          color: COLORS.textSecondary,
           maxWidth: '600px',
           marginLeft: 'auto',
           marginRight: 'auto',
@@ -114,7 +114,7 @@ export default function ProgressCheckpoint({ profile, onContinue, onSkipToUpload
 
       {/* Populated Organizational Chart */}
       <div style={{
-        backgroundColor: COLORS.backgroundGray,
+        backgroundColor: COLORS.bgPage,
         borderRadius: '16px',
         padding: '2rem',
         marginBottom: '2rem'
@@ -166,7 +166,7 @@ export default function ProgressCheckpoint({ profile, onContinue, onSkipToUpload
             textAlign: 'center'
           }}>
             <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>💰</div>
-            <div style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.darkGray }}>
+            <div style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.textPrimary }}>
               INCOME
             </div>
           </div>
@@ -180,7 +180,7 @@ export default function ProgressCheckpoint({ profile, onContinue, onSkipToUpload
             textAlign: 'center'
           }}>
             <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📊</div>
-            <div style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.darkGray }}>
+            <div style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.textPrimary }}>
               EXPENDITURE
             </div>
           </div>
@@ -194,7 +194,7 @@ export default function ProgressCheckpoint({ profile, onContinue, onSkipToUpload
             textAlign: 'center'
           }}>
             <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>👥</div>
-            <div style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.darkGray }}>
+            <div style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.textPrimary }}>
               DRAWINGS
             </div>
           </div>
@@ -270,7 +270,7 @@ export default function ProgressCheckpoint({ profile, onContinue, onSkipToUpload
           <h3 style={{
             fontSize: '1.25rem',
             fontWeight: 600,
-            color: COLORS.darkGray,
+            color: COLORS.textPrimary,
             marginBottom: '1.5rem',
             display: 'flex',
             alignItems: 'center',
@@ -284,19 +284,19 @@ export default function ProgressCheckpoint({ profile, onContinue, onSkipToUpload
             {/* Partners */}
             {partnersCount > 0 && (
               <div style={{
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 borderRadius: '8px',
                 padding: '1rem'
               }}>
                 <div style={{
                   fontSize: '0.875rem',
                   fontWeight: 600,
-                  color: COLORS.mediumGray,
+                  color: COLORS.textSecondary,
                   marginBottom: '0.5rem'
                 }}>
                   GP PARTNERS ({partnersCount})
                 </div>
-                <div style={{ fontSize: '0.9375rem', color: COLORS.darkGray }}>
+                <div style={{ fontSize: '0.9375rem', color: COLORS.textPrimary }}>
                   {profile.gps.partners.map(p => p.name).join(' • ')}
                 </div>
               </div>
@@ -305,19 +305,19 @@ export default function ProgressCheckpoint({ profile, onContinue, onSkipToUpload
             {/* Salaried GPs */}
             {salariedCount > 0 && (
               <div style={{
-                backgroundColor: COLORS.backgroundGray,
+                backgroundColor: COLORS.bgPage,
                 borderRadius: '8px',
                 padding: '1rem'
               }}>
                 <div style={{
                   fontSize: '0.875rem',
                   fontWeight: 600,
-                  color: COLORS.mediumGray,
+                  color: COLORS.textSecondary,
                   marginBottom: '0.5rem'
                 }}>
                   SALARIED GPs ({salariedCount})
                 </div>
-                <div style={{ fontSize: '0.9375rem', color: COLORS.darkGray }}>
+                <div style={{ fontSize: '0.9375rem', color: COLORS.textPrimary }}>
                   {profile.gps.salaried.map(g => g.name).join(' • ')}
                 </div>
               </div>
@@ -328,7 +328,7 @@ export default function ProgressCheckpoint({ profile, onContinue, onSkipToUpload
               <div
                 key={role}
                 style={{
-                  backgroundColor: COLORS.backgroundGray,
+                  backgroundColor: COLORS.bgPage,
                   borderRadius: '8px',
                   padding: '1rem'
                 }}
@@ -336,13 +336,13 @@ export default function ProgressCheckpoint({ profile, onContinue, onSkipToUpload
                 <div style={{
                   fontSize: '0.875rem',
                   fontWeight: 600,
-                  color: COLORS.mediumGray,
+                  color: COLORS.textSecondary,
                   marginBottom: '0.5rem',
                   textTransform: 'uppercase'
                 }}>
                   {role} ({names.length})
                 </div>
-                <div style={{ fontSize: '0.9375rem', color: COLORS.darkGray }}>
+                <div style={{ fontSize: '0.9375rem', color: COLORS.textPrimary }}>
                   {names.join(' • ')}
                 </div>
               </div>
@@ -352,9 +352,9 @@ export default function ProgressCheckpoint({ profile, onContinue, onSkipToUpload
             <div style={{
               textAlign: 'center',
               paddingTop: '0.75rem',
-              borderTop: `2px solid ${COLORS.lightGray}`,
+              borderTop: `2px solid ${COLORS.borderLight}`,
               fontSize: '0.875rem',
-              color: COLORS.mediumGray,
+              color: COLORS.textSecondary,
               fontWeight: 600
             }}>
               Total Team Members: {partnersCount + salariedCount + staffCount}
@@ -374,19 +374,19 @@ export default function ProgressCheckpoint({ profile, onContinue, onSkipToUpload
             <h4 style={{
               fontSize: '1rem',
               fontWeight: 600,
-              color: COLORS.darkGray,
+              color: COLORS.textPrimary,
               marginBottom: '1rem'
             }}>
               Additional Details Collected:
             </h4>
             <div style={{ display: 'grid', gap: '0.5rem' }}>
               {hasAccountant && (
-                <div style={{ fontSize: '0.9375rem', color: COLORS.darkGray }}>
+                <div style={{ fontSize: '0.9375rem', color: COLORS.textPrimary }}>
                   ✓ Accountant: <strong>{profile.practiceDetails.accountant}</strong>
                 </div>
               )}
               {hasYearEnd && (
-                <div style={{ fontSize: '0.9375rem', color: COLORS.darkGray }}>
+                <div style={{ fontSize: '0.9375rem', color: COLORS.textPrimary }}>
                   ✓ Accounting Year End: <strong>{profile.practiceDetails.yearEndDate}</strong>
                 </div>
               )}
@@ -410,7 +410,7 @@ export default function ProgressCheckpoint({ profile, onContinue, onSkipToUpload
           <h3 style={{
             fontSize: '1.125rem',
             fontWeight: 600,
-            color: COLORS.darkGray,
+            color: COLORS.textPrimary,
             marginBottom: '0.75rem',
             minHeight: '1.5rem'
           }}>
@@ -418,7 +418,7 @@ export default function ProgressCheckpoint({ profile, onContinue, onSkipToUpload
           </h3>
           <p style={{
             fontSize: '1rem',
-            color: COLORS.mediumGray,
+            color: COLORS.textSecondary,
             lineHeight: 1.5,
             opacity: closing.length > 0 ? 1 : 0,
             transition: 'opacity 0.3s'
@@ -470,9 +470,9 @@ export default function ProgressCheckpoint({ profile, onContinue, onSkipToUpload
             padding: '0.875rem 1.5rem',
             fontSize: '1rem',
             fontWeight: 500,
-            color: COLORS.mediumGray,
+            color: COLORS.textSecondary,
             backgroundColor: 'transparent',
-            border: `2px solid ${COLORS.lightGray}`,
+            border: `2px solid ${COLORS.borderLight}`,
             borderRadius: '8px',
             cursor: 'pointer',
             display: 'flex',
@@ -481,12 +481,12 @@ export default function ProgressCheckpoint({ profile, onContinue, onSkipToUpload
             transition: 'all 0.2s'
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = COLORS.mediumGray;
-            e.currentTarget.style.color = COLORS.darkGray;
+            e.currentTarget.style.borderColor = COLORS.textSecondary;
+            e.currentTarget.style.color = COLORS.textPrimary;
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = COLORS.lightGray;
-            e.currentTarget.style.color = COLORS.mediumGray;
+            e.currentTarget.style.borderColor = COLORS.borderLight;
+            e.currentTarget.style.color = COLORS.textSecondary;
           }}
         >
           <SkipForward style={{ width: '18px', height: '18px' }} />
