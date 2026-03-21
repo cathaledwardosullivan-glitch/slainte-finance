@@ -482,7 +482,7 @@ export const CATEGORY_MAPPING = [
       "Derry Cour",
       "Cleaning",
       "Webster",
-      "ISS",
+      "ISS Facility",
       "MITIE"
     ],
     "type": "expense",
@@ -1111,7 +1111,7 @@ export const CATEGORY_MAPPING = [
       "McMahons",
       "GALA",
       "SKYL",
-      "DUNNES",
+      "DUNNES STORES",
       "Dunnes Stores",
       "LIDL",
       "CENTRA",

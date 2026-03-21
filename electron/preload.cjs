@@ -110,6 +110,24 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getErrorReportingSetting: () => ipcRenderer.invoke('get-error-reporting-setting'),
   setErrorReportingSetting: (enabled) => ipcRenderer.invoke('set-error-reporting-setting', enabled),
 
+  // Background Transaction Processor
+  backgroundProcessor: {
+    getStagedResults: () => ipcRenderer.invoke('background:get-staged'),
+    getStagedDetail: (id) => ipcRenderer.invoke('background:get-staged-detail', id),
+    applyStaged: (id, txIds) => ipcRenderer.invoke('background:apply-staged', id, txIds),
+    dismissStaged: (id) => ipcRenderer.invoke('background:dismiss-staged', id),
+    getInboxPath: () => ipcRenderer.invoke('background:get-inbox-path'),
+    openInbox: () => ipcRenderer.invoke('background:open-inbox'),
+    onResultsReady: (cb) => ipcRenderer.on('background:results-ready', (e, data) => cb(data)),
+    onProcessingError: (cb) => ipcRenderer.on('background:processing-error', (e, data) => cb(data)),
+    onProcessingProgress: (cb) => ipcRenderer.on('background:processing-progress', (e, data) => cb(data)),
+    removeListeners: () => {
+      ipcRenderer.removeAllListeners('background:results-ready');
+      ipcRenderer.removeAllListeners('background:processing-error');
+      ipcRenderer.removeAllListeners('background:processing-progress');
+    },
+  },
+
   // Platform info
   platform: process.platform,
   version: process.versions.electron

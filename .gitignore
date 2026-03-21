@@ -31,3 +31,9 @@ dist-ssr
 release/
 node_modules/
 dist/
+
+# Ground truth test data (contains real financial data)
+test-data/
+
+# Isolated Electron test instance
+test-userdata/

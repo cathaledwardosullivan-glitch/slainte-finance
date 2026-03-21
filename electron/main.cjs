@@ -13,6 +13,9 @@ const fs = require('fs');
 // PCRS Automation Module
 const { PCRSAutomation } = require('./pcrs/pcrsAutomation.cjs');
 
+// Background Transaction Processor
+const BackgroundProcessor = require('./backgroundProcessor.cjs');
+
 // Centralized model configuration
 const { MODELS } = require('./modelConfig.cjs');
 
@@ -765,6 +768,9 @@ let mainWindow = null;
 
 // PCRS Automation instance
 let pcrsAutomation = null;
+
+// Background processor instance
+let bgProcessor = null;
 
 // Express API Server
 const expressApp = express();
@@ -2377,6 +2383,58 @@ app.whenReady().then(() => {
     console.error('[PCRS] Failed to initialize automation:', err);
   });
 
+  // Initialize Background Transaction Processor
+  bgProcessor = new BackgroundProcessor({
+    userDataPath: app.getPath('userData'),
+    onReady: (stagedResult) => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('background:results-ready', {
+          id: stagedResult.id,
+          sourceFile: stagedResult.sourceFile,
+          summary: stagedResult.summary,
+        });
+      }
+    },
+    onError: (error, fileName) => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('background:processing-error', {
+          fileName,
+          error: error.message,
+        });
+      }
+    },
+    onProgress: (fileName, percent) => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('background:processing-progress', {
+          fileName,
+          percent,
+        });
+      }
+    },
+  });
+  bgProcessor.start();
+
+  // IPC handlers for background processor
+  ipcMain.handle('background:get-staged', async () => {
+    return bgProcessor.getStagedResults();
+  });
+  ipcMain.handle('background:get-staged-detail', async (event, stagedId) => {
+    return bgProcessor.getStagedDetail(stagedId);
+  });
+  ipcMain.handle('background:apply-staged', async (event, stagedId, approvedTransactionIds) => {
+    return bgProcessor.applyStagedTransactions(stagedId, approvedTransactionIds);
+  });
+  ipcMain.handle('background:dismiss-staged', async (event, stagedId) => {
+    return bgProcessor.dismissStaged(stagedId);
+  });
+  ipcMain.handle('background:get-inbox-path', async () => {
+    return bgProcessor.getInboxPath();
+  });
+  ipcMain.handle('background:open-inbox', async () => {
+    const { shell } = require('electron');
+    shell.openPath(bgProcessor.getInboxPath());
+  });
+
   // Check for updates after a short delay (only in production)
   if (!isDev) {
     setTimeout(() => {
@@ -2427,6 +2485,11 @@ app.on('window-all-closed', () => {
 
 app.on('before-quit', () => {
   console.log('[Electron] Shutting down...');
+
+  // Stop background processor
+  if (bgProcessor) {
+    bgProcessor.stop();
+  }
 
   // Auto-backup on close if enabled
   // Uses cached plaintext password (set during password creation, migration, or mobile login)
