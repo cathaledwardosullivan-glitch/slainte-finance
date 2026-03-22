@@ -2384,53 +2384,65 @@ app.whenReady().then(() => {
   });
 
   // Initialize Background Transaction Processor
-  bgProcessor = new BackgroundProcessor({
-    userDataPath: app.getPath('userData'),
-    onReady: (stagedResult) => {
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('background:results-ready', {
-          id: stagedResult.id,
-          sourceFile: stagedResult.sourceFile,
-          summary: stagedResult.summary,
-        });
-      }
-    },
-    onError: (error, fileName) => {
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('background:processing-error', {
-          fileName,
-          error: error.message,
-        });
-      }
-    },
-    onProgress: (fileName, percent) => {
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('background:processing-progress', {
-          fileName,
-          percent,
-        });
-      }
-    },
-  });
-  bgProcessor.start();
+  try {
+    bgProcessor = new BackgroundProcessor({
+      userDataPath: app.getPath('userData'),
+      onReady: (stagedResult) => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('background:results-ready', {
+            id: stagedResult.id,
+            sourceFile: stagedResult.sourceFile,
+            summary: stagedResult.summary,
+            duplicateCount: stagedResult.duplicates?.count || 0,
+          });
+        }
+      },
+      onError: (error, fileName) => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('background:processing-error', {
+            fileName,
+            error: error.message,
+          });
+        }
+      },
+      onProgress: (fileName, percent) => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('background:processing-progress', {
+            fileName,
+            percent,
+          });
+        }
+      },
+    });
+    bgProcessor.start();
+  } catch (err) {
+    console.error('[BackgroundProcessor] Failed to initialize:', err);
+  }
 
-  // IPC handlers for background processor
+  // IPC handlers for background processor — registered unconditionally so the
+  // renderer always gets a clean response rather than "no handler" errors
   ipcMain.handle('background:get-staged', async () => {
+    if (!bgProcessor) return [];
     return bgProcessor.getStagedResults();
   });
   ipcMain.handle('background:get-staged-detail', async (event, stagedId) => {
+    if (!bgProcessor) return null;
     return bgProcessor.getStagedDetail(stagedId);
   });
   ipcMain.handle('background:apply-staged', async (event, stagedId, approvedTransactionIds) => {
+    if (!bgProcessor) return { success: false, error: 'Background processor not available' };
     return bgProcessor.applyStagedTransactions(stagedId, approvedTransactionIds);
   });
   ipcMain.handle('background:dismiss-staged', async (event, stagedId) => {
+    if (!bgProcessor) return { success: false, error: 'Background processor not available' };
     return bgProcessor.dismissStaged(stagedId);
   });
   ipcMain.handle('background:get-inbox-path', async () => {
+    if (!bgProcessor) return null;
     return bgProcessor.getInboxPath();
   });
   ipcMain.handle('background:open-inbox', async () => {
+    if (!bgProcessor) return;
     const { shell } = require('electron');
     shell.openPath(bgProcessor.getInboxPath());
   });

@@ -112,7 +112,7 @@ const FINN_TOOLS = [
   },
   {
     name: 'lookup_financial_data',
-    description: 'Look up specific financial data points from the practice\'s records. Use this to answer questions about income, expenses, profit, categories, trends, or transaction counts instead of guessing. Use "system_status" to check what needs attention — stale data, uncategorised transactions, overdue tasks.',
+    description: 'Look up specific financial data points from the practice\'s records. Use this to answer questions about income, expenses, profit, categories, trends, or transaction counts instead of guessing. Use "system_status" to check what needs attention — stale data, uncategorised transactions, overdue tasks, staged transactions. Use "staged_results" for details on background-processed bank statements awaiting review.',
     input_schema: {
       type: 'object',
       properties: {
@@ -122,9 +122,9 @@ const FINN_TOOLS = [
             'total_income', 'total_expenses', 'profit', 'profit_margin',
             'top_expenses', 'top_income', 'gms_payments', 'uncategorized_count',
             'monthly_trends', 'transaction_count', 'available_years', 'expense_breakdown', 'income_breakdown',
-            'system_status'
+            'system_status', 'staged_results'
           ],
-          description: 'The data point to retrieve. Use "system_status" to check for stale data, uncategorised transactions, overdue tasks, and other items needing attention.'
+          description: 'The data point to retrieve. Use "system_status" to check for stale data, uncategorised transactions, overdue tasks, and other items needing attention. Use "staged_results" for details on background-processed bank statements awaiting review.'
         },
         period: {
           type: 'string',
@@ -350,6 +350,10 @@ export const FinnProvider = ({ children }) => {
   const startBackgroundReportRef = useRef(null); // For retry functionality
   const pcrsListenerSetupRef = useRef(false); // Track if PCRS IPC listeners are set up
   const lastCreatedCategoryRef = useRef(null); // For immediate recategorize after category creation
+  const stagedResultsListenerRef = useRef(false); // Track if background processor listener is set up
+
+  // Background processor staged results (cached for synchronous access in system_status)
+  const [stagedResults, setStagedResults] = useState([]);
 
   // Reports state
   const [savedReports, setSavedReports] = useState([]);
@@ -477,6 +481,55 @@ export const FinnProvider = ({ children }) => {
     }
     prevIsOpenRef.current = isOpen;
   }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Background processor: fetch staged results on mount + listen for real-time updates
+  useEffect(() => {
+    if (!window.electronAPI?.backgroundProcessor || stagedResultsListenerRef.current) return;
+    stagedResultsListenerRef.current = true;
+
+    // Initial fetch — pick up anything processed before this session
+    window.electronAPI.backgroundProcessor.getStagedResults().then(results => {
+      if (results && results.length > 0) {
+        setStagedResults(results);
+      }
+    }).catch(() => {});
+
+    // Real-time listener — file just finished processing
+    window.electronAPI.backgroundProcessor.onResultsReady((data) => {
+      // Refresh the full staged results list
+      window.electronAPI.backgroundProcessor.getStagedResults().then(results => {
+        setStagedResults(results || []);
+      }).catch(() => {});
+
+      // Open Finn and tell the user
+      setIsOpen(true);
+      const { sourceFile, summary, duplicateCount } = data;
+      const newCount = summary.totalTransactions - duplicateCount;
+      let msg;
+      if (duplicateCount > 0 && newCount === 0) {
+        msg = `I processed "${sourceFile}" but all ${summary.totalTransactions} transactions are duplicates of ones you've already imported. Nothing new to add.`;
+      } else if (duplicateCount > 0) {
+        msg = `I just finished processing "${sourceFile}" — ${summary.totalTransactions} transactions found, ${duplicateCount} are duplicates I'll skip. ` +
+          `Of the ${newCount} new ones, ${summary.auto - duplicateCount} categorised automatically` +
+          (summary.review > 0 ? ` and ${summary.review} ${summary.review === 1 ? 'needs' : 'need'} your input` : '') +
+          `. Say "review" when you're ready.`;
+      } else {
+        msg = `I just finished processing "${sourceFile}" — ${summary.totalTransactions} transactions found, ` +
+          `${summary.auto} categorised automatically` +
+          (summary.review > 0 ? ` and ${summary.review} ${summary.review === 1 ? 'needs' : 'need'} your input` : '') +
+          `. Say "review" when you're ready to look at them.`;
+      }
+      // Small delay so the panel has time to open before message appears
+      setTimeout(() => addAssistantMessage(msg), 300);
+    });
+
+    return () => {
+      if (window.electronAPI?.backgroundProcessor) {
+        window.electronAPI.backgroundProcessor.removeListeners();
+      }
+      stagedResultsListenerRef.current = false;
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Listen for post-tour choice to show contextual follow-up message
   useEffect(() => {
@@ -1028,6 +1081,30 @@ export const FinnProvider = ({ children }) => {
         return { count: financialContext.totalTransactions || transactions.length };
       case 'available_years':
         return { years: financialContext.availableYears || [], mostRecent: financialContext.mostRecentYear };
+      case 'staged_results': {
+        if (stagedResults.length === 0) {
+          return { hasStaged: false, message: 'No background-processed transactions waiting.' };
+        }
+        const totalTxns = stagedResults.reduce((sum, s) => sum + s.summary.totalTransactions, 0);
+        const totalAuto = stagedResults.reduce((sum, s) => sum + s.summary.auto, 0);
+        const totalReview = stagedResults.reduce((sum, s) => sum + s.summary.review, 0);
+        return {
+          hasStaged: true,
+          fileCount: stagedResults.length,
+          files: stagedResults.map(s => ({
+            id: s.id,
+            sourceFile: s.sourceFile,
+            processedAt: s.processedAt,
+            totalTransactions: s.summary.totalTransactions,
+            auto: s.summary.auto,
+            review: s.summary.review,
+            dateRange: s.summary.dateRange
+          })),
+          totalTransactions: totalTxns,
+          totalAuto,
+          totalReview
+        };
+      }
       case 'system_status': {
         const statusItems = [];
 
@@ -1078,6 +1155,19 @@ export const FinnProvider = ({ children }) => {
           }
         }
 
+        // 7. Background-processed transactions awaiting review
+        if (stagedResults.length > 0) {
+          const totalTxns = stagedResults.reduce((sum, s) => sum + s.summary.totalTransactions, 0);
+          const totalAuto = stagedResults.reduce((sum, s) => sum + s.summary.auto, 0);
+          const totalReview = stagedResults.reduce((sum, s) => sum + s.summary.review, 0);
+          statusItems.push({
+            type: 'staged_transactions',
+            severity: 'high',
+            message: `${stagedResults.length} bank statement${stagedResults.length > 1 ? 's' : ''} processed — ${totalTxns} transactions (${totalAuto} auto-categorised, ${totalReview} need review)`,
+            data: { fileCount: stagedResults.length, totalTxns, totalAuto, totalReview }
+          });
+        }
+
         const totalActive = activeFinancial.length + (getOverdueActions().length > 0 ? overdueGMS.length : 0);
         return {
           statusItems,
@@ -1089,7 +1179,7 @@ export const FinnProvider = ({ children }) => {
       default:
         return { error: `Unknown query type: ${query}` };
     }
-  }, [getFinancialContext, transactions, unidentifiedTransactions, paymentAnalysisData]);
+  }, [getFinancialContext, transactions, unidentifiedTransactions, paymentAnalysisData, stagedResults]);
 
   // Search transactions by category, date, amount, or description
   const searchTransactions = useCallback((input) => {
@@ -1733,6 +1823,7 @@ Keep your response to 1-3 sentences maximum. Be warm but concise.`;
         return `Navigating to ${input.target?.replace(/-/g, ' ').replace(':', ' → ')}`;
       case 'lookup_financial_data':
         if (input.query === 'system_status') return 'Checking what needs attention';
+        if (input.query === 'staged_results') return 'Checking for processed bank statements';
         return `Looking up ${input.query?.replace(/_/g, ' ')}`;
       case 'search_transactions':
         if (input.action === 'recategorize') return `Recategorizing ${input.category || 'matching'} transactions to "${input.newCategory}"`;
@@ -1891,7 +1982,7 @@ RULES:
       toolActions,
       isError: true
     };
-  }, [messages, getRecentConversationHistory, getPageContextDescription, getCiaranContext, buildGMSHealthCheckContext, executeToolAction]);
+  }, [getRecentConversationHistory, getPageContextDescription, getCiaranContext, buildGMSHealthCheckContext, executeToolAction]);
 
   // Report Q&A — mini agentic loop for follow-up questions about a report
   const reportQA = useCallback(async (message, report, conversationHistory = []) => {
@@ -2199,7 +2290,7 @@ RULES:
     } finally {
       setIsLoading(false);
     }
-  }, [apiKey, currentChatId, isLoading, isRetryRequest, failedReportContext, messages, agenticQuery]);
+  }, [apiKey, currentChatId, isLoading, isRetryRequest, failedReportContext, agenticQuery]);
 
   // Add assistant message to chat
   const addAssistantMessage = useCallback((content, isError = false, extras = {}) => {
