@@ -1737,10 +1737,11 @@ ipcMain.handle('list-backups', async () => {
 
 ipcMain.handle('create-backup', async (event, password) => {
   try {
-    if (!password) {
-      return { success: false, error: 'Password is required for backup encryption' };
+    const backupPassword = password || cachedBackupPassword;
+    if (!backupPassword) {
+      return { success: false, error: 'Password is required for backup encryption. Please set a mobile access password in Settings first.' };
     }
-    const result = createEncryptedBackup(password, false);
+    const result = createEncryptedBackup(backupPassword, false);
     return { success: true, ...result };
   } catch (error) {
     return { success: false, error: error.message };
@@ -2436,6 +2437,14 @@ app.whenReady().then(() => {
   ipcMain.handle('background:dismiss-staged', async (event, stagedId) => {
     if (!bgProcessor) return { success: false, error: 'Background processor not available' };
     return bgProcessor.dismissStaged(stagedId);
+  });
+  ipcMain.handle('background:remove-from-staged', async (event, stagedId, txIds) => {
+    if (!bgProcessor) return { success: false, error: 'Background processor not available' };
+    return bgProcessor.removeFromStaged(stagedId, txIds);
+  });
+  ipcMain.handle('background:rescore-staged', async (event, stagedId) => {
+    if (!bgProcessor) return { success: false, error: 'Background processor not available' };
+    return bgProcessor.rescoreStaged(stagedId);
   });
   ipcMain.handle('background:get-inbox-path', async () => {
     if (!bgProcessor) return null;

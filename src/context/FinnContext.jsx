@@ -45,7 +45,7 @@ const TASK_TIMEOUT_MS = 3 * 60 * 1000;
 const FINN_TOOLS = [
   {
     name: 'navigate',
-    description: 'Navigate to a page, section, or modal in Sláinte Finance, create a task, create a new category, or trigger a file export/download. Use when the user wants to go somewhere, open something, add a task, create a category, or download data. Use "tasks:create" to create a task — provide just the title and description, then the Tasks panel will open for the user to set assignee, due date, and priority. IMPORTANT: Always describe the proposed task to the user and get their confirmation BEFORE calling with tasks:create. Use "categories:create" to create a new expense/income category — provide categoryData with name, type, and section. IMPORTANT: Always describe the proposed category to the user and get their confirmation BEFORE calling with categories:create. After creating a category, you can immediately recategorize matching transactions using search_transactions with action="recategorize". EXPORT RULE: When the user says "export", "download", "give me", or "send me" a data file (transactions CSV, PCRS summary, payment overview, accountant pack), use the matching "export:*" target for an instant download. EXCEPTION — P&L REPORTS: For P&L requests, navigate to "reports" instead of using "export:pl-draft", because the Reports panel lets the user choose the year and flags incomplete items like motor expenses and depreciation. Only use "export:pl-draft" if the user specifically asks for a quick/draft/raw P&L data extract.',
+    description: 'Navigate to a page, section, or modal in Sláinte Finance, create a task, create a new category, review staged transactions, or trigger a file export/download. Use when the user wants to go somewhere, open something, add a task, create a category, or download data. Use "tasks:create" to create a task — provide just the title and description, then the Tasks panel will open for the user to set assignee, due date, and priority. IMPORTANT: Always describe the proposed task to the user and get their confirmation BEFORE calling with tasks:create. Use "categories:create" to create a new expense/income category — provide categoryData with name, type, and section. IMPORTANT: Always describe the proposed category to the user and get their confirmation BEFORE calling with categories:create. After creating a category, you can immediately recategorize matching transactions using search_transactions with action="recategorize". Use "staged:review" to review background-processed bank statements — provide stagedReviewData with stagedId and action. REVIEW FLOW: First call with action "review" to get the full picture, then "apply-auto" for high-confidence transactions, then present review clusters to the user one round at a time (largest clusters first). For each cluster the user categorises, call "apply-cluster" with the category. Between rounds call "rescore" to cascade the user\'s answers. Stop presenting clusters when the largest has fewer than 5 members and offer "apply-remaining". EXPORT RULE: When the user says "export", "download", "give me", or "send me" a data file (transactions CSV, PCRS summary, payment overview, accountant pack), use the matching "export:*" target for an instant download. EXCEPTION — P&L REPORTS: For P&L requests, navigate to "reports" instead of using "export:pl-draft", because the Reports panel lets the user choose the year and flags incomplete items like motor expenses and depreciation. Only use "export:pl-draft" if the user specifically asks for a quick/draft/raw P&L data extract.',
     input_schema: {
       type: 'object',
       properties: {
@@ -62,12 +62,12 @@ const FINN_TOOLS = [
             'settings', 'transactions', 'reports', 'pcrs-downloader',
             'settings:profile', 'settings:data', 'settings:categories',
             'settings:backup', 'settings:privacy',
-            'tasks:create', 'categories:create',
+            'tasks:create', 'categories:create', 'staged:review',
             'export:transactions-simple', 'export:transactions-detailed',
             'export:pcrs-summary', 'export:payment-overview',
             'export:pl-draft', 'export:accountant-pack'
           ],
-          description: 'The page or section to navigate to. "reports" opens the Reports panel where the user can generate a proper P&L report (with year selection, motor expenses, depreciation flags) — use this for P&L requests. "finances-overview" opens the Financial Dashboard. "gms-health-check" opens the GMS Health Check. "pcrs-downloader" opens the PCRS statement downloader. "advanced-insights" opens the Advanced Insights tab. "advanced-insights:overview/gms/growth/costs/tax" opens a specific Advanced Insights category. "tasks:create" creates a new task (requires taskData). "categories:create" creates a new expense/income category (requires categoryData) — use when the user wants a category that doesn\'t exist yet. FILE DOWNLOADS (instant): "export:transactions-simple" downloads simplified transaction CSV. "export:transactions-detailed" downloads full transaction CSV with categories. "export:pcrs-summary" downloads PCRS payment summary CSV. "export:payment-overview" downloads monthly payment breakdown CSV. "export:pl-draft" downloads a quick draft P&L CSV (raw data only — no motor expenses or depreciation, use only when user explicitly wants a quick/draft extract). "export:accountant-pack" downloads all exports bundled as ZIP.'
+          description: 'The page or section to navigate to. "reports" opens the Reports panel where the user can generate a proper P&L report (with year selection, motor expenses, depreciation flags) — use this for P&L requests. "finances-overview" opens the Financial Dashboard. "gms-health-check" opens the GMS Health Check. "pcrs-downloader" opens the PCRS statement downloader. "advanced-insights" opens the Advanced Insights tab. "advanced-insights:overview/gms/growth/costs/tax" opens a specific Advanced Insights category. "tasks:create" creates a new task (requires taskData). "categories:create" creates a new expense/income category (requires categoryData) — use when the user wants a category that doesn\'t exist yet. "staged:review" reviews background-processed bank statements (requires stagedReviewData with stagedId and action) — use when there are staged transactions to review. FILE DOWNLOADS (instant): "export:transactions-simple" downloads simplified transaction CSV. "export:transactions-detailed" downloads full transaction CSV with categories. "export:pcrs-summary" downloads PCRS payment summary CSV. "export:payment-overview" downloads monthly payment breakdown CSV. "export:pl-draft" downloads a quick draft P&L CSV (raw data only — no motor expenses or depreciation, use only when user explicitly wants a quick/draft extract). "export:accountant-pack" downloads all exports bundled as ZIP.'
         },
         taskData: {
           type: 'object',
@@ -104,6 +104,21 @@ const FINN_TOOLS = [
               type: 'string',
               description: 'P&L reporting line for the accountant (e.g. "Employer\'s PRSI & PAYE", "Staff costs")'
             }
+          }
+        },
+        stagedReviewData: {
+          type: 'object',
+          description: 'Only used when target is "staged:review". Controls the conversational review of background-processed bank statements. Use action "review" to fetch the full staged data (auto-batch summary + review clusters). Use "apply-auto" to bulk-apply all high-confidence transactions. Use "apply-cluster" to apply a specific cluster with the user\'s chosen category (adds an identifier for future learning). Use "rescore" after applying clusters to re-run the categorisation engine and cascade the user\'s answers into more auto-categorisations. Use "apply-remaining" to apply all remaining transactions (categorised or not) and finish the review.',
+          properties: {
+            stagedId: { type: 'string', description: 'The staged result ID to review (from staged_results lookup)' },
+            action: {
+              type: 'string',
+              enum: ['review', 'apply-auto', 'apply-cluster', 'rescore', 'apply-remaining'],
+              description: 'The review action to perform. Start with "review" to see what needs attention, then "apply-auto" for the high-confidence batch, then present clusters and "apply-cluster" for each user answer, "rescore" between rounds to cascade, and "apply-remaining" to finish.'
+            },
+            clusterIndex: { type: 'number', description: 'For apply-cluster: the 0-based index of the cluster to apply (from the reviewClusters array)' },
+            categoryCode: { type: 'string', description: 'For apply-cluster: the category code to assign to all cluster members' },
+            categoryName: { type: 'string', description: 'For apply-cluster: the category name (for display and identifier learning)' }
           }
         }
       },
@@ -351,6 +366,7 @@ export const FinnProvider = ({ children }) => {
   const pcrsListenerSetupRef = useRef(false); // Track if PCRS IPC listeners are set up
   const lastCreatedCategoryRef = useRef(null); // For immediate recategorize after category creation
   const stagedResultsListenerRef = useRef(false); // Track if background processor listener is set up
+  const stagedDetailCacheRef = useRef({}); // Cache staged detail between tool calls in same agentic loop
 
   // Background processor staged results (cached for synchronous access in system_status)
   const [stagedResults, setStagedResults] = useState([]);
@@ -1416,7 +1432,7 @@ export const FinnProvider = ({ children }) => {
   }, []);
 
   // Execute a tool action and return the result
-  const executeToolAction = useCallback((toolName, input) => {
+  const executeToolAction = useCallback(async (toolName, input) => {
     switch (toolName) {
       case 'navigate': {
         const target = input.target;
@@ -1541,6 +1557,343 @@ export const FinnProvider = ({ children }) => {
             categoryCode: code,
             categoryName: data.name
           };
+        }
+
+        // Staged transaction review — conversational review of background-processed bank statements
+        if (target === 'staged:review') {
+          if (!window.electronAPI?.backgroundProcessor) {
+            return { success: false, error: 'Background processor not available.' };
+          }
+          const data = input.stagedReviewData || {};
+          const { stagedId, action = 'review' } = data;
+
+          if (!stagedId) {
+            return { success: false, error: 'stagedId is required. Use lookup_financial_data with query "staged_results" to find available staged files.' };
+          }
+
+          // Helper: get staged detail (cached within an agentic loop)
+          const getStagedDetailCached = async (id) => {
+            if (stagedDetailCacheRef.current[id]) return stagedDetailCacheRef.current[id];
+            const detail = await window.electronAPI.backgroundProcessor.getStagedDetail(id);
+            if (detail) stagedDetailCacheRef.current[id] = detail;
+            return detail;
+          };
+
+          // Helper: invalidate cache after mutations
+          const invalidateCache = (id) => {
+            delete stagedDetailCacheRef.current[id];
+          };
+
+          if (action === 'review') {
+            // Fetch and return the full staged review data
+            const detail = await getStagedDetailCached(stagedId);
+            if (!detail) {
+              return { success: false, error: `Staged result "${stagedId}" not found. It may have already been applied.` };
+            }
+
+            const autoTxns = detail.transactions.filter(t => t.stagedCohort === 'auto');
+            const reviewTxns = detail.transactions.filter(t => t.stagedCohort === 'review');
+
+            // Open the review panel
+            window.dispatchEvent(new CustomEvent('staged-review:open', {
+              detail: { stagedData: detail }
+            }));
+
+            return {
+              success: true,
+              stagedId,
+              sourceFile: detail.sourceFile,
+              processedAt: detail.processedAt,
+              summary: detail.summary,
+              autoTransactions: autoTxns.length,
+              reviewTransactions: reviewTxns.length,
+              reviewClusters: (detail.reviewClusters || []).map((c, i) => ({
+                index: i,
+                representativeDescription: c.representativeDescription,
+                suggestedCategory: c.suggestedCategory,
+                suggestedConfidence: c.suggestedConfidence,
+                memberCount: c.memberCount,
+                totalAmount: Math.round(c.totalAmount * 100) / 100,
+              })),
+              anomalyWarnings: detail.anomalyWarnings || [],
+              message: `${detail.sourceFile}: ${detail.summary.totalTransactions} transactions — ${autoTxns.length} auto-categorised (high confidence), ${reviewTxns.length} need review across ${(detail.reviewClusters || []).length} clusters.`
+            };
+          }
+
+          if (action === 'apply-auto') {
+            // Bulk-apply all high-confidence auto-cohort transactions
+            const detail = await getStagedDetailCached(stagedId);
+            if (!detail) {
+              return { success: false, error: `Staged result "${stagedId}" not found.` };
+            }
+
+            const autoTxns = detail.transactions.filter(t => t.stagedCohort === 'auto');
+            if (autoTxns.length === 0) {
+              return { success: true, applied: 0, message: 'No auto-categorised transactions to apply.' };
+            }
+
+            // Add to React state (auto-save handles persistence)
+            setTransactions(prev => [...prev, ...autoTxns]);
+
+            // Clean up staging file
+            const autoIds = autoTxns.map(t => t.id);
+            const result = await window.electronAPI.backgroundProcessor.removeFromStaged(stagedId, autoIds);
+            invalidateCache(stagedId);
+
+            // Refresh staged results summary for system_status awareness
+            const updatedResults = await window.electronAPI.backgroundProcessor.getStagedResults();
+            setStagedResults(updatedResults || []);
+
+            // Notify review panel
+            window.dispatchEvent(new CustomEvent('staged-review:applied', {
+              detail: { stagedId, appliedCount: autoTxns.length, isAuto: true }
+            }));
+
+            return {
+              success: true,
+              applied: autoTxns.length,
+              remaining: result.remaining,
+              message: `Applied ${autoTxns.length} auto-categorised transactions.${result.remaining > 0 ? ` ${result.remaining} still need review.` : ' All transactions applied.'}`
+            };
+          }
+
+          if (action === 'apply-cluster') {
+            // Apply all members of a specific cluster with the user's chosen category
+            const { clusterIndex, categoryCode, categoryName } = data;
+
+            if (clusterIndex === undefined || clusterIndex === null) {
+              return { success: false, error: 'clusterIndex is required for apply-cluster.' };
+            }
+            if (!categoryCode && !categoryName) {
+              return { success: false, error: 'categoryCode or categoryName is required for apply-cluster.' };
+            }
+
+            const detail = await getStagedDetailCached(stagedId);
+            if (!detail) {
+              return { success: false, error: `Staged result "${stagedId}" not found.` };
+            }
+
+            // Find the target category
+            let targetCat = null;
+            if (categoryCode) {
+              targetCat = categoryMapping.find(c => c.code === categoryCode);
+              // Also check lastCreatedCategoryRef for categories created in this agentic loop
+              if (!targetCat && lastCreatedCategoryRef.current?.code === categoryCode) {
+                targetCat = lastCreatedCategoryRef.current;
+              }
+            }
+            if (!targetCat && categoryName) {
+              const lowerName = categoryName.toLowerCase();
+              const matches = categoryMapping.filter(c => c.name.toLowerCase().includes(lowerName));
+              if (matches.length === 1) {
+                targetCat = matches[0];
+              } else if (matches.length > 1) {
+                const exact = matches.find(c => c.name.toLowerCase() === lowerName);
+                targetCat = exact || null;
+                if (!targetCat) {
+                  return { success: false, error: `Multiple categories match "${categoryName}": ${matches.map(m => m.name).join(', ')}. Please be more specific or use the exact categoryCode.` };
+                }
+              }
+              // Check lastCreatedCategoryRef
+              if (!targetCat && lastCreatedCategoryRef.current?.name.toLowerCase().includes(lowerName)) {
+                targetCat = lastCreatedCategoryRef.current;
+              }
+            }
+
+            if (!targetCat) {
+              // Suggest close matches to help Finn recover
+              const searchTerm = (categoryName || categoryCode || '').toLowerCase();
+              const closeMatches = categoryMapping
+                .filter(c => {
+                  const name = c.name.toLowerCase();
+                  // Check if any word from the search term appears in the category name
+                  const words = searchTerm.split(/\s+/).filter(w => w.length >= 3);
+                  return words.some(w => name.includes(w));
+                })
+                .slice(0, 5)
+                .map(c => `"${c.name}" (code: ${c.code})`);
+              const suggestion = closeMatches.length > 0
+                ? ` Did you mean: ${closeMatches.join(', ')}?`
+                : ' Use categories:create to create it first.';
+              return { success: false, error: `Category "${categoryCode || categoryName}" not found.${suggestion}` };
+            }
+
+            // Get cluster and its member transactions
+            const cluster = (detail.reviewClusters || [])[clusterIndex];
+            if (!cluster) {
+              return { success: false, error: `Cluster at index ${clusterIndex} not found. There are ${(detail.reviewClusters || []).length} clusters.` };
+            }
+
+            // Find all transactions belonging to this cluster (by matching representative description)
+            const clusterTxns = detail.transactions.filter(t => {
+              // Match by representative ID or by being in the review cohort with similar details
+              if (t.id === cluster.representativeId) return true;
+              // Use the clustering logic: transactions in the review cohort that match this cluster
+              if (t.stagedCohort !== 'review') return false;
+              // Simple similarity check — same first 8 chars of cleaned details
+              const repClean = (cluster.representativeDescription || '').replace(/[0-9]/g, '').trim().substring(0, 8).toLowerCase();
+              const txnClean = (t.details || '').replace(/[0-9]/g, '').trim().substring(0, 8).toLowerCase();
+              return repClean.length >= 4 && repClean === txnClean;
+            });
+
+            // If prefix matching didn't find enough, fall back to just the member count
+            // by getting the top N similar review transactions
+            let finalTxns = clusterTxns;
+            if (clusterTxns.length < cluster.memberCount) {
+              // The staging file doesn't store cluster membership directly.
+              // Re-cluster to find exact members, or use all review txns that
+              // match the representative closely. For accuracy, we check all
+              // review transactions against the representative description.
+              const repDesc = (cluster.representativeDescription || '').toLowerCase();
+              const reviewTxns = detail.transactions.filter(t => t.stagedCohort === 'review');
+              const scored = reviewTxns.map(t => {
+                const desc = (t.details || '').toLowerCase();
+                // Quick similarity: shared prefix ratio
+                let shared = 0;
+                const minLen = Math.min(desc.length, repDesc.length);
+                for (let i = 0; i < minLen; i++) {
+                  if (desc[i] === repDesc[i]) shared++;
+                  else break;
+                }
+                return { txn: t, score: minLen > 0 ? shared / Math.max(desc.length, repDesc.length) : 0 };
+              }).filter(s => s.score >= 0.6)
+                .sort((a, b) => b.score - a.score)
+                .slice(0, cluster.memberCount);
+              finalTxns = scored.map(s => s.txn);
+            }
+
+            if (finalTxns.length === 0) {
+              return { success: false, error: 'Could not find transactions for this cluster.' };
+            }
+
+            // Apply category override to each transaction
+            const overriddenTxns = finalTxns.map(t => ({
+              ...t,
+              categoryCode: targetCat.code,
+              categoryName: targetCat.name,
+              categoryMatchType: 'finn-background',
+              categoryReviewed: true,
+              categoryCohort: 'auto',
+            }));
+
+            // Add to React state
+            setTransactions(prev => [...prev, ...overriddenTxns]);
+
+            // Clean up staging file
+            const txnIds = finalTxns.map(t => t.id);
+            const result = await window.electronAPI.backgroundProcessor.removeFromStaged(stagedId, txnIds);
+            invalidateCache(stagedId);
+
+            // Add identifier for future learning
+            const identifier = (cluster.representativeDescription || '').trim();
+            let identifierAdded = null;
+            if (identifier && identifier.length >= 3) {
+              // Clean the identifier — take the most distinctive part (first word or phrase before numbers)
+              const cleanId = identifier.replace(/\d{2,}/g, '').replace(/\s+/g, ' ').trim().split(/\s{2,}/)[0].trim();
+              if (cleanId.length >= 3) {
+                const existingIds = (targetCat.identifiers || []).map(id => id.toLowerCase());
+                if (!existingIds.includes(cleanId.toLowerCase())) {
+                  setCategoryMapping(prev => prev.map(cat => {
+                    if (cat.code === targetCat.code) {
+                      return { ...cat, identifiers: [...(cat.identifiers || []), cleanId] };
+                    }
+                    return cat;
+                  }));
+                  identifierAdded = cleanId;
+                }
+              }
+            }
+
+            // Notify review panel
+            window.dispatchEvent(new CustomEvent('staged-review:applied', {
+              detail: { stagedId, appliedCount: finalTxns.length, clusterIndex, categoryName: targetCat.name, isAuto: false }
+            }));
+
+            return {
+              success: true,
+              applied: finalTxns.length,
+              remaining: result.remaining,
+              categoryApplied: targetCat.name,
+              identifierAdded,
+              message: `Applied "${targetCat.name}" to ${finalTxns.length} transactions.${identifierAdded ? ` Added "${identifierAdded}" as a keyword — these will auto-categorise in future.` : ''}${result.remaining > 0 ? ` ${result.remaining} transactions remaining.` : ' All transactions applied.'}`
+            };
+          }
+
+          if (action === 'rescore') {
+            // Re-run categorisation engine on remaining review transactions
+            // This cascades the user's recent category decisions into more auto-categorisations
+            window.dispatchEvent(new CustomEvent('staged-review:rescore-start', { detail: { stagedId } }));
+
+            const result = await window.electronAPI.backgroundProcessor.rescoreStaged(stagedId);
+            invalidateCache(stagedId);
+
+            if (!result || result.remainingReview === undefined) {
+              return { success: false, error: 'Rescore failed. The staged file may have been removed.' };
+            }
+
+            // Notify review panel with updated clusters
+            window.dispatchEvent(new CustomEvent('staged-review:rescore-done', {
+              detail: { stagedId, promoted: result.promoted, updatedClusters: result.reviewClusters }
+            }));
+
+            return {
+              success: true,
+              promoted: result.promoted,
+              remainingReview: result.remainingReview,
+              remainingAuto: result.remainingAuto,
+              reviewClusters: (result.reviewClusters || []).map((c, i) => ({
+                index: i,
+                representativeDescription: c.representativeDescription,
+                suggestedCategory: c.suggestedCategory,
+                suggestedConfidence: c.suggestedConfidence,
+                memberCount: c.memberCount,
+                totalAmount: Math.round(c.totalAmount * 100) / 100,
+              })),
+              message: result.promoted > 0
+                ? `Rescoring complete — ${result.promoted} more transactions auto-categorised from your answers. ${result.remainingReview} still need review.`
+                : `Rescoring complete — no additional matches found. ${result.remainingReview} still need review.`
+            };
+          }
+
+          if (action === 'apply-remaining') {
+            // Apply all remaining transactions (categorised or not) and finish the review
+            const detail = await getStagedDetailCached(stagedId);
+            if (!detail) {
+              return { success: false, error: `Staged result "${stagedId}" not found.` };
+            }
+
+            const remaining = detail.transactions;
+            if (remaining.length === 0) {
+              return { success: true, applied: 0, message: 'No remaining transactions — review is complete.' };
+            }
+
+            // Add to React state
+            setTransactions(prev => [...prev, ...remaining]);
+
+            // Dismiss the entire staged file
+            await window.electronAPI.backgroundProcessor.dismissStaged(stagedId);
+            invalidateCache(stagedId);
+
+            // Refresh staged results state
+            const updatedResults = await window.electronAPI.backgroundProcessor.getStagedResults();
+            setStagedResults(updatedResults || []);
+
+            const categorised = remaining.filter(t => t.categoryCode).length;
+            const uncategorised = remaining.length - categorised;
+
+            // Close review panel
+            window.dispatchEvent(new CustomEvent('staged-review:close', { detail: { stagedId } }));
+
+            return {
+              success: true,
+              applied: remaining.length,
+              categorised,
+              uncategorised,
+              message: `Applied all ${remaining.length} remaining transactions (${categorised} categorised, ${uncategorised} uncategorised). Review complete.`
+            };
+          }
+
+          return { success: false, error: `Unknown staged review action: "${action}". Valid actions: review, apply-auto, apply-cluster, rescore, apply-remaining.` };
         }
 
         // Export actions — trigger file downloads without navigating away
@@ -1761,7 +2114,7 @@ export const FinnProvider = ({ children }) => {
       default:
         return { success: false, error: `Unknown tool: ${toolName}` };
     }
-  }, [lookupDataPoint, searchTransactions, lookupSavedReports, getFinancialContext, getCiaranContext, buildGMSHealthCheckContext, setCurrentView, setIsOpen, openFeedback, transactions, paymentAnalysisData, profile, categoryMapping, setCategoryMapping]);
+  }, [lookupDataPoint, searchTransactions, lookupSavedReports, getFinancialContext, getCiaranContext, buildGMSHealthCheckContext, setCurrentView, setIsOpen, openFeedback, transactions, setTransactions, paymentAnalysisData, profile, categoryMapping, setCategoryMapping, stagedResults]);
 
   // Handle quick queries (greetings, thanks, etc.)
   const handleQuickQuery = useCallback(async (message, queryType) => {
@@ -1820,6 +2173,15 @@ Keep your response to 1-3 sentences maximum. Be warm but concise.`;
       case 'navigate':
         if (input.target === 'tasks:create') return `Creating task: ${input.taskData?.title || 'new task'}`;
         if (input.target?.startsWith('export:')) return `Downloading ${input.target.split(':')[1]?.replace(/-/g, ' ')}`;
+        if (input.target === 'staged:review') {
+          const action = input.stagedReviewData?.action || 'review';
+          if (action === 'review') return 'Reviewing staged transactions';
+          if (action === 'apply-auto') return 'Applying auto-categorised transactions';
+          if (action === 'apply-cluster') return `Applying category to transaction cluster`;
+          if (action === 'rescore') return 'Re-scoring remaining transactions';
+          if (action === 'apply-remaining') return 'Applying remaining transactions';
+          return 'Reviewing staged transactions';
+        }
         return `Navigating to ${input.target?.replace(/-/g, ' ').replace(':', ' → ')}`;
       case 'lookup_financial_data':
         if (input.query === 'system_status') return 'Checking what needs attention';
@@ -1884,7 +2246,8 @@ RULES:
 - NEVER say you don't have access to data — use your tools to check.
 - The app has a built-in PCRS/GMS statement downloader. Users do NOT need to log into the PCRS portal manually. Navigate to the PCRS downloader page if they ask about downloading statements.
 - Use start_app_tour when the user asks for a tour, wants to be shown around, or asks how the app works. The tour starts automatically — just call the tool.
-- If you cannot resolve a user's issue (bug, missing feature, or something outside your control), use send_feedback to open the feedback form pre-filled with a summary. Do NOT tell the user to contact support — use the tool to open the form for them.`;
+- If you cannot resolve a user's issue (bug, missing feature, or something outside your control), use send_feedback to open the feedback form pre-filled with a summary. Do NOT tell the user to contact support — use the tool to open the form for them.
+- STAGED TRANSACTION REVIEW: When staged transactions are pending (check via system_status or staged_results), guide the user through a round-based review. Flow: (1) navigate staged:review with action "review" to get the full picture, (2) present the auto-categorised batch count and ask user to approve — then "apply-auto", (3) present the largest review clusters one round at a time — each cluster shows a representative description, suggested category, and member count — ask the user which category each belongs to, (4) after each round of answers, "apply-cluster" for each, then "rescore" to cascade their answers into more auto-categorisations, (5) when the largest remaining cluster has fewer than 5 members, offer to apply remaining as-is or go through one by one. Keep cluster presentations concise — show 5-10 per round. Between rounds, tell the user you're re-scoring and will be right back. This is a CONVERSATION — ask, listen, apply, repeat.`;
 
     // Build messages array with conversation history
     const recentMessages = messages.slice(-6);
@@ -1954,7 +2317,7 @@ RULES:
         for (const block of response.content.filter(b => b.type === 'tool_use')) {
           console.log(`[Finn] Tool call: ${block.name}`, block.input);
 
-          const result = executeToolAction(block.name, block.input);
+          const result = await executeToolAction(block.name, block.input);
           toolActions.push({
             name: block.name,
             input: block.input,
@@ -2070,7 +2433,7 @@ RULES:
         const toolResults = [];
         for (const block of response.content.filter(b => b.type === 'tool_use')) {
           console.log(`[Finn Q&A] Tool call: ${block.name}`, block.input);
-          const result = executeToolAction(block.name, block.input);
+          const result = await executeToolAction(block.name, block.input);
           toolActions.push({
             name: block.name,
             input: block.input,
@@ -2173,7 +2536,7 @@ RULES:
         const toolResults = [];
         for (const block of response.content.filter(b => b.type === 'tool_use')) {
           console.log(`[Finn GMS Q&A] Tool call: ${block.name}`, block.input);
-          const result = executeToolAction(block.name, block.input);
+          const result = await executeToolAction(block.name, block.input);
           toolActions.push({
             name: block.name,
             input: block.input,

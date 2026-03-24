@@ -20,6 +20,7 @@ import COLORS from './utils/colors';
 import { FloatingFinancialChat } from './components/FloatingFinancialChat';
 import UnifiedFinnWidget from './components/UnifiedFinnWidget';
 import FloatingFeedbackButton from './components/UnifiedFinnWidget/FloatingFeedbackButton';
+import StagedReviewPanel from './components/UnifiedFinnWidget/StagedReviewPanel';
 import TasksWidget from './components/TasksWidget';
 import SlainteLogo from './components/SlainteLogo';
 import ModuleSelector from './components/ModuleSelector';
@@ -356,6 +357,7 @@ function AppLayout() {
             {useUnifiedFinn ? (
               <>
                 <UnifiedFinnWidget currentView={currentView} />
+                <StagedReviewPanel />
                 <FloatingFeedbackButton />
               </>
             ) : (

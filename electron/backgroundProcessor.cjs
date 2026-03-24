@@ -679,6 +679,145 @@ class BackgroundProcessor {
       console.error('[BackgroundProcessor] Error dismissing staged:', error);
     }
   }
+
+  /**
+   * Remove specific transactions from a staging file without merging into localStorage.
+   * React handles state updates and persistence — this just cleans up the staging file.
+   * Deletes the file entirely if no transactions remain.
+   */
+  removeFromStaged(stagedId, txIds) {
+    try {
+      const stagingFile = path.join(this.stagingPath, `${stagedId}.json`);
+      if (!fs.existsSync(stagingFile)) {
+        throw new Error(`Staged result ${stagedId} not found`);
+      }
+
+      const staged = JSON.parse(fs.readFileSync(stagingFile, 'utf8'));
+      const removeSet = new Set(txIds);
+      const removed = staged.transactions.filter(t => removeSet.has(t.id)).length;
+      const remaining = staged.transactions.filter(t => !removeSet.has(t.id));
+
+      if (removed === 0) {
+        return { removed: 0, remaining: staged.transactions.length };
+      }
+
+      if (remaining.length === 0) {
+        fs.unlinkSync(stagingFile);
+        console.log('[BackgroundProcessor] Staging file removed (all transactions cleared):', stagedId);
+        return { removed, remaining: 0 };
+      }
+
+      // Update staging file with remaining transactions
+      staged.transactions = remaining;
+      staged.summary.totalTransactions = remaining.length;
+      staged.summary.auto = remaining.filter(t => t.stagedCohort === 'auto').length;
+      staged.summary.review = remaining.filter(t => t.stagedCohort === 'review').length;
+
+      // Rebuild review clusters from remaining review transactions
+      const reviewTxns = remaining.filter(t => t.stagedCohort === 'review');
+      staged.reviewClusters = this._buildReviewClusters(reviewTxns);
+
+      fs.writeFileSync(stagingFile, JSON.stringify(staged, null, 2));
+      console.log('[BackgroundProcessor] Removed', removed, 'transactions from staging, remaining:', remaining.length);
+
+      return { removed, remaining: remaining.length };
+    } catch (error) {
+      console.error('[BackgroundProcessor] Error removing from staged:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Re-score remaining staged transactions using passes C (similarity) and D (group confidence).
+   * Called between conversational review rounds — user's recent approvals enrich the corpus,
+   * potentially cascading into more auto-categorizations.
+   *
+   * Runs in the main process. Finn tells the user he's working on it.
+   */
+  rescoreStaged(stagedId) {
+    try {
+      const stagingFile = path.join(this.stagingPath, `${stagedId}.json`);
+      if (!fs.existsSync(stagingFile)) {
+        throw new Error(`Staged result ${stagedId} not found`);
+      }
+
+      const staged = JSON.parse(fs.readFileSync(stagingFile, 'utf8'));
+
+      // Only re-score transactions still in the review cohort
+      const reviewTxns = staged.transactions.filter(t => t.stagedCohort === 'review');
+      const autoTxns = staged.transactions.filter(t => t.stagedCohort === 'auto');
+
+      if (reviewTxns.length === 0) {
+        return {
+          promoted: 0,
+          remainingReview: 0,
+          remainingAuto: autoTxns.length,
+          reviewClusters: [],
+          summary: staged.summary,
+        };
+      }
+
+      // Load the full corpus — existing transactions in localStorage now include
+      // everything the user has approved so far this session
+      const existingCorpus = this._loadExistingTransactions() || [];
+      const categoryMapping = this._loadCategoryMapping();
+      const practiceProfile = this._loadPracticeProfile();
+
+      // Run the full convergence loop on review transactions using the enriched corpus.
+      // Passes A and B will re-run (cheap, instant) but the real value comes from
+      // passes C (similarity) and D (group confidence) with the enriched corpus.
+      const result = runConvergenceLoop(
+        reviewTxns.map(t => {
+          // Strip existing categorization so the loop can re-assess
+          const { categoryCode, categoryName, unifiedConfidence, convergencePass, convergenceIteration, ...clean } = t;
+          return clean;
+        }),
+        categoryMapping,
+        existingCorpus,
+        practiceProfile
+      );
+
+      // Apply background-processor fields to newly categorized
+      let promoted = 0;
+      for (const txn of result.categorized) {
+        txn.categoryMatchType = 'finn-background';
+        txn.stagedCohort = txn.unifiedConfidence >= CONFIDENCE_AUTO_THRESHOLD ? 'auto' : 'review';
+        if (txn.stagedCohort === 'auto') promoted++;
+      }
+      for (const txn of result.uncategorized) {
+        txn.stagedCohort = 'review';
+        txn.unifiedConfidence = 0;
+        txn.convergencePass = 'none';
+        txn.categoryMatchType = 'finn-background';
+      }
+
+      // Rebuild staged file with updated transactions
+      const updatedTransactions = [...autoTxns, ...result.categorized, ...result.uncategorized];
+      staged.transactions = updatedTransactions;
+      staged.summary.totalTransactions = updatedTransactions.length;
+      staged.summary.auto = updatedTransactions.filter(t => t.stagedCohort === 'auto').length;
+      staged.summary.review = updatedTransactions.filter(t => t.stagedCohort === 'review').length;
+
+      // Rebuild review clusters
+      const newReviewTxns = updatedTransactions.filter(t => t.stagedCohort === 'review');
+      staged.reviewClusters = this._buildReviewClusters(newReviewTxns);
+
+      fs.writeFileSync(stagingFile, JSON.stringify(staged, null, 2));
+
+      console.log(`[BackgroundProcessor] Rescore: ${promoted} promoted to auto, ${newReviewTxns.length} still in review`);
+
+      return {
+        promoted,
+        remainingReview: newReviewTxns.length,
+        remainingAuto: staged.summary.auto,
+        reviewClusters: staged.reviewClusters,
+        summary: staged.summary,
+      };
+    } catch (error) {
+      console.error('[BackgroundProcessor] Error rescoring staged:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = BackgroundProcessor;

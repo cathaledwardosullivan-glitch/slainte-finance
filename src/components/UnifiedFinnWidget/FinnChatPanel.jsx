@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import Markdown from 'react-markdown';
 import { useFinn } from '../../context/FinnContext';
 import { useTour } from '../Tour';
 import { Send, MessageCircle, Loader2, X, FileText, Play, RefreshCw, SkipForward, Download, FolderOpen, MessageSquare, CheckCircle, Navigation, Search, FileSearch, BookOpen, Copy, Mail, CheckSquare } from 'lucide-react';
@@ -102,7 +103,24 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
             border: isError ? `1px solid ${COLORS.expenseColor}40` : 'none'
           }}
         >
-          {message.content}
+          {isUser ? message.content : (
+            <Markdown
+              components={{
+                // Compact paragraphs for chat bubble context
+                p: ({ children }) => <p style={{ margin: '0.25rem 0' }}>{children}</p>,
+                strong: ({ children }) => <strong style={{ fontWeight: 600 }}>{children}</strong>,
+                ul: ({ children }) => <ul style={{ margin: '0.25rem 0', paddingLeft: '1.25rem' }}>{children}</ul>,
+                ol: ({ children }) => <ol style={{ margin: '0.25rem 0', paddingLeft: '1.25rem' }}>{children}</ol>,
+                li: ({ children }) => <li style={{ margin: '0.125rem 0' }}>{children}</li>,
+                // Prevent headings from being oversized in chat
+                h1: ({ children }) => <strong style={{ display: 'block', margin: '0.25rem 0', fontWeight: 600 }}>{children}</strong>,
+                h2: ({ children }) => <strong style={{ display: 'block', margin: '0.25rem 0', fontWeight: 600 }}>{children}</strong>,
+                h3: ({ children }) => <strong style={{ display: 'block', margin: '0.25rem 0', fontWeight: 600 }}>{children}</strong>,
+              }}
+            >
+              {message.content}
+            </Markdown>
+          )}
 
           {/* Tool execution indicators */}
           {message.toolActions?.length > 0 && (
