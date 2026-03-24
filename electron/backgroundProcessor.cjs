@@ -18,8 +18,8 @@ const engine = require('./utils/categorizationBundle.cjs');
 // Shared convergence loop and anomaly detection
 const { runConvergenceLoop, runAnomalyDetection } = require('./utils/convergenceLoop.cjs');
 
-// Opus deep analysis pass
-const { shouldRunOpusPass, runOpusPass } = require('./utils/opusAnalysisPass.cjs');
+// Opus group-level analysis pass (Pass 1 of two-pass architecture)
+const { shouldRunOpusPass, runOpusPass, GROUP_AUTO_THRESHOLD } = require('./utils/opusAnalysisPass.cjs');
 
 // Node.js PDF/CSV adapter
 const { parseStatement } = require('./utils/pdfAdapter.cjs');
@@ -235,7 +235,9 @@ class BackgroundProcessor {
       practiceProfile
     );
 
-    // Step 5b: Opus deep analysis pass (cold start / high uncategorized count)
+    // Step 5b: Opus GROUP-level analysis pass (cold start / high uncategorized count)
+    // Two-pass architecture: Pass 1 assigns groups only. Groups are sufficient for dashboard.
+    // Categories assigned later (Pass 2) when detailed reports are needed.
     let opusTriggered = false;
     const totalTxns = convergenceResult.categorized.length + convergenceResult.uncategorized.length;
     if (shouldRunOpusPass(totalTxns, convergenceResult.uncategorized.length)) {
@@ -243,52 +245,66 @@ class BackgroundProcessor {
       const apiKey = this._loadApiKey();
       if (apiKey && !this._isLocalOnlyMode()) {
         opusTriggered = true;
-        console.log(`[BackgroundProcessor] Opus pass triggered: ${convergenceResult.uncategorized.length}/${totalTxns} uncategorized`);
+        console.log(`[BackgroundProcessor] Opus group pass triggered: ${convergenceResult.uncategorized.length}/${totalTxns} uncategorized`);
 
         const opusResult = await runOpusPass(
           convergenceResult.uncategorized,
-          convergenceResult.categorized,
           categoryMapping,
           practiceProfile,
           apiKey
         );
 
         if (opusResult.results.length > 0) {
-          // Move Opus-categorized transactions from uncategorized to categorized
-          const opusCategorizedIds = new Set(opusResult.results.map(r => r.id));
-          convergenceResult.uncategorized = convergenceResult.uncategorized.filter(t => !opusCategorizedIds.has(t.id));
+          // Opus assigned groups — move from uncategorized based on confidence
+          const opusHandledIds = new Set(opusResult.results.map(r => r.id));
+          convergenceResult.uncategorized = convergenceResult.uncategorized.filter(t => !opusHandledIds.has(t.id));
 
-          // Add background-processor fields and push to categorized
+          // Group-confirmed (>=0.85) go to 'group-confirmed' cohort
+          // Below threshold go to 'review' with group as hint
           for (const txn of opusResult.results) {
-            txn.categoryMatchType = 'finn-background';
-            txn.stagedCohort = txn.unifiedConfidence >= CONFIDENCE_AUTO_THRESHOLD ? 'auto' : 'review';
+            txn.stagedCohort = txn.groupConfirmed ? 'group-confirmed' : 'review';
             convergenceResult.categorized.push(txn);
           }
 
-          console.log(`[BackgroundProcessor] Opus categorized ${opusResult.results.length} transactions`);
+          console.log(`[BackgroundProcessor] Opus grouped ${opusResult.results.length} transactions (${opusResult.results.filter(r => r.groupConfirmed).length} auto-confirmed)`);
+        }
 
-          // Step 5c: Post-AI cascading — run similarity + group confidence on remaining
-          if (convergenceResult.uncategorized.length > 0) {
-            this.onProgress(fileName, 70);
-            const cascadeCorpus = [...existingTransactions, ...convergenceResult.categorized];
-            const postAiResult = runConvergenceLoop(
-              convergenceResult.uncategorized,
-              categoryMapping,
-              cascadeCorpus,
-              practiceProfile,
-              { maxIterations: 3 } // Limited iterations for cascading
-            );
+        // UNCERTAIN results also move out of uncategorized — they go to review with no group hint
+        if (opusResult.uncertain.length > 0) {
+          const uncertainIds = new Set(opusResult.uncertain.map(r => r.id));
+          convergenceResult.uncategorized = convergenceResult.uncategorized.filter(t => !uncertainIds.has(t.id));
 
-            if (postAiResult.categorized.length > 0) {
-              for (const txn of postAiResult.categorized) {
-                txn.categoryMatchType = 'finn-background';
-                txn.stagedCohort = txn.unifiedConfidence >= CONFIDENCE_AUTO_THRESHOLD ? 'auto' : 'review';
-                txn.convergencePass = 'post_ai_cascade';
-              }
-              convergenceResult.categorized.push(...postAiResult.categorized);
-              convergenceResult.uncategorized = postAiResult.uncategorized;
-              console.log(`[BackgroundProcessor] Post-AI cascade: +${postAiResult.categorized.length} categorized`);
+          for (const txn of opusResult.uncertain) {
+            txn.stagedCohort = 'review';
+          }
+          convergenceResult.categorized.push(...opusResult.uncertain);
+          console.log(`[BackgroundProcessor] Opus uncertain: ${opusResult.uncertain.length} transactions (no group suggestion)`);
+        }
+
+        // Step 5c: Post-AI cascade on remaining (UNCERTAIN + below threshold)
+        // Uses identifier/profile corpus which has full categories — any similarity
+        // matches get both group AND category, going straight to auto cohort.
+        const remainingForCascade = convergenceResult.uncategorized;
+        if (remainingForCascade.length > 0) {
+          this.onProgress(fileName, 70);
+          const cascadeCorpus = [...existingTransactions, ...convergenceResult.categorized.filter(t => !!t.categoryCode)];
+          const postAiResult = runConvergenceLoop(
+            remainingForCascade,
+            categoryMapping,
+            cascadeCorpus,
+            practiceProfile,
+            { maxIterations: 3 }
+          );
+
+          if (postAiResult.categorized.length > 0) {
+            for (const txn of postAiResult.categorized) {
+              txn.categoryMatchType = 'finn-background';
+              txn.stagedCohort = txn.unifiedConfidence >= CONFIDENCE_AUTO_THRESHOLD ? 'auto' : 'review';
+              txn.convergencePass = 'post_ai_cascade';
             }
+            convergenceResult.categorized.push(...postAiResult.categorized);
+            convergenceResult.uncategorized = postAiResult.uncategorized;
+            console.log(`[BackgroundProcessor] Post-AI cascade: +${postAiResult.categorized.length} categorized`);
           }
         }
 
@@ -508,9 +524,10 @@ class BackgroundProcessor {
     // Anomaly-flagged transactions stay in their cohort — flags are advisory, not demotions.
     // Finn mentions them during review.
     const auto = categorized.filter(t => t.stagedCohort === 'auto');
+    const groupConfirmed = categorized.filter(t => t.stagedCohort === 'group-confirmed');
     const review = [...categorized.filter(t => t.stagedCohort === 'review'), ...uncategorized];
 
-    // Build review clusters for strategic handover
+    // Build review clusters for strategic handover (groups-only review)
     const reviewClusters = this._buildReviewClusters(review);
 
     const totalDebits = allTransactions.reduce((sum, t) => sum + (t.debit || 0), 0);
@@ -524,6 +541,7 @@ class BackgroundProcessor {
       summary: {
         totalTransactions: allTransactions.length,
         auto: auto.length,
+        groupConfirmed: groupConfirmed.length,
         review: review.length,
         dateRange: parseMetadata.dateRange || null,
         totalDebits: Math.round(totalDebits * 100) / 100,
@@ -560,15 +578,22 @@ class BackgroundProcessor {
       .filter(c => c.size >= 1)
       .map(cluster => {
         const rep = cluster.representative;
-        // Check if any member has a suggested category
+        // Check if any member has a suggested category (from identifier/cascade matches)
         const categorizedMember = cluster.transactions.find(t => t.categoryCode);
+        // Check if any member has a suggested group (from Opus group pass)
+        const groupedMember = cluster.transactions.find(t => t.suggestedGroup);
 
         return {
           representativeId: rep.id,
           representativeDescription: rep.details,
+          // Category data (from identifier/cascade — may be null for Opus-grouped txns)
           suggestedCategory: categorizedMember?.categoryName || null,
           suggestedCategoryCode: categorizedMember?.categoryCode || null,
           suggestedConfidence: categorizedMember?.unifiedConfidence || 0,
+          // Group data (from Opus group pass)
+          suggestedGroup: groupedMember?.suggestedGroup || null,
+          opusGroupConfidence: groupedMember?.opusGroupConfidence || 0,
+          opusReasoning: groupedMember?.opusReasoning || null,
           memberCount: cluster.size,
           totalAmount: cluster.transactions.reduce((sum, t) => sum + (t.amount || 0), 0),
         };
@@ -711,6 +736,7 @@ class BackgroundProcessor {
       staged.transactions = remaining;
       staged.summary.totalTransactions = remaining.length;
       staged.summary.auto = remaining.filter(t => t.stagedCohort === 'auto').length;
+      staged.summary.groupConfirmed = remaining.filter(t => t.stagedCohort === 'group-confirmed').length;
       staged.summary.review = remaining.filter(t => t.stagedCohort === 'review').length;
 
       // Rebuild review clusters from remaining review transactions
@@ -745,13 +771,13 @@ class BackgroundProcessor {
 
       // Only re-score transactions still in the review cohort
       const reviewTxns = staged.transactions.filter(t => t.stagedCohort === 'review');
-      const autoTxns = staged.transactions.filter(t => t.stagedCohort === 'auto');
+      const nonReviewTxns = staged.transactions.filter(t => t.stagedCohort !== 'review');
 
       if (reviewTxns.length === 0) {
         return {
           promoted: 0,
           remainingReview: 0,
-          remainingAuto: autoTxns.length,
+          remainingAuto: nonReviewTxns.filter(t => t.stagedCohort === 'auto').length,
           reviewClusters: [],
           summary: staged.summary,
         };
@@ -764,11 +790,12 @@ class BackgroundProcessor {
       const practiceProfile = this._loadPracticeProfile();
 
       // Run the full convergence loop on review transactions using the enriched corpus.
-      // Passes A and B will re-run (cheap, instant) but the real value comes from
-      // passes C (similarity) and D (group confidence) with the enriched corpus.
+      // After user confirms/corrects groups, similarity matching may find new matches
+      // from the newly enriched corpus (user-applied transactions with identifiers).
       const result = runConvergenceLoop(
         reviewTxns.map(t => {
           // Strip existing categorization so the loop can re-assess
+          // But preserve group data from Opus — it's still valid context
           const { categoryCode, categoryName, unifiedConfidence, convergencePass, convergenceIteration, ...clean } = t;
           return clean;
         }),
@@ -781,6 +808,7 @@ class BackgroundProcessor {
       let promoted = 0;
       for (const txn of result.categorized) {
         txn.categoryMatchType = 'finn-background';
+        // Convergence found a full category match — this can go to auto
         txn.stagedCohort = txn.unifiedConfidence >= CONFIDENCE_AUTO_THRESHOLD ? 'auto' : 'review';
         if (txn.stagedCohort === 'auto') promoted++;
       }
@@ -792,10 +820,11 @@ class BackgroundProcessor {
       }
 
       // Rebuild staged file with updated transactions
-      const updatedTransactions = [...autoTxns, ...result.categorized, ...result.uncategorized];
+      const updatedTransactions = [...nonReviewTxns, ...result.categorized, ...result.uncategorized];
       staged.transactions = updatedTransactions;
       staged.summary.totalTransactions = updatedTransactions.length;
       staged.summary.auto = updatedTransactions.filter(t => t.stagedCohort === 'auto').length;
+      staged.summary.groupConfirmed = updatedTransactions.filter(t => t.stagedCohort === 'group-confirmed').length;
       staged.summary.review = updatedTransactions.filter(t => t.stagedCohort === 'review').length;
 
       // Rebuild review clusters

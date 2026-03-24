@@ -1,31 +1,43 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { X, CheckCircle, Clock, Loader2, ChevronDown, ChevronRight, FileText, ArrowRight, Check, Pencil, Search, CheckCheck } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
+import { GROUPS, SECTION_TO_GROUP } from '../../utils/categorizationEngine';
 import COLORS from '../../utils/colors';
 
 /**
  * StagedReviewPanel — Floating side panel next to Finn during conversational
- * review of staged transactions. Users accept/change category suggestions
- * directly in the panel via buttons — Finn handles the conversation flow.
+ * review of staged transactions. Pass 1 (group assignment): users accept/change
+ * GROUP suggestions only — no mention of categories.
+ *
+ * Two-pass architecture:
+ *   Pass 1 (this panel): Confirm groups → dashboard ready
+ *   Pass 2 (future):     Assign categories within groups → P&L ready
  */
+
+// Build ordered list of groups for the picker
+const GROUP_LIST = Object.entries(GROUPS)
+  .filter(([key]) => key !== 'UNKNOWN') // Don't show UNKNOWN as an option
+  .sort((a, b) => a[1].displayOrder - b[1].displayOrder)
+  .map(([key, g]) => ({ code: key, name: g.name, type: g.type }));
+
 const StagedReviewPanel = () => {
   const { setTransactions, categoryMapping, setCategoryMapping } = useAppContext();
 
   const [isOpen, setIsOpen] = useState(false);
   const [stagedData, setStagedData] = useState(null);
   const [stagedId, setStagedId] = useState(null);
-  const [appliedClusters, setAppliedClusters] = useState({}); // { clusterIndex: categoryName }
+  const [appliedClusters, setAppliedClusters] = useState({}); // { clusterIndex: groupName }
   const [autoApplied, setAutoApplied] = useState(0);
   const [rescoring, setRescoring] = useState(false);
   const [expandedCluster, setExpandedCluster] = useState(null);
   const [totalApplied, setTotalApplied] = useState(0);
-  const [changingCluster, setChangingCluster] = useState(null); // index of cluster showing category picker
+  const [changingCluster, setChangingCluster] = useState(null); // index of cluster showing group picker
   const [searchText, setSearchText] = useState('');
   const [applying, setApplying] = useState(null); // index of cluster currently being applied
   const searchInputRef = useRef(null);
 
-  // Apply a single cluster with the given category
-  const applyCluster = useCallback(async (clusterIndex, targetCat, cluster) => {
+  // Apply a single cluster with the given GROUP
+  const applyCluster = useCallback(async (clusterIndex, targetGroup, cluster) => {
     if (!stagedData || !window.electronAPI?.backgroundProcessor) return;
 
     setApplying(clusterIndex);
@@ -34,14 +46,13 @@ const StagedReviewPanel = () => {
       const members = findClusterMembers(cluster, stagedData);
       if (members.length === 0) return;
 
-      // Override category on each transaction
+      // Assign group to each transaction — no category yet (Pass 1)
       const overridden = members.map(t => ({
         ...t,
-        categoryCode: targetCat.code,
-        categoryName: targetCat.name,
+        suggestedGroup: targetGroup.code,
+        groupConfirmed: true,
         categoryMatchType: 'finn-background',
-        categoryReviewed: true,
-        categoryCohort: 'auto',
+        stagedCohort: 'group-confirmed',
       }));
 
       // Add to React state
@@ -51,28 +62,40 @@ const StagedReviewPanel = () => {
       const txnIds = members.map(t => t.id);
       await window.electronAPI.backgroundProcessor.removeFromStaged(stagedId, txnIds);
 
-      // Add identifier for future learning
+      // Add identifier for future learning (group-level)
       const identifier = (cluster.representativeDescription || '').trim();
       if (identifier.length >= 3) {
         const cleanId = identifier.replace(/\d{2,}/g, '').replace(/\s+/g, ' ').trim().split(/\s{2,}/)[0].trim();
         if (cleanId.length >= 3) {
-          const existingIds = (targetCat.identifiers || []).map(id => id.toLowerCase());
-          if (!existingIds.includes(cleanId.toLowerCase())) {
-            setCategoryMapping(prev => prev.map(cat => {
-              if (cat.code === targetCat.code) {
-                return { ...cat, identifiers: [...(cat.identifiers || []), cleanId] };
-              }
-              return cat;
-            }));
+          // Find any category in this group to attach the identifier to.
+          // This helps the deterministic engine in future runs — even though we're
+          // only confirming groups now, the identifier will match in Pass A.
+          const groupCategories = categoryMapping.filter(c => {
+            const catGroup = SECTION_TO_GROUP[c.section];
+            return catGroup === targetGroup.code;
+          });
+          // Pick the first category in the group — identifier learning is imprecise
+          // at group level but still valuable for future deterministic matching
+          if (groupCategories.length > 0) {
+            const targetCat = groupCategories[0];
+            const existingIds = (targetCat.identifiers || []).map(id => id.toLowerCase());
+            if (!existingIds.includes(cleanId.toLowerCase())) {
+              setCategoryMapping(prev => prev.map(cat => {
+                if (cat.code === targetCat.code) {
+                  return { ...cat, identifiers: [...(cat.identifiers || []), cleanId] };
+                }
+                return cat;
+              }));
+            }
           }
         }
       }
 
       // Update panel state
-      setAppliedClusters(prev => ({ ...prev, [clusterIndex]: targetCat.name }));
+      setAppliedClusters(prev => ({ ...prev, [clusterIndex]: targetGroup.name }));
       setTotalApplied(prev => prev + members.length);
 
-      // Remove applied transactions from cached stagedData so they don't appear in future lookups
+      // Remove applied transactions from cached stagedData
       setStagedData(prev => {
         if (!prev) return prev;
         const appliedSet = new Set(txnIds);
@@ -84,16 +107,16 @@ const StagedReviewPanel = () => {
 
       // Notify FinnContext (for staged results cache sync)
       window.dispatchEvent(new CustomEvent('staged-review:applied', {
-        detail: { stagedId, appliedCount: members.length, clusterIndex, categoryName: targetCat.name, isAuto: false }
+        detail: { stagedId, appliedCount: members.length, clusterIndex, groupName: targetGroup.name, isAuto: false }
       }));
     } finally {
       setApplying(null);
       setChangingCluster(null);
       setSearchText('');
     }
-  }, [stagedData, stagedId, setTransactions, setCategoryMapping]);
+  }, [stagedData, stagedId, setTransactions, setCategoryMapping, categoryMapping]);
 
-  // Accept All — apply suggested categories to all pending clusters that have suggestions
+  // Accept All — apply suggested groups to all pending clusters that have suggestions
   const acceptAll = useCallback(async () => {
     if (!stagedData) return;
     const reviewClusters = stagedData.reviewClusters || [];
@@ -102,12 +125,12 @@ const StagedReviewPanel = () => {
     for (let i = 0; i < multiClusters.length; i++) {
       if (appliedClusters[i] !== undefined) continue; // already applied
       const cluster = multiClusters[i];
-      if (!cluster.suggestedCategoryCode) continue; // no suggestion
-      const targetCat = categoryMapping.find(c => c.code === cluster.suggestedCategoryCode);
-      if (!targetCat) continue;
-      await applyCluster(i, targetCat, cluster);
+      if (!cluster.suggestedGroup) continue; // no group suggestion
+      const targetGroup = GROUP_LIST.find(g => g.code === cluster.suggestedGroup);
+      if (!targetGroup) continue;
+      await applyCluster(i, targetGroup, cluster);
     }
-  }, [stagedData, appliedClusters, categoryMapping, applyCluster]);
+  }, [stagedData, appliedClusters, applyCluster]);
 
   // Event listeners
   useEffect(() => {
@@ -126,12 +149,12 @@ const StagedReviewPanel = () => {
     };
 
     const handleApplied = (e) => {
-      const { appliedCount, clusterIndex, categoryName, isAuto } = e.detail;
+      const { appliedCount, clusterIndex, groupName, isAuto } = e.detail;
       if (isAuto) {
         setAutoApplied(appliedCount);
         setTotalApplied(prev => prev + appliedCount);
       } else if (clusterIndex !== undefined) {
-        setAppliedClusters(prev => ({ ...prev, [clusterIndex]: categoryName || 'Categorised' }));
+        setAppliedClusters(prev => ({ ...prev, [clusterIndex]: groupName || 'Grouped' }));
         setTotalApplied(prev => prev + (appliedCount || 0));
       }
     };
@@ -165,7 +188,7 @@ const StagedReviewPanel = () => {
     };
   }, []);
 
-  // Focus search input when category picker opens
+  // Focus search input when group picker opens
   useEffect(() => {
     if (changingCluster !== null && searchInputRef.current) {
       searchInputRef.current.focus();
@@ -183,9 +206,9 @@ const StagedReviewPanel = () => {
   const activeClusterIndex = multiClusters.findIndex((_, i) => !appliedClusters[i]);
   const allClustersResolved = multiClusters.length === 0 || activeClusterIndex === -1;
 
-  // Count how many pending clusters have suggestions (for Accept All button)
+  // Count how many pending clusters have group suggestions (for Accept All button)
   const pendingWithSuggestions = multiClusters.filter((c, i) =>
-    appliedClusters[i] === undefined && c.suggestedCategoryCode
+    appliedClusters[i] === undefined && c.suggestedGroup
   ).length;
 
   return (
@@ -221,7 +244,7 @@ const StagedReviewPanel = () => {
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <FileText size={16} />
-          <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>Transaction Review</span>
+          <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>Group Assignment</span>
         </div>
         <button
           onClick={() => setIsOpen(false)}
@@ -252,7 +275,7 @@ const StagedReviewPanel = () => {
           }} />
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: COLORS.textSecondary }}>
-          <span>{totalApplied} of {totalTransactions} applied</span>
+          <span>{totalApplied} of {totalTransactions} grouped</span>
           <span style={{ fontWeight: 600, color: progressPercent === 100 ? COLORS.incomeColor : COLORS.slainteBlue }}>
             {progressPercent}%
           </span>
@@ -295,7 +318,7 @@ const StagedReviewPanel = () => {
               cursor: 'pointer',
             }}
           >
-            <CheckCheck size={12} /> Accept All
+            <CheckCheck size={12} /> Accept All Groups
           </button>
         )}
       </div>
@@ -317,20 +340,19 @@ const StagedReviewPanel = () => {
               isActive={isActive}
               isChanging={isChanging}
               isApplying={isApplying}
-              appliedCategory={appliedClusters[i]}
+              appliedGroup={appliedClusters[i]}
               isExpanded={expandedCluster === i}
               onToggleExpand={() => setExpandedCluster(expandedCluster === i ? null : i)}
               onAccept={() => {
-                const cat = categoryMapping.find(c => c.code === cluster.suggestedCategoryCode);
-                if (cat) applyCluster(i, cat, cluster);
+                const group = GROUP_LIST.find(g => g.code === cluster.suggestedGroup);
+                if (group) applyCluster(i, group, cluster);
               }}
               onStartChange={() => { setChangingCluster(i); setSearchText(''); }}
               onCancelChange={() => { setChangingCluster(null); setSearchText(''); }}
-              onSelectCategory={(cat) => applyCluster(i, cat, cluster)}
+              onSelectGroup={(group) => applyCluster(i, group, cluster)}
               searchText={searchText}
               onSearchChange={setSearchText}
               searchInputRef={changingCluster === i ? searchInputRef : null}
-              categoryMapping={categoryMapping}
               stagedData={stagedData}
             />
           );
@@ -398,17 +420,17 @@ const StagedReviewPanel = () => {
 };
 
 /**
- * ClusterCard — A review cluster with Accept/Change buttons and inline category picker
+ * ClusterCard — A review cluster with Accept/Change GROUP buttons and inline group picker
  */
 const ClusterCard = ({
   cluster, index, isApplied, isActive, isChanging, isApplying,
-  appliedCategory, isExpanded, onToggleExpand,
-  onAccept, onStartChange, onCancelChange, onSelectCategory,
+  appliedGroup, isExpanded, onToggleExpand,
+  onAccept, onStartChange, onCancelChange, onSelectGroup,
   searchText, onSearchChange, searchInputRef,
-  categoryMapping, stagedData
+  stagedData
 }) => {
-  const hasSuggestion = !!cluster.suggestedCategoryCode;
-  const suggestedCat = hasSuggestion ? categoryMapping.find(c => c.code === cluster.suggestedCategoryCode) : null;
+  const hasSuggestion = !!cluster.suggestedGroup;
+  const suggestedGroup = hasSuggestion ? GROUP_LIST.find(g => g.code === cluster.suggestedGroup) : null;
 
   const bgColor = isApplied
     ? `${COLORS.incomeColor}08`
@@ -420,13 +442,13 @@ const ClusterCard = ({
 
   const memberTransactions = isExpanded ? findClusterMembers(cluster, stagedData) : [];
 
-  // Filtered categories for the picker
-  const filteredCategories = searchText.length >= 1
-    ? categoryMapping.filter(c =>
-        c.name.toLowerCase().includes(searchText.toLowerCase()) ||
-        (c.section || '').toLowerCase().includes(searchText.toLowerCase())
-      ).slice(0, 8)
-    : categoryMapping.slice(0, 8);
+  // Filtered groups for the picker
+  const filteredGroups = searchText.length >= 1
+    ? GROUP_LIST.filter(g =>
+        g.name.toLowerCase().includes(searchText.toLowerCase()) ||
+        g.code.toLowerCase().includes(searchText.toLowerCase())
+      )
+    : GROUP_LIST;
 
   return (
     <div
@@ -486,15 +508,21 @@ const ClusterCard = ({
               {cluster.totalAmount >= 0 ? '+' : '-'}€{Math.abs(cluster.totalAmount).toLocaleString()}
             </span>
           </div>
+          {/* Opus reasoning hint */}
+          {!isApplied && cluster.opusReasoning && (
+            <div style={{ fontSize: '0.65rem', color: COLORS.textSecondary, marginTop: '0.125rem', fontStyle: 'italic' }}>
+              {cluster.opusReasoning}
+            </div>
+          )}
           {isApplied && (
             <div style={{ fontSize: '0.7rem', color: COLORS.incomeColor, fontWeight: 500, marginTop: '0.125rem' }}>
-              → {appliedCategory}
+              → {appliedGroup}
             </div>
           )}
           {/* Suggestion + buttons (when not applied and not changing) */}
           {!isApplied && !isChanging && (
             <div style={{ marginTop: '0.375rem', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-              {hasSuggestion && suggestedCat ? (
+              {hasSuggestion && suggestedGroup ? (
                 <>
                   <button
                     onClick={(e) => { e.stopPropagation(); onAccept(); }}
@@ -509,7 +537,7 @@ const ClusterCard = ({
                       cursor: 'pointer',
                     }}
                   >
-                    <Check size={10} /> {suggestedCat.name}
+                    <Check size={10} /> {suggestedGroup.name}
                   </button>
                   <button
                     onClick={(e) => { e.stopPropagation(); onStartChange(); }}
@@ -539,7 +567,7 @@ const ClusterCard = ({
                     cursor: 'pointer',
                   }}
                 >
-                  <Search size={10} /> Categorise
+                  <Search size={10} /> Assign Group
                 </button>
               )}
             </div>
@@ -554,7 +582,7 @@ const ClusterCard = ({
         )}
       </div>
 
-      {/* Inline category picker */}
+      {/* Inline group picker */}
       {isChanging && (
         <div style={{
           borderTop: `1px solid ${COLORS.borderLight}`,
@@ -568,7 +596,7 @@ const ClusterCard = ({
               type="text"
               value={searchText}
               onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Search categories..."
+              placeholder="Search groups..."
               style={{
                 flex: 1, border: `1px solid ${COLORS.borderLight}`, borderRadius: '0.375rem',
                 padding: '0.3rem 0.5rem', fontSize: '0.75rem', outline: 'none',
@@ -587,30 +615,37 @@ const ClusterCard = ({
               <X size={14} />
             </button>
           </div>
-          <div style={{ maxHeight: '10rem', overflowY: 'auto' }}>
-            {filteredCategories.map(cat => (
+          <div style={{ maxHeight: '12rem', overflowY: 'auto' }}>
+            {filteredGroups.map(group => (
               <button
-                key={cat.code}
-                onClick={() => onSelectCategory(cat)}
+                key={group.code}
+                onClick={() => onSelectGroup(group)}
                 style={{
-                  display: 'block', width: '100%', textAlign: 'left',
-                  padding: '0.3rem 0.5rem', borderRadius: '0.25rem',
+                  display: 'flex', width: '100%', textAlign: 'left',
+                  padding: '0.375rem 0.5rem', borderRadius: '0.25rem',
                   border: 'none', backgroundColor: 'transparent',
-                  cursor: 'pointer', fontSize: '0.7rem',
+                  cursor: 'pointer', fontSize: '0.75rem',
                   color: COLORS.textPrimary,
+                  alignItems: 'center', gap: '0.5rem',
                 }}
-                onMouseEnter={(e) => e.target.style.backgroundColor = `${COLORS.slainteBlue}10`}
-                onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${COLORS.slainteBlue}10`}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
               >
-                <span style={{ fontWeight: 500 }}>{cat.name}</span>
-                <span style={{ color: COLORS.textSecondary, marginLeft: '0.375rem', fontSize: '0.6rem' }}>
-                  {cat.section}
+                <span style={{
+                  width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0,
+                  backgroundColor: group.type === 'income' ? COLORS.incomeColor
+                    : group.type === 'non-business' ? COLORS.textSecondary
+                    : COLORS.expenseColor,
+                }} />
+                <span style={{ fontWeight: 500 }}>{group.name}</span>
+                <span style={{ color: COLORS.textSecondary, fontSize: '0.6rem', marginLeft: 'auto' }}>
+                  {group.code}
                 </span>
               </button>
             ))}
-            {filteredCategories.length === 0 && (
+            {filteredGroups.length === 0 && (
               <div style={{ padding: '0.5rem', fontSize: '0.7rem', color: COLORS.textSecondary, textAlign: 'center' }}>
-                No matching categories
+                No matching groups
               </div>
             )}
           </div>

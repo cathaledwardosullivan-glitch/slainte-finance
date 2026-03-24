@@ -11,6 +11,7 @@ import { isAppHelpQuestion, buildAppKnowledgeContext } from '../utils/appContext
 import { get as getProfileFromStorage, getOverdueActions, getActiveFinancialTasks, getActionsDueSoon, createFinancialTask, addFinancialTask, addActionItem } from '../storage/practiceProfileStorage';
 import { buildCiaranContext } from '../utils/ciaranContextBuilder';
 import { isDemoMode, getDemoApiKey } from '../utils/demoMode';
+import { GROUPS } from '../utils/categorizationEngine';
 import { isLANMode } from '../hooks/useLANMode';
 import { SUGGESTED_ANALYSES } from '../data/suggestedAnalyses';
 import { getContactInfo } from '../data/contactDirectory';
@@ -108,17 +109,18 @@ const FINN_TOOLS = [
         },
         stagedReviewData: {
           type: 'object',
-          description: 'Only used when target is "staged:review". Controls the conversational review of background-processed bank statements. Use action "review" to fetch the full staged data (auto-batch summary + review clusters). Use "apply-auto" to bulk-apply all high-confidence transactions. Use "apply-cluster" to apply a specific cluster with the user\'s chosen category (adds an identifier for future learning). Use "rescore" after applying clusters to re-run the categorisation engine and cascade the user\'s answers into more auto-categorisations. Use "apply-remaining" to apply all remaining transactions (categorised or not) and finish the review.',
+          description: 'Only used when target is "staged:review". Controls the conversational review of background-processed bank statements. Two-pass system: Pass 1 assigns GROUPS (10 options like Staff Costs, Premises, Income), Pass 2 assigns specific categories within groups (future). Use "review" to fetch staged data. Use "apply-auto" to bulk-apply all auto-grouped and AI-grouped transactions. Use "apply-cluster" with groupCode to assign a group to a cluster (Pass 1). Use "rescore" after applying clusters to cascade answers. Use "apply-remaining" to finish.',
           properties: {
             stagedId: { type: 'string', description: 'The staged result ID to review (from staged_results lookup)' },
             action: {
               type: 'string',
               enum: ['review', 'apply-auto', 'apply-cluster', 'rescore', 'apply-remaining'],
-              description: 'The review action to perform. Start with "review" to see what needs attention, then "apply-auto" for the high-confidence batch, then present clusters and "apply-cluster" for each user answer, "rescore" between rounds to cascade, and "apply-remaining" to finish.'
+              description: 'The review action to perform. Start with "review", then "apply-auto" for the high-confidence batch, then "apply-cluster" with groupCode for each cluster the user assigns, "rescore" between rounds to cascade, and "apply-remaining" to finish.'
             },
             clusterIndex: { type: 'number', description: 'For apply-cluster: the 0-based index of the cluster to apply (from the reviewClusters array)' },
-            categoryCode: { type: 'string', description: 'For apply-cluster: the category code to assign to all cluster members' },
-            categoryName: { type: 'string', description: 'For apply-cluster: the category name (for display and identifier learning)' }
+            groupCode: { type: 'string', description: 'For apply-cluster (Pass 1): the group code to assign (INCOME, STAFF, PREMISES, MEDICAL, OFFICE, PROFESSIONAL, MOTOR, OTHER, NON_BUSINESS)' },
+            categoryCode: { type: 'string', description: 'For apply-cluster (Pass 2/legacy): the category code to assign to all cluster members' },
+            categoryName: { type: 'string', description: 'For apply-cluster (Pass 2/legacy): the category name' }
           }
         }
       },
@@ -1103,6 +1105,7 @@ export const FinnProvider = ({ children }) => {
         }
         const totalTxns = stagedResults.reduce((sum, s) => sum + s.summary.totalTransactions, 0);
         const totalAuto = stagedResults.reduce((sum, s) => sum + s.summary.auto, 0);
+        const totalGroupConfirmed = stagedResults.reduce((sum, s) => sum + (s.summary.groupConfirmed || 0), 0);
         const totalReview = stagedResults.reduce((sum, s) => sum + s.summary.review, 0);
         return {
           hasStaged: true,
@@ -1113,11 +1116,13 @@ export const FinnProvider = ({ children }) => {
             processedAt: s.processedAt,
             totalTransactions: s.summary.totalTransactions,
             auto: s.summary.auto,
+            groupConfirmed: s.summary.groupConfirmed || 0,
             review: s.summary.review,
             dateRange: s.summary.dateRange
           })),
           totalTransactions: totalTxns,
           totalAuto,
+          totalGroupConfirmed,
           totalReview
         };
       }
@@ -1175,12 +1180,13 @@ export const FinnProvider = ({ children }) => {
         if (stagedResults.length > 0) {
           const totalTxns = stagedResults.reduce((sum, s) => sum + s.summary.totalTransactions, 0);
           const totalAuto = stagedResults.reduce((sum, s) => sum + s.summary.auto, 0);
+          const totalGroupConf = stagedResults.reduce((sum, s) => sum + (s.summary.groupConfirmed || 0), 0);
           const totalReview = stagedResults.reduce((sum, s) => sum + s.summary.review, 0);
           statusItems.push({
             type: 'staged_transactions',
             severity: 'high',
-            message: `${stagedResults.length} bank statement${stagedResults.length > 1 ? 's' : ''} processed — ${totalTxns} transactions (${totalAuto} auto-categorised, ${totalReview} need review)`,
-            data: { fileCount: stagedResults.length, totalTxns, totalAuto, totalReview }
+            message: `${stagedResults.length} bank statement${stagedResults.length > 1 ? 's' : ''} processed — ${totalTxns} transactions (${totalAuto} auto-grouped, ${totalGroupConf} AI-grouped, ${totalReview} need group assignment)`,
+            data: { fileCount: stagedResults.length, totalTxns, totalAuto, totalGroupConfirmed: totalGroupConf, totalReview }
           });
         }
 
@@ -1592,11 +1598,15 @@ export const FinnProvider = ({ children }) => {
             }
 
             const autoTxns = detail.transactions.filter(t => t.stagedCohort === 'auto');
+            const groupConfirmedTxns = detail.transactions.filter(t => t.stagedCohort === 'group-confirmed');
             const reviewTxns = detail.transactions.filter(t => t.stagedCohort === 'review');
 
-            // If ALL transactions are auto-categorised, apply immediately without review
-            if (reviewTxns.length === 0 && autoTxns.length > 0) {
-              setTransactions(prev => [...prev, ...autoTxns]);
+            // Transactions ready to apply without review: auto (full category) + group-confirmed (group assigned by AI)
+            const readyToApply = [...autoTxns, ...groupConfirmedTxns];
+
+            // If ALL transactions are auto/group-confirmed, apply immediately without review
+            if (reviewTxns.length === 0 && readyToApply.length > 0) {
+              setTransactions(prev => [...prev, ...readyToApply]);
               await window.electronAPI.backgroundProcessor.dismissStaged(stagedId);
               invalidateCache(stagedId);
               const updatedResults = await window.electronAPI.backgroundProcessor.getStagedResults();
@@ -1606,9 +1616,9 @@ export const FinnProvider = ({ children }) => {
                 success: true,
                 stagedId,
                 autoApplied: true,
-                applied: autoTxns.length,
+                applied: readyToApply.length,
                 reviewTransactions: 0,
-                message: `${detail.sourceFile}: All ${autoTxns.length} transactions were high-confidence — applied automatically. No review needed.`
+                message: `${detail.sourceFile}: All ${readyToApply.length} transactions grouped successfully — ${autoTxns.length} with exact categories, ${groupConfirmedTxns.length} with AI-confirmed groups. Applied automatically. No review needed.`
               };
             }
 
@@ -1624,38 +1634,43 @@ export const FinnProvider = ({ children }) => {
               processedAt: detail.processedAt,
               summary: detail.summary,
               autoTransactions: autoTxns.length,
+              groupConfirmedTransactions: groupConfirmedTxns.length,
               reviewTransactions: reviewTxns.length,
               reviewClusters: (detail.reviewClusters || []).map((c, i) => ({
                 index: i,
                 representativeDescription: c.representativeDescription,
-                suggestedCategory: c.suggestedCategory,
-                suggestedConfidence: c.suggestedConfidence,
+                suggestedGroup: c.suggestedGroup,
+                opusGroupConfidence: c.opusGroupConfidence,
+                opusReasoning: c.opusReasoning,
                 memberCount: c.memberCount,
                 totalAmount: Math.round(c.totalAmount * 100) / 100,
               })),
               anomalyWarnings: detail.anomalyWarnings || [],
-              message: `${detail.sourceFile}: ${detail.summary.totalTransactions} transactions — ${autoTxns.length} auto-categorised (high confidence), ${reviewTxns.length} need review across ${(detail.reviewClusters || []).length} clusters.`
+              message: `${detail.sourceFile}: ${detail.summary.totalTransactions} transactions — ${autoTxns.length} auto-grouped, ${groupConfirmedTxns.length} AI-grouped, ${reviewTxns.length} need group assignment across ${(detail.reviewClusters || []).length} clusters.`
             };
           }
 
           if (action === 'apply-auto') {
-            // Bulk-apply all high-confidence auto-cohort transactions
+            // Bulk-apply all auto + group-confirmed transactions
             const detail = await getStagedDetailCached(stagedId);
             if (!detail) {
               return { success: false, error: `Staged result "${stagedId}" not found.` };
             }
 
             const autoTxns = detail.transactions.filter(t => t.stagedCohort === 'auto');
-            if (autoTxns.length === 0) {
-              return { success: true, applied: 0, message: 'No auto-categorised transactions to apply.' };
+            const groupConfirmedTxns = detail.transactions.filter(t => t.stagedCohort === 'group-confirmed');
+            const readyToApply = [...autoTxns, ...groupConfirmedTxns];
+
+            if (readyToApply.length === 0) {
+              return { success: true, applied: 0, message: 'No auto-grouped transactions to apply.' };
             }
 
             // Add to React state (auto-save handles persistence)
-            setTransactions(prev => [...prev, ...autoTxns]);
+            setTransactions(prev => [...prev, ...readyToApply]);
 
             // Clean up staging file
-            const autoIds = autoTxns.map(t => t.id);
-            const result = await window.electronAPI.backgroundProcessor.removeFromStaged(stagedId, autoIds);
+            const applyIds = readyToApply.map(t => t.id);
+            const result = await window.electronAPI.backgroundProcessor.removeFromStaged(stagedId, applyIds);
             invalidateCache(stagedId);
 
             // Refresh staged results summary for system_status awareness
@@ -1664,76 +1679,31 @@ export const FinnProvider = ({ children }) => {
 
             // Notify review panel
             window.dispatchEvent(new CustomEvent('staged-review:applied', {
-              detail: { stagedId, appliedCount: autoTxns.length, isAuto: true }
+              detail: { stagedId, appliedCount: readyToApply.length, isAuto: true }
             }));
 
             return {
               success: true,
-              applied: autoTxns.length,
+              applied: readyToApply.length,
+              autoCategorised: autoTxns.length,
+              aiGrouped: groupConfirmedTxns.length,
               remaining: result.remaining,
-              message: `Applied ${autoTxns.length} auto-categorised transactions.${result.remaining > 0 ? ` ${result.remaining} still need review.` : ' All transactions applied.'}`
+              message: `Applied ${readyToApply.length} transactions (${autoTxns.length} fully categorised, ${groupConfirmedTxns.length} AI-grouped).${result.remaining > 0 ? ` ${result.remaining} still need group assignment.` : ' All transactions applied.'}`
             };
           }
 
           if (action === 'apply-cluster') {
-            // Apply all members of a specific cluster with the user's chosen category
-            const { clusterIndex, categoryCode, categoryName } = data;
+            // Apply all members of a specific cluster with the user's chosen GROUP (Pass 1)
+            // or CATEGORY (Pass 2, future). Currently Pass 1 only.
+            const { clusterIndex, groupCode, categoryCode, categoryName } = data;
 
             if (clusterIndex === undefined || clusterIndex === null) {
               return { success: false, error: 'clusterIndex is required for apply-cluster.' };
-            }
-            if (!categoryCode && !categoryName) {
-              return { success: false, error: 'categoryCode or categoryName is required for apply-cluster.' };
             }
 
             const detail = await getStagedDetailCached(stagedId);
             if (!detail) {
               return { success: false, error: `Staged result "${stagedId}" not found.` };
-            }
-
-            // Find the target category
-            let targetCat = null;
-            if (categoryCode) {
-              targetCat = categoryMapping.find(c => c.code === categoryCode);
-              // Also check lastCreatedCategoryRef for categories created in this agentic loop
-              if (!targetCat && lastCreatedCategoryRef.current?.code === categoryCode) {
-                targetCat = lastCreatedCategoryRef.current;
-              }
-            }
-            if (!targetCat && categoryName) {
-              const lowerName = categoryName.toLowerCase();
-              const matches = categoryMapping.filter(c => c.name.toLowerCase().includes(lowerName));
-              if (matches.length === 1) {
-                targetCat = matches[0];
-              } else if (matches.length > 1) {
-                const exact = matches.find(c => c.name.toLowerCase() === lowerName);
-                targetCat = exact || null;
-                if (!targetCat) {
-                  return { success: false, error: `Multiple categories match "${categoryName}": ${matches.map(m => m.name).join(', ')}. Please be more specific or use the exact categoryCode.` };
-                }
-              }
-              // Check lastCreatedCategoryRef
-              if (!targetCat && lastCreatedCategoryRef.current?.name.toLowerCase().includes(lowerName)) {
-                targetCat = lastCreatedCategoryRef.current;
-              }
-            }
-
-            if (!targetCat) {
-              // Suggest close matches to help Finn recover
-              const searchTerm = (categoryName || categoryCode || '').toLowerCase();
-              const closeMatches = categoryMapping
-                .filter(c => {
-                  const name = c.name.toLowerCase();
-                  // Check if any word from the search term appears in the category name
-                  const words = searchTerm.split(/\s+/).filter(w => w.length >= 3);
-                  return words.some(w => name.includes(w));
-                })
-                .slice(0, 5)
-                .map(c => `"${c.name}" (code: ${c.code})`);
-              const suggestion = closeMatches.length > 0
-                ? ` Did you mean: ${closeMatches.join(', ')}?`
-                : ' Use categories:create to create it first.';
-              return { success: false, error: `Category "${categoryCode || categoryName}" not found.${suggestion}` };
             }
 
             // Get cluster and its member transactions
@@ -1742,31 +1712,21 @@ export const FinnProvider = ({ children }) => {
               return { success: false, error: `Cluster at index ${clusterIndex} not found. There are ${(detail.reviewClusters || []).length} clusters.` };
             }
 
-            // Find all transactions belonging to this cluster (by matching representative description)
+            // Find all transactions belonging to this cluster
             const clusterTxns = detail.transactions.filter(t => {
-              // Match by representative ID or by being in the review cohort with similar details
               if (t.id === cluster.representativeId) return true;
-              // Use the clustering logic: transactions in the review cohort that match this cluster
               if (t.stagedCohort !== 'review') return false;
-              // Simple similarity check — same first 8 chars of cleaned details
               const repClean = (cluster.representativeDescription || '').replace(/[0-9]/g, '').trim().substring(0, 8).toLowerCase();
               const txnClean = (t.details || '').replace(/[0-9]/g, '').trim().substring(0, 8).toLowerCase();
               return repClean.length >= 4 && repClean === txnClean;
             });
 
-            // If prefix matching didn't find enough, fall back to just the member count
-            // by getting the top N similar review transactions
             let finalTxns = clusterTxns;
             if (clusterTxns.length < cluster.memberCount) {
-              // The staging file doesn't store cluster membership directly.
-              // Re-cluster to find exact members, or use all review txns that
-              // match the representative closely. For accuracy, we check all
-              // review transactions against the representative description.
               const repDesc = (cluster.representativeDescription || '').toLowerCase();
               const reviewTxns = detail.transactions.filter(t => t.stagedCohort === 'review');
               const scored = reviewTxns.map(t => {
                 const desc = (t.details || '').toLowerCase();
-                // Quick similarity: shared prefix ratio
                 let shared = 0;
                 const minLen = Math.min(desc.length, repDesc.length);
                 for (let i = 0; i < minLen; i++) {
@@ -1784,7 +1744,85 @@ export const FinnProvider = ({ children }) => {
               return { success: false, error: 'Could not find transactions for this cluster.' };
             }
 
-            // Apply category override to each transaction
+            // Determine mode: group assignment (Pass 1) vs category assignment (Pass 2)
+            const isGroupAssignment = !!groupCode && !categoryCode && !categoryName;
+
+            if (isGroupAssignment) {
+              // Pass 1: Assign GROUP only
+              const overriddenTxns = finalTxns.map(t => ({
+                ...t,
+                suggestedGroup: groupCode,
+                groupConfirmed: true,
+                categoryMatchType: 'finn-background',
+                stagedCohort: 'group-confirmed',
+              }));
+
+              setTransactions(prev => [...prev, ...overriddenTxns]);
+
+              const txnIds = finalTxns.map(t => t.id);
+              const result = await window.electronAPI.backgroundProcessor.removeFromStaged(stagedId, txnIds);
+              invalidateCache(stagedId);
+
+              // Notify review panel
+              const groupName = Object.values(GROUPS).find(g => g.code === groupCode)?.name || groupCode;
+              window.dispatchEvent(new CustomEvent('staged-review:applied', {
+                detail: { stagedId, appliedCount: finalTxns.length, clusterIndex, groupName, isAuto: false }
+              }));
+
+              return {
+                success: true,
+                applied: finalTxns.length,
+                remaining: result.remaining,
+                groupApplied: groupName,
+                message: `Assigned group "${groupName}" to ${finalTxns.length} transactions.${result.remaining > 0 ? ` ${result.remaining} transactions remaining.` : ' All transactions grouped.'}`
+              };
+            }
+
+            // Pass 2 / legacy: Assign CATEGORY
+            if (!categoryCode && !categoryName) {
+              return { success: false, error: 'groupCode or categoryCode/categoryName is required for apply-cluster.' };
+            }
+
+            let targetCat = null;
+            if (categoryCode) {
+              targetCat = categoryMapping.find(c => c.code === categoryCode);
+              if (!targetCat && lastCreatedCategoryRef.current?.code === categoryCode) {
+                targetCat = lastCreatedCategoryRef.current;
+              }
+            }
+            if (!targetCat && categoryName) {
+              const lowerName = categoryName.toLowerCase();
+              const matches = categoryMapping.filter(c => c.name.toLowerCase().includes(lowerName));
+              if (matches.length === 1) {
+                targetCat = matches[0];
+              } else if (matches.length > 1) {
+                const exact = matches.find(c => c.name.toLowerCase() === lowerName);
+                targetCat = exact || null;
+                if (!targetCat) {
+                  return { success: false, error: `Multiple categories match "${categoryName}": ${matches.map(m => m.name).join(', ')}. Please be more specific or use the exact categoryCode.` };
+                }
+              }
+              if (!targetCat && lastCreatedCategoryRef.current?.name.toLowerCase().includes(categoryName.toLowerCase())) {
+                targetCat = lastCreatedCategoryRef.current;
+              }
+            }
+
+            if (!targetCat) {
+              const searchTerm = (categoryName || categoryCode || '').toLowerCase();
+              const closeMatches = categoryMapping
+                .filter(c => {
+                  const name = c.name.toLowerCase();
+                  const words = searchTerm.split(/\s+/).filter(w => w.length >= 3);
+                  return words.some(w => name.includes(w));
+                })
+                .slice(0, 5)
+                .map(c => `"${c.name}" (code: ${c.code})`);
+              const suggestion = closeMatches.length > 0
+                ? ` Did you mean: ${closeMatches.join(', ')}?`
+                : ' Use categories:create to create it first.';
+              return { success: false, error: `Category "${categoryCode || categoryName}" not found.${suggestion}` };
+            }
+
             const overriddenTxns = finalTxns.map(t => ({
               ...t,
               categoryCode: targetCat.code,
@@ -1794,10 +1832,8 @@ export const FinnProvider = ({ children }) => {
               categoryCohort: 'auto',
             }));
 
-            // Add to React state
             setTransactions(prev => [...prev, ...overriddenTxns]);
 
-            // Clean up staging file
             const txnIds = finalTxns.map(t => t.id);
             const result = await window.electronAPI.backgroundProcessor.removeFromStaged(stagedId, txnIds);
             invalidateCache(stagedId);
@@ -1806,7 +1842,6 @@ export const FinnProvider = ({ children }) => {
             const identifier = (cluster.representativeDescription || '').trim();
             let identifierAdded = null;
             if (identifier && identifier.length >= 3) {
-              // Clean the identifier — take the most distinctive part (first word or phrase before numbers)
               const cleanId = identifier.replace(/\d{2,}/g, '').replace(/\s+/g, ' ').trim().split(/\s{2,}/)[0].trim();
               if (cleanId.length >= 3) {
                 const existingIds = (targetCat.identifiers || []).map(id => id.toLowerCase());
@@ -1822,7 +1857,6 @@ export const FinnProvider = ({ children }) => {
               }
             }
 
-            // Notify review panel
             window.dispatchEvent(new CustomEvent('staged-review:applied', {
               detail: { stagedId, appliedCount: finalTxns.length, clusterIndex, categoryName: targetCat.name, isAuto: false }
             }));
@@ -1862,14 +1896,15 @@ export const FinnProvider = ({ children }) => {
               reviewClusters: (result.reviewClusters || []).map((c, i) => ({
                 index: i,
                 representativeDescription: c.representativeDescription,
-                suggestedCategory: c.suggestedCategory,
-                suggestedConfidence: c.suggestedConfidence,
+                suggestedGroup: c.suggestedGroup,
+                opusGroupConfidence: c.opusGroupConfidence,
+                opusReasoning: c.opusReasoning,
                 memberCount: c.memberCount,
                 totalAmount: Math.round(c.totalAmount * 100) / 100,
               })),
               message: result.promoted > 0
-                ? `Rescoring complete — ${result.promoted} more transactions auto-categorised from your answers. ${result.remainingReview} still need review.`
-                : `Rescoring complete — no additional matches found. ${result.remainingReview} still need review.`
+                ? `Rescoring complete — ${result.promoted} more transactions auto-grouped from your answers. ${result.remainingReview} still need group assignment.`
+                : `Rescoring complete — no additional matches found. ${result.remainingReview} still need group assignment.`
             };
           }
 
@@ -1896,8 +1931,8 @@ export const FinnProvider = ({ children }) => {
             const updatedResults = await window.electronAPI.backgroundProcessor.getStagedResults();
             setStagedResults(updatedResults || []);
 
-            const categorised = remaining.filter(t => t.categoryCode).length;
-            const uncategorised = remaining.length - categorised;
+            const grouped = remaining.filter(t => t.suggestedGroup || t.categoryCode).length;
+            const ungrouped = remaining.length - grouped;
 
             // Close review panel
             window.dispatchEvent(new CustomEvent('staged-review:close', { detail: { stagedId } }));
@@ -1905,9 +1940,9 @@ export const FinnProvider = ({ children }) => {
             return {
               success: true,
               applied: remaining.length,
-              categorised,
-              uncategorised,
-              message: `Applied all ${remaining.length} remaining transactions (${categorised} categorised, ${uncategorised} uncategorised). Review complete.`
+              grouped,
+              ungrouped,
+              message: `Applied all ${remaining.length} remaining transactions (${grouped} grouped, ${ungrouped} ungrouped). Group assignment complete.`
             };
           }
 
