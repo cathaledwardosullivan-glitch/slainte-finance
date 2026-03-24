@@ -1594,7 +1594,25 @@ export const FinnProvider = ({ children }) => {
             const autoTxns = detail.transactions.filter(t => t.stagedCohort === 'auto');
             const reviewTxns = detail.transactions.filter(t => t.stagedCohort === 'review');
 
-            // Open the review panel
+            // If ALL transactions are auto-categorised, apply immediately without review
+            if (reviewTxns.length === 0 && autoTxns.length > 0) {
+              setTransactions(prev => [...prev, ...autoTxns]);
+              await window.electronAPI.backgroundProcessor.dismissStaged(stagedId);
+              invalidateCache(stagedId);
+              const updatedResults = await window.electronAPI.backgroundProcessor.getStagedResults();
+              setStagedResults(updatedResults || []);
+
+              return {
+                success: true,
+                stagedId,
+                autoApplied: true,
+                applied: autoTxns.length,
+                reviewTransactions: 0,
+                message: `${detail.sourceFile}: All ${autoTxns.length} transactions were high-confidence — applied automatically. No review needed.`
+              };
+            }
+
+            // Open the review panel (only when there are transactions to review)
             window.dispatchEvent(new CustomEvent('staged-review:open', {
               detail: { stagedData: detail }
             }));
@@ -2247,7 +2265,7 @@ RULES:
 - The app has a built-in PCRS/GMS statement downloader. Users do NOT need to log into the PCRS portal manually. Navigate to the PCRS downloader page if they ask about downloading statements.
 - Use start_app_tour when the user asks for a tour, wants to be shown around, or asks how the app works. The tour starts automatically — just call the tool.
 - If you cannot resolve a user's issue (bug, missing feature, or something outside your control), use send_feedback to open the feedback form pre-filled with a summary. Do NOT tell the user to contact support — use the tool to open the form for them.
-- STAGED TRANSACTION REVIEW: When staged transactions are pending (check via system_status or staged_results), guide the user through a round-based review. Flow: (1) navigate staged:review with action "review" to get the full picture, (2) present the auto-categorised batch count and ask user to approve — then "apply-auto", (3) present the largest review clusters one round at a time — each cluster shows a representative description, suggested category, and member count — ask the user which category each belongs to, (4) after each round of answers, "apply-cluster" for each, then "rescore" to cascade their answers into more auto-categorisations, (5) when the largest remaining cluster has fewer than 5 members, offer to apply remaining as-is or go through one by one. Keep cluster presentations concise — show 5-10 per round. Between rounds, tell the user you're re-scoring and will be right back. This is a CONVERSATION — ask, listen, apply, repeat.`;
+- STAGED TRANSACTION REVIEW: When staged transactions are pending (check via system_status or staged_results), guide the user through a review. Process each staged file one at a time. Flow: (1) navigate staged:review with action "review" — this auto-applies any all-auto files and opens the Transaction Review panel for files that need review, (2) immediately call "apply-auto" to apply the high-confidence batch (do NOT ask for permission — just apply and report the count), (3) tell the user the remaining clusters are shown in the Transaction Review panel beside you, where they can Accept the suggested category or Change it using the buttons on each cluster. You do NOT need to list every cluster in chat — the panel shows them. Just summarise briefly (e.g. "5 clusters remaining — you can accept or change the suggestions in the panel"). If the user asks you about a specific transaction in chat, help them, but the panel is the primary interaction surface for categorisation. (4) If the user asks you to apply remaining or finish up, call "apply-remaining".`;
 
     // Build messages array with conversation history
     const recentMessages = messages.slice(-6);

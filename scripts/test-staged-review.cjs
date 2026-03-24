@@ -18,8 +18,8 @@
 const fs = require('fs');
 const path = require('path');
 
-// Electron userData path on Windows
-const userDataPath = path.join(process.env.APPDATA, 'slainte-finance');
+// Electron userData path on Windows — must match package.json "name" field
+const userDataPath = path.join(process.env.APPDATA, 'slainte-finance-v2');
 const stagingPath = path.join(userDataPath, 'staged-results');
 
 // --cleanup flag
@@ -254,36 +254,36 @@ const reviewClusters = [
   {
     representativeId: reviewTransactions[0].id,
     representativeDescription: 'MEDISEC IRELAND LTD DD REF3000',
-    suggestedCategory: null,
-    suggestedCategoryCode: null,
-    suggestedConfidence: 0,
+    suggestedCategory: 'Medical Indemnity Insurance',
+    suggestedCategoryCode: '7.2',
+    suggestedConfidence: 0.75,
     memberCount: 12,
     totalAmount: -18900,
   },
   {
     representativeId: reviewTransactions[12].id,
     representativeDescription: 'JOHNSON CLEANING SERVICES TFR4000',
-    suggestedCategory: null,
-    suggestedCategoryCode: null,
-    suggestedConfidence: 0,
+    suggestedCategory: 'Cleaning',
+    suggestedCategoryCode: '4.6',
+    suggestedConfidence: 0.80,
     memberCount: 8,
     totalAmount: -3000,
   },
   {
     representativeId: reviewTransactions[20].id,
     representativeDescription: 'VHI GROUP DAC PMT 5000',
-    suggestedCategory: null,
-    suggestedCategoryCode: null,
-    suggestedConfidence: 0,
+    suggestedCategory: 'Private Patient Consultations',
+    suggestedCategoryCode: '1.1',
+    suggestedConfidence: 0.65,
     memberCount: 6,
     totalAmount: 2100,
   },
   {
     representativeId: reviewTransactions[26].id,
     representativeDescription: 'STERIMED WASTE MGMT LTD DD6000',
-    suggestedCategory: null,
-    suggestedCategoryCode: null,
-    suggestedConfidence: 0,
+    suggestedCategory: 'Medical Waste Disposal',
+    suggestedCategoryCode: '3.5',
+    suggestedConfidence: 0.70,
     memberCount: 4,
     totalAmount: -780,
   },
