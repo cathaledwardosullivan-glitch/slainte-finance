@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useContext, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useContext, useEffect, useRef } from 'react';
 import { Printer, TrendingUp } from 'lucide-react';
 import COLORS from '../../utils/colors';
 import { useAppContext } from '../../context/AppContext';
@@ -184,9 +184,10 @@ const GMSHealthCheckV2 = () => {
   const tasks = tasksCtx?.tasks || [];
 
   const [activeModal, setActiveModal] = useState(null); // area ID or null
+  const closeModal = useCallback(() => setActiveModal(null), []);
   const [showImpactPanel, setShowImpactPanel] = useState(false);
 
-  const healthCheckData = profile?.healthCheckData || {};
+  const healthCheckData = useMemo(() => profile?.healthCheckData || {}, [profile?.healthCheckData]);
 
   // --- Memoised calculations (same as v1) ---
 
@@ -583,8 +584,11 @@ const GMSHealthCheckV2 = () => {
     'stcServices', 'stcDemographics', 'staffDetails'
   ];
 
+  const profileRef = useRef(profile);
+  profileRef.current = profile;
+
   const handleUpdate = useCallback((newHealthCheckData) => {
-    const oldData = profile?.healthCheckData || {};
+    const oldData = profileRef.current?.healthCheckData || {};
     const now = new Date().toISOString();
     const timestamps = { ...(oldData._timestamps || {}) };
 
@@ -595,7 +599,7 @@ const GMSHealthCheckV2 = () => {
     }
 
     updateProfile({ healthCheckData: { ...newHealthCheckData, _timestamps: timestamps } });
-  }, [updateProfile, profile]);
+  }, [updateProfile]);
 
   // --- Cycle management ---
 
@@ -812,7 +816,7 @@ const GMSHealthCheckV2 = () => {
               healthCheckData={healthCheckData}
               paymentAnalysisData={paymentAnalysisData}
               onUpdate={handleUpdate}
-              onClose={() => setActiveModal(null)}
+              onClose={closeModal}
             />
           );
         })()}

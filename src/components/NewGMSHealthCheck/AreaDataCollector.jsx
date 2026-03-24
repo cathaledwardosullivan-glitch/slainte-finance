@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Upload, Info, X, AlertCircle, Users, Edit3, Plus, UserPlus, Trash2, CheckSquare, Square, FileText, CheckCircle } from 'lucide-react';
 import COLORS from '../../utils/colors';
 import { usePracticeProfile } from '../../hooks/usePracticeProfile';
@@ -565,9 +565,9 @@ const STCServicesCollector = ({ readiness, healthCheckData, paymentAnalysisData,
   );
 
   // Auto-apply detected services on first load (only if stcServices is empty)
-  const [autoApplied, setAutoApplied] = useState(false);
+  const autoAppliedRef = useRef(false);
   useEffect(() => {
-    if (!autoApplied && hasPCRSData && Object.keys(detectedServices).length > 0) {
+    if (!autoAppliedRef.current && hasPCRSData && Object.keys(detectedServices).length > 0) {
       const existingServices = healthCheckData?.stcServices || {};
       const hasExistingSelections = Object.values(existingServices).some(v => v === true);
       if (!hasExistingSelections) {
@@ -577,9 +577,9 @@ const STCServicesCollector = ({ readiness, healthCheckData, paymentAnalysisData,
           stcServices: { ...detectedServices }
         });
       }
-      setAutoApplied(true);
+      autoAppliedRef.current = true;
     }
-  }, [autoApplied, hasPCRSData, detectedServices, healthCheckData, onUpdate]);
+  }, [hasPCRSData, detectedServices]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggleService = (serviceId) => {
     const current = healthCheckData || {};

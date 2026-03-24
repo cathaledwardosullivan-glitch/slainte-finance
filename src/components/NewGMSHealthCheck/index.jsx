@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useContext } from 'react';
+import React, { useState, useMemo, useCallback, useContext, useRef } from 'react';
 import { Printer, Upload, CheckCircle, RefreshCw, TrendingUp } from 'lucide-react';
 import COLORS from '../../utils/colors';
 import { useAppContext } from '../../context/AppContext';
@@ -231,7 +231,7 @@ const NewGMSHealthCheck = () => {
   const [cycleProcessing, setCycleProcessing] = useState(false);
   const [showImpactPanel, setShowImpactPanel] = useState(false);
 
-  const healthCheckData = profile?.healthCheckData || {};
+  const healthCheckData = useMemo(() => profile?.healthCheckData || {}, [profile?.healthCheckData]);
   const isSocrates = profile?.practiceDetails?.ehrSystem === 'socrates';
 
   // Aggregate GMS payments once (expensive, memoized)
@@ -260,8 +260,10 @@ const NewGMSHealthCheck = () => {
 
   // Mark health check as complete once analysis can run, so Finn and other
   // context builders know results are available (they gate on healthCheckComplete).
+  const autoCompleteFiredRef = useRef(false);
   React.useEffect(() => {
-    if (analysisResults && !healthCheckData.healthCheckComplete) {
+    if (analysisResults && !healthCheckData.healthCheckComplete && !autoCompleteFiredRef.current) {
+      autoCompleteFiredRef.current = true;
       updateProfile({ healthCheckData: { ...healthCheckData, healthCheckComplete: true } });
     }
   }, [analysisResults, healthCheckData, updateProfile]);
@@ -644,8 +646,11 @@ const NewGMSHealthCheck = () => {
 
   // Handle health check data updates from area forms
   // Auto-diffs old vs new data to stamp only the sections that actually changed
+  const profileRef = useRef(profile);
+  profileRef.current = profile;
+
   const handleUpdate = useCallback((newHealthCheckData) => {
-    const oldData = profile?.healthCheckData || {};
+    const oldData = profileRef.current?.healthCheckData || {};
     const now = new Date().toISOString();
     const timestamps = { ...(oldData._timestamps || {}) };
 
@@ -656,7 +661,7 @@ const NewGMSHealthCheck = () => {
     }
 
     updateProfile({ healthCheckData: { ...newHealthCheckData, _timestamps: timestamps } });
-  }, [updateProfile, profile]);
+  }, [updateProfile]);
 
   // Print report handler
   const canPrint = summary.analyzableCount > 0;
