@@ -477,7 +477,7 @@ export const FinnProvider = ({ children }) => {
         if (status.statusItems && status.statusItems.length > 0) {
           const nudgeContext = JSON.stringify(status.statusItems.slice(0, 3));
           callClaude(
-            `You are Finn, a warm Irish financial advisor for GP practices. Based on the following system status items, write a brief 1-2 sentence greeting that naturally mentions the most important item. Be helpful, not nagging. Do NOT list all items — pick the single most actionable one. Do NOT use emojis.\n\nStatus: ${nudgeContext}`,
+            `You are Finn, a professional Irish financial advisor for GP practices. Based on the following system status items, write a brief 1-2 sentence greeting that naturally mentions the most important item. Be helpful, not nagging. Do NOT list all items — pick the single most actionable one. Do NOT use emojis. Use professional language — no slang or colloquialisms.\n\nStatus: ${nudgeContext}`,
             { model: MODELS.FAST, maxTokens: 150, apiKey }
           ).then(response => {
             if (response && response.content) {
@@ -521,24 +521,28 @@ export const FinnProvider = ({ children }) => {
 
       // Open Finn and tell the user
       setIsOpen(true);
-      const { sourceFile, summary, duplicateCount } = data;
+      const { id: stagedId, sourceFile, summary, duplicateCount } = data;
       const newCount = summary.totalTransactions - duplicateCount;
       let msg;
+      let showReviewAction = false;
       if (duplicateCount > 0 && newCount === 0) {
         msg = `I processed "${sourceFile}" but all ${summary.totalTransactions} transactions are duplicates of ones you've already imported. Nothing new to add.`;
       } else if (duplicateCount > 0) {
         msg = `I just finished processing "${sourceFile}" — ${summary.totalTransactions} transactions found, ${duplicateCount} are duplicates I'll skip. ` +
           `Of the ${newCount} new ones, ${summary.auto - duplicateCount} categorised automatically` +
           (summary.review > 0 ? ` and ${summary.review} ${summary.review === 1 ? 'needs' : 'need'} your input` : '') +
-          `. Say "review" when you're ready.`;
+          `.`;
+        showReviewAction = true;
       } else {
         msg = `I just finished processing "${sourceFile}" — ${summary.totalTransactions} transactions found, ` +
           `${summary.auto} categorised automatically` +
           (summary.review > 0 ? ` and ${summary.review} ${summary.review === 1 ? 'needs' : 'need'} your input` : '') +
-          `. Say "review" when you're ready to look at them.`;
+          `.`;
+        showReviewAction = true;
       }
       // Small delay so the panel has time to open before message appears
-      setTimeout(() => addAssistantMessage(msg), 300);
+      const extras = showReviewAction ? { action: { type: 'review_staged', label: 'Review Transactions', stagedId } } : {};
+      setTimeout(() => addAssistantMessage(msg, false, extras), 300);
     });
 
     return () => {
@@ -2380,7 +2384,7 @@ RULES:
 - The app has a built-in PCRS/GMS statement downloader. Users do NOT need to log into the PCRS portal manually. Navigate to the PCRS downloader page if they ask about downloading statements.
 - Use start_app_tour when the user asks for a tour, wants to be shown around, or asks how the app works. The tour starts automatically — just call the tool.
 - If you cannot resolve a user's issue (bug, missing feature, or something outside your control), use send_feedback to open the feedback form pre-filled with a summary. Do NOT tell the user to contact support — use the tool to open the form for them.
-- STAGED TRANSACTION REVIEW: When staged transactions are pending (check via system_status or staged_results), guide the user through a review. Process each staged file one at a time. Flow: (1) navigate staged:review with action "review" — this auto-applies any all-auto files and opens the Transaction Review panel for files that need review, (2) immediately call "apply-auto" to apply the high-confidence batch (do NOT ask for permission — just apply and report the count), (3) tell the user the remaining clusters are shown in the Transaction Review panel beside you, where they can Accept the suggested category or Change it using the buttons on each cluster. You do NOT need to list every cluster in chat — the panel shows them. Just summarise briefly (e.g. "5 clusters remaining — you can accept or change the suggestions in the panel"). If the user asks you about a specific transaction in chat, help them, but the panel is the primary interaction surface for categorisation. (4) If the user asks you to apply remaining or finish up, call "apply-remaining".`;
+- STAGED TRANSACTION REVIEW: When staged transactions are pending (check via system_status or staged_results), guide the user through a review. IMPORTANT: When the user asks about pending transactions, says "review", or responds "yes" to your offer to review, immediately navigate to staged:review — do NOT ask for further confirmation. Process each staged file one at a time. Flow: (1) navigate staged:review with action "review" — this auto-applies any all-auto files and opens the Transaction Review panel for files that need review, (2) immediately call "apply-auto" to apply the high-confidence batch (do NOT ask for permission — just apply and report the count), (3) tell the user the remaining clusters are shown in the Transaction Review panel beside you, where they can Accept the suggested category or Change it using the buttons on each cluster. You do NOT need to list every cluster in chat — the panel shows them. Just summarise briefly (e.g. "5 clusters remaining — you can accept or change the suggestions in the panel"). If the user asks you about a specific transaction in chat, help them, but the panel is the primary interaction surface for categorisation. (4) If the user asks you to apply remaining or finish up, call "apply-remaining".`;
 
     // Build messages array with conversation history
     const recentMessages = messages.slice(-6);
@@ -2763,13 +2767,28 @@ RULES:
       console.log('[Finn] Routing through agentic query');
       const result = await agenticQuery(userMessage);
 
+      // If the agentic loop looked up staged_results and there are staged files,
+      // attach a review button so the user can start review with one click
+      const lookedUpStaged = result.toolActions?.some(a =>
+        a.name === 'lookup_financial_data' && (a.input?.query === 'staged_results' || a.input?.query === 'system_status')
+      );
+      const didNavigateToReview = result.toolActions?.some(a =>
+        a.name === 'navigate' && a.input?.target === 'staged:review'
+      );
+      let reviewAction;
+      if (lookedUpStaged && !didNavigateToReview && stagedResults.length > 0) {
+        // Pick the first staged file for the button (most common case)
+        reviewAction = { type: 'review_staged', label: 'Review Transactions', stagedId: stagedResults[0].id };
+      }
+
       const assistantMsg = {
         type: 'assistant',
         content: result.content,
         timestamp: new Date().toISOString(),
         id: `assistant-${Date.now()}`,
         isError: result.isError || false,
-        toolActions: result.toolActions?.length > 0 ? result.toolActions : undefined
+        toolActions: result.toolActions?.length > 0 ? result.toolActions : undefined,
+        ...(reviewAction ? { action: reviewAction } : {})
       };
 
       setMessages(prev => [...prev, assistantMsg]);

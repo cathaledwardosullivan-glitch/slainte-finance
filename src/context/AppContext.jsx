@@ -66,7 +66,8 @@ export const AppProvider = ({ children }) => {
             'gp_finance_payment_analysis',
             'gp_finance_saved_reports',
             'gp_finance_settings',
-            'slainte_practice_profile'
+            'slainte_practice_profile',
+            'slainte_ai_corrections'
         ];
 
         for (const key of keysToSync) {

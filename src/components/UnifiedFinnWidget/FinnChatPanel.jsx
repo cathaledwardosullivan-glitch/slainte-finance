@@ -58,8 +58,6 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
 
   // Get welcome message based on current page
   const getWelcomeMessage = () => {
-    if (!hasData) return null;
-
     const pageMessages = {
       dashboard: `Good morning. How can I help you today?`,
       transactions: `I can help with transaction queries, category analysis, or identifying patterns. What would you like to look at?`,
@@ -192,6 +190,45 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
             >
               <Play style={{ height: '0.875rem', width: '0.875rem' }} />
               {message.action.label || 'Start Tour'}
+            </button>
+          )}
+
+          {/* Staged review action button */}
+          {message.action?.type === 'review_staged' && (
+            <button
+              onClick={async () => {
+                try {
+                  const detail = await window.electronAPI.backgroundProcessor.getStagedDetail(message.action.stagedId);
+                  if (detail) {
+                    window.dispatchEvent(new CustomEvent('staged-review:open', {
+                      detail: { stagedData: detail }
+                    }));
+                  }
+                } catch (err) {
+                  console.error('[FinnChatPanel] Failed to open staged review:', err);
+                }
+              }}
+              style={{
+                marginTop: '0.75rem',
+                width: '100%',
+                padding: '0.625rem 1rem',
+                backgroundColor: COLORS.incomeColor,
+                color: COLORS.white,
+                border: 'none',
+                borderRadius: '0.5rem',
+                fontSize: '0.8125rem',
+                fontWeight: 500,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.opacity = '0.85'}
+              onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+            >
+              <CheckCircle style={{ height: '0.875rem', width: '0.875rem' }} />
+              {message.action.label || 'Review Transactions'}
             </button>
           )}
 
@@ -468,7 +505,7 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
         }}
       >
         {/* Welcome message */}
-        {messages.length === 0 && hasData && (
+        {messages.length === 0 && (
           <div
             style={{
               backgroundColor: `${COLORS.slainteBlue}10`,
@@ -481,26 +518,6 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
           >
             <div style={{ color: COLORS.textPrimary, lineHeight: '1.5' }}>
               {getWelcomeMessage()}
-            </div>
-          </div>
-        )}
-
-        {/* No data message */}
-        {!hasData && (
-          <div style={{ textAlign: 'center', color: COLORS.textSecondary, padding: '2rem 1rem' }}>
-            <MessageCircle
-              style={{
-                margin: '0 auto 0.75rem',
-                height: '2.5rem',
-                width: '2.5rem',
-                color: COLORS.borderLight
-              }}
-            />
-            <div style={{ fontSize: '0.875rem', marginBottom: '0.5rem' }}>
-              Upload transaction data to start chatting with Finn
-            </div>
-            <div style={{ fontSize: '0.75rem', color: COLORS.borderLight }}>
-              Go to Transactions to import your data
             </div>
           </div>
         )}
@@ -745,8 +762,8 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
               e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
             }}
             onKeyDown={handleKeyPress}
-            placeholder={!hasData ? "Upload data first..." : "Ask Finn a question..."}
-            disabled={!hasData || isLoading || !apiKey}
+            placeholder={!apiKey ? "API key required..." : "Ask Finn a question..."}
+            disabled={isLoading || !apiKey}
             rows={1}
             style={{
               flex: 1,
@@ -755,7 +772,7 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
               padding: '0.625rem 0.875rem',
               fontSize: '0.875rem',
               outline: 'none',
-              backgroundColor: (!hasData || isLoading || !apiKey) ? COLORS.bgPage : COLORS.white,
+              backgroundColor: (isLoading || !apiKey) ? COLORS.bgPage : COLORS.white,
               transition: 'box-shadow 0.2s, border-color 0.2s',
               resize: 'none',
               minHeight: '2.5rem',
@@ -774,15 +791,15 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
           />
           <button
             onClick={handleSend}
-            disabled={!inputValue.trim() || isLoading || !hasData || !apiKey}
+            disabled={!inputValue.trim() || isLoading || !apiKey}
             style={{
               backgroundColor: COLORS.slainteBlue,
               color: COLORS.white,
               padding: '0.625rem',
               borderRadius: '0.5rem',
               border: 'none',
-              cursor: (!inputValue.trim() || isLoading || !hasData || !apiKey) ? 'not-allowed' : 'pointer',
-              opacity: (!inputValue.trim() || isLoading || !hasData || !apiKey) ? 0.5 : 1,
+              cursor: (!inputValue.trim() || isLoading || !apiKey) ? 'not-allowed' : 'pointer',
+              opacity: (!inputValue.trim() || isLoading || !apiKey) ? 0.5 : 1,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -791,7 +808,7 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
               flexShrink: 0
             }}
             onMouseEnter={(e) => {
-              if (inputValue.trim() && !isLoading && hasData && apiKey) {
+              if (inputValue.trim() && !isLoading && apiKey) {
                 e.currentTarget.style.backgroundColor = COLORS.slainteBlueDark;
               }
             }}
@@ -804,14 +821,14 @@ const FinnChatPanel = ({ currentView = 'dashboard' }) => {
         </div>
 
         {/* Helper text */}
-        {hasData && apiKey && (
+        {apiKey && (
           <div style={{ fontSize: '0.6875rem', color: COLORS.textSecondary, marginTop: '0.375rem' }}>
             Enter to send • Shift+Enter for new line
           </div>
         )}
 
         {/* API key warning / demo key entry */}
-        {!apiKey && hasData && (
+        {!apiKey && (
           isDemoMode() ? (
             <DemoKeyPrompt onKeySaved={(key) => { setDemoApiKey(key); setApiKey(key); }} />
           ) : (

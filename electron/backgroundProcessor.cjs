@@ -33,6 +33,7 @@ const { parseStatement } = require('./utils/pdfAdapter.cjs');
 
 const CONFIDENCE_AUTO_THRESHOLD = 0.90;
 const FILE_DEBOUNCE_MS = 2000; // Wait for file write to complete
+const BATCH_WINDOW_MS = 5000;  // Accumulate files arriving within this window into one batch
 const SUPPORTED_EXTENSIONS = ['.pdf', '.csv'];
 
 // ============================================================================
@@ -61,6 +62,11 @@ class BackgroundProcessor {
     this.watcher = null;
     this.processing = false;
     this.queue = [];
+
+    // Batch window: accumulate files arriving close together
+    this.batchWindowMs = BATCH_WINDOW_MS;
+    this._batchTimer = null;
+    this._batchQueue = [];
   }
 
   // --------------------------------------------------------------------------
@@ -76,6 +82,10 @@ class BackgroundProcessor {
   }
 
   stop() {
+    if (this._batchTimer) {
+      clearTimeout(this._batchTimer);
+      this._batchTimer = null;
+    }
     if (this.watcher) {
       this.watcher.close();
       this.watcher = null;
@@ -157,8 +167,32 @@ class BackgroundProcessor {
 
   _enqueue(filePath) {
     // Don't queue duplicates
-    if (this.queue.includes(filePath)) return;
-    this.queue.push(filePath);
+    if (this._batchQueue.includes(filePath)) return;
+    if (this.queue.some(q => Array.isArray(q) ? q.includes(filePath) : q === filePath)) return;
+
+    this._batchQueue.push(filePath);
+
+    // Reset the batch window timer — keep accumulating if more files arrive
+    if (this._batchTimer) clearTimeout(this._batchTimer);
+    this._batchTimer = setTimeout(() => this._flushBatch(), this.batchWindowMs);
+  }
+
+  _flushBatch() {
+    this._batchTimer = null;
+    if (this._batchQueue.length === 0) return;
+
+    const batch = [...this._batchQueue];
+    this._batchQueue = [];
+
+    if (batch.length === 1) {
+      // Single file — queue as a plain path (existing behavior)
+      this.queue.push(batch[0]);
+    } else {
+      // Multiple files — queue as an array (batch)
+      console.log(`[BackgroundProcessor] Batching ${batch.length} files for combined processing`);
+      this.queue.push(batch);
+    }
+
     this._processNext();
   }
 
@@ -166,25 +200,50 @@ class BackgroundProcessor {
     if (this.processing || this.queue.length === 0) return;
 
     this.processing = true;
-    const filePath = this.queue.shift();
-    const fileName = path.basename(filePath);
+    const item = this.queue.shift();
+    const isBatch = Array.isArray(item);
 
     try {
-      console.log('[BackgroundProcessor] Processing:', fileName);
-      this.onProgress(fileName, 0);
+      if (isBatch) {
+        const fileNames = item.map(f => path.basename(f));
+        console.log(`[BackgroundProcessor] Processing batch of ${item.length} files:`, fileNames.join(', '));
+        this.onProgress(fileNames.join(', '), 0);
 
-      const result = await this._processFile(filePath);
+        const result = await this._processBatch(item);
 
-      // Move file to processed folder
-      const destPath = path.join(this.processedPath, fileName);
-      fs.renameSync(filePath, destPath);
-      console.log('[BackgroundProcessor] Moved to processed:', fileName);
+        // Move all files to processed folder
+        for (const filePath of item) {
+          const destPath = path.join(this.processedPath, path.basename(filePath));
+          fs.renameSync(filePath, destPath);
+        }
+        console.log(`[BackgroundProcessor] Moved ${item.length} files to processed`);
 
-      this.onReady(result);
+        this.onReady(result);
+      } else {
+        const filePath = item;
+        const fileName = path.basename(filePath);
+        console.log('[BackgroundProcessor] Processing:', fileName);
+        this.onProgress(fileName, 0);
+
+        const result = await this._processFile(filePath);
+
+        // Move file to processed folder
+        const destPath = path.join(this.processedPath, fileName);
+        fs.renameSync(filePath, destPath);
+        console.log('[BackgroundProcessor] Moved to processed:', fileName);
+
+        this.onReady(result);
+      }
     } catch (error) {
-      console.error('[BackgroundProcessor] Error processing', fileName, ':', error.message);
-      // Leave file in inbox for retry on next app launch
-      this.onError(error, fileName);
+      if (isBatch) {
+        const fileNames = item.map(f => path.basename(f)).join(', ');
+        console.error('[BackgroundProcessor] Error processing batch:', fileNames, ':', error.message);
+        this.onError(error, fileNames);
+      } else {
+        const fileName = path.basename(item);
+        console.error('[BackgroundProcessor] Error processing', fileName, ':', error.message);
+        this.onError(error, fileName);
+      }
     } finally {
       this.processing = false;
       // Process next in queue
@@ -248,13 +307,16 @@ class BackgroundProcessor {
       const apiKey = this._loadApiKey();
       if (apiKey && !this._isLocalOnlyMode()) {
         opusTriggered = true;
+        const corrections = this._loadAICorrections();
+        const groupCorrections = this._formatCorrectionsForPrompt(corrections, 'group_assignment');
         console.log(`[BackgroundProcessor] Opus group pass triggered: ${convergenceResult.uncategorized.length}/${totalTxns} uncategorized`);
 
         const opusResult = await runOpusPass(
           convergenceResult.uncategorized,
           categoryMapping,
           practiceProfile,
-          apiKey
+          apiKey,
+          groupCorrections
         );
 
         if (opusResult.results.length > 0) {
@@ -375,6 +437,266 @@ class BackgroundProcessor {
   }
 
   // --------------------------------------------------------------------------
+  // Batch Processing (multiple files → single staged result)
+  // --------------------------------------------------------------------------
+
+  async _processBatch(filePaths) {
+    const fileNames = filePaths.map(f => path.basename(f));
+    const batchLabel = `${fileNames.length} files`;
+
+    // Step 1: Parse all files
+    this.onProgress(batchLabel, 5);
+    const allParsed = [];
+    const parseMetadata = { dateRange: null, sourceFiles: [] };
+
+    for (const filePath of filePaths) {
+      const fileName = path.basename(filePath);
+      try {
+        const parsed = await parseStatement(filePath);
+        console.log(`[BackgroundProcessor] Batch parsed ${parsed.transactions.length} transactions from ${fileName}`);
+
+        if (parsed.transactions.length === 0) {
+          console.warn(`[BackgroundProcessor] Batch: no transactions in ${fileName}, skipping`);
+          continue;
+        }
+
+        // Normalize with source file tracking (already built into _normalizeTransactions)
+        const normalized = this._normalizeTransactions(parsed.transactions, fileName);
+        allParsed.push(...normalized);
+        parseMetadata.sourceFiles.push(fileName);
+
+        // Merge date ranges
+        if (parsed.metadata?.dateRange) {
+          if (!parseMetadata.dateRange) {
+            parseMetadata.dateRange = { ...parsed.metadata.dateRange };
+          } else {
+            if (parsed.metadata.dateRange.from < parseMetadata.dateRange.from) {
+              parseMetadata.dateRange.from = parsed.metadata.dateRange.from;
+            }
+            if (parsed.metadata.dateRange.to > parseMetadata.dateRange.to) {
+              parseMetadata.dateRange.to = parsed.metadata.dateRange.to;
+            }
+          }
+        }
+      } catch (err) {
+        console.error(`[BackgroundProcessor] Batch: error parsing ${fileName}:`, err.message);
+        // Continue with other files — don't fail the whole batch
+      }
+    }
+
+    if (allParsed.length === 0) {
+      throw new Error(`No transactions found across ${fileNames.length} files`);
+    }
+
+    console.log(`[BackgroundProcessor] Batch: ${allParsed.length} total transactions from ${parseMetadata.sourceFiles.length} files`);
+
+    // Step 2: Load context (once for the whole batch)
+    this.onProgress(batchLabel, 15);
+    const categoryMapping = this._loadCategoryMapping();
+    const existingTransactions = this._loadExistingTransactions();
+    const practiceProfile = this._loadPracticeProfile();
+
+    console.log('[BackgroundProcessor] Batch loaded context:', {
+      categories: categoryMapping.length,
+      existingTransactions: existingTransactions.length,
+      hasProfile: !!practiceProfile,
+    });
+
+    // Step 3: Cross-file duplicate detection (against existing + within batch)
+    this.onProgress(batchLabel, 25);
+    const duplicates = this._detectDuplicates(allParsed, existingTransactions);
+    // Also detect intra-batch duplicates (same transaction in overlapping statements)
+    const intraBatchDups = this._detectIntraBatchDuplicates(allParsed);
+    if (intraBatchDups.length > 0) {
+      console.log(`[BackgroundProcessor] Batch: ${intraBatchDups.length} intra-batch duplicates removed`);
+      const intraDupSet = new Set(intraBatchDups);
+      // Remove intra-batch duplicates (keep first occurrence)
+      const deduped = [];
+      for (const t of allParsed) {
+        if (!intraDupSet.has(t.id)) {
+          deduped.push(t);
+        }
+      }
+      allParsed.length = 0;
+      allParsed.push(...deduped);
+      duplicates.intraBatchCount = intraBatchDups.length;
+    }
+
+    // Step 4: Convergence loop on combined set
+    this.onProgress(batchLabel, 35);
+    const convergenceResult = this._runConvergenceLoop(
+      allParsed,
+      categoryMapping,
+      existingTransactions,
+      practiceProfile
+    );
+
+    // Step 5: Opus GROUP-level analysis (same logic as single-file)
+    let opusTriggered = false;
+    const totalTxns = convergenceResult.categorized.length + convergenceResult.uncategorized.length;
+    if (shouldRunOpusPass(totalTxns, convergenceResult.uncategorized.length)) {
+      this.onProgress(batchLabel, 55);
+      const apiKey = this._loadApiKey();
+      if (apiKey && !this._isLocalOnlyMode()) {
+        opusTriggered = true;
+        const corrections = this._loadAICorrections();
+        const groupCorrections = this._formatCorrectionsForPrompt(corrections, 'group_assignment');
+        console.log(`[BackgroundProcessor] Batch Opus group pass: ${convergenceResult.uncategorized.length}/${totalTxns} uncategorized`);
+
+        const opusResult = await runOpusPass(
+          convergenceResult.uncategorized,
+          categoryMapping,
+          practiceProfile,
+          apiKey,
+          groupCorrections
+        );
+
+        if (opusResult.results.length > 0) {
+          const opusHandledIds = new Set(opusResult.results.map(r => r.id));
+          convergenceResult.uncategorized = convergenceResult.uncategorized.filter(t => !opusHandledIds.has(t.id));
+
+          for (const txn of opusResult.results) {
+            txn.stagedCohort = txn.groupConfirmed ? 'group-confirmed' : 'review';
+            convergenceResult.categorized.push(txn);
+          }
+
+          console.log(`[BackgroundProcessor] Batch Opus grouped ${opusResult.results.length} transactions (${opusResult.results.filter(r => r.groupConfirmed).length} auto-confirmed)`);
+        }
+
+        if (opusResult.uncertain.length > 0) {
+          const uncertainIds = new Set(opusResult.uncertain.map(r => r.id));
+          convergenceResult.uncategorized = convergenceResult.uncategorized.filter(t => !uncertainIds.has(t.id));
+
+          for (const txn of opusResult.uncertain) {
+            txn.stagedCohort = 'review';
+          }
+          convergenceResult.categorized.push(...opusResult.uncertain);
+          console.log(`[BackgroundProcessor] Batch Opus uncertain: ${opusResult.uncertain.length} transactions`);
+        }
+
+        // Post-AI cascade
+        const remainingForCascade = convergenceResult.uncategorized;
+        if (remainingForCascade.length > 0) {
+          this.onProgress(batchLabel, 70);
+          const cascadeCorpus = [...existingTransactions, ...convergenceResult.categorized.filter(t => !!t.categoryCode)];
+          const postAiResult = runConvergenceLoop(
+            remainingForCascade,
+            categoryMapping,
+            cascadeCorpus,
+            practiceProfile,
+            { maxIterations: 3 }
+          );
+
+          if (postAiResult.categorized.length > 0) {
+            for (const txn of postAiResult.categorized) {
+              txn.categoryMatchType = 'finn-background';
+              txn.stagedCohort = txn.unifiedConfidence >= CONFIDENCE_AUTO_THRESHOLD ? 'auto' : 'review';
+              txn.convergencePass = 'post_ai_cascade';
+            }
+            convergenceResult.categorized.push(...postAiResult.categorized);
+            convergenceResult.uncategorized = postAiResult.uncategorized;
+            console.log(`[BackgroundProcessor] Batch post-AI cascade: +${postAiResult.categorized.length} categorized`);
+          }
+        }
+
+        if (opusResult.error) {
+          console.warn(`[BackgroundProcessor] Batch Opus pass error: ${opusResult.error}`);
+        }
+      }
+    }
+
+    // Step 6: Anomaly detection
+    this.onProgress(batchLabel, 80);
+    const anomalies = runAnomalyDetection(
+      convergenceResult.categorized,
+      categoryMapping,
+      practiceProfile
+    );
+
+    if (opusTriggered) {
+      for (const flaggedTxn of anomalies.demoted) {
+        const opusCategorized = convergenceResult.categorized.find(
+          t => t.id === flaggedTxn.id && t.convergencePass === 'opus_ai'
+        );
+        flaggedTxn.anomalyCorrelation = opusCategorized ? 'opus_agrees' : 'opus_not_assessed';
+      }
+    }
+
+    if (anomalies.demoted.length > 0) {
+      console.log(`[BackgroundProcessor] Batch anomaly flags: ${anomalies.demoted.length}`);
+    }
+
+    // Step 7: Build single staged result for the entire batch
+    this.onProgress(batchLabel, 90);
+    const staged = this._buildStagedResult(
+      parseMetadata.sourceFiles.join(', '),
+      convergenceResult,
+      duplicates,
+      parseMetadata,
+      anomalies,
+      opusTriggered
+    );
+
+    // Add batch-specific metadata
+    staged.sourceFiles = parseMetadata.sourceFiles;
+    staged.isBatch = true;
+
+    // Per-file breakdown for the summary
+    staged.summary.fileBreakdown = parseMetadata.sourceFiles.map(sf => {
+      const fileTxns = staged.transactions.filter(t => t.fileName === sf);
+      return {
+        fileName: sf,
+        transactionCount: fileTxns.length,
+        debits: Math.round(fileTxns.reduce((sum, t) => sum + (t.debit || 0), 0) * 100) / 100,
+        credits: Math.round(fileTxns.reduce((sum, t) => sum + (t.credit || 0), 0) * 100) / 100,
+      };
+    });
+
+    if (duplicates.intraBatchCount) {
+      staged.summary.intraBatchDuplicates = duplicates.intraBatchCount;
+    }
+
+    // Step 8: Write staging file
+    const stagingFile = path.join(this.stagingPath, `${staged.id}.json`);
+    fs.writeFileSync(stagingFile, JSON.stringify(staged, null, 2));
+    console.log(`[BackgroundProcessor] Batch staged result written: ${staged.id} (${allParsed.length} transactions from ${parseMetadata.sourceFiles.length} files)`);
+
+    this.onProgress(batchLabel, 100);
+    return staged;
+  }
+
+  /**
+   * Detect duplicate transactions within a batch (overlapping bank statements).
+   * Returns IDs to remove (keeps first occurrence by array order).
+   */
+  _detectIntraBatchDuplicates(transactions) {
+    const seen = new Set();
+    const duplicateIds = [];
+
+    for (const t of transactions) {
+      const sig = this._transactionSignature(t);
+      if (!sig) continue;
+
+      // Include source file in the key — same transaction in different files is a duplicate
+      // Same transaction in the same file is NOT a duplicate (could be legit same-day same-amount)
+      const crossFileSig = sig; // Signature without file — matches across files
+      if (seen.has(crossFileSig)) {
+        // Only flag as intra-batch dup if from a DIFFERENT source file
+        const firstMatch = transactions.find(
+          other => other.id !== t.id && this._transactionSignature(other) === crossFileSig
+        );
+        if (firstMatch && firstMatch.fileName !== t.fileName) {
+          duplicateIds.push(t.id);
+          continue;
+        }
+      }
+      seen.add(crossFileSig);
+    }
+
+    return duplicateIds;
+  }
+
+  // --------------------------------------------------------------------------
   // Data Loading
   // --------------------------------------------------------------------------
 
@@ -415,6 +737,33 @@ class BackgroundProcessor {
   _isLocalOnlyMode() {
     const profile = this._loadPracticeProfile();
     return profile?.operations?.localOnlyMode === true;
+  }
+
+  _loadAICorrections() {
+    return this._loadLocalStorageKey('slainte_ai_corrections') || {};
+  }
+
+  /**
+   * Format corrections for a given feature into a prompt block.
+   * @param {Object} corrections - Full aiCorrections object
+   * @param {string} feature - 'group_assignment' or 'expense_categorization'
+   * @param {number} limit - Max corrections to include
+   * @returns {string} Prompt block or empty string
+   */
+  _formatCorrectionsForPrompt(corrections, feature, limit = 20) {
+    const featureCorrections = corrections[feature] || [];
+    if (featureCorrections.length === 0) return '';
+
+    const sorted = [...featureCorrections]
+      .sort((a, b) => (b.frequency !== a.frequency) ? b.frequency - a.frequency : b.timestamp - a.timestamp)
+      .slice(0, limit);
+
+    const lines = sorted.map(c => {
+      const freq = c.frequency > 1 ? ` [corrected ${c.frequency}x]` : '';
+      return `- "${c.pattern}": AI suggested ${c.aiSuggested.name} → User corrected to ${c.userChose.name}${freq}`;
+    });
+
+    return `\nLEARNED CORRECTIONS (from user feedback — avoid repeating these mistakes):\n${lines.join('\n')}\n`;
   }
 
   // --------------------------------------------------------------------------
@@ -873,6 +1222,8 @@ class BackgroundProcessor {
 
     const categoryMapping = this._loadCategoryMapping();
     const practiceProfile = this._loadPracticeProfile();
+    const corrections = this._loadAICorrections();
+    const categoryCorrections = this._formatCorrectionsForPrompt(corrections, 'expense_categorization');
 
     // Build corpus of fully-categorised transactions for similarity matching
     const existingTransactions = this._loadExistingTransactions() || [];
@@ -891,7 +1242,7 @@ class BackgroundProcessor {
       console.log(`[BackgroundProcessor] Pass 2 on ${needsCategorisation.length} applied transactions`);
 
       const result = await runCategoryAssignmentPass(
-        needsCategorisation, categoryMapping, corpus, practiceProfile, apiKey
+        needsCategorisation, categoryMapping, corpus, practiceProfile, apiKey, categoryCorrections
       );
 
       if (result.error) {

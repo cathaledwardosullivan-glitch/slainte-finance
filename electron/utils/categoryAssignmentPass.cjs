@@ -195,7 +195,7 @@ function buildCorpusExamples(groupCode, corpus, categoryMapping) {
  * Build a category-level prompt for transactions within a single group.
  * Includes corpus examples, domain hints, and confidence calibration.
  */
-function buildCategoryPrompt(transactions, groupCode, groupName, categories, practiceProfile, corpus, categoryMapping) {
+function buildCategoryPrompt(transactions, groupCode, groupName, categories, practiceProfile, corpus, categoryMapping, correctionsBlock = '') {
   const profileContext = buildProfileContext(practiceProfile);
 
   const categoryLines = categories.map(c =>
@@ -243,6 +243,10 @@ GROUP-SPECIFIC GUIDANCE:
 ${hints}`;
   }
 
+  if (correctionsBlock) {
+    prompt += correctionsBlock;
+  }
+
   prompt += `
 
 CONFIDENCE CALIBRATION:
@@ -286,67 +290,92 @@ function buildProfileContext(practiceProfile) {
 // API CALL
 // ============================================================================
 
+const RETRYABLE_STATUS_CODES = new Set([429, 500, 502, 503, 529]);
+const MAX_RETRIES = 2;
+const BASE_BACKOFF_MS = 2000;
+
 /**
  * Call the API for a single batch of transactions within one group.
  * Uses Sonnet (STANDARD tier) — best accuracy/cost ratio with improved prompt.
+ * Retries on transient errors (429, 500, 502, 503, 529) with exponential backoff.
  */
 async function callCategoryAPI(apiKey, prompt) {
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: MODELS.STANDARD,
-      max_tokens: 4096,
-      temperature: 0.2, // Match Pass 1
-      messages: [{ role: 'user', content: prompt }],
-    }),
-  });
+  let lastError;
 
-  if (!response.ok) {
-    const errorBody = await response.text();
-    throw new Error(`Category API error: ${response.status} - ${errorBody}`);
-  }
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    if (attempt > 0) {
+      const backoff = BASE_BACKOFF_MS * Math.pow(2, attempt - 1);
+      console.log(`[CategoryPass] Retry ${attempt}/${MAX_RETRIES} after ${backoff}ms...`);
+      await new Promise(resolve => setTimeout(resolve, backoff));
+    }
 
-  const data = await response.json();
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: MODELS.STANDARD,
+        max_tokens: 4096,
+        temperature: 0.2,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    });
 
-  if (data.usage) {
-    console.log(`[CategoryPass] Token usage — input: ${data.usage.input_tokens}, output: ${data.usage.output_tokens}`);
-  }
+    if (!response.ok) {
+      const errorBody = await response.text();
+      lastError = new Error(`Category API error: ${response.status} - ${errorBody}`);
 
-  // Parse response — same robust extraction as opusAnalysisPass
-  const text = data.content?.[0]?.text || '';
-  let jsonText = text;
-  const fenceMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-  if (fenceMatch) {
-    jsonText = fenceMatch[1];
-  }
+      if (RETRYABLE_STATUS_CODES.has(response.status) && attempt < MAX_RETRIES) {
+        console.warn(`[CategoryPass] Transient error (${response.status}), will retry`);
+        continue;
+      }
+      throw lastError;
+    }
 
-  const jsonMatch = jsonText.match(/\[[\s\S]*\]/);
-  if (jsonMatch) return JSON.parse(jsonMatch[0]);
+    // Success — parse the response
+    const data = await response.json();
 
-  // Try salvaging truncated response
-  const partialMatch = jsonText.match(/\[[\s\S]*/);
-  if (partialMatch) {
-    const partial = partialMatch[0];
-    const lastComplete = partial.lastIndexOf('}');
-    if (lastComplete > 0) {
-      const salvaged = partial.substring(0, lastComplete + 1) + ']';
-      try {
-        const results = JSON.parse(salvaged);
-        console.log(`[CategoryPass] Salvaged ${results.length} results from truncated response`);
-        return results;
-      } catch {
-        // Fall through
+    if (data.usage) {
+      console.log(`[CategoryPass] Token usage — input: ${data.usage.input_tokens}, output: ${data.usage.output_tokens}`);
+    }
+
+    // Parse response — same robust extraction as opusAnalysisPass
+    const text = data.content?.[0]?.text || '';
+    let jsonText = text;
+    const fenceMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (fenceMatch) {
+      jsonText = fenceMatch[1];
+    }
+
+    const jsonMatch = jsonText.match(/\[[\s\S]*\]/);
+    if (jsonMatch) return JSON.parse(jsonMatch[0]);
+
+    // Try salvaging truncated response
+    const partialMatch = jsonText.match(/\[[\s\S]*/);
+    if (partialMatch) {
+      const partial = partialMatch[0];
+      const lastComplete = partial.lastIndexOf('}');
+      if (lastComplete > 0) {
+        const salvaged = partial.substring(0, lastComplete + 1) + ']';
+        try {
+          const results = JSON.parse(salvaged);
+          console.log(`[CategoryPass] Salvaged ${results.length} results from truncated response`);
+          return results;
+        } catch {
+          // Fall through
+        }
       }
     }
+
+    console.error('[CategoryPass] Could not extract JSON from response:', text.substring(0, 200));
+    throw new Error('Category API response did not contain a valid JSON array');
   }
 
-  console.error('[CategoryPass] Could not extract JSON from response:', text.substring(0, 200));
-  throw new Error('Category API response did not contain a valid JSON array');
+  // All retries exhausted
+  throw lastError;
 }
 
 // ============================================================================
@@ -363,7 +392,7 @@ async function callCategoryAPI(apiKey, prompt) {
  * @param {string} apiKey - Anthropic API key
  * @returns {Promise<{ results: Array, uncertain: Array, similarityMatched: number, aiMatched: number, error: string|null }>}
  */
-async function runCategoryAssignmentPass(transactions, categoryMapping, corpus, practiceProfile, apiKey) {
+async function runCategoryAssignmentPass(transactions, categoryMapping, corpus, practiceProfile, apiKey, correctionsBlock = '') {
   if (!apiKey) {
     return { results: [], uncertain: [], similarityMatched: 0, aiMatched: 0, error: 'No API key available' };
   }
@@ -461,7 +490,7 @@ async function runCategoryAssignmentPass(transactions, categoryMapping, corpus, 
       console.log(`[CategoryPass] ${groupCode} batch ${batchNum}/${totalBatches}: ${batch.length} transactions, ${groupCategories.length} categories`);
 
       try {
-        const prompt = buildCategoryPrompt(batch, groupCode, groupDef.name, groupCategories, practiceProfile, corpus, categoryMapping);
+        const prompt = buildCategoryPrompt(batch, groupCode, groupDef.name, groupCategories, practiceProfile, corpus, categoryMapping, correctionsBlock);
         const batchResults = await callCategoryAPI(apiKey, prompt);
 
         // Map results back to transactions

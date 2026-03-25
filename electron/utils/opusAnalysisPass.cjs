@@ -111,7 +111,7 @@ function formatTransactions(transactions) {
 /**
  * Build the group-level Opus prompt with few-shot examples.
  */
-function buildOpusPrompt(transactions, categoryMapping, practiceProfile) {
+function buildOpusPrompt(transactions, categoryMapping, practiceProfile, correctionsBlock = '') {
   const profileContext = buildProfileContext(practiceProfile);
   const groupLines = buildGroupLines(categoryMapping);
   const txnList = formatTransactions(transactions);
@@ -136,8 +136,7 @@ EXAMPLES:
 6. [DEBIT] €99.63 | "BRIGHTHR SEPA DD" → {"group": "OFFICE", "confidence": 0.90, "reasoning": "BrightHR — HR management software platform, software subscription"}
 7. [DEBIT] €750.00 | "TO COMFORT AIR CONDIT" → {"group": "PREMISES", "confidence": 0.90, "reasoning": "Comfort Air Conditioning — HVAC maintenance for practice premises"}
 8. [DEBIT] €213.50 | "POS24JUN Brown Thomas" → {"group": "OTHER", "confidence": 0.80, "reasoning": "Department store — likely staff gift or practice event purchase, sundry business expense"}
-
-KEY RULES:
+${correctionsBlock}KEY RULES:
 - NEPOSCHG* (foreign exchange charges) → PROFESSIONAL (Bank Charges category)
 - Staff meals, gifts, fruit deliveries, department store purchases → OTHER, not PREMISES or NON_BUSINESS
 - PREMISES is strictly: rent, rates, utilities, cleaning, building insurance, building maintenance/repairs
@@ -159,69 +158,93 @@ Respond ONLY with the JSON array.`;
 // API CALL
 // ============================================================================
 
+const RETRYABLE_STATUS_CODES = new Set([429, 500, 502, 503, 529]);
+const MAX_RETRIES = 2;
+const BASE_BACKOFF_MS = 2000;
+
 /**
- * Call the Opus API for a single batch.
+ * Call the Opus API for a single batch, with retry on transient errors.
  * @param {string} apiKey
  * @param {string} prompt
  * @returns {Promise<Array<{index, group, confidence, reasoning}>>}
  */
 async function callOpus(apiKey, prompt) {
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: MODELS.STRATEGIC,
-      max_tokens: 8192,
-      temperature: 0.2,
-      messages: [{ role: 'user', content: prompt }],
-    }),
-  });
+  let lastError;
 
-  if (!response.ok) {
-    const errorBody = await response.text();
-    throw new Error(`Opus API error: ${response.status} - ${errorBody}`);
-  }
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    if (attempt > 0) {
+      const backoff = BASE_BACKOFF_MS * Math.pow(2, attempt - 1);
+      console.log(`[OpusPass] Retry ${attempt}/${MAX_RETRIES} after ${backoff}ms...`);
+      await new Promise(resolve => setTimeout(resolve, backoff));
+    }
 
-  const data = await response.json();
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: MODELS.STRATEGIC,
+        max_tokens: 8192,
+        temperature: 0.2,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    });
 
-  if (data.usage) {
-    console.log(`[OpusPass] Token usage — input: ${data.usage.input_tokens}, output: ${data.usage.output_tokens}`);
-  }
+    if (!response.ok) {
+      const errorBody = await response.text();
+      lastError = new Error(`Opus API error: ${response.status} - ${errorBody}`);
 
-  // Parse the response — extract JSON array, handling code fences and truncation
-  const text = data.content?.[0]?.text || '';
-  let jsonText = text;
-  const fenceMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-  if (fenceMatch) {
-    jsonText = fenceMatch[1];
-  }
+      if (RETRYABLE_STATUS_CODES.has(response.status) && attempt < MAX_RETRIES) {
+        console.warn(`[OpusPass] Transient error (${response.status}), will retry`);
+        continue;
+      }
+      throw lastError;
+    }
 
-  const jsonMatch = jsonText.match(/\[[\s\S]*\]/);
-  if (jsonMatch) return JSON.parse(jsonMatch[0]);
+    // Success — parse the response
+    const data = await response.json();
 
-  // Try salvaging truncated response
-  const partialMatch = jsonText.match(/\[[\s\S]*/);
-  if (partialMatch) {
-    const partial = partialMatch[0];
-    const lastComplete = partial.lastIndexOf('}');
-    if (lastComplete > 0) {
-      const salvaged = partial.substring(0, lastComplete + 1) + ']';
-      try {
-        const results = JSON.parse(salvaged);
-        console.log(`[OpusPass] Salvaged ${results.length} results from truncated response`);
-        return results;
-      } catch {
-        // Fall through to error
+    if (data.usage) {
+      console.log(`[OpusPass] Token usage — input: ${data.usage.input_tokens}, output: ${data.usage.output_tokens}`);
+    }
+
+    // Extract JSON array, handling code fences and truncation
+    const text = data.content?.[0]?.text || '';
+    let jsonText = text;
+    const fenceMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (fenceMatch) {
+      jsonText = fenceMatch[1];
+    }
+
+    const jsonMatch = jsonText.match(/\[[\s\S]*\]/);
+    if (jsonMatch) return JSON.parse(jsonMatch[0]);
+
+    // Try salvaging truncated response
+    const partialMatch = jsonText.match(/\[[\s\S]*/);
+    if (partialMatch) {
+      const partial = partialMatch[0];
+      const lastComplete = partial.lastIndexOf('}');
+      if (lastComplete > 0) {
+        const salvaged = partial.substring(0, lastComplete + 1) + ']';
+        try {
+          const results = JSON.parse(salvaged);
+          console.log(`[OpusPass] Salvaged ${results.length} results from truncated response`);
+          return results;
+        } catch {
+          // Fall through to error
+        }
       }
     }
+
+    console.error('[OpusPass] Could not extract JSON from response:', text.substring(0, 200));
+    throw new Error('Opus response did not contain a valid JSON array');
   }
 
-  console.error('[OpusPass] Could not extract JSON from response:', text.substring(0, 200));
-  throw new Error('Opus response did not contain a valid JSON array');
+  // All retries exhausted
+  throw lastError;
 }
 
 // ============================================================================
@@ -243,12 +266,15 @@ async function callOpus(apiKey, prompt) {
  * @param {string} apiKey - Anthropic API key
  * @returns {Promise<{results: Array, uncertain: Array, skipped: number, error: string|null}>}
  */
-async function runOpusPass(uncategorized, categoryMapping, practiceProfile, apiKey) {
+async function runOpusPass(uncategorized, categoryMapping, practiceProfile, apiKey, correctionsBlock = '') {
   if (!apiKey) {
     return { results: [], uncertain: [], skipped: uncategorized.length, error: 'No API key available' };
   }
 
   console.log(`[OpusPass] Analyzing ${uncategorized.length} uncategorized transactions with ${MODELS.STRATEGIC} (group-level)`);
+  if (correctionsBlock) {
+    console.log(`[OpusPass] Including learned corrections in prompt`);
+  }
 
   const allResults = [];
   const allUncertain = [];
@@ -263,7 +289,7 @@ async function runOpusPass(uncategorized, categoryMapping, practiceProfile, apiK
     console.log(`[OpusPass] Batch ${batchNum}/${totalBatches}: ${batch.length} transactions`);
 
     try {
-      const prompt = buildOpusPrompt(batch, categoryMapping, practiceProfile);
+      const prompt = buildOpusPrompt(batch, categoryMapping, practiceProfile, correctionsBlock);
       const batchResults = await callOpus(apiKey, prompt);
 
       // Map results back to transactions

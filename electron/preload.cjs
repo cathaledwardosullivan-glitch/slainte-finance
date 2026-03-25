@@ -121,6 +121,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     runCategoryAssignment: (stagedIdOrApplied) => ipcRenderer.invoke('background:run-category-assignment', stagedIdOrApplied),
     getInboxPath: () => ipcRenderer.invoke('background:get-inbox-path'),
     openInbox: () => ipcRenderer.invoke('background:open-inbox'),
+    copyToInbox: (fileName, fileBuffer) => ipcRenderer.invoke('background:copy-to-inbox', fileName, fileBuffer),
     onResultsReady: (cb) => ipcRenderer.on('background:results-ready', (e, data) => cb(data)),
     onProcessingError: (cb) => ipcRenderer.on('background:processing-error', (e, data) => cb(data)),
     onProcessingProgress: (cb) => ipcRenderer.on('background:processing-progress', (e, data) => cb(data)),

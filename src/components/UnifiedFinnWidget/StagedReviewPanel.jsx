@@ -13,6 +13,8 @@ import COLORS from '../../utils/colors';
  *   Pass 2 (category mode): Assign categories within groups → P&L ready
  */
 
+const CLUSTER_PAGE_SIZE = 10;
+
 // Build ordered list of groups for the picker
 const GROUP_LIST = Object.entries(GROUPS)
   .filter(([key]) => key !== 'UNKNOWN') // Don't show UNKNOWN as an option
@@ -20,19 +22,20 @@ const GROUP_LIST = Object.entries(GROUPS)
   .map(([key, g]) => ({ code: key, name: g.name, type: g.type }));
 
 const StagedReviewPanel = () => {
-  const { transactions, setTransactions, categoryMapping, setCategoryMapping } = useAppContext();
+  const { transactions, setTransactions, categoryMapping, setCategoryMapping, recordAICorrection } = useAppContext();
 
   const [isOpen, setIsOpen] = useState(false);
   const [stagedData, setStagedData] = useState(null);
   const [stagedId, setStagedId] = useState(null);
-  const [appliedClusters, setAppliedClusters] = useState({}); // { clusterIndex: groupName/categoryName }
+  const [appliedClusters, setAppliedClusters] = useState({}); // { representativeId: groupName/categoryName }
   const [autoApplied, setAutoApplied] = useState(0);
   const [rescoring, setRescoring] = useState(false);
   const [expandedCluster, setExpandedCluster] = useState(null);
   const [totalApplied, setTotalApplied] = useState(0);
   const [changingCluster, setChangingCluster] = useState(null); // index of cluster showing picker
   const [searchText, setSearchText] = useState('');
-  const [applying, setApplying] = useState(null); // index of cluster currently being applied
+  const [applying, setApplying] = useState(null); // id of cluster currently being applied
+  const [batchNumber, setBatchNumber] = useState(1); // tracks which batch the user is on (display only)
   const searchInputRef = useRef(null);
 
   // Pass 2: Review mode — 'group' for Pass 1, 'category' for Pass 2
@@ -56,10 +59,14 @@ const StagedReviewPanel = () => {
   const applyCluster = useCallback(async (clusterIndex, target, cluster) => {
     if (!stagedData || !window.electronAPI?.backgroundProcessor) return;
 
-    setApplying(clusterIndex);
+    setApplying(cluster.representativeId);
     try {
       const members = findClusterMembers(cluster, stagedData, reviewMode);
-      if (members.length === 0) return;
+      if (members.length === 0) {
+        console.warn('[StagedReview] No members found for cluster:', cluster.representativeId, cluster.representativeDescription,
+          '| stagedCohort of representative:', stagedData.transactions?.find(t => t.id === cluster.representativeId)?.stagedCohort);
+        return;
+      }
 
       let overridden;
       let appliedLabel;
@@ -128,30 +135,53 @@ const StagedReviewPanel = () => {
         }
       }
 
-      // Update panel state
-      setAppliedClusters(prev => ({ ...prev, [clusterIndex]: appliedLabel }));
+      // Record AI correction if user changed the suggestion
+      const pattern = (cluster.representativeDescription || '').replace(/\d{2,}/g, '').replace(/\s+/g, ' ').trim().split(/\s{2,}/)[0].trim();
+      if (pattern.length >= 3) {
+        if (reviewMode === 'category' && cluster.suggestedCategoryCode && cluster.suggestedCategoryCode !== target.code) {
+          recordAICorrection(
+            'expense_categorization',
+            pattern,
+            { code: cluster.suggestedCategoryCode, name: cluster.suggestedCategory || cluster.suggestedCategoryCode },
+            { code: target.code, name: target.name },
+            { memberCount: members.length, source: 'staged_review_pass2' }
+          );
+        } else if (reviewMode === 'group' && cluster.suggestedGroup && cluster.suggestedGroup !== target.code) {
+          const suggestedGroupObj = GROUP_LIST.find(g => g.code === cluster.suggestedGroup);
+          recordAICorrection(
+            'group_assignment',
+            pattern,
+            { code: cluster.suggestedGroup, name: suggestedGroupObj?.name || cluster.suggestedGroup },
+            { code: target.code, name: target.name },
+            { memberCount: members.length, source: 'staged_review_pass1' }
+          );
+        }
+      }
+
+      // Update panel state — keyed by representativeId for stability across re-clustering
+      const clusterId = cluster.representativeId;
+      setAppliedClusters(prev => ({ ...prev, [clusterId]: appliedLabel }));
       setTotalApplied(prev => prev + members.length);
 
-      // Remove applied transactions from cached stagedData (both modes)
-      if (reviewMode === 'group') {
-        const txnIds = new Set(members.map(t => t.id));
-        setStagedData(prev => {
-          if (!prev) return prev;
-          return { ...prev, transactions: prev.transactions.filter(t => !txnIds.has(t.id)) };
-        });
-      } else {
-        // In category mode, mark as resolved rather than removing (transactions already applied)
-        const txnIds = new Set(members.map(t => t.id));
-        setStagedData(prev => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            transactions: prev.transactions.map(t =>
-              txnIds.has(t.id) ? { ...t, categoryCode: target.code, categoryName: target.name, categoryCohort: 'auto' } : t
-            ),
-          };
-        });
-      }
+      // Mark applied transactions in cached stagedData (don't remove — clusters still reference them)
+      const txnIds = new Set(members.map(t => t.id));
+      setStagedData(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          transactions: prev.transactions.map(t =>
+            txnIds.has(t.id) ? {
+              ...t,
+              suggestedGroup: reviewMode === 'group' ? target.code : t.suggestedGroup,
+              groupConfirmed: reviewMode === 'group' ? true : t.groupConfirmed,
+              categoryCode: reviewMode === 'category' ? target.code : t.categoryCode,
+              categoryName: reviewMode === 'category' ? target.name : t.categoryName,
+              categoryCohort: reviewMode === 'category' ? 'auto' : t.categoryCohort,
+              stagedCohort: 'applied',
+            } : t
+          ),
+        };
+      });
 
       // Notify FinnContext
       const eventName = reviewMode === 'category' ? 'staged-review:category-applied' : 'staged-review:applied';
@@ -169,28 +199,27 @@ const StagedReviewPanel = () => {
       setChangingCluster(null);
       setSearchText('');
     }
-  }, [stagedData, stagedId, reviewMode, setTransactions, setCategoryMapping, categoryMapping]);
+  }, [stagedData, stagedId, reviewMode, setTransactions, setCategoryMapping, categoryMapping, recordAICorrection]);
 
-  // Accept All — apply suggested groups/categories to all pending clusters
+  // Accept All — apply suggested groups/categories to pending items in current batch.
+  // Captures the batch snapshot at call time so mid-loop data changes don't break iteration.
   const acceptAll = useCallback(async () => {
     if (!stagedData) return;
-    const reviewClusters = stagedData.reviewClusters || [];
-    const multiClusters = reviewClusters.filter(c => c.memberCount > 1);
+    const batch = (stagedData.reviewClusters || []).slice(0, CLUSTER_PAGE_SIZE);
 
-    for (let i = 0; i < multiClusters.length; i++) {
-      if (appliedClusters[i] !== undefined) continue;
-      const cluster = multiClusters[i];
+    for (const cluster of batch) {
+      if (appliedClusters[cluster.representativeId] !== undefined) continue;
 
       if (reviewMode === 'category') {
         if (!cluster.suggestedCategoryCode) continue;
         const targetCat = categoriesByGroup[cluster.suggestedGroup]?.find(c => c.code === cluster.suggestedCategoryCode);
         if (!targetCat) continue;
-        await applyCluster(i, targetCat, cluster);
+        await applyCluster(0, targetCat, cluster);
       } else {
         if (!cluster.suggestedGroup) continue;
         const targetGroup = GROUP_LIST.find(g => g.code === cluster.suggestedGroup);
         if (!targetGroup) continue;
-        await applyCluster(i, targetGroup, cluster);
+        await applyCluster(0, targetGroup, cluster);
       }
     }
   }, [stagedData, appliedClusters, applyCluster, reviewMode, categoriesByGroup]);
@@ -208,30 +237,41 @@ const StagedReviewPanel = () => {
       setExpandedCluster(null);
       setChangingCluster(null);
       setSearchText('');
+      setBatchNumber(1);
       setReviewMode(mode || 'group');
       setIsOpen(true);
     };
 
     const handleApplied = (e) => {
-      const { appliedCount, clusterIndex, groupName, categoryName, isAuto } = e.detail;
+      const { appliedCount, clusterIndex, representativeId, groupName, categoryName, isAuto } = e.detail;
       if (isAuto) {
         setAutoApplied(appliedCount);
         setTotalApplied(prev => prev + appliedCount);
-      } else if (clusterIndex !== undefined) {
-        setAppliedClusters(prev => ({ ...prev, [clusterIndex]: categoryName || groupName || 'Applied' }));
-        setTotalApplied(prev => prev + (appliedCount || 0));
+      } else {
+        // Prefer representativeId, fall back to clusterIndex for legacy FinnContext events
+        const key = representativeId || clusterIndex;
+        if (key !== undefined) {
+          setAppliedClusters(prev => ({ ...prev, [key]: categoryName || groupName || 'Applied' }));
+          setTotalApplied(prev => prev + (appliedCount || 0));
+        }
       }
     };
 
     const handleRescoreStart = () => setRescoring(true);
 
     const handleRescoreDone = (e) => {
-      const { promoted, updatedClusters } = e.detail;
+      const { promoted, updatedClusters, nextBatch } = e.detail;
       setRescoring(false);
       if (promoted > 0) setTotalApplied(prev => prev + promoted);
       if (updatedClusters) {
         setStagedData(prev => prev ? { ...prev, reviewClusters: updatedClusters } : prev);
+        // Fresh batch — clear applied state so new items render as unapplied
         setAppliedClusters({});
+        setExpandedCluster(null);
+        setChangingCluster(null);
+        if (nextBatch) {
+          setBatchNumber(prev => prev + 1);
+        }
       }
     };
 
@@ -249,6 +289,7 @@ const StagedReviewPanel = () => {
       setExpandedCluster(null);
       setChangingCluster(null);
       setSearchText('');
+      setBatchNumber(1);
       setIsOpen(true);
     };
 
@@ -283,20 +324,28 @@ const StagedReviewPanel = () => {
   if (!isOpen || !stagedData) return null;
 
   const isCategory = reviewMode === 'category';
-  const totalTransactions = stagedData.summary?.totalTransactions || stagedData.transactions?.length || 0;
-  const reviewClusters = stagedData.reviewClusters || [];
-  const multiClusters = reviewClusters.filter(c => c.memberCount > 1);
-  const singletons = reviewClusters.filter(c => c.memberCount === 1);
-  const progressPercent = totalTransactions > 0 ? Math.round((totalApplied / totalTransactions) * 100) : 0;
 
-  const activeClusterIndex = multiClusters.findIndex((_, i) => !appliedClusters[i]);
-  const allClustersResolved = multiClusters.length === 0 || activeClusterIndex === -1;
+  // All review items — sorted by memberCount desc from the backend (multi-clusters first, singletons last)
+  const allReviewItems = stagedData.reviewClusters || [];
 
-  // Count pending clusters with suggestions
-  const pendingWithSuggestions = multiClusters.filter((c, i) => {
-    if (appliedClusters[i] !== undefined) return false;
+  // Current batch: always show first CLUSTER_PAGE_SIZE items from the list.
+  // After rescore between batches, the list is rebuilt with fewer items — we show the new first 10.
+  const currentBatch = allReviewItems.slice(0, CLUSTER_PAGE_SIZE);
+  const remainingAfterBatch = Math.max(0, allReviewItems.length - CLUSTER_PAGE_SIZE);
+
+  // Batch progress: how many in the current batch have been resolved
+  const resolvedInBatch = currentBatch.filter(c => appliedClusters[c.representativeId] !== undefined).length;
+  const batchResolved = currentBatch.length > 0 && resolvedInBatch === currentBatch.length;
+  const allDone = allReviewItems.length === 0 || (batchResolved && remainingAfterBatch === 0);
+
+  // Count pending items with suggestions in current batch
+  const pendingWithSuggestions = currentBatch.filter(c => {
+    if (appliedClusters[c.representativeId] !== undefined) return false;
     return isCategory ? !!c.suggestedCategoryCode : !!c.suggestedGroup;
   }).length;
+
+  // Active item — first unapplied in current batch
+  const activeClusterIndex = currentBatch.findIndex(c => !appliedClusters[c.representativeId]);
 
   return (
     <div
@@ -347,10 +396,17 @@ const StagedReviewPanel = () => {
         </button>
       </div>
 
-      {/* Source file + progress */}
+      {/* Batch progress */}
       <div style={{ padding: '0.75rem 1rem', borderBottom: `1px solid ${COLORS.borderLight}`, flexShrink: 0 }}>
-        <div style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginBottom: '0.375rem' }}>
-          {stagedData.sourceFile || (isCategory ? 'Category assignment' : '')}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.375rem' }}>
+          <span style={{ fontSize: '0.75rem', color: COLORS.textSecondary }}>
+            Batch {batchNumber} — {allReviewItems.length} {allReviewItems.length === 1 ? 'item' : 'items'} remaining
+          </span>
+          {rescoring && (
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.7rem', color: COLORS.slainteBlue }}>
+              <Loader2 size={12} style={{ animation: 'spin 1s linear infinite' }} /> Re-scoring
+            </span>
+          )}
         </div>
         <div style={{
           height: '6px', borderRadius: '3px', backgroundColor: COLORS.borderLight,
@@ -358,42 +414,26 @@ const StagedReviewPanel = () => {
         }}>
           <div style={{
             height: '100%', borderRadius: '3px',
-            backgroundColor: progressPercent === 100 ? COLORS.incomeColor : COLORS.slainteBlue,
-            width: `${progressPercent}%`,
+            backgroundColor: batchResolved ? COLORS.incomeColor : COLORS.slainteBlue,
+            width: `${currentBatch.length > 0 ? Math.round((resolvedInBatch / currentBatch.length) * 100) : 0}%`,
             transition: 'width 0.5s ease-out, background-color 0.3s',
           }} />
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: COLORS.textSecondary }}>
-          <span>{totalApplied} of {totalTransactions} {isCategory ? 'categorised' : 'grouped'}</span>
-          <span style={{ fontWeight: 600, color: progressPercent === 100 ? COLORS.incomeColor : COLORS.slainteBlue }}>
-            {progressPercent}%
-          </span>
+          <span>{resolvedInBatch} of {currentBatch.length} resolved</span>
+          {remainingAfterBatch > 0 && (
+            <span>{remainingAfterBatch} more after this batch</span>
+          )}
         </div>
       </div>
 
-      {/* Summary strip with Accept All */}
+      {/* Accept All button strip */}
       <div style={{
         padding: '0.5rem 1rem', borderBottom: `1px solid ${COLORS.borderLight}`,
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
         fontSize: '0.7rem', flexShrink: 0,
       }}>
-        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-          {autoApplied > 0 && (
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: COLORS.incomeColor }}>
-              <CheckCircle size={12} /> {autoApplied} auto
-            </span>
-          )}
-          {multiClusters.length > 0 && (
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: COLORS.textSecondary }}>
-              <ArrowRight size={12} /> {Object.keys(appliedClusters).length}/{multiClusters.length} clusters
-            </span>
-          )}
-          {rescoring && (
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: COLORS.slainteBlue }}>
-              <Loader2 size={12} style={{ animation: 'spin 1s linear infinite' }} /> Re-scoring
-            </span>
-          )}
-        </div>
+        <div />
         {pendingWithSuggestions > 1 && (
           <button
             onClick={acceptAll}
@@ -414,40 +454,49 @@ const StagedReviewPanel = () => {
 
       {/* Scrollable cluster list */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '0.5rem' }}>
-        {multiClusters.map((cluster, i) => {
-          const isApplied = appliedClusters[i] !== undefined;
+        {currentBatch.map((cluster, i) => {
+          const cId = cluster.representativeId;
+          const isApplied = appliedClusters[cId] !== undefined;
           const isActive = i === activeClusterIndex && !isApplied;
-          const isChanging = changingCluster === i;
-          const isApplying = applying === i;
+          const isChanging = changingCluster === cId;
+          const isApplying = applying === cId;
 
           return (
             <ClusterCard
-              key={`cluster-${i}`}
+              key={cId || `cluster-${i}`}
               cluster={cluster}
               index={i}
               isApplied={isApplied}
               isActive={isActive}
               isChanging={isChanging}
               isApplying={isApplying}
-              appliedLabel={appliedClusters[i]}
-              isExpanded={expandedCluster === i}
-              onToggleExpand={() => setExpandedCluster(expandedCluster === i ? null : i)}
+              appliedLabel={appliedClusters[cId]}
+              isExpanded={expandedCluster === cId}
+              onToggleExpand={() => setExpandedCluster(expandedCluster === cId ? null : cId)}
               onAccept={() => {
                 if (isCategory) {
                   const cats = categoriesByGroup[cluster.suggestedGroup] || [];
                   const cat = cats.find(c => c.code === cluster.suggestedCategoryCode);
-                  if (cat) applyCluster(i, cat, cluster);
+                  if (cat) {
+                    applyCluster(i, cat, cluster);
+                  } else {
+                    console.warn('[StagedReview] No category match for:', cluster.suggestedCategoryCode, 'in group', cluster.suggestedGroup);
+                  }
                 } else {
                   const group = GROUP_LIST.find(g => g.code === cluster.suggestedGroup);
-                  if (group) applyCluster(i, group, cluster);
+                  if (group) {
+                    applyCluster(i, group, cluster);
+                  } else {
+                    console.warn('[StagedReview] No group match for suggestedGroup:', cluster.suggestedGroup, '| cluster:', cluster.representativeDescription);
+                  }
                 }
               }}
-              onStartChange={() => { setChangingCluster(i); setSearchText(''); }}
+              onStartChange={() => { setChangingCluster(cId); setSearchText(''); }}
               onCancelChange={() => { setChangingCluster(null); setSearchText(''); }}
               onSelectItem={(item) => applyCluster(i, item, cluster)}
               searchText={searchText}
               onSearchChange={setSearchText}
-              searchInputRef={changingCluster === i ? searchInputRef : null}
+              searchInputRef={changingCluster === cId ? searchInputRef : null}
               stagedData={stagedData}
               reviewMode={reviewMode}
               categoriesByGroup={categoriesByGroup}
@@ -455,47 +504,77 @@ const StagedReviewPanel = () => {
           );
         })}
 
-        {/* Singletons — shown after all clusters resolved */}
-        {singletons.length > 0 && allClustersResolved && (
-          <div style={{ marginTop: '0.5rem' }}>
-            <div style={{
-              fontSize: '0.7rem', fontWeight: 600, color: COLORS.textSecondary,
-              padding: '0.25rem 0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em',
-            }}>
-              One-off transactions ({singletons.length})
-            </div>
-            {singletons.map((cluster, i) => {
-              const globalIndex = multiClusters.length + i;
-              const isApplied = appliedClusters[globalIndex] !== undefined;
-              return (
-                <div
-                  key={`singleton-${i}`}
-                  style={{
-                    padding: '0.5rem 0.75rem', borderRadius: '0.5rem', marginBottom: '0.25rem',
-                    fontSize: '0.75rem',
-                    backgroundColor: isApplied ? `${COLORS.incomeColor}08` : COLORS.bgPage,
-                    border: `1px solid ${isApplied ? `${COLORS.incomeColor}30` : COLORS.borderLight}`,
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  }}
-                >
-                  <span style={{
-                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                    flex: 1, marginRight: '0.5rem', color: COLORS.textPrimary,
-                  }}>
-                    {cluster.representativeDescription}
-                  </span>
-                  <span style={{
-                    fontWeight: 600, whiteSpace: 'nowrap',
-                    color: cluster.totalAmount >= 0 ? COLORS.incomeColor : COLORS.expenseColor,
-                    fontSize: '0.7rem',
-                  }}>
-                    {cluster.totalAmount >= 0 ? '+' : '-'}{Math.abs(cluster.totalAmount).toLocaleString()}
-                  </span>
-                </div>
-              );
-            })}
+        {/* Continue button — shown when all items in batch are resolved and more remain */}
+        {batchResolved && remainingAfterBatch > 0 && !rescoring && (
+          <button
+            onClick={async () => {
+              if (stagedId && window.electronAPI?.backgroundProcessor?.rescoreStaged) {
+                setRescoring(true);
+                try {
+                  const result = await window.electronAPI.backgroundProcessor.rescoreStaged(stagedId);
+                  window.dispatchEvent(new CustomEvent('staged-review:rescore-done', {
+                    detail: {
+                      stagedId,
+                      promoted: result?.promoted || 0,
+                      updatedClusters: result?.reviewClusters,
+                      nextBatch: true,
+                    }
+                  }));
+                } catch (err) {
+                  console.error('[StagedReviewPanel] Rescore failed:', err);
+                  setRescoring(false);
+                  // Still advance — clear applied and let user see remaining items
+                  setAppliedClusters({});
+                  setBatchNumber(prev => prev + 1);
+                }
+              } else {
+                setAppliedClusters({});
+                setBatchNumber(prev => prev + 1);
+              }
+            }}
+            style={{
+              width: '100%', padding: '0.75rem', marginTop: '0.5rem',
+              borderRadius: '0.5rem', border: `1px solid ${COLORS.slainteBlue}`,
+              backgroundColor: `${COLORS.slainteBlue}10`,
+              color: COLORS.slainteBlue, fontWeight: 600, fontSize: '0.8rem',
+              cursor: 'pointer', display: 'flex', alignItems: 'center',
+              justifyContent: 'center', gap: '0.5rem',
+            }}
+          >
+            Continue <ArrowRight size={14} />
+            <span style={{ fontSize: '0.7rem', fontWeight: 400, opacity: 0.7 }}>
+              ({remainingAfterBatch} items remaining)
+            </span>
+          </button>
+        )}
+
+        {/* Rescoring indicator */}
+        {rescoring && (
+          <div style={{
+            textAlign: 'center', padding: '1rem', fontSize: '0.75rem',
+            color: COLORS.slainteBlue, display: 'flex', alignItems: 'center',
+            justifyContent: 'center', gap: '0.5rem',
+          }}>
+            <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} />
+            Re-scoring with your corrections...
           </div>
         )}
+
+        {/* All done */}
+        {allDone && (
+          <div style={{
+            textAlign: 'center', padding: '2rem 1rem', fontSize: '0.85rem',
+            color: COLORS.incomeColor, display: 'flex', flexDirection: 'column',
+            alignItems: 'center', gap: '0.5rem',
+          }}>
+            <CheckCircle size={24} />
+            <span style={{ fontWeight: 600 }}>All done!</span>
+            <span style={{ fontSize: '0.75rem', color: COLORS.textSecondary }}>
+              All transactions have been {isCategory ? 'categorised' : 'grouped'}.
+            </span>
+          </div>
+        )}
+
       </div>
 
       <style>{`
@@ -630,7 +709,7 @@ const ClusterCard = ({
             fontSize: '0.7rem', color: COLORS.textSecondary,
             display: 'flex', gap: '0.75rem', marginTop: '0.125rem',
           }}>
-            <span>{cluster.memberCount} transactions</span>
+            <span>{cluster.memberCount} {cluster.memberCount === 1 ? 'transaction' : 'transactions'}</span>
             <span style={{
               fontWeight: 600,
               color: cluster.totalAmount >= 0 ? COLORS.incomeColor : COLORS.expenseColor,
@@ -846,10 +925,15 @@ function findClusterMembers(cluster, stagedData, reviewMode) {
   const repClean = (cluster.representativeDescription || '').toLowerCase().replace(/[0-9]/g, '').trim().substring(0, 8);
 
   return stagedData.transactions.filter(t => {
+    // Representative always matches — the backend's rescore chose it, trust it
     if (t.id === cluster.representativeId) return true;
+
+    // Skip already-applied transactions for non-representative members
+    if (t.stagedCohort === 'applied') return false;
+
     // In group mode, only review cohort; in category mode, match uncategorised transactions
     if (reviewMode === 'category') {
-      if (t.categoryCode && t.categoryCohort === 'auto') return false; // already categorised
+      if (t.categoryCode && t.categoryCohort === 'auto') return false;
     } else {
       if (t.stagedCohort !== 'review') return false;
     }

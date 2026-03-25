@@ -20,6 +20,7 @@ import PathSelection from './Onboarding/PathSelection';
 import WebsiteAnalysis from './Onboarding/WebsiteAnalysis';
 import StaffProfileForm from './Onboarding/StaffProfileForm';
 import OnboardingBankUpload from './Onboarding/OnboardingBankUpload';
+import OnboardingInboxUpload from './Onboarding/OnboardingInboxUpload';
 import OnboardingTransactionUpload from './Onboarding/OnboardingTransactionUpload';
 import GMSPanelUploadPrompt from './Onboarding/GMSPanelUploadPrompt';
 import QuickConnectSetup from './Onboarding/QuickConnectSetup';
@@ -244,6 +245,13 @@ export default function UnifiedOnboarding({ onComplete, onSkip }) {
     setCurrentStep(STEPS.PRACTICE_PROFILE);
   };
 
+  const handleInboxUploadComplete = (result) => {
+    console.log(`[UnifiedOnboarding] Files copied to inbox: ${result.filesCopied}`);
+    // Background processor picks up files automatically — no browser-side parsing needed
+    setUploadedFile(true);
+    setCurrentStep(STEPS.PRACTICE_PROFILE);
+  };
+
   const handleBankUploadSkip = () => {
     setCurrentStep(STEPS.PRACTICE_PROFILE);
   };
@@ -358,8 +366,9 @@ export default function UnifiedOnboarding({ onComplete, onSkip }) {
       updateProfile(completedProfile);
     }
 
-    // If we have raw transactions, start background categorization
-    if (rawParsedTransactions.length > 0) {
+    // If we have raw transactions (Path A / local-only), start browser-side categorization.
+    // Inbox path users skip this — the background processor handles everything automatically.
+    if (rawParsedTransactions.length > 0 && storage.isLocalOnlyMode()) {
       startBackgroundCategorization(rawParsedTransactions, generatedCategories);
     }
 
@@ -381,7 +390,10 @@ export default function UnifiedOnboarding({ onComplete, onSkip }) {
 
   // Helper: go to transaction processing if we have transactions, otherwise complete
   const goToTransactionProcessingOrComplete = () => {
-    if (rawParsedTransactions.length > 0) {
+    if (!storage.isLocalOnlyMode() && window.electronAPI?.backgroundProcessor) {
+      // Inbox path: skip wave processing — Finn handles review post-onboarding
+      handleFinalComplete();
+    } else if (rawParsedTransactions.length > 0) {
       setCurrentStep(STEPS.TRANSACTION_PROCESSING);
     } else {
       handleFinalComplete();
@@ -737,11 +749,17 @@ export default function UnifiedOnboarding({ onComplete, onSkip }) {
           )}
 
           {currentStep === STEPS.BANK_UPLOAD && (
-            <OnboardingBankUpload
-              onComplete={handleBankUploadComplete}
-              onSkip={handleBankUploadSkip}
-              onBack={() => setCurrentStep(isWebsiteAnalyzing || websiteAnalysisResult ? STEPS.WEBSITE_URL : STEPS.PATH_SELECTION)}
-            />
+            !storage.isLocalOnlyMode() && window.electronAPI?.backgroundProcessor
+              ? <OnboardingInboxUpload
+                  onComplete={handleInboxUploadComplete}
+                  onSkip={handleBankUploadSkip}
+                  onBack={() => setCurrentStep(isWebsiteAnalyzing || websiteAnalysisResult ? STEPS.WEBSITE_URL : STEPS.PATH_SELECTION)}
+                />
+              : <OnboardingBankUpload
+                  onComplete={handleBankUploadComplete}
+                  onSkip={handleBankUploadSkip}
+                  onBack={() => setCurrentStep(isWebsiteAnalyzing || websiteAnalysisResult ? STEPS.WEBSITE_URL : STEPS.PATH_SELECTION)}
+                />
           )}
 
           {currentStep === STEPS.PRACTICE_PROFILE && (

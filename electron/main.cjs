@@ -2459,6 +2459,18 @@ app.whenReady().then(() => {
     const { shell } = require('electron');
     shell.openPath(bgProcessor.getInboxPath());
   });
+  ipcMain.handle('background:copy-to-inbox', async (event, fileName, fileBuffer) => {
+    if (!bgProcessor) return { success: false, error: 'Background processor not available' };
+    const inboxPath = bgProcessor.getInboxPath();
+    const parsed = path.parse(fileName);
+    const safeName = fs.existsSync(path.join(inboxPath, fileName))
+      ? `${parsed.name}_${Date.now()}${parsed.ext}`
+      : fileName;
+    const destPath = path.join(inboxPath, safeName);
+    fs.writeFileSync(destPath, Buffer.from(fileBuffer));
+    console.log(`[BackgroundProcessor] File copied to inbox: ${safeName}`);
+    return { success: true, fileName: safeName };
+  });
 
   // Check for updates after a short delay (only in production)
   if (!isDev) {
