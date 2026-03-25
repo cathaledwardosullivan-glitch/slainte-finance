@@ -118,6 +118,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     dismissStaged: (id) => ipcRenderer.invoke('background:dismiss-staged', id),
     removeFromStaged: (id, txIds) => ipcRenderer.invoke('background:remove-from-staged', id, txIds),
     rescoreStaged: (id) => ipcRenderer.invoke('background:rescore-staged', id),
+    runCategoryAssignment: (stagedIdOrApplied) => ipcRenderer.invoke('background:run-category-assignment', stagedIdOrApplied),
     getInboxPath: () => ipcRenderer.invoke('background:get-inbox-path'),
     openInbox: () => ipcRenderer.invoke('background:open-inbox'),
     onResultsReady: (cb) => ipcRenderer.on('background:results-ready', (e, data) => cb(data)),

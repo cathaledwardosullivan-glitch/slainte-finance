@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { X, CheckCircle, Clock, Loader2, ChevronDown, ChevronRight, FileText, ArrowRight, Check, Pencil, Search, CheckCheck } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 import { GROUPS, SECTION_TO_GROUP } from '../../utils/categorizationEngine';
@@ -6,12 +6,11 @@ import COLORS from '../../utils/colors';
 
 /**
  * StagedReviewPanel — Floating side panel next to Finn during conversational
- * review of staged transactions. Pass 1 (group assignment): users accept/change
- * GROUP suggestions only — no mention of categories.
+ * review of staged transactions. Supports two modes:
  *
  * Two-pass architecture:
- *   Pass 1 (this panel): Confirm groups → dashboard ready
- *   Pass 2 (future):     Assign categories within groups → P&L ready
+ *   Pass 1 (group mode):    Confirm groups → dashboard ready
+ *   Pass 2 (category mode): Assign categories within groups → P&L ready
  */
 
 // Build ordered list of groups for the picker
@@ -21,63 +20,101 @@ const GROUP_LIST = Object.entries(GROUPS)
   .map(([key, g]) => ({ code: key, name: g.name, type: g.type }));
 
 const StagedReviewPanel = () => {
-  const { setTransactions, categoryMapping, setCategoryMapping } = useAppContext();
+  const { transactions, setTransactions, categoryMapping, setCategoryMapping } = useAppContext();
 
   const [isOpen, setIsOpen] = useState(false);
   const [stagedData, setStagedData] = useState(null);
   const [stagedId, setStagedId] = useState(null);
-  const [appliedClusters, setAppliedClusters] = useState({}); // { clusterIndex: groupName }
+  const [appliedClusters, setAppliedClusters] = useState({}); // { clusterIndex: groupName/categoryName }
   const [autoApplied, setAutoApplied] = useState(0);
   const [rescoring, setRescoring] = useState(false);
   const [expandedCluster, setExpandedCluster] = useState(null);
   const [totalApplied, setTotalApplied] = useState(0);
-  const [changingCluster, setChangingCluster] = useState(null); // index of cluster showing group picker
+  const [changingCluster, setChangingCluster] = useState(null); // index of cluster showing picker
   const [searchText, setSearchText] = useState('');
   const [applying, setApplying] = useState(null); // index of cluster currently being applied
   const searchInputRef = useRef(null);
 
-  // Apply a single cluster with the given GROUP
-  const applyCluster = useCallback(async (clusterIndex, targetGroup, cluster) => {
+  // Pass 2: Review mode — 'group' for Pass 1, 'category' for Pass 2
+  const [reviewMode, setReviewMode] = useState('group'); // 'group' | 'category'
+
+  // Build category list indexed by group for the Pass 2 picker
+  const categoriesByGroup = useMemo(() => {
+    const map = {};
+    for (const cat of categoryMapping) {
+      const group = SECTION_TO_GROUP[cat.section];
+      if (!group) continue;
+      if (!map[group]) map[group] = [];
+      if (!map[group].find(c => c.code === cat.code)) {
+        map[group].push({ code: cat.code, name: cat.name, section: cat.section, type: cat.type });
+      }
+    }
+    return map;
+  }, [categoryMapping]);
+
+  // Apply a single cluster with the given GROUP (Pass 1) or CATEGORY (Pass 2)
+  const applyCluster = useCallback(async (clusterIndex, target, cluster) => {
     if (!stagedData || !window.electronAPI?.backgroundProcessor) return;
 
     setApplying(clusterIndex);
     try {
-      // Find cluster member transactions
-      const members = findClusterMembers(cluster, stagedData);
+      const members = findClusterMembers(cluster, stagedData, reviewMode);
       if (members.length === 0) return;
 
-      // Assign group to each transaction — no category yet (Pass 1)
-      const overridden = members.map(t => ({
-        ...t,
-        suggestedGroup: targetGroup.code,
-        groupConfirmed: true,
-        categoryMatchType: 'finn-background',
-        stagedCohort: 'group-confirmed',
-      }));
+      let overridden;
+      let appliedLabel;
 
-      // Add to React state
-      setTransactions(prev => [...prev, ...overridden]);
+      if (reviewMode === 'category') {
+        // Pass 2: Assign CATEGORY (target is { code, name, section })
+        overridden = members.map(t => ({
+          ...t,
+          categoryCode: target.code,
+          categoryName: target.name,
+          categorySection: target.section,
+          categoryReviewed: true,
+          categoryCohort: 'auto',
+          categoryMatchType: 'user-review',
+        }));
+        appliedLabel = target.name;
 
-      // Clean up staging file
-      const txnIds = members.map(t => t.id);
-      await window.electronAPI.backgroundProcessor.removeFromStaged(stagedId, txnIds);
+        // Update transactions already in React state (Pass 2 operates on applied transactions)
+        setTransactions(prev => prev.map(t => {
+          const match = overridden.find(o => o.id === t.id);
+          return match || t;
+        }));
+      } else {
+        // Pass 1: Assign GROUP (target is { code, name, type })
+        overridden = members.map(t => ({
+          ...t,
+          suggestedGroup: target.code,
+          groupConfirmed: true,
+          categoryMatchType: 'finn-background',
+          stagedCohort: 'group-confirmed',
+        }));
+        appliedLabel = target.name;
 
-      // Add identifier for future learning (group-level)
+        // Add to React state
+        setTransactions(prev => [...prev, ...overridden]);
+
+        // Clean up staging file
+        const txnIds = members.map(t => t.id);
+        await window.electronAPI.backgroundProcessor.removeFromStaged(stagedId, txnIds);
+      }
+
+      // Add identifier for future learning
       const identifier = (cluster.representativeDescription || '').trim();
       if (identifier.length >= 3) {
         const cleanId = identifier.replace(/\d{2,}/g, '').replace(/\s+/g, ' ').trim().split(/\s{2,}/)[0].trim();
         if (cleanId.length >= 3) {
-          // Find any category in this group to attach the identifier to.
-          // This helps the deterministic engine in future runs — even though we're
-          // only confirming groups now, the identifier will match in Pass A.
-          const groupCategories = categoryMapping.filter(c => {
-            const catGroup = SECTION_TO_GROUP[c.section];
-            return catGroup === targetGroup.code;
-          });
-          // Pick the first category in the group — identifier learning is imprecise
-          // at group level but still valuable for future deterministic matching
-          if (groupCategories.length > 0) {
-            const targetCat = groupCategories[0];
+          let targetCat;
+          if (reviewMode === 'category') {
+            targetCat = categoryMapping.find(c => c.code === target.code);
+          } else {
+            // Group mode — attach to first category in group
+            const groupCategories = categoryMapping.filter(c => SECTION_TO_GROUP[c.section] === target.code);
+            targetCat = groupCategories[0];
+          }
+          if (targetCat) {
             const existingIds = (targetCat.identifiers || []).map(id => id.toLowerCase());
             if (!existingIds.includes(cleanId.toLowerCase())) {
               setCategoryMapping(prev => prev.map(cat => {
@@ -92,50 +129,76 @@ const StagedReviewPanel = () => {
       }
 
       // Update panel state
-      setAppliedClusters(prev => ({ ...prev, [clusterIndex]: targetGroup.name }));
+      setAppliedClusters(prev => ({ ...prev, [clusterIndex]: appliedLabel }));
       setTotalApplied(prev => prev + members.length);
 
-      // Remove applied transactions from cached stagedData
-      setStagedData(prev => {
-        if (!prev) return prev;
-        const appliedSet = new Set(txnIds);
-        return {
-          ...prev,
-          transactions: prev.transactions.filter(t => !appliedSet.has(t.id)),
-        };
-      });
+      // Remove applied transactions from cached stagedData (both modes)
+      if (reviewMode === 'group') {
+        const txnIds = new Set(members.map(t => t.id));
+        setStagedData(prev => {
+          if (!prev) return prev;
+          return { ...prev, transactions: prev.transactions.filter(t => !txnIds.has(t.id)) };
+        });
+      } else {
+        // In category mode, mark as resolved rather than removing (transactions already applied)
+        const txnIds = new Set(members.map(t => t.id));
+        setStagedData(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            transactions: prev.transactions.map(t =>
+              txnIds.has(t.id) ? { ...t, categoryCode: target.code, categoryName: target.name, categoryCohort: 'auto' } : t
+            ),
+          };
+        });
+      }
 
-      // Notify FinnContext (for staged results cache sync)
-      window.dispatchEvent(new CustomEvent('staged-review:applied', {
-        detail: { stagedId, appliedCount: members.length, clusterIndex, groupName: targetGroup.name, isAuto: false }
+      // Notify FinnContext
+      const eventName = reviewMode === 'category' ? 'staged-review:category-applied' : 'staged-review:applied';
+      window.dispatchEvent(new CustomEvent(eventName, {
+        detail: {
+          stagedId, appliedCount: members.length, clusterIndex,
+          groupName: reviewMode === 'group' ? appliedLabel : undefined,
+          categoryName: reviewMode === 'category' ? appliedLabel : undefined,
+          categoryCode: reviewMode === 'category' ? target.code : undefined,
+          isAuto: false,
+        }
       }));
     } finally {
       setApplying(null);
       setChangingCluster(null);
       setSearchText('');
     }
-  }, [stagedData, stagedId, setTransactions, setCategoryMapping, categoryMapping]);
+  }, [stagedData, stagedId, reviewMode, setTransactions, setCategoryMapping, categoryMapping]);
 
-  // Accept All — apply suggested groups to all pending clusters that have suggestions
+  // Accept All — apply suggested groups/categories to all pending clusters
   const acceptAll = useCallback(async () => {
     if (!stagedData) return;
     const reviewClusters = stagedData.reviewClusters || [];
     const multiClusters = reviewClusters.filter(c => c.memberCount > 1);
 
     for (let i = 0; i < multiClusters.length; i++) {
-      if (appliedClusters[i] !== undefined) continue; // already applied
+      if (appliedClusters[i] !== undefined) continue;
       const cluster = multiClusters[i];
-      if (!cluster.suggestedGroup) continue; // no group suggestion
-      const targetGroup = GROUP_LIST.find(g => g.code === cluster.suggestedGroup);
-      if (!targetGroup) continue;
-      await applyCluster(i, targetGroup, cluster);
+
+      if (reviewMode === 'category') {
+        if (!cluster.suggestedCategoryCode) continue;
+        const targetCat = categoriesByGroup[cluster.suggestedGroup]?.find(c => c.code === cluster.suggestedCategoryCode);
+        if (!targetCat) continue;
+        await applyCluster(i, targetCat, cluster);
+      } else {
+        if (!cluster.suggestedGroup) continue;
+        const targetGroup = GROUP_LIST.find(g => g.code === cluster.suggestedGroup);
+        if (!targetGroup) continue;
+        await applyCluster(i, targetGroup, cluster);
+      }
     }
-  }, [stagedData, appliedClusters, applyCluster]);
+  }, [stagedData, appliedClusters, applyCluster, reviewMode, categoriesByGroup]);
 
   // Event listeners
   useEffect(() => {
     const handleOpen = (e) => {
-      const { stagedData: data } = e.detail;
+      const { stagedData: data, mode } = e.detail;
       setStagedData(data);
       setStagedId(data.id);
       setAppliedClusters({});
@@ -145,16 +208,17 @@ const StagedReviewPanel = () => {
       setExpandedCluster(null);
       setChangingCluster(null);
       setSearchText('');
+      setReviewMode(mode || 'group');
       setIsOpen(true);
     };
 
     const handleApplied = (e) => {
-      const { appliedCount, clusterIndex, groupName, isAuto } = e.detail;
+      const { appliedCount, clusterIndex, groupName, categoryName, isAuto } = e.detail;
       if (isAuto) {
         setAutoApplied(appliedCount);
         setTotalApplied(prev => prev + appliedCount);
       } else if (clusterIndex !== undefined) {
-        setAppliedClusters(prev => ({ ...prev, [clusterIndex]: groupName || 'Grouped' }));
+        setAppliedClusters(prev => ({ ...prev, [clusterIndex]: categoryName || groupName || 'Applied' }));
         setTotalApplied(prev => prev + (appliedCount || 0));
       }
     };
@@ -171,24 +235,45 @@ const StagedReviewPanel = () => {
       }
     };
 
+    // Pass 2 mode switch — opens panel in category mode with Pass 2 review clusters
+    const handlePass2 = (e) => {
+      const { stagedData: data, reviewClusters } = e.detail;
+      if (data) {
+        setStagedData({ ...data, reviewClusters: reviewClusters || data.reviewClusters });
+        setStagedId(data.id || 'applied');
+      }
+      setReviewMode('category');
+      setAppliedClusters({});
+      setAutoApplied(e.detail.autoApplied || 0);
+      setTotalApplied(e.detail.autoApplied || 0);
+      setExpandedCluster(null);
+      setChangingCluster(null);
+      setSearchText('');
+      setIsOpen(true);
+    };
+
     const handleClose = () => setIsOpen(false);
 
     window.addEventListener('staged-review:open', handleOpen);
     window.addEventListener('staged-review:applied', handleApplied);
+    window.addEventListener('staged-review:category-applied', handleApplied);
     window.addEventListener('staged-review:rescore-start', handleRescoreStart);
     window.addEventListener('staged-review:rescore-done', handleRescoreDone);
+    window.addEventListener('staged-review:pass2', handlePass2);
     window.addEventListener('staged-review:close', handleClose);
 
     return () => {
       window.removeEventListener('staged-review:open', handleOpen);
       window.removeEventListener('staged-review:applied', handleApplied);
+      window.removeEventListener('staged-review:category-applied', handleApplied);
       window.removeEventListener('staged-review:rescore-start', handleRescoreStart);
       window.removeEventListener('staged-review:rescore-done', handleRescoreDone);
+      window.removeEventListener('staged-review:pass2', handlePass2);
       window.removeEventListener('staged-review:close', handleClose);
     };
   }, []);
 
-  // Focus search input when group picker opens
+  // Focus search input when picker opens
   useEffect(() => {
     if (changingCluster !== null && searchInputRef.current) {
       searchInputRef.current.focus();
@@ -197,7 +282,8 @@ const StagedReviewPanel = () => {
 
   if (!isOpen || !stagedData) return null;
 
-  const totalTransactions = stagedData.summary?.totalTransactions || 0;
+  const isCategory = reviewMode === 'category';
+  const totalTransactions = stagedData.summary?.totalTransactions || stagedData.transactions?.length || 0;
   const reviewClusters = stagedData.reviewClusters || [];
   const multiClusters = reviewClusters.filter(c => c.memberCount > 1);
   const singletons = reviewClusters.filter(c => c.memberCount === 1);
@@ -206,10 +292,11 @@ const StagedReviewPanel = () => {
   const activeClusterIndex = multiClusters.findIndex((_, i) => !appliedClusters[i]);
   const allClustersResolved = multiClusters.length === 0 || activeClusterIndex === -1;
 
-  // Count how many pending clusters have group suggestions (for Accept All button)
-  const pendingWithSuggestions = multiClusters.filter((c, i) =>
-    appliedClusters[i] === undefined && c.suggestedGroup
-  ).length;
+  // Count pending clusters with suggestions
+  const pendingWithSuggestions = multiClusters.filter((c, i) => {
+    if (appliedClusters[i] !== undefined) return false;
+    return isCategory ? !!c.suggestedCategoryCode : !!c.suggestedGroup;
+  }).length;
 
   return (
     <div
@@ -233,7 +320,7 @@ const StagedReviewPanel = () => {
       {/* Header */}
       <div
         style={{
-          backgroundColor: COLORS.textPrimary,
+          backgroundColor: isCategory ? COLORS.slainteBlue : COLORS.textPrimary,
           color: COLORS.white,
           padding: '0.75rem 1rem',
           display: 'flex',
@@ -244,7 +331,9 @@ const StagedReviewPanel = () => {
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <FileText size={16} />
-          <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>Group Assignment</span>
+          <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>
+            {isCategory ? 'Category Assignment' : 'Group Assignment'}
+          </span>
         </div>
         <button
           onClick={() => setIsOpen(false)}
@@ -261,7 +350,7 @@ const StagedReviewPanel = () => {
       {/* Source file + progress */}
       <div style={{ padding: '0.75rem 1rem', borderBottom: `1px solid ${COLORS.borderLight}`, flexShrink: 0 }}>
         <div style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginBottom: '0.375rem' }}>
-          {stagedData.sourceFile}
+          {stagedData.sourceFile || (isCategory ? 'Category assignment' : '')}
         </div>
         <div style={{
           height: '6px', borderRadius: '3px', backgroundColor: COLORS.borderLight,
@@ -275,7 +364,7 @@ const StagedReviewPanel = () => {
           }} />
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: COLORS.textSecondary }}>
-          <span>{totalApplied} of {totalTransactions} grouped</span>
+          <span>{totalApplied} of {totalTransactions} {isCategory ? 'categorised' : 'grouped'}</span>
           <span style={{ fontWeight: 600, color: progressPercent === 100 ? COLORS.incomeColor : COLORS.slainteBlue }}>
             {progressPercent}%
           </span>
@@ -318,7 +407,7 @@ const StagedReviewPanel = () => {
               cursor: 'pointer',
             }}
           >
-            <CheckCheck size={12} /> Accept All Groups
+            <CheckCheck size={12} /> Accept All {isCategory ? 'Categories' : 'Groups'}
           </button>
         )}
       </div>
@@ -340,20 +429,28 @@ const StagedReviewPanel = () => {
               isActive={isActive}
               isChanging={isChanging}
               isApplying={isApplying}
-              appliedGroup={appliedClusters[i]}
+              appliedLabel={appliedClusters[i]}
               isExpanded={expandedCluster === i}
               onToggleExpand={() => setExpandedCluster(expandedCluster === i ? null : i)}
               onAccept={() => {
-                const group = GROUP_LIST.find(g => g.code === cluster.suggestedGroup);
-                if (group) applyCluster(i, group, cluster);
+                if (isCategory) {
+                  const cats = categoriesByGroup[cluster.suggestedGroup] || [];
+                  const cat = cats.find(c => c.code === cluster.suggestedCategoryCode);
+                  if (cat) applyCluster(i, cat, cluster);
+                } else {
+                  const group = GROUP_LIST.find(g => g.code === cluster.suggestedGroup);
+                  if (group) applyCluster(i, group, cluster);
+                }
               }}
               onStartChange={() => { setChangingCluster(i); setSearchText(''); }}
               onCancelChange={() => { setChangingCluster(null); setSearchText(''); }}
-              onSelectGroup={(group) => applyCluster(i, group, cluster)}
+              onSelectItem={(item) => applyCluster(i, item, cluster)}
               searchText={searchText}
               onSearchChange={setSearchText}
               searchInputRef={changingCluster === i ? searchInputRef : null}
               stagedData={stagedData}
+              reviewMode={reviewMode}
+              categoriesByGroup={categoriesByGroup}
             />
           );
         })}
@@ -392,7 +489,7 @@ const StagedReviewPanel = () => {
                     color: cluster.totalAmount >= 0 ? COLORS.incomeColor : COLORS.expenseColor,
                     fontSize: '0.7rem',
                   }}>
-                    {cluster.totalAmount >= 0 ? '+' : '-'}€{Math.abs(cluster.totalAmount).toLocaleString()}
+                    {cluster.totalAmount >= 0 ? '+' : '-'}{Math.abs(cluster.totalAmount).toLocaleString()}
                   </span>
                 </div>
               );
@@ -420,17 +517,32 @@ const StagedReviewPanel = () => {
 };
 
 /**
- * ClusterCard — A review cluster with Accept/Change GROUP buttons and inline group picker
+ * ClusterCard — A review cluster with Accept/Change buttons.
+ * In group mode: group picker (10 options).
+ * In category mode: category picker filtered by the cluster's group (6-10 options).
  */
 const ClusterCard = ({
   cluster, index, isApplied, isActive, isChanging, isApplying,
-  appliedGroup, isExpanded, onToggleExpand,
-  onAccept, onStartChange, onCancelChange, onSelectGroup,
+  appliedLabel, isExpanded, onToggleExpand,
+  onAccept, onStartChange, onCancelChange, onSelectItem,
   searchText, onSearchChange, searchInputRef,
-  stagedData
+  stagedData, reviewMode, categoriesByGroup,
 }) => {
-  const hasSuggestion = !!cluster.suggestedGroup;
-  const suggestedGroup = hasSuggestion ? GROUP_LIST.find(g => g.code === cluster.suggestedGroup) : null;
+  const isCategory = reviewMode === 'category';
+
+  // Determine suggestion
+  const hasSuggestion = isCategory
+    ? !!cluster.suggestedCategoryCode
+    : !!cluster.suggestedGroup;
+
+  const suggestionLabel = isCategory
+    ? cluster.suggestedCategory || cluster.suggestedCategoryCode
+    : (GROUP_LIST.find(g => g.code === cluster.suggestedGroup)?.name || null);
+
+  // Group context label for category mode
+  const groupLabel = cluster.suggestedGroup
+    ? (GROUPS[cluster.suggestedGroup]?.name || cluster.suggestedGroup)
+    : null;
 
   const bgColor = isApplied
     ? `${COLORS.incomeColor}08`
@@ -440,15 +552,33 @@ const ClusterCard = ({
     ? `${COLORS.incomeColor}40`
     : isActive ? COLORS.slainteBlue : COLORS.borderLight;
 
-  const memberTransactions = isExpanded ? findClusterMembers(cluster, stagedData) : [];
+  const memberTransactions = isExpanded ? findClusterMembers(cluster, stagedData, reviewMode) : [];
 
-  // Filtered groups for the picker
-  const filteredGroups = searchText.length >= 1
-    ? GROUP_LIST.filter(g =>
-        g.name.toLowerCase().includes(searchText.toLowerCase()) ||
-        g.code.toLowerCase().includes(searchText.toLowerCase())
-      )
-    : GROUP_LIST;
+  // Build picker items based on mode
+  const pickerItems = useMemo(() => {
+    if (isCategory) {
+      // Categories within this cluster's group
+      const cats = categoriesByGroup[cluster.suggestedGroup] || [];
+      if (searchText.length >= 1) {
+        const lower = searchText.toLowerCase();
+        return cats.filter(c =>
+          c.name.toLowerCase().includes(lower) ||
+          c.code.toLowerCase().includes(lower)
+        );
+      }
+      return cats;
+    } else {
+      // Groups
+      if (searchText.length >= 1) {
+        const lower = searchText.toLowerCase();
+        return GROUP_LIST.filter(g =>
+          g.name.toLowerCase().includes(lower) ||
+          g.code.toLowerCase().includes(lower)
+        );
+      }
+      return GROUP_LIST;
+    }
+  }, [isCategory, categoriesByGroup, cluster.suggestedGroup, searchText]);
 
   return (
     <div
@@ -505,24 +635,30 @@ const ClusterCard = ({
               fontWeight: 600,
               color: cluster.totalAmount >= 0 ? COLORS.incomeColor : COLORS.expenseColor,
             }}>
-              {cluster.totalAmount >= 0 ? '+' : '-'}€{Math.abs(cluster.totalAmount).toLocaleString()}
+              {cluster.totalAmount >= 0 ? '+' : '-'}{Math.abs(cluster.totalAmount).toLocaleString()}
             </span>
           </div>
-          {/* Opus reasoning hint */}
-          {!isApplied && cluster.opusReasoning && (
+          {/* Group context in category mode */}
+          {isCategory && groupLabel && !isApplied && (
+            <div style={{ fontSize: '0.65rem', color: COLORS.slainteBlue, marginTop: '0.125rem' }}>
+              Group: {groupLabel}
+            </div>
+          )}
+          {/* AI reasoning hint */}
+          {!isApplied && (cluster.opusReasoning || cluster.categoryReasoning) && (
             <div style={{ fontSize: '0.65rem', color: COLORS.textSecondary, marginTop: '0.125rem', fontStyle: 'italic' }}>
-              {cluster.opusReasoning}
+              {cluster.categoryReasoning || cluster.opusReasoning}
             </div>
           )}
           {isApplied && (
             <div style={{ fontSize: '0.7rem', color: COLORS.incomeColor, fontWeight: 500, marginTop: '0.125rem' }}>
-              → {appliedGroup}
+              {appliedLabel}
             </div>
           )}
           {/* Suggestion + buttons (when not applied and not changing) */}
           {!isApplied && !isChanging && (
             <div style={{ marginTop: '0.375rem', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-              {hasSuggestion && suggestedGroup ? (
+              {hasSuggestion && suggestionLabel ? (
                 <>
                   <button
                     onClick={(e) => { e.stopPropagation(); onAccept(); }}
@@ -535,9 +671,10 @@ const ClusterCard = ({
                       color: COLORS.white,
                       fontSize: '0.65rem', fontWeight: 600,
                       cursor: 'pointer',
+                      maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                     }}
                   >
-                    <Check size={10} /> {suggestedGroup.name}
+                    <Check size={10} /> {suggestionLabel}
                   </button>
                   <button
                     onClick={(e) => { e.stopPropagation(); onStartChange(); }}
@@ -567,7 +704,7 @@ const ClusterCard = ({
                     cursor: 'pointer',
                   }}
                 >
-                  <Search size={10} /> Assign Group
+                  <Search size={10} /> {isCategory ? 'Assign Category' : 'Assign Group'}
                 </button>
               )}
             </div>
@@ -582,7 +719,7 @@ const ClusterCard = ({
         )}
       </div>
 
-      {/* Inline group picker */}
+      {/* Inline picker (group or category) */}
       {isChanging && (
         <div style={{
           borderTop: `1px solid ${COLORS.borderLight}`,
@@ -596,7 +733,7 @@ const ClusterCard = ({
               type="text"
               value={searchText}
               onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Search groups..."
+              placeholder={isCategory ? 'Search categories...' : 'Search groups...'}
               style={{
                 flex: 1, border: `1px solid ${COLORS.borderLight}`, borderRadius: '0.375rem',
                 padding: '0.3rem 0.5rem', fontSize: '0.75rem', outline: 'none',
@@ -616,10 +753,10 @@ const ClusterCard = ({
             </button>
           </div>
           <div style={{ maxHeight: '12rem', overflowY: 'auto' }}>
-            {filteredGroups.map(group => (
+            {pickerItems.map(item => (
               <button
-                key={group.code}
-                onClick={() => onSelectGroup(group)}
+                key={item.code}
+                onClick={() => onSelectItem(item)}
                 style={{
                   display: 'flex', width: '100%', textAlign: 'left',
                   padding: '0.375rem 0.5rem', borderRadius: '0.25rem',
@@ -633,19 +770,21 @@ const ClusterCard = ({
               >
                 <span style={{
                   width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0,
-                  backgroundColor: group.type === 'income' ? COLORS.incomeColor
-                    : group.type === 'non-business' ? COLORS.textSecondary
+                  backgroundColor: (item.type === 'income') ? COLORS.incomeColor
+                    : (item.type === 'non-business') ? COLORS.textSecondary
                     : COLORS.expenseColor,
                 }} />
-                <span style={{ fontWeight: 500 }}>{group.name}</span>
-                <span style={{ color: COLORS.textSecondary, fontSize: '0.6rem', marginLeft: 'auto' }}>
-                  {group.code}
+                <span style={{ fontWeight: 500, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {item.name}
+                </span>
+                <span style={{ color: COLORS.textSecondary, fontSize: '0.6rem', flexShrink: 0 }}>
+                  {item.code}
                 </span>
               </button>
             ))}
-            {filteredGroups.length === 0 && (
+            {pickerItems.length === 0 && (
               <div style={{ padding: '0.5rem', fontSize: '0.7rem', color: COLORS.textSecondary, textAlign: 'center' }}>
-                No matching groups
+                No matching {isCategory ? 'categories' : 'groups'}
               </div>
             )}
           </div>
@@ -683,7 +822,7 @@ const ClusterCard = ({
                 fontWeight: 600, whiteSpace: 'nowrap',
                 color: (txn.credit || txn.isIncome) ? COLORS.incomeColor : COLORS.expenseColor,
               }}>
-                {(txn.credit || txn.isIncome) ? '+' : '-'}€{Math.abs(txn.amount || txn.debit || txn.credit || 0).toLocaleString()}
+                {(txn.credit || txn.isIncome) ? '+' : '-'}{Math.abs(txn.amount || txn.debit || txn.credit || 0).toLocaleString()}
               </span>
             </div>
           ))}
@@ -698,14 +837,22 @@ const ClusterCard = ({
   );
 };
 
-/** Find transactions belonging to a cluster by matching representative description. */
-function findClusterMembers(cluster, stagedData) {
+/**
+ * Find transactions belonging to a cluster by matching representative description.
+ * In category mode, matches against all transactions (not just stagedCohort === 'review').
+ */
+function findClusterMembers(cluster, stagedData, reviewMode) {
   if (!stagedData?.transactions) return [];
   const repClean = (cluster.representativeDescription || '').toLowerCase().replace(/[0-9]/g, '').trim().substring(0, 8);
 
   return stagedData.transactions.filter(t => {
     if (t.id === cluster.representativeId) return true;
-    if (t.stagedCohort !== 'review') return false;
+    // In group mode, only review cohort; in category mode, match uncategorised transactions
+    if (reviewMode === 'category') {
+      if (t.categoryCode && t.categoryCohort === 'auto') return false; // already categorised
+    } else {
+      if (t.stagedCohort !== 'review') return false;
+    }
     const txnClean = (t.details || '').toLowerCase().replace(/[0-9]/g, '').trim().substring(0, 8);
     return repClean.length >= 4 && repClean === txnClean;
   });

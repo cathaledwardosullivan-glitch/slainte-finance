@@ -126,7 +126,7 @@ for (let i = 0; i < 45; i++) {
     date: `2026-02-${String(1 + (i % 28)).padStart(2, '0')}`,
     details: `BOIPA CARD PMT ${200 + i}`,
     credit: 60 + Math.floor(Math.random() * 40),
-    categoryCode: '1.1', categoryName: 'Private Patient Consultations',
+    categoryCode: '1.1', categoryName: 'Patient Fees',
     confidence: 0.96, pass: 'identifier', cohort: 'auto'
   }));
 }
@@ -272,7 +272,7 @@ const reviewClusters = [
   {
     representativeId: reviewTransactions[20].id,
     representativeDescription: 'VHI GROUP DAC PMT 5000',
-    suggestedCategory: 'Private Patient Consultations',
+    suggestedCategory: 'Patient Fees',
     suggestedCategoryCode: '1.1',
     suggestedConfidence: 0.65,
     memberCount: 6,

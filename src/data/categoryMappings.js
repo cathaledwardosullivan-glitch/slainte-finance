@@ -22,7 +22,7 @@ export const CATEGORY_MAPPING = [
   },
   {
     "code": "1.1",
-    "name": "Private Patient Consultations",
+    "name": "Patient Fees",
     "identifiers": [
       "BOIPA",
       "LATM",

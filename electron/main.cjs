@@ -2446,6 +2446,10 @@ app.whenReady().then(() => {
     if (!bgProcessor) return { success: false, error: 'Background processor not available' };
     return bgProcessor.rescoreStaged(stagedId);
   });
+  ipcMain.handle('background:run-category-assignment', async (event, stagedId) => {
+    if (!bgProcessor) return { success: false, error: 'Background processor not available' };
+    return bgProcessor.runCategoryAssignment(stagedId);
+  });
   ipcMain.handle('background:get-inbox-path', async () => {
     if (!bgProcessor) return null;
     return bgProcessor.getInboxPath();

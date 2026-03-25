@@ -109,13 +109,13 @@ const FINN_TOOLS = [
         },
         stagedReviewData: {
           type: 'object',
-          description: 'Only used when target is "staged:review". Controls the conversational review of background-processed bank statements. Two-pass system: Pass 1 assigns GROUPS (10 options like Staff Costs, Premises, Income), Pass 2 assigns specific categories within groups (future). Use "review" to fetch staged data. Use "apply-auto" to bulk-apply all auto-grouped and AI-grouped transactions. Use "apply-cluster" with groupCode to assign a group to a cluster (Pass 1). Use "rescore" after applying clusters to cascade answers. Use "apply-remaining" to finish.',
+          description: 'Only used when target is "staged:review". Controls the conversational review of background-processed bank statements. Two-pass system: Pass 1 assigns GROUPS (10 options like Staff Costs, Premises, Income), Pass 2 assigns specific CATEGORIES within confirmed groups (6-10 options per group). Use "review" to fetch staged data. Use "apply-auto" to bulk-apply all auto-grouped and AI-grouped transactions. Use "apply-cluster" with groupCode to assign a group (Pass 1) or categoryCode to assign a category (Pass 2). Use "categorise" to trigger Pass 2 category assignment on grouped-but-uncategorised transactions — this runs AI analysis and opens the category review panel. Use "rescore" after applying clusters to cascade answers. Use "apply-remaining" to finish.',
           properties: {
-            stagedId: { type: 'string', description: 'The staged result ID to review (from staged_results lookup)' },
+            stagedId: { type: 'string', description: 'The staged result ID to review (from staged_results lookup), or "applied" to run category assignment on already-imported transactions' },
             action: {
               type: 'string',
-              enum: ['review', 'apply-auto', 'apply-cluster', 'rescore', 'apply-remaining'],
-              description: 'The review action to perform. Start with "review", then "apply-auto" for the high-confidence batch, then "apply-cluster" with groupCode for each cluster the user assigns, "rescore" between rounds to cascade, and "apply-remaining" to finish.'
+              enum: ['review', 'apply-auto', 'apply-cluster', 'categorise', 'rescore', 'apply-remaining'],
+              description: 'The review action to perform. Pass 1 flow: "review" → "apply-auto" → "apply-cluster" with groupCode → "rescore" → "apply-remaining". Pass 2 flow: "categorise" (triggers AI category assignment) → then "apply-cluster" with categoryCode for items needing review. Use "categorise" when the user wants detailed categories assigned (e.g. for P&L reports).'
             },
             clusterIndex: { type: 'number', description: 'For apply-cluster: the 0-based index of the cluster to apply (from the reviewClusters array)' },
             groupCode: { type: 'string', description: 'For apply-cluster (Pass 1): the group code to assign (INCOME, STAFF, PREMISES, MEDICAL, OFFICE, PROFESSIONAL, MOTOR, OTHER, NON_BUSINESS)' },
@@ -1190,6 +1190,19 @@ export const FinnProvider = ({ children }) => {
           });
         }
 
+        // 8. Grouped-but-uncategorised transactions (Pass 2 candidates)
+        const groupedNoCat = transactions.filter(t =>
+          t.suggestedGroup && t.groupConfirmed && !t.categoryCode
+        ).length;
+        if (groupedNoCat > 0) {
+          statusItems.push({
+            type: 'needs_category_assignment',
+            severity: 'low',
+            message: `${groupedNoCat} transactions have groups but no detailed categories. Use "categorise" action to assign categories for P&L reports.`,
+            data: { count: groupedNoCat }
+          });
+        }
+
         const totalActive = activeFinancial.length + (getOverdueActions().length > 0 ? overdueGMS.length : 0);
         return {
           statusItems,
@@ -1694,7 +1707,7 @@ export const FinnProvider = ({ children }) => {
 
           if (action === 'apply-cluster') {
             // Apply all members of a specific cluster with the user's chosen GROUP (Pass 1)
-            // or CATEGORY (Pass 2, future). Currently Pass 1 only.
+            // or CATEGORY (Pass 2).
             const { clusterIndex, groupCode, categoryCode, categoryName } = data;
 
             if (clusterIndex === undefined || clusterIndex === null) {
@@ -1946,7 +1959,73 @@ export const FinnProvider = ({ children }) => {
             };
           }
 
-          return { success: false, error: `Unknown staged review action: "${action}". Valid actions: review, apply-auto, apply-cluster, rescore, apply-remaining.` };
+          if (action === 'categorise') {
+            // Pass 2: Trigger category assignment on grouped-but-uncategorised transactions.
+            // Can run on a staged file or on already-applied transactions ('applied').
+            const targetId = stagedId || 'applied';
+
+            if (!window.electronAPI?.backgroundProcessor?.runCategoryAssignment) {
+              return { success: false, error: 'Category assignment not available in this version.' };
+            }
+
+            try {
+              const result = await window.electronAPI.backgroundProcessor.runCategoryAssignment(targetId);
+
+              if (result.total === 0) {
+                return {
+                  success: true,
+                  message: 'All transactions already have categories assigned. No action needed.',
+                };
+              }
+
+              // If running on applied transactions, sync React state
+              if (targetId === 'applied' && result.updatedTransactions) {
+                setTransactions(result.updatedTransactions);
+              }
+
+              // Build review cluster data for the panel (only if there are items needing review)
+              const reviewCount = result.total - result.autoConfirmed;
+              if (reviewCount > 0 && result.reviewClusters) {
+                // Open review panel in category mode
+                const panelData = targetId === 'applied'
+                  ? {
+                      id: 'applied',
+                      sourceFile: 'Applied transactions',
+                      summary: { totalTransactions: result.total },
+                      transactions: result.updatedTransactions?.filter(t =>
+                        t.suggestedGroup && t.groupConfirmed && (!t.categoryCode || t.categoryCohort === 'review')
+                      ) || [],
+                      reviewClusters: result.reviewClusters,
+                    }
+                  : await getStagedDetailCached(targetId);
+
+                if (panelData) {
+                  invalidateCache(targetId);
+                  window.dispatchEvent(new CustomEvent('staged-review:pass2', {
+                    detail: {
+                      stagedData: panelData,
+                      reviewClusters: result.reviewClusters,
+                      autoApplied: result.autoConfirmed,
+                    }
+                  }));
+                }
+              }
+
+              return {
+                success: true,
+                total: result.total,
+                autoConfirmed: result.autoConfirmed,
+                similarityMatched: result.similarityMatched,
+                aiMatched: result.aiMatched,
+                uncertain: result.uncertain,
+                message: `Category assignment complete: ${result.autoConfirmed} auto-confirmed (${result.similarityMatched} by similarity, ${result.aiMatched} by AI).${reviewCount > 0 ? ` ${reviewCount} need your input — the review panel is open.` : ' All transactions categorised.'}`
+              };
+            } catch (error) {
+              return { success: false, error: `Category assignment failed: ${error.message}` };
+            }
+          }
+
+          return { success: false, error: `Unknown staged review action: "${action}". Valid actions: review, apply-auto, apply-cluster, categorise, rescore, apply-remaining.` };
         }
 
         // Export actions — trigger file downloads without navigating away
@@ -2231,6 +2310,7 @@ Keep your response to 1-3 sentences maximum. Be warm but concise.`;
           if (action === 'review') return 'Reviewing staged transactions';
           if (action === 'apply-auto') return 'Applying auto-categorised transactions';
           if (action === 'apply-cluster') return `Applying category to transaction cluster`;
+          if (action === 'categorise') return 'Running category assignment on grouped transactions';
           if (action === 'rescore') return 'Re-scoring remaining transactions';
           if (action === 'apply-remaining') return 'Applying remaining transactions';
           return 'Reviewing staged transactions';

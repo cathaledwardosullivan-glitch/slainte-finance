@@ -21,6 +21,9 @@ const { runConvergenceLoop, runAnomalyDetection } = require('./utils/convergence
 // Opus group-level analysis pass (Pass 1 of two-pass architecture)
 const { shouldRunOpusPass, runOpusPass, GROUP_AUTO_THRESHOLD } = require('./utils/opusAnalysisPass.cjs');
 
+// Category assignment pass (Pass 2 of two-pass architecture)
+const { runCategoryAssignmentPass, CATEGORY_AUTO_THRESHOLD } = require('./utils/categoryAssignmentPass.cjs');
+
 // Node.js PDF/CSV adapter
 const { parseStatement } = require('./utils/pdfAdapter.cjs');
 
@@ -846,6 +849,237 @@ class BackgroundProcessor {
       console.error('[BackgroundProcessor] Error rescoring staged:', error);
       throw error;
     }
+  }
+  // --------------------------------------------------------------------------
+  // Pass 2: Category Assignment Within Groups
+  // --------------------------------------------------------------------------
+
+  /**
+   * Run Pass 2 category assignment on staged transactions that have confirmed
+   * groups but no categoryCode. Can run on a specific staged file, or on
+   * already-applied transactions from localStorage.
+   *
+   * @param {string} stagedId - The staged result ID, OR 'applied' to process localStorage transactions
+   * @returns {{ autoConfirmed, aiMatched, similarityMatched, uncertain, reviewClusters, summary }}
+   */
+  async runCategoryAssignment(stagedId) {
+    const apiKey = this._loadApiKey();
+    if (!apiKey) {
+      throw new Error('No API key available for category assignment');
+    }
+    if (this._isLocalOnlyMode()) {
+      throw new Error('Category assignment requires AI and is not available in Local Only Mode');
+    }
+
+    const categoryMapping = this._loadCategoryMapping();
+    const practiceProfile = this._loadPracticeProfile();
+
+    // Build corpus of fully-categorised transactions for similarity matching
+    const existingTransactions = this._loadExistingTransactions() || [];
+    const corpus = existingTransactions.filter(t => t.categoryCode && t.suggestedGroup);
+
+    if (stagedId === 'applied') {
+      // Process already-applied transactions in localStorage that have group but no category
+      const needsCategorisation = existingTransactions.filter(t =>
+        t.suggestedGroup && t.groupConfirmed && !t.categoryCode
+      );
+
+      if (needsCategorisation.length === 0) {
+        return { autoConfirmed: 0, aiMatched: 0, similarityMatched: 0, uncertain: 0, total: 0 };
+      }
+
+      console.log(`[BackgroundProcessor] Pass 2 on ${needsCategorisation.length} applied transactions`);
+
+      const result = await runCategoryAssignmentPass(
+        needsCategorisation, categoryMapping, corpus, practiceProfile, apiKey
+      );
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      // Merge results back into localStorage
+      const resultMap = new Map();
+      for (const txn of result.results) {
+        resultMap.set(txn.id, txn);
+      }
+      for (const txn of result.uncertain) {
+        resultMap.set(txn.id, txn);
+      }
+
+      const updatedTransactions = existingTransactions.map(t => {
+        const updated = resultMap.get(t.id);
+        if (updated) {
+          return {
+            ...t,
+            categoryCode: updated.categoryCode || t.categoryCode,
+            categoryName: updated.categoryName || t.categoryName,
+            categorySection: updated.categorySection || t.categorySection,
+            categoryCohort: updated.categoryCohort || t.categoryCohort,
+            categoryConfidence: updated.categoryConfidence,
+            categoryReasoning: updated.categoryReasoning,
+            categoryMatchType: updated.categoryMatchType || t.categoryMatchType,
+          };
+        }
+        return t;
+      });
+
+      // Write back to localStorage.json
+      const storageData = fs.existsSync(this.localStoragePath)
+        ? JSON.parse(fs.readFileSync(this.localStoragePath, 'utf8'))
+        : {};
+      storageData.gp_finance_transactions = JSON.stringify(updatedTransactions);
+      fs.writeFileSync(this.localStoragePath, JSON.stringify(storageData, null, 2));
+
+      const autoConfirmed = result.results.filter(r => r.categoryCohort === 'auto').length;
+
+      console.log(`[BackgroundProcessor] Pass 2 complete: ${autoConfirmed} auto-confirmed, ${result.uncertain.length} uncertain`);
+
+      // Build review clusters for uncertain transactions (same as staged path)
+      const reviewClusters = this._buildCategoryReviewClusters(
+        updatedTransactions.filter(t => t.categoryCohort === 'review' || (!t.categoryCode && t.suggestedGroup)),
+        categoryMapping
+      );
+
+      return {
+        autoConfirmed,
+        aiMatched: result.aiMatched,
+        similarityMatched: result.similarityMatched,
+        uncertain: result.uncertain.length,
+        total: needsCategorisation.length,
+        reviewClusters,
+        summary: {
+          categoryPass: {
+            autoConfirmed,
+            aiMatched: result.aiMatched,
+            similarityMatched: result.similarityMatched,
+            uncertain: result.uncertain.length,
+            total: needsCategorisation.length,
+          }
+        },
+        updatedTransactions,
+      };
+    }
+
+    // Process a staged file
+    const stagingFile = path.join(this.stagingPath, `${stagedId}.json`);
+    if (!fs.existsSync(stagingFile)) {
+      throw new Error(`Staged result ${stagedId} not found`);
+    }
+
+    const staged = JSON.parse(fs.readFileSync(stagingFile, 'utf8'));
+
+    // Find transactions that have a confirmed group but no categoryCode
+    const needsCategorisation = staged.transactions.filter(t =>
+      t.suggestedGroup && (t.groupConfirmed || t.stagedCohort === 'group-confirmed') && !t.categoryCode
+    );
+
+    if (needsCategorisation.length === 0) {
+      return { autoConfirmed: 0, aiMatched: 0, similarityMatched: 0, uncertain: 0, total: 0, summary: staged.summary };
+    }
+
+    console.log(`[BackgroundProcessor] Pass 2 on staged ${stagedId}: ${needsCategorisation.length} transactions`);
+
+    const result = await runCategoryAssignmentPass(
+      needsCategorisation, categoryMapping, corpus, practiceProfile, apiKey
+    );
+
+    if (result.error) {
+      throw new Error(result.error);
+    }
+
+    // Merge results back into staged transactions
+    const resultMap = new Map();
+    for (const txn of result.results) {
+      resultMap.set(txn.id, txn);
+    }
+    for (const txn of result.uncertain) {
+      resultMap.set(txn.id, txn);
+    }
+
+    staged.transactions = staged.transactions.map(t => {
+      const updated = resultMap.get(t.id);
+      if (updated) {
+        return {
+          ...t,
+          categoryCode: updated.categoryCode || null,
+          categoryName: updated.categoryName || null,
+          categorySection: updated.categorySection || null,
+          categoryCohort: updated.categoryCohort || 'review',
+          categoryConfidence: updated.categoryConfidence || 0,
+          categoryReasoning: updated.categoryReasoning || null,
+          categoryMatchType: updated.categoryMatchType || t.categoryMatchType,
+          convergencePass: updated.convergencePass || t.convergencePass,
+        };
+      }
+      return t;
+    });
+
+    // Rebuild review clusters with category data
+    const reviewTxns = staged.transactions.filter(t =>
+      !t.categoryCode || (t.categoryCohort === 'review')
+    );
+    staged.reviewClusters = this._buildCategoryReviewClusters(
+      staged.transactions.filter(t => t.categoryCohort === 'review' || (!t.categoryCode && t.suggestedGroup)),
+      categoryMapping
+    );
+
+    // Update summary
+    const autoConfirmed = result.results.filter(r => r.categoryCohort === 'auto').length;
+    staged.summary.categoryPass = {
+      autoConfirmed,
+      aiMatched: result.aiMatched,
+      similarityMatched: result.similarityMatched,
+      uncertain: result.uncertain.length,
+      total: needsCategorisation.length,
+    };
+
+    fs.writeFileSync(stagingFile, JSON.stringify(staged, null, 2));
+
+    console.log(`[BackgroundProcessor] Pass 2 staged complete: ${autoConfirmed} auto, ${result.uncertain.length} uncertain`);
+
+    return {
+      autoConfirmed,
+      aiMatched: result.aiMatched,
+      similarityMatched: result.similarityMatched,
+      uncertain: result.uncertain.length,
+      total: needsCategorisation.length,
+      reviewClusters: staged.reviewClusters,
+      summary: staged.summary,
+    };
+  }
+
+  /**
+   * Build review clusters for Pass 2 (category assignment).
+   * Groups uncategorised transactions by description similarity,
+   * with category suggestions from the AI pass.
+   */
+  _buildCategoryReviewClusters(reviewTransactions, categoryMapping) {
+    if (reviewTransactions.length === 0) return [];
+
+    const clusters = engine.clusterSimilarTransactions(reviewTransactions);
+    const sectionToGroup = engine.SECTION_TO_GROUP;
+
+    return clusters
+      .filter(c => c.size >= 1)
+      .map(cluster => {
+        const rep = cluster.representative;
+        // Check if any member has a category suggestion from Pass 2
+        const categorisedMember = cluster.transactions.find(t => t.categoryCode);
+
+        return {
+          representativeId: rep.id,
+          representativeDescription: rep.details,
+          suggestedGroup: rep.suggestedGroup || null,
+          suggestedCategory: categorisedMember?.categoryName || null,
+          suggestedCategoryCode: categorisedMember?.categoryCode || null,
+          categoryConfidence: categorisedMember?.categoryConfidence || 0,
+          categoryReasoning: categorisedMember?.categoryReasoning || null,
+          memberCount: cluster.size,
+          totalAmount: cluster.transactions.reduce((sum, t) => sum + (t.amount || 0), 0),
+        };
+      })
+      .sort((a, b) => b.memberCount - a.memberCount);
   }
 }
 
