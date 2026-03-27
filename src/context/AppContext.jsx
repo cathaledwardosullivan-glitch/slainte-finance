@@ -104,7 +104,12 @@ export const AppProvider = ({ children }) => {
                 const savedUnidentified = loadUnidentifiedTransactions();
                 const savedCategories = loadCategoryMapping();
                 const savedSettings = loadSettings();
-                const savedPaymentAnalysis = JSON.parse(localStorage.getItem('gp_finance_payment_analysis') || '[]');
+                let savedPaymentAnalysis = JSON.parse(localStorage.getItem('gp_finance_payment_analysis') || '[]');
+                // Handle wrapped format from backup restore { data, timestamp, version }
+                if (savedPaymentAnalysis && !Array.isArray(savedPaymentAnalysis) && Array.isArray(savedPaymentAnalysis.data)) {
+                    savedPaymentAnalysis = savedPaymentAnalysis.data;
+                }
+                if (!Array.isArray(savedPaymentAnalysis)) savedPaymentAnalysis = [];
                 const savedAICorrections = JSON.parse(localStorage.getItem('slainte_ai_corrections') || JSON.stringify({
                     expense_categorization: [],
                     repeating_transactions: [],

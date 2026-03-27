@@ -581,7 +581,7 @@ function gatherBackupData() {
     };
 
     return {
-      version: '2.0',
+      version: '2.1',
       appVersion: 'Slainte Finance V2',
       exportDate: new Date().toISOString(),
       backupType: 'encrypted-auto',
@@ -593,7 +593,11 @@ function gatherBackupData() {
       practiceProfile: safeParse(storageData['slainte_practice_profile'], null),
       settings: safeParse(storageData['gp_finance_settings'], {}),
       aiCorrections: safeParse(storageData['slainte_ai_corrections'], {}),
-      categoryPreferences: safeParse(storageData['gp_finance_category_preferences'], null)
+      categoryPreferences: safeParse(storageData['gp_finance_category_preferences'], null),
+      // v2.1: Chat history and learned patterns
+      chatHistory: storageData['ciaran_chats'] || null,
+      currentChatId: storageData['ciaran_current_chat_id'] || null,
+      learnedPatterns: storageData['gp_finance_learned_patterns'] || null
     };
   } catch (error) {
     console.error('[Backup] Error gathering backup data:', error);
@@ -648,7 +652,14 @@ function createEncryptedBackup(password, isAuto = false) {
     const encryptedData = encryptData(backupData, password);
 
     // Generate filename with timestamp
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const now = new Date();
+    const timestamp = now.getFullYear().toString()
+      + String(now.getMonth() + 1).padStart(2, '0')
+      + String(now.getDate()).padStart(2, '0')
+      + '-'
+      + String(now.getHours()).padStart(2, '0')
+      + String(now.getMinutes()).padStart(2, '0')
+      + String(now.getSeconds()).padStart(2, '0');
     const filename = `backup-${timestamp}.slainte-backup`;
     const filepath = path.join(getBackupsPath(), filename);
 
@@ -746,6 +757,10 @@ function restoreFromBackup(filepath, password) {
     if (decryptedData.settings) storageData['gp_finance_settings'] = JSON.stringify(decryptedData.settings);
     if (decryptedData.aiCorrections) storageData['slainte_ai_corrections'] = JSON.stringify(decryptedData.aiCorrections);
     if (decryptedData.categoryPreferences) storageData['gp_finance_category_preferences'] = JSON.stringify(decryptedData.categoryPreferences);
+    // v2.1: Chat history and learned patterns
+    if (decryptedData.chatHistory) storageData['ciaran_chats'] = decryptedData.chatHistory;
+    if (decryptedData.currentChatId) storageData['ciaran_current_chat_id'] = decryptedData.currentChatId;
+    if (decryptedData.learnedPatterns) storageData['gp_finance_learned_patterns'] = decryptedData.learnedPatterns;
 
     fs.writeFileSync(storagePath, JSON.stringify(storageData, null, 2));
 
@@ -755,7 +770,9 @@ function restoreFromBackup(filepath, password) {
       success: true,
       backupDate: decryptedData.exportDate,
       transactionCount: decryptedData.transactions?.length || 0,
-      unidentifiedCount: decryptedData.unidentifiedTransactions?.length || 0
+      unidentifiedCount: decryptedData.unidentifiedTransactions?.length || 0,
+      // Return the storage entries so the renderer can write them to browser localStorage
+      storageEntries: storageData
     };
   } catch (error) {
     console.error('[Backup] Error restoring from backup:', error);

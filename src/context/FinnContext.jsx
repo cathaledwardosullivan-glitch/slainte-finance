@@ -634,7 +634,12 @@ export const FinnProvider = ({ children }) => {
 
   // Load saved reports from localStorage
   const loadSavedReports = useCallback(() => {
-    const reports = JSON.parse(localStorage.getItem('gp_finance_saved_reports') || '[]');
+    let reports = JSON.parse(localStorage.getItem('gp_finance_saved_reports') || '[]');
+    // Handle storageUtils wrapper format { data, timestamp, version }
+    if (reports && !Array.isArray(reports) && Array.isArray(reports.data)) {
+      reports = reports.data;
+    }
+    if (!Array.isArray(reports)) reports = [];
     // Sort by date, newest first
     reports.sort((a, b) => new Date(b.generatedDate) - new Date(a.generatedDate));
     setSavedReports(reports);

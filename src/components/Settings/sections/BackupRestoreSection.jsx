@@ -121,6 +121,9 @@ const BackupRestoreSection = () => {
   const [lastBackupDate, setLastBackupDate] = useState(null);
   const [backupList, setBackupList] = useState([]);
   const [isCreatingBackup, setIsCreatingBackup] = useState(false);
+  const [isRestoringBackup, setIsRestoringBackup] = useState(false);
+  const [restoreTarget, setRestoreTarget] = useState(null);
+  const [restorePassword, setRestorePassword] = useState('');
   const [securityPasswordSet, setSecurityPasswordSet] = useState(false);
 
   // Load auto-backup settings
@@ -284,6 +287,51 @@ const BackupRestoreSection = () => {
       alert('Backup failed: ' + error.message);
     } finally {
       setIsCreatingBackup(false);
+    }
+  };
+
+  // Restore from encrypted backup
+  const handleRestoreEncrypted = async () => {
+    if (!restoreTarget || !restorePassword) return;
+    setIsRestoringBackup(true);
+    try {
+      const result = await window.electronAPI.restoreBackup(restoreTarget.filepath, restorePassword);
+      if (result.success) {
+        // Clear browser localStorage first to remove any corrupted/stale data,
+        // then write the restored data fresh.
+        localStorage.clear();
+        if (result.storageEntries) {
+          for (const [key, value] of Object.entries(result.storageEntries)) {
+            localStorage.setItem(key, value);
+          }
+        }
+        setRestoreTarget(null);
+        setRestorePassword('');
+        alert(`Backup restored successfully!\n\n• ${result.transactionCount || 0} transactions\n• ${result.unidentifiedCount || 0} unidentified\n• Backup date: ${result.backupDate ? new Date(result.backupDate).toLocaleDateString() : 'Unknown'}\n\nThe page will now reload.`);
+        window.location.reload();
+      } else {
+        alert('Restore failed: ' + result.error);
+      }
+    } catch (error) {
+      alert('Restore failed: ' + error.message);
+    } finally {
+      setIsRestoringBackup(false);
+    }
+  };
+
+  // Delete encrypted backup
+  const handleDeleteBackup = async (backup) => {
+    if (!window.confirm(`Delete backup from ${new Date(backup.created).toLocaleString()}?\n\nThis cannot be undone.`)) return;
+    try {
+      const result = await window.electronAPI.deleteBackup(backup.filepath);
+      if (result.success) {
+        const backups = await window.electronAPI.listBackups();
+        setBackupList(backups || []);
+      } else {
+        alert('Delete failed: ' + result.error);
+      }
+    } catch (error) {
+      alert('Delete failed: ' + error.message);
     }
   };
 
@@ -494,18 +542,109 @@ const BackupRestoreSection = () => {
               <p style={{ fontSize: '0.75rem', fontWeight: 600, marginBottom: '0.5rem', color: COLORS.chartViolet }}>
                 Recent Encrypted Backups ({backupList.length})
               </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', maxHeight: '8rem', overflowY: 'auto' }}>
-                {backupList.slice(0, 5).map((backup, index) => (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', maxHeight: '12rem', overflowY: 'auto' }}>
+                {backupList.slice(0, 7).map((backup, index) => (
                   <div key={index} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.75rem', padding: '0.5rem', borderRadius: '0.25rem', backgroundColor: COLORS.bgPage }}>
                     <span style={{ color: COLORS.textPrimary }}>
                       {new Date(backup.created).toLocaleString()}
                     </span>
-                    <span style={{ color: COLORS.textSecondary }}>
-                      {(backup.size / 1024).toFixed(1)} KB
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ color: COLORS.textSecondary }}>
+                        {(backup.size / 1024 / 1024).toFixed(1)} MB
+                      </span>
+                      <button
+                        onClick={() => { setRestoreTarget(backup); setRestorePassword(''); }}
+                        style={{
+                          padding: '0.25rem 0.5rem',
+                          borderRadius: '0.25rem',
+                          fontSize: '0.7rem',
+                          fontWeight: 600,
+                          color: COLORS.white,
+                          backgroundColor: COLORS.chartViolet,
+                          border: 'none',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Restore
+                      </button>
+                      <button
+                        onClick={() => handleDeleteBackup(backup)}
+                        style={{
+                          padding: '0.25rem 0.5rem',
+                          borderRadius: '0.25rem',
+                          fontSize: '0.7rem',
+                          fontWeight: 600,
+                          color: COLORS.expenseColor,
+                          backgroundColor: 'transparent',
+                          border: `1px solid ${COLORS.expenseColor}`,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
+
+              {/* Restore password prompt */}
+              {restoreTarget && (
+                <div style={{ marginTop: '0.75rem', padding: '0.75rem', borderRadius: '0.5rem', backgroundColor: `${COLORS.chartViolet}10`, border: `1px solid ${COLORS.chartViolet}40` }}>
+                  <p style={{ fontSize: '0.8rem', fontWeight: 600, color: COLORS.chartViolet, marginBottom: '0.5rem' }}>
+                    Restore backup from {new Date(restoreTarget.created).toLocaleString()}
+                  </p>
+                  <p style={{ fontSize: '0.75rem', color: COLORS.textSecondary, marginBottom: '0.5rem' }}>
+                    Enter your App Security Password to decrypt this backup. This will replace all current data.
+                  </p>
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <input
+                      type="password"
+                      value={restorePassword}
+                      onChange={(e) => setRestorePassword(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' && restorePassword) handleRestoreEncrypted(); }}
+                      placeholder="Security password"
+                      autoFocus
+                      style={{
+                        flex: 1,
+                        padding: '0.5rem',
+                        fontSize: '0.8rem',
+                        border: `1px solid ${COLORS.borderLight}`,
+                        borderRadius: '0.25rem'
+                      }}
+                    />
+                    <button
+                      onClick={handleRestoreEncrypted}
+                      disabled={!restorePassword || isRestoringBackup}
+                      style={{
+                        padding: '0.5rem 0.75rem',
+                        borderRadius: '0.25rem',
+                        fontSize: '0.8rem',
+                        fontWeight: 600,
+                        color: COLORS.white,
+                        backgroundColor: restorePassword && !isRestoringBackup ? COLORS.chartViolet : COLORS.borderLight,
+                        border: 'none',
+                        cursor: restorePassword && !isRestoringBackup ? 'pointer' : 'not-allowed'
+                      }}
+                    >
+                      {isRestoringBackup ? 'Restoring...' : 'Confirm'}
+                    </button>
+                    <button
+                      onClick={() => { setRestoreTarget(null); setRestorePassword(''); }}
+                      style={{
+                        padding: '0.5rem 0.75rem',
+                        borderRadius: '0.25rem',
+                        fontSize: '0.8rem',
+                        color: COLORS.textSecondary,
+                        backgroundColor: 'transparent',
+                        border: `1px solid ${COLORS.borderLight}`,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

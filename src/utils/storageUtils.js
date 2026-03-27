@@ -63,9 +63,14 @@ const loadFromStorage = (key, defaultValue = null) => {
   try {
     const stored = localStorage.getItem(key);
     if (!stored) return defaultValue;
-    
+
     const parsed = JSON.parse(stored);
-    return parsed.data || defaultValue;
+    // Handle both wrapped format { data, timestamp, version } and raw format
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && 'data' in parsed && 'version' in parsed) {
+      return parsed.data || defaultValue;
+    }
+    // Raw format (e.g. from backup restore) — return as-is
+    return parsed || defaultValue;
   } catch (error) {
     console.error('Error loading from storage:', error);
     return defaultValue;

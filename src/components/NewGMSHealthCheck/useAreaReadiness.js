@@ -19,7 +19,8 @@ export const AREAS = [
  */
 function countUniqueMonths(paymentAnalysisData) {
   const months = new Set();
-  paymentAnalysisData.forEach(pdf => {
+  const data = Array.isArray(paymentAnalysisData) ? paymentAnalysisData : [];
+  data.forEach(pdf => {
     if (pdf.month && pdf.year) {
       months.add(`${pdf.year}-${pdf.month}`);
     }
