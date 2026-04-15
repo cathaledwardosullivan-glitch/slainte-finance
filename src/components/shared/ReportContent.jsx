@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import DOMPurify from 'dompurify';
 import { BarChart3, AlertCircle } from 'lucide-react';
 import { formatArtifactHTML } from '../../utils/artifactBuilder';
-import COLORS from '../../utils/colors';
+import REPORT_THEME, { generateReportCSS } from '../../utils/reportTheme';
 
 /**
  * Recursively sanitise d3-format strings in a Vega-Lite spec.
@@ -71,22 +71,26 @@ export const InlineVegaChart = ({ spec, id }) => {
     renderChart();
   }, [spec]);
 
+  const errStyles = REPORT_THEME.chart.error;
+  const ctrStyles = REPORT_THEME.chart.container;
+  const loadStyles = REPORT_THEME.chart.loading;
+
   if (error) {
     return (
       <div
         style={{
-          padding: '1rem',
-          backgroundColor: `${COLORS.expenseColor}10`,
-          border: `1px solid ${COLORS.expenseColor}30`,
-          borderRadius: '0.5rem',
-          margin: '1rem 0'
+          padding: errStyles.padding,
+          backgroundColor: errStyles.backgroundColor,
+          border: errStyles.border,
+          borderRadius: errStyles.borderRadius,
+          margin: errStyles.margin
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-          <AlertCircle style={{ height: '1rem', width: '1rem', color: COLORS.expenseColor }} />
-          <span style={{ fontWeight: 500, color: COLORS.expenseColor }}>Chart could not be rendered</span>
+          <AlertCircle style={{ height: '1rem', width: '1rem', color: errStyles.iconColor }} />
+          <span style={{ fontWeight: 500, color: errStyles.textColor }}>Chart could not be rendered</span>
         </div>
-        <p style={{ fontSize: '0.8125rem', color: COLORS.textSecondary, margin: 0 }}>{error}</p>
+        <p style={{ fontSize: errStyles.detailFontSize, color: errStyles.detailColor, margin: 0 }}>{error}</p>
       </div>
     );
   }
@@ -94,17 +98,17 @@ export const InlineVegaChart = ({ spec, id }) => {
   return (
     <div
       style={{
-        margin: '1.5rem 0',
-        padding: '1rem',
-        backgroundColor: COLORS.bgPage,
-        borderRadius: '0.5rem',
-        border: `1px solid ${COLORS.borderLight}`
+        margin: ctrStyles.margin,
+        padding: ctrStyles.padding,
+        backgroundColor: ctrStyles.backgroundColor,
+        borderRadius: ctrStyles.borderRadius,
+        border: ctrStyles.border
       }}
     >
       {loading && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: COLORS.textSecondary }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: loadStyles.color }}>
           <BarChart3 style={{ height: '1rem', width: '1rem' }} />
-          <span style={{ fontSize: '0.875rem' }}>Loading chart...</span>
+          <span style={{ fontSize: loadStyles.fontSize }}>Loading chart...</span>
         </div>
       )}
       <div
@@ -114,7 +118,7 @@ export const InlineVegaChart = ({ spec, id }) => {
           display: loading ? 'none' : 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          minHeight: loading ? '0' : '200px'
+          minHeight: loading ? '0' : ctrStyles.minHeight
         }}
       />
     </div>
@@ -175,6 +179,8 @@ const ReportContentRenderer = ({ report }) => {
     created_at: report.generatedDate
   };
 
+  const co = REPORT_THEME.callout;
+
   return (
     <>
       {/* Intro text if available */}
@@ -182,13 +188,13 @@ const ReportContentRenderer = ({ report }) => {
         <div
           style={{
             marginBottom: '1.5rem',
-            padding: '1rem',
-            backgroundColor: `${COLORS.slainteBlue}08`,
-            borderRadius: '0.5rem',
-            borderLeft: `3px solid ${COLORS.slainteBlue}`,
-            fontSize: '0.9375rem',
-            lineHeight: '1.6',
-            color: COLORS.textPrimary
+            padding: co.padding,
+            backgroundColor: co.intro.backgroundColor,
+            borderRadius: co.borderRadius,
+            borderLeft: `${co.borderLeftWidth} solid ${co.intro.borderLeftColor}`,
+            fontSize: co.fontSize,
+            lineHeight: co.lineHeight,
+            color: co.color
           }}
         >
           {report.intro}
@@ -221,81 +227,21 @@ const ReportContentRenderer = ({ report }) => {
         <div
           style={{
             marginTop: '1.5rem',
-            padding: '1rem',
-            backgroundColor: `${COLORS.incomeColor}08`,
-            borderRadius: '0.5rem',
-            borderLeft: `3px solid ${COLORS.incomeColor}`,
-            fontSize: '0.9375rem',
-            lineHeight: '1.6',
-            color: COLORS.textPrimary
+            padding: co.padding,
+            backgroundColor: co.conclusion.backgroundColor,
+            borderRadius: co.borderRadius,
+            borderLeft: `${co.borderLeftWidth} solid ${co.conclusion.borderLeftColor}`,
+            fontSize: co.fontSize,
+            lineHeight: co.lineHeight,
+            color: co.color
           }}
         >
           {report.conclusion}
         </div>
       )}
 
-      {/* Shared report content styles */}
-      <style>{`
-        .report-content {
-          line-height: 1.7;
-          color: ${COLORS.textPrimary};
-        }
-        .report-content h1 {
-          color: ${COLORS.slainteBlue};
-          border-bottom: 2px solid ${COLORS.slainteBlue};
-          padding-bottom: 0.75rem;
-          margin-bottom: 1.5rem;
-          font-size: 1.5rem;
-          font-weight: 600;
-        }
-        .report-content h2 {
-          color: ${COLORS.slainteBlue};
-          margin-top: 2rem;
-          margin-bottom: 1rem;
-          font-size: 1.25rem;
-          font-weight: 600;
-        }
-        .report-content h3 {
-          color: ${COLORS.textPrimary};
-          margin-top: 1.5rem;
-          margin-bottom: 0.75rem;
-          font-size: 1.0625rem;
-          font-weight: 600;
-        }
-        .report-content p {
-          margin-bottom: 1rem;
-        }
-        .report-content ul, .report-content ol {
-          margin-left: 1.5rem;
-          margin-bottom: 1rem;
-        }
-        .report-content li {
-          margin: 0.5rem 0;
-        }
-        .report-content strong {
-          font-weight: 600;
-          color: ${COLORS.textPrimary};
-        }
-        .report-content table.artifact-table {
-          width: 100%;
-          border-collapse: collapse;
-          margin: 1.5rem 0;
-          font-size: 0.875rem;
-        }
-        .report-content table.artifact-table th,
-        .report-content table.artifact-table td {
-          border: 1px solid ${COLORS.borderLight};
-          padding: 0.75rem;
-          text-align: left;
-        }
-        .report-content table.artifact-table th {
-          background-color: ${COLORS.bgPage};
-          font-weight: 600;
-        }
-        .report-content table.artifact-table tr:hover {
-          background-color: ${COLORS.bgPage};
-        }
-      `}</style>
+      {/* Report content styles generated from shared theme */}
+      <style>{generateReportCSS('screen')}</style>
     </>
   );
 };

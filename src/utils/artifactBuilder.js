@@ -4,6 +4,7 @@
  */
 import DOMPurify from 'dompurify';
 import COLORS from '../utils/colors';
+import REPORT_THEME, { generateReportCSS } from './reportTheme';
 
 /**
  * Parse response for artifact tags and separate intro/conclusion from content
@@ -286,85 +287,20 @@ export function exportArtifactPDF(artifact) {
       <title>${sanitizedTitle}</title>
       <style>
         body {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          font-family: ${REPORT_THEME.typography.fontFamilyPrint};
           max-width: 800px;
           margin: 40px auto;
           padding: 20px;
-          line-height: 1.6;
-          color: ${COLORS.textPrimary};
+          line-height: ${REPORT_THEME.typography.body.lineHeight};
+          color: ${REPORT_THEME.typography.body.color};
         }
-        h1 { color: ${COLORS.infoText}; border-bottom: 3px solid ${COLORS.infoText}; padding-bottom: 10px; }
-        h2 { color: #2563eb; margin-top: 30px; }
-        h3 { color: ${COLORS.slainteBlue}; margin-top: 20px; }
-        table.artifact-table {
-          width: 100%;
-          border-collapse: collapse;
-          margin: 20px 0;
-        }
-        table.artifact-table th,
-        table.artifact-table td {
-          border: 1px solid #ddd;
-          padding: 12px;
-          text-align: left;
-        }
-        table.artifact-table th {
-          background-color: ${COLORS.bgHover};
-          font-weight: 600;
-        }
-        table.artifact-table tr:nth-child(even) {
-          background-color: ${COLORS.bgPage};
-        }
-        .chart-placeholder {
-          border: 2px dashed #93c5fd;
-          border-radius: 8px;
-          padding: 24px;
-          margin: 20px 0;
-          text-align: center;
-          background-color: ${COLORS.slainteBlueLight};
-        }
-        .chart-placeholder-icon {
-          font-size: 32px;
-          margin-bottom: 8px;
-        }
-        .chart-placeholder-title {
-          font-weight: 600;
-          color: ${COLORS.infoText};
-          font-size: 16px;
-          margin-bottom: 4px;
-        }
-        .chart-placeholder-note {
-          color: ${COLORS.textMuted};
-          font-size: 13px;
-        }
-        pre.artifact-code {
-          background-color: ${COLORS.bgHover};
-          border: 1px solid ${COLORS.borderLight};
-          border-radius: 6px;
-          padding: 16px;
-          overflow-x: auto;
-          font-size: 13px;
-          line-height: 1.5;
-          margin: 16px 0;
-        }
-        pre.artifact-code code {
-          font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-        }
-        ul { margin-left: 20px; }
-        li { margin: 8px 0; }
-        .meta {
-          color: ${COLORS.textMuted};
-          font-size: 14px;
-          margin-top: 40px;
-          padding-top: 20px;
-          border-top: 1px solid ${COLORS.borderLight};
-        }
-        @media print {
-          body { margin: 0; padding: 20px; }
-        }
+        ${generateReportCSS('pdf')}
       </style>
     </head>
     <body>
-      ${sanitizedHtml}
+      <div class="report-content">
+        ${sanitizedHtml}
+      </div>
       <div class="meta">
         Generated: ${new Date().toLocaleString()}<br>
         Source: Financial Chat - Finn

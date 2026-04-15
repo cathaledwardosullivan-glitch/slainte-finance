@@ -1,8 +1,8 @@
-# Finn Report Style Guide — Draft for Review
+# Finn Report Style Guide
 
 > **Purpose:** This document defines how Finn-generated reports should look, read, and feel — ensuring every report feels like it came from the same trusted advisor, whether it's a pre-built Suggested Analysis or a custom ad-hoc report.
 >
-> **Status:** Draft. Needs review by Ciaran + Kristina. Decisions marked with **[DECISION NEEDED]** require input before implementation.
+> **Status:** All decisions finalised (2026-04-08). Ready for implementation into `reportSystemPrompt`.
 
 ---
 
@@ -35,15 +35,11 @@ kinda high tbh"      rose 12% to           have increased
 
 ### How to Address the GP
 
-**[DECISION NEEDED]** — Pick one approach and use it consistently:
+Use a **mix** of "Your" and "The practice":
+- **"The practice"** for factual statements: "The practice spent €274,968 on staff."
+- **"You/Your"** for actions and recommendations: "You should review your PRSI structure."
 
-- **Option A: "Your practice..."** — Warm, direct. "Your staff costs rose 12%." "Your profit margin is 38%." Feels personal but could feel presumptuous in a multi-partner practice.
-
-- **Option B: "The practice..."** — Slightly more formal, neutral. "The practice's staff costs rose 12%." Works better for multi-partner practices where no single person "owns" the finances.
-
-- **Option C: Mix** — Use "Your" for actions and recommendations ("You should review your PRSI structure"), "The practice" for factual statements ("The practice spent €274,968 on staff"). This is what the Operating Cost report did naturally.
-
-> **Recommendation:** Option C. It balances warmth with professionalism.
+This balances warmth with professionalism and works for both single-GP and multi-partner practices.
 
 ---
 
@@ -96,14 +92,11 @@ Target: ~1,500-1,800 words. Deeper analysis, scenario modelling, forward-looking
 ## References
 ```
 
-### **[DECISION NEEDED]** — Section Naming
+### Section Naming
 
-Should we use the same section names every time (consistency) or let them vary by topic (e.g., "Scenario Analysis" instead of "Analysis" for strategic reports)?
+Three **fixed core sections** appear in every report: **Key Findings**, **Analysis**, **Recommendations**. These are always named exactly this way — users learn where to look.
 
-- **Option A: Fixed names** — Always: Key Findings, Analysis, Recommendations. Predictable, scannable.
-- **Option B: Contextual names** — Allow: "Cost Breakdown", "Trend Analysis", "Scenario Comparison". More descriptive.
-
-> **Recommendation:** Option A for the three core sections (Key Findings, Analysis, Recommendations). Allow one additional section with a contextual name if the report needs it (e.g., "Scenario Comparison" for strategic reports).
+One **contextual section** is permitted per report if the topic demands it (e.g., "Scenario Comparison" for strategic reports, "Risk Assessment" for outlook reports). This sits between Analysis and Recommendations.
 
 ---
 
@@ -111,15 +104,14 @@ Should we use the same section names every time (consistency) or let them vary b
 
 ### Monetary Values
 
-**[DECISION NEEDED]** — How should we format euro amounts?
-
-| Format | Example | Best for |
+| Context | Format | Example |
 |---|---|---|
-| Full with comma separator | €274,968 | Precision in tables and key figures |
-| Rounded with K suffix | €275K | Narrative text, approximate comparisons |
-| Rounded to nearest thousand | €275,000 | Middle ground |
+| Tables and key callouts | Full with comma separator | €274,968 |
+| Narrative text (€10K+) | Rounded with K suffix | €275K |
+| Narrative text (€1K–€10K) | Rounded to nearest hundred | €8,500 |
+| Any amount under €1,000 | Always full | €847 |
 
-> **Recommendation:** Use full figures (€274,968) in tables and key callouts. Use rounded (€275K) in flowing narrative text where exact precision doesn't matter. Never mix within the same paragraph.
+Never mix formats within the same paragraph.
 
 ### Percentages
 - Always one decimal place: "38.2%" not "38%" or "38.24%"
@@ -141,31 +133,26 @@ Charts are rendered via Vega-Lite with the `latimes` theme (clean, minimal, news
 
 ### Colour Palette for Charts
 
-**[DECISION NEEDED]** — Should we enforce the app's brand colours in charts, or let the Vega theme handle it?
+**Always use the app's brand colour palette.** This ensures visual consistency between the reports and the rest of the app. The palette is defined in `CHART_COLORS.series` in `src/utils/colors.js`.
 
-**Option A: Enforce brand colours**
 ```
-Income/positive:    #4ECDC4  (turquoise — matches app income colour)
-Expense/negative:   #FF6B6B  (coral red — matches app expense colour)
-Neutral/primary:    #4A90E2  (Slainte blue)
-Highlight/warning:  #FFD23C  (yellow)
-Secondary palette:  #8B5CF6  (purple), #F59E0B (amber), #10B981 (green)
-```
+Semantic colours (use when meaning applies):
+  Income/positive:    #4ECDC4  (turquoise)
+  Expense/negative:   #FF6B6B  (coral)
+  Highlight/warning:  #FFD23C  (sunflower yellow)
 
-**Option B: Use a curated chart-specific palette**
-A softer, more professional set designed for data visualisation (better contrast, colourblind-safe):
-```
-Series 1:  #2563EB  (blue)
-Series 2:  #16A34A  (green)
-Series 3:  #DC2626  (red)
-Series 4:  #9333EA  (purple)
-Series 5:  #CA8A04  (amber)
-Series 6:  #0891B2  (teal)
+Series order (for multi-category charts):
+  1. #4A90E2  Sláinte Blue
+  2. #4ECDC4  Turquoise
+  3. #FF6B6B  Coral
+  4. #7C6EBF  Periwinkle
+  5. #F9A826  Marigold
+  6. #FFD23C  Sunflower Yellow
+  7. #8B5CF6  Amethyst
+  8. #EC4899  Hot Pink
 ```
 
-**Option C: Hybrid** — Use brand colours for semantic meaning (income = turquoise, expense = coral) but use the professional palette for non-semantic multi-series charts.
-
-> **Recommendation:** Option C. When a chart shows income vs expense, use the brand colours the user already associates with those concepts. For everything else (multi-category breakdowns, trend lines by scheme), use the professional palette.
+When a chart shows income vs expense, always use turquoise (#4ECDC4) for income and coral (#FF6B6B) for expense — the user already associates these colours with those concepts from the rest of the app.
 
 ### Chart Type Guidelines
 
@@ -262,12 +249,9 @@ Every report ends with recommendations. These should follow a consistent format:
    PRSI at €201,933 represents 73% of non-GP staff salaries, which is significantly above the standard 11% employer rate — this likely indicates a classification issue.
 ```
 
-### **[DECISION NEEDED]** — Number of Recommendations
+### Number of Recommendations
 
-- **Option A: Always 3-5** — Consistent, manageable
-- **Option B: As many as needed, prioritised** — More thorough but risks overwhelming
-
-> **Recommendation:** Always 3-5, prioritised by estimated financial impact. If there are more than 5 valid recommendations, include the top 5 and add a closing line: "Additional areas worth reviewing include [X] and [Y]."
+Always **3-5 recommendations**, prioritised by estimated financial impact. If there are more than 5 valid recommendations, include the top 5 and add a closing line: "Additional areas worth reviewing include [X] and [Y]."
 
 ---
 
@@ -303,19 +287,19 @@ Every report must end with a References section.
 
 ---
 
-## 9. Consistency Checklist
+## 9. Consistency Checklist — Final Decisions
 
-Before finalising the style guide, these are the decisions that need to be made:
+All decisions finalised 2026-04-08.
 
-| # | Decision | Options | Recommendation |
-|---|---|---|---|
-| 1 | How to address the GP | "Your" / "The practice" / Mix | Mix (Option C) |
-| 2 | Section naming | Fixed / Contextual | Fixed core + 1 contextual |
-| 3 | Monetary format | Full / Rounded K / Nearest thousand | Full in tables, K in narrative |
-| 4 | Chart colours | Brand / Professional / Hybrid | Hybrid (Option C) |
-| 5 | Number of recommendations | Always 3-5 / As many as needed | Always 3-5 |
-| 6 | Y-axis at zero | Always / Allow truncation | Always (with rare annotated exceptions) |
-| 7 | Maximum charts per report | 1-2 standard, 2-3 strategic | Yes, enforce these limits |
+| # | Decision | Final Answer |
+|---|---|---|
+| 1 | How to address the GP | Mix — "The practice" for facts, "You/Your" for actions |
+| 2 | Section naming | Fixed core (Key Findings, Analysis, Recommendations) + 1 contextual section |
+| 3 | Monetary format | Full in tables (€274,968), K in narrative (€275K), full under €1K, nearest hundred under €10K |
+| 4 | Chart colours | Brand colours always — use `CHART_COLORS.series` from `colors.js` |
+| 5 | Number of recommendations | Always 3-5, prioritised by financial impact |
+| 6 | Y-axis at zero | Always at zero, with rare annotated exceptions |
+| 7 | Maximum charts per report | 1-2 standard, 2-3 strategic (hard limits) |
 
 ---
 
