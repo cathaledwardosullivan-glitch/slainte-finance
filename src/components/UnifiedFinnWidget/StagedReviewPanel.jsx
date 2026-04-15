@@ -314,6 +314,51 @@ const StagedReviewPanel = () => {
     };
   }, []);
 
+  // When allDone becomes true, clean up the staging file and apply any remaining transactions
+  const cleanupDoneRef = useRef(false);
+  useEffect(() => {
+    // Reset cleanup flag when a new staged file is opened
+    if (!isOpen) {
+      cleanupDoneRef.current = false;
+      return;
+    }
+
+    // Compute allDone inline (same logic as render)
+    const items = stagedData?.reviewClusters || [];
+    const batch = items.slice(0, CLUSTER_PAGE_SIZE);
+    const remaining = Math.max(0, items.length - CLUSTER_PAGE_SIZE);
+    const resolved = batch.filter(c => appliedClusters[c.representativeId] !== undefined).length;
+    const batchDone = batch.length > 0 && resolved === batch.length;
+    const done = items.length === 0 || (batchDone && remaining === 0);
+
+    if (!done || !stagedId || stagedId === 'applied' || cleanupDoneRef.current) return;
+    cleanupDoneRef.current = true;
+
+    const cleanup = async () => {
+      try {
+        // Fetch remaining transactions still in the staging file (auto + group-confirmed)
+        const detail = await window.electronAPI?.backgroundProcessor?.getStagedDetail(stagedId);
+        if (detail?.transactions?.length > 0) {
+          const leftover = detail.transactions.filter(t => t.stagedCohort !== 'applied');
+          if (leftover.length > 0) {
+            setTransactions(prev => [...prev, ...leftover]);
+          }
+        }
+
+        // Dismiss the staging file from disk
+        await window.electronAPI?.backgroundProcessor?.dismissStaged(stagedId);
+
+        // Tell FinnContext to refresh its stagedResults state
+        window.dispatchEvent(new CustomEvent('staged-review:cleanup-complete', { detail: { stagedId } }));
+        console.log('[StagedReviewPanel] Cleanup complete — staging file dismissed');
+      } catch (err) {
+        console.error('[StagedReviewPanel] Cleanup failed:', err);
+      }
+    };
+
+    cleanup();
+  }, [isOpen, stagedData, stagedId, appliedClusters, setTransactions]);
+
   // Focus search input when picker opens
   useEffect(() => {
     if (changingCluster !== null && searchInputRef.current) {
@@ -511,12 +556,48 @@ const StagedReviewPanel = () => {
               if (stagedId && window.electronAPI?.backgroundProcessor?.rescoreStaged) {
                 setRescoring(true);
                 try {
+                  // Step 1: Deterministic rescore (similarity matching with enriched corpus)
                   const result = await window.electronAPI.backgroundProcessor.rescoreStaged(stagedId);
+                  let totalPromoted = result?.promoted || 0;
+                  let finalClusters = result?.reviewClusters;
+                  const finalRemaining = result?.remainingReview || 0;
+
+                  // Step 2: If review items remain, run Sonnet rescore with user corrections as few-shot
+                  if (finalRemaining > 0 && window.electronAPI.backgroundProcessor.sonnetRescoreStaged) {
+                    // Collect corrections from this batch — what the user assigned to each cluster
+                    const corrections = currentBatch
+                      .filter(c => appliedClusters[c.representativeId] !== undefined)
+                      .map(c => ({
+                        description: c.representativeDescription || '',
+                        groupCode: (() => {
+                          // Find the group code the user assigned (stored in stagedData.transactions)
+                          const txn = stagedData?.transactions?.find(t => t.id === c.representativeId);
+                          return txn?.suggestedGroup || c.suggestedGroup || '';
+                        })(),
+                        groupName: appliedClusters[c.representativeId] || '',
+                      }))
+                      .filter(c => c.description && c.groupCode);
+
+                    if (corrections.length > 0) {
+                      try {
+                        const sonnetResult = await window.electronAPI.backgroundProcessor.sonnetRescoreStaged(stagedId, corrections);
+                        if (sonnetResult && !sonnetResult.skipped) {
+                          totalPromoted += sonnetResult.promoted || 0;
+                          finalClusters = sonnetResult.reviewClusters;
+                          console.log(`[StagedReviewPanel] Sonnet rescore: ${sonnetResult.promoted} promoted`);
+                        }
+                      } catch (err) {
+                        console.warn('[StagedReviewPanel] Sonnet rescore failed (non-fatal):', err.message);
+                        // Continue with deterministic results — Sonnet is best-effort
+                      }
+                    }
+                  }
+
                   window.dispatchEvent(new CustomEvent('staged-review:rescore-done', {
                     detail: {
                       stagedId,
-                      promoted: result?.promoted || 0,
-                      updatedClusters: result?.reviewClusters,
+                      promoted: totalPromoted,
+                      updatedClusters: finalClusters,
                       nextBatch: true,
                     }
                   }));

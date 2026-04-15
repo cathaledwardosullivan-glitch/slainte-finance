@@ -5,7 +5,7 @@ import { getVisibleCategories } from '../utils/categoryPreferences';
 import CategoryPickerModal from './CategoryPickerModal';
 import { GROUPS } from '../utils/categorizationEngine';
 import { PARENT_CATEGORIES, getParentCategoryForCode, getSubcategoriesForParent } from '../utils/parentCategoryMapping';
-import { useProcessingFlow } from './ProcessingFlow/ProcessingFlowContext';
+import { useProcessingFlowSafe } from './ProcessingFlow/ProcessingFlowContext';
 import ProcessingFlowPanel from './ProcessingFlow';
 import { Search, Filter, FileText, Target, X, Save, ChevronDown, ChevronUp, AlertTriangle, CheckCircle, Eye, EyeOff } from 'lucide-react';
 
@@ -457,13 +457,17 @@ export default function TransactionListV2() {
         recordAICorrection
     } = useAppContext();
 
-    // ─── ProcessingFlow integration ──────────────────────────────────
-    const { isFlowOpen, startProcessing } = useProcessingFlow();
+    // ─── ProcessingFlow integration (safe: companion view has no provider) ───
+    const processingFlow = useProcessingFlowSafe();
+    const isFlowOpen = processingFlow?.isFlowOpen ?? false;
+    const startProcessing = processingFlow?.startProcessing;
 
     // IDs of categorized transactions we pulled out for re-processing
     const [reprocessedIds, setReprocessedIds] = useState(new Set());
 
     const handleReviewNow = useCallback(() => {
+        if (!startProcessing) return; // No ProcessingFlow provider (companion view)
+
         // Collect review-cohort categorized transactions (low confidence, need re-review)
         const reviewCohortTransactions = transactions.filter(t =>
             t.categoryCohort === 'review' || t.categoryCohort === 'conflict' ||

@@ -27,6 +27,9 @@ const { runCategoryAssignmentPass, CATEGORY_AUTO_THRESHOLD } = require('./utils/
 // Node.js PDF/CSV adapter
 const { parseStatement } = require('./utils/pdfAdapter.cjs');
 
+// Model configuration
+const { MODELS } = require('./modelConfig.cjs');
+
 // ============================================================================
 // CONFIGURATION
 // ============================================================================
@@ -1199,6 +1202,192 @@ class BackgroundProcessor {
       throw error;
     }
   }
+
+  /**
+   * Between-batch Sonnet rescore.
+   *
+   * After the deterministic rescore, if review items remain, run a lightweight
+   * Sonnet call using the user's corrections from this batch as few-shot examples.
+   * This catches semantic patterns that similarity matching misses.
+   *
+   * @param {string} stagedId - Staged result ID
+   * @param {Array<{description: string, groupCode: string, groupName: string}>} corrections - User corrections from this batch
+   * @returns {Promise<{promoted: number, remainingReview: number, reviewClusters: Array}>}
+   */
+  async sonnetRescoreStaged(stagedId, corrections) {
+    const MIN_REVIEW_FOR_SONNET = 3;  // Don't waste an API call for < 3 items
+    const SONNET_BATCH_SIZE = 50;     // Sonnet is fast, keep batches moderate
+    const SONNET_AUTO_THRESHOLD = 0.85;
+
+    try {
+      const stagingFile = path.join(this.stagingPath, `${stagedId}.json`);
+      if (!fs.existsSync(stagingFile)) {
+        throw new Error(`Staged result ${stagedId} not found`);
+      }
+
+      const staged = JSON.parse(fs.readFileSync(stagingFile, 'utf8'));
+      const reviewTxns = staged.transactions.filter(t => t.stagedCohort === 'review');
+      const nonReviewTxns = staged.transactions.filter(t => t.stagedCohort !== 'review');
+
+      if (reviewTxns.length < MIN_REVIEW_FOR_SONNET) {
+        return {
+          promoted: 0,
+          remainingReview: reviewTxns.length,
+          reviewClusters: staged.reviewClusters,
+          skipped: true,
+          reason: `Only ${reviewTxns.length} review items — Sonnet pass skipped`,
+        };
+      }
+
+      const apiKey = this._loadApiKey();
+      if (!apiKey || this._isLocalOnlyMode()) {
+        return {
+          promoted: 0,
+          remainingReview: reviewTxns.length,
+          reviewClusters: staged.reviewClusters,
+          skipped: true,
+          reason: 'No API key or local-only mode',
+        };
+      }
+
+      // Build few-shot corrections block from user's batch decisions
+      let correctionsBlock = '';
+      if (corrections && corrections.length > 0) {
+        const lines = corrections.map(c =>
+          `- "${c.description}" → ${c.groupCode} (${c.groupName})`
+        );
+        correctionsBlock = `\nUSER CORRECTIONS FROM THIS SESSION (use these as definitive examples):\n${lines.join('\n')}\n\n`;
+      }
+
+      // Build prompt — reuse the Opus prompt builder with corrections injected
+      const { buildOpusPrompt } = require('./utils/opusAnalysisPass.cjs');
+      const categoryMapping = this._loadCategoryMapping();
+      const practiceProfile = this._loadPracticeProfile();
+
+      let promoted = 0;
+      const updatedReview = [];
+
+      // Process in batches
+      for (let i = 0; i < reviewTxns.length; i += SONNET_BATCH_SIZE) {
+        const batch = reviewTxns.slice(i, i + SONNET_BATCH_SIZE);
+        const batchNum = Math.floor(i / SONNET_BATCH_SIZE) + 1;
+        const totalBatches = Math.ceil(reviewTxns.length / SONNET_BATCH_SIZE);
+
+        console.log(`[SonnetRescore] Batch ${batchNum}/${totalBatches}: ${batch.length} transactions`);
+
+        try {
+          const prompt = buildOpusPrompt(batch, categoryMapping, practiceProfile, correctionsBlock);
+
+          const response = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': apiKey,
+              'anthropic-version': '2023-06-01',
+            },
+            body: JSON.stringify({
+              model: MODELS.STANDARD,
+              max_tokens: 4096,
+              temperature: 0.2,
+              messages: [{ role: 'user', content: prompt }],
+            }),
+          });
+
+          if (!response.ok) {
+            const errorBody = await response.text();
+            console.warn(`[SonnetRescore] API error: ${response.status} - ${errorBody.substring(0, 200)}`);
+            updatedReview.push(...batch);
+            continue;
+          }
+
+          const data = await response.json();
+          if (data.usage) {
+            console.log(`[SonnetRescore] Token usage — input: ${data.usage.input_tokens}, output: ${data.usage.output_tokens}`);
+          }
+
+          // Parse JSON response
+          const text = data.content?.[0]?.text || '';
+          let jsonText = text;
+          const fenceMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+          if (fenceMatch) jsonText = fenceMatch[1];
+
+          let results = [];
+          const jsonMatch = jsonText.match(/\[[\s\S]*\]/);
+          if (jsonMatch) {
+            results = JSON.parse(jsonMatch[0]);
+          } else {
+            // Try salvaging truncated response
+            const partial = jsonText.match(/\[[\s\S]*/);
+            if (partial) {
+              const lastComplete = partial[0].lastIndexOf('}');
+              if (lastComplete > 0) {
+                try {
+                  results = JSON.parse(partial[0].substring(0, lastComplete + 1) + ']');
+                } catch { /* fall through */ }
+              }
+            }
+          }
+
+          // Apply results to batch
+          for (const result of results) {
+            const idx = result.index - 1;
+            if (idx < 0 || idx >= batch.length) continue;
+            const txn = batch[idx];
+
+            if (result.group && result.group !== 'UNCERTAIN' && result.confidence >= SONNET_AUTO_THRESHOLD) {
+              txn.suggestedGroup = result.group;
+              txn.opusGroupConfidence = result.confidence;
+              txn.opusReasoning = result.reasoning || 'Sonnet between-batch rescore';
+              txn.groupConfirmed = true;
+              txn.stagedCohort = 'group-confirmed';
+              txn.categoryMatchType = 'sonnet-rescore';
+              promoted++;
+            } else if (result.group && result.group !== 'UNCERTAIN') {
+              // Below threshold — keep as review but add Sonnet's suggestion
+              txn.suggestedGroup = result.group;
+              txn.opusGroupConfidence = result.confidence || 0;
+              txn.opusReasoning = result.reasoning || 'Sonnet between-batch suggestion';
+            }
+          }
+
+          // Collect remaining review items from this batch
+          for (const txn of batch) {
+            if (txn.stagedCohort === 'review') {
+              updatedReview.push(txn);
+            }
+          }
+        } catch (err) {
+          console.error(`[SonnetRescore] Batch ${batchNum} failed:`, err.message);
+          updatedReview.push(...batch);
+        }
+      }
+
+      // Rebuild staged file
+      const promotedTxns = reviewTxns.filter(t => t.stagedCohort === 'group-confirmed');
+      const allTxns = [...nonReviewTxns, ...promotedTxns, ...updatedReview];
+      staged.transactions = allTxns;
+      staged.summary.totalTransactions = allTxns.length;
+      staged.summary.auto = allTxns.filter(t => t.stagedCohort === 'auto').length;
+      staged.summary.groupConfirmed = allTxns.filter(t => t.stagedCohort === 'group-confirmed').length;
+      staged.summary.review = updatedReview.length;
+
+      staged.reviewClusters = this._buildReviewClusters(updatedReview);
+      fs.writeFileSync(stagingFile, JSON.stringify(staged, null, 2));
+
+      console.log(`[SonnetRescore] Complete: ${promoted} promoted, ${updatedReview.length} still in review`);
+
+      return {
+        promoted,
+        remainingReview: updatedReview.length,
+        reviewClusters: staged.reviewClusters,
+        summary: staged.summary,
+      };
+    } catch (error) {
+      console.error('[BackgroundProcessor] Sonnet rescore error:', error);
+      throw error;
+    }
+  }
+
   // --------------------------------------------------------------------------
   // Pass 2: Category Assignment Within Groups
   // --------------------------------------------------------------------------

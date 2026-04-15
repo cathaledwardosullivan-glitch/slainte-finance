@@ -5,6 +5,7 @@
  */
 import { useState, useEffect, useCallback } from 'react';
 import { setDemoModeFlag, initDemoMode } from '../utils/demoMode';
+import { restoreFromIDB } from '../utils/offlineStorage';
 
 /**
  * Check if we're running in LAN mode (mobile accessing via IP)
@@ -85,28 +86,68 @@ export default function useLANMode() {
         // Verify token by making a test API call
         verifyToken(token);
       } else {
-        // No token — check if we have cached data for offline demo
-        if (hasCachedData()) {
-          console.log('[LAN] No token but cached data found — entering offline demo mode');
-          setIsOffline(true);
-          setDemoModeFlag(true);
-          setIsAuthenticated(true);
-        }
-        setIsLoading(false);
+        // No token — check if the server is reachable so the user can log in.
+        // Only fall back to offline demo mode if the server is unreachable
+        // AND we have cached data from a previous session.
+        checkServerOrOffline();
+        return; // checkServerOrOffline will call setIsLoading(false)
       }
     } else {
       setIsLoading(false);
     }
   }, []);
 
-  // Verify token is still valid
+  // No token — check if server is reachable so user can log in,
+  // otherwise fall back to offline demo mode if cached data exists.
+  const checkServerOrOffline = async () => {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      await fetch(`${getAPIBaseURL()}/api/health`, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      // Server is reachable — show login screen so user can re-authenticate
+      console.log('[LAN] No token, server reachable — showing login screen');
+    } catch {
+      // Server unreachable — use cached data if available
+      if (hasCachedData()) {
+        console.log('[LAN] No token, server unreachable, cached data found — entering offline demo mode');
+        setIsOffline(true);
+        setDemoModeFlag(true);
+        setIsAuthenticated(true);
+      } else {
+        // localStorage is empty (Chromebook PWAs can clear it between sessions).
+        // Try IndexedDB — it works over plain HTTP (unlike SW/Cache API) and is
+        // more persistent than localStorage for installed web app shortcuts.
+        const restored = await restoreFromIDB();
+        if (restored) {
+          console.log('[LAN] Restored data from IndexedDB — entering offline demo mode');
+          setIsOffline(true);
+          setDemoModeFlag(true);
+          setIsAuthenticated(true);
+        } else {
+          console.log('[LAN] No token, no cached data, server unreachable');
+          setIsOffline(true);
+          setError('Unable to connect to desktop app. Make sure the desktop app is running.');
+        }
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Verify token is still valid (with timeout to avoid hanging on unreachable server)
   const verifyToken = async (token) => {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+
       const response = await fetch(`${getAPIBaseURL()}/api/health`, {
         headers: {
           'Authorization': `Bearer ${token}`
-        }
+        },
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
 
       if (response.ok) {
         setIsAuthenticated(true);
@@ -118,15 +159,13 @@ export default function useLANMode() {
       }
     } catch (err) {
       console.error('[LAN] Token verification failed (network error):', err);
-      // Network error — server unreachable. If we have cached data, enter offline mode.
-      if (hasCachedData()) {
-        console.log('[LAN] Server unreachable but cached data available — entering offline demo mode');
-        setIsOffline(true);
-        setDemoModeFlag(true);
-        setIsAuthenticated(true);
-      } else {
-        setError('Unable to connect to desktop app');
-      }
+      // Network error — server unreachable. Token exists so user was previously
+      // authenticated. Trust the stored token and enter offline mode — the data
+      // loading phase will handle missing/empty data gracefully.
+      console.log('[LAN] Server unreachable, stored token found — entering offline mode');
+      setIsOffline(true);
+      setDemoModeFlag(true);
+      setIsAuthenticated(true);
     } finally {
       setIsLoading(false);
     }
@@ -242,12 +281,23 @@ export default function useLANMode() {
 
 /**
  * Check if localStorage has enough cached data from a previous sync
- * to run the app in offline demo mode.
+ * to run the app in offline demo mode. Checks multiple data sources
+ * since the user may have PCRS/GMS data but no bank transactions.
  */
 function hasCachedData() {
   try {
-    const transactions = localStorage.getItem('gp_finance_transactions');
-    return transactions && JSON.parse(transactions).length > 0;
+    const checks = [
+      'gp_finance_transactions',
+      'gp_finance_category_mapping',
+      'gp_finance_payment_analysis',
+      'slainte_practice_profile'
+    ];
+    return checks.some(key => {
+      const raw = localStorage.getItem(key);
+      if (!raw) return false;
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed.length > 0 : !!parsed;
+    });
   } catch {
     return false;
   }

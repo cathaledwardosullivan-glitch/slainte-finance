@@ -3,8 +3,8 @@
  * Handles authentication and data loading for devices
  * accessing the app via LAN (mobile phones and desktop companions)
  */
-import React, { useState, useEffect, useRef } from 'react';
-import { Lock, Wifi, RefreshCw, AlertCircle, Euro, Stethoscope, Sparkles } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Lock, Wifi, WifiOff, RefreshCw, AlertCircle, Euro, Stethoscope, Sparkles, Monitor } from 'lucide-react';
 import useLANMode, { isLANMode } from '../hooks/useLANMode';
 import { useAppContext } from '../context/AppContext';
 import { FinnProvider } from '../context/FinnContext';
@@ -13,13 +13,14 @@ import SlainteLogo from './SlainteLogo';
 import MobileLayout from './MobileLayout';
 import PWAInstallPrompt from './PWAInstallPrompt';
 import BusinessOverview from './BusinessOverview';
-import NewGMSHealthCheck from './NewGMSHealthCheck';
+import GMSHealthCheckV2 from './GMSHealthCheckV2';
 import AdvancedInsightsV2 from './AdvancedInsightsV2';
 import UnifiedFinnWidget from './UnifiedFinnWidget';
 import FloatingFeedbackButton from './UnifiedFinnWidget/FloatingFeedbackButton';
 import { TourProvider } from './Tour';
 import { TasksProvider } from '../context/TasksContext';
 import TasksWidget from './TasksWidget';
+import { saveSyncToIDB } from '../utils/offlineStorage';
 
 export default function LANMobileWrapper() {
   const {
@@ -106,18 +107,23 @@ export default function LANMobileWrapper() {
     if (isOffline) {
       console.log('[LAN] Offline demo mode — loading from localStorage cache');
       try {
-        const loadCached = (key, setter) => {
+        const loadCachedArray = (key, setter) => {
           const raw = localStorage.getItem(key);
-          if (raw) {
-            const parsed = JSON.parse(raw);
-            if (setter && parsed) setter(parsed);
-          }
+          if (!raw) return;
+          try {
+            let parsed = JSON.parse(raw);
+            // Handle wrapped format { data, timestamp, version } from backup restore
+            if (parsed && !Array.isArray(parsed) && Array.isArray(parsed.data)) {
+              parsed = parsed.data;
+            }
+            if (Array.isArray(parsed) && setter) setter(parsed);
+          } catch { /* skip corrupt entries */ }
         };
 
-        loadCached('gp_finance_transactions', setTransactions);
-        loadCached('gp_finance_unidentified', setUnidentifiedTransactions);
-        loadCached('gp_finance_category_mapping', setCategoryMapping);
-        loadCached('gp_finance_payment_analysis', setPaymentAnalysisData);
+        loadCachedArray('gp_finance_transactions', setTransactions);
+        loadCachedArray('gp_finance_unidentified', setUnidentifiedTransactions);
+        loadCachedArray('gp_finance_category_mapping', setCategoryMapping);
+        loadCachedArray('gp_finance_payment_analysis', setPaymentAnalysisData);
         // These don't have context setters but are in localStorage for components to read
         // loadCached('gp_finance_saved_reports');
         // loadCached('slainte_practice_profile');
@@ -185,6 +191,9 @@ export default function LANMobileWrapper() {
             reports: data.savedReports?.length || 0
           });
 
+          // Persist to IndexedDB for offline resilience (survives localStorage clearing)
+          saveSyncToIDB(data);
+
           setLastSynced(Date.now());
           setDataLoaded(true);
           setDataLoading(false);
@@ -243,6 +252,9 @@ export default function LANMobileWrapper() {
           localStorage.setItem('gp_finance_settings', JSON.stringify(data.settings));
         }
 
+        // Persist to IndexedDB for offline resilience
+        saveSyncToIDB(data);
+
         setLastSynced(Date.now());
         setDataLoaded(true);
       } else {
@@ -284,6 +296,16 @@ export default function LANMobileWrapper() {
           <p style={{ color: COLORS.textSecondary }}>Connecting to desktop...</p>
         </div>
       </div>
+    );
+  }
+
+  // Show server-offline screen when server is unreachable and no cached data
+  if (isOffline && !isAuthenticated) {
+    return (
+      <ServerOfflineScreen
+        error={authError}
+        onRetry={() => window.location.reload()}
+      />
     );
   }
 
@@ -494,7 +516,7 @@ function LANDesktopLayout({ currentView, setCurrentView, lastSynced, onRefresh, 
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {currentView === 'business-overview' && <BusinessOverview setCurrentView={setCurrentView} />}
-        {currentView === 'gms-health-check' && <NewGMSHealthCheck />}
+        {currentView === 'gms-health-check' && <GMSHealthCheckV2 />}
         {currentView === 'advanced-insights' && <AdvancedInsightsV2 setCurrentView={setCurrentView} />}
       </main>
 
@@ -503,6 +525,114 @@ function LANDesktopLayout({ currentView, setCurrentView, lastSynced, onRefresh, 
       <TasksProvider>
         <TasksWidget />
       </TasksProvider>
+    </div>
+  );
+}
+
+/**
+ * Server Offline Screen
+ * Shown when the companion device can't reach the desktop server
+ * and has no cached data to fall back on.
+ * Auto-retries every 10 seconds so it connects as soon as the server starts.
+ */
+function ServerOfflineScreen({ error, onRetry }) {
+  const [retryCount, setRetryCount] = useState(0);
+  const [isRetrying, setIsRetrying] = useState(false);
+  const [countdown, setCountdown] = useState(10);
+
+  // Auto-retry every 10 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          // Try to reach the server
+          setIsRetrying(true);
+          fetch(`${window.location.origin}/api/health`, {
+            signal: AbortSignal.timeout(5000)
+          })
+            .then(res => {
+              if (res.ok) {
+                // Server is back! Reload the page to go through normal auth flow
+                window.location.reload();
+              }
+            })
+            .catch(() => {
+              // Still offline
+              setRetryCount(c => c + 1);
+            })
+            .finally(() => setIsRetrying(false));
+          return 10; // Reset countdown
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: COLORS.bgPage }}>
+      <div className="w-full max-w-sm text-center">
+        <div className="rounded-lg shadow-lg p-6" style={{ backgroundColor: COLORS.white }}>
+          {/* Logo */}
+          <div className="mb-6">
+            <SlainteLogo size="normal" showFinance={true} />
+          </div>
+
+          {/* Offline icon */}
+          <div className="mx-auto mb-4 w-16 h-16 rounded-full flex items-center justify-center"
+               style={{ backgroundColor: `${COLORS.highlightYellow}30` }}>
+            <WifiOff className="h-8 w-8" style={{ color: COLORS.textSecondary }} />
+          </div>
+
+          <h2 className="text-lg font-bold mb-2" style={{ color: COLORS.textPrimary }}>
+            Desktop App Not Running
+          </h2>
+
+          <p className="text-sm mb-4" style={{ color: COLORS.textSecondary }}>
+            Open Slainte Finance on the desktop computer to connect this device.
+          </p>
+
+          {/* Connection hint */}
+          <div className="mb-5 p-3 rounded-lg text-left" style={{ backgroundColor: COLORS.bgPage }}>
+            <div className="flex items-start gap-2">
+              <Monitor className="h-4 w-4 mt-0.5 flex-shrink-0" style={{ color: COLORS.slainteBlue }} />
+              <div className="text-xs" style={{ color: COLORS.textSecondary }}>
+                <p className="font-medium mb-1" style={{ color: COLORS.textPrimary }}>To connect:</p>
+                <ol className="list-decimal list-inside space-y-0.5">
+                  <li>Open Slainte Finance on your desktop</li>
+                  <li>Make sure both devices are on the same Wi-Fi</li>
+                  <li>This page will connect automatically</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+
+          {/* Auto-retry status */}
+          <div className="flex items-center justify-center gap-2 mb-4">
+            {isRetrying ? (
+              <>
+                <RefreshCw className="h-4 w-4 animate-spin" style={{ color: COLORS.slainteBlue }} />
+                <span className="text-xs" style={{ color: COLORS.slainteBlue }}>Checking connection...</span>
+              </>
+            ) : (
+              <span className="text-xs" style={{ color: COLORS.textSecondary }}>
+                Retrying in {countdown}s{retryCount > 0 ? ` (attempt ${retryCount + 1})` : ''}
+              </span>
+            )}
+          </div>
+
+          {/* Manual retry button */}
+          <button
+            onClick={onRetry}
+            disabled={isRetrying}
+            className="w-full py-3 rounded-lg font-semibold disabled:opacity-50 transition-opacity"
+            style={{ backgroundColor: COLORS.slainteBlue, color: COLORS.white }}
+          >
+            {isRetrying ? 'Connecting...' : 'Retry Now'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

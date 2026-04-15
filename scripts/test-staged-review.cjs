@@ -80,7 +80,7 @@ if (!fs.existsSync(stagingPath)) {
 // ============================================================================
 
 let txnCounter = 0;
-function makeTxn({ date, details, debit, credit, categoryCode, categoryName, confidence, pass, cohort }) {
+function makeTxn({ date, details, debit, credit, categoryCode, categoryName, confidence, pass, cohort, suggestedGroup, groupConfirmed }) {
   txnCounter++;
   const id = `test-txn-${Date.now()}-${txnCounter}`;
   const amount = debit || credit || 0;
@@ -103,6 +103,10 @@ function makeTxn({ date, details, debit, credit, categoryCode, categoryName, con
     convergenceIteration: 1,
     categoryMatchType: 'finn-background',
     stagedCohort: cohort,
+    suggestedGroup: suggestedGroup || null,
+    groupConfirmed: groupConfirmed || false,
+    opusGroupConfidence: suggestedGroup ? (confidence || 0.5) : 0,
+    opusReasoning: suggestedGroup ? 'Test data' : null,
   };
 }
 
@@ -116,7 +120,8 @@ for (let i = 0; i < 12; i++) {
     details: `PCRS PAYMENT ${1000 + i}`,
     credit: 2450 + Math.floor(Math.random() * 500),
     categoryCode: '1.2', categoryName: 'PCRS Payments',
-    confidence: 0.98, pass: 'identifier', cohort: 'auto'
+    confidence: 0.98, pass: 'identifier', cohort: 'auto',
+    suggestedGroup: 'INCOME', groupConfirmed: true,
   }));
 }
 
@@ -127,7 +132,8 @@ for (let i = 0; i < 45; i++) {
     details: `BOIPA CARD PMT ${200 + i}`,
     credit: 60 + Math.floor(Math.random() * 40),
     categoryCode: '1.1', categoryName: 'Patient Fees',
-    confidence: 0.96, pass: 'identifier', cohort: 'auto'
+    confidence: 0.96, pass: 'identifier', cohort: 'auto',
+    suggestedGroup: 'INCOME', groupConfirmed: true,
   }));
 }
 
@@ -138,7 +144,8 @@ for (let i = 0; i < 4; i++) {
     details: `ELECTRIC IRELAND DD ${900 + i}`,
     credit: null, debit: 285 + Math.floor(Math.random() * 50),
     categoryCode: '4.1', categoryName: 'Electricity',
-    confidence: 0.95, pass: 'identifier', cohort: 'auto'
+    confidence: 0.95, pass: 'identifier', cohort: 'auto',
+    suggestedGroup: 'PREMISES', groupConfirmed: true,
   }));
 }
 
@@ -149,7 +156,8 @@ for (let i = 0; i < 2; i++) {
     details: `THREE IRELAND LTD DD`,
     debit: 89.99,
     categoryCode: '5.2', categoryName: 'Phone & Internet',
-    confidence: 0.94, pass: 'identifier', cohort: 'auto'
+    confidence: 0.94, pass: 'identifier', cohort: 'auto',
+    suggestedGroup: 'OFFICE', groupConfirmed: true,
   }));
 }
 
@@ -160,7 +168,8 @@ for (let i = 0; i < 8; i++) {
     details: `SALARY TFR STAFF ${['SMITH', 'MURPHY', 'KELLY', 'WALSH', 'BYRNE', 'RYAN', 'OCALLAGHAN', 'DOYLE'][i]}`,
     debit: 2200 + Math.floor(Math.random() * 800),
     categoryCode: '2.3', categoryName: 'Reception Salaries',
-    confidence: 0.93, pass: 'identifier', cohort: 'auto'
+    confidence: 0.93, pass: 'identifier', cohort: 'auto',
+    suggestedGroup: 'STAFF', groupConfirmed: true,
   }));
 }
 
@@ -170,19 +179,46 @@ autoTransactions.push(makeTxn({
   details: 'ZURICH INSURANCE PLC DD',
   debit: 450,
   categoryCode: '4.4', categoryName: 'Insurance',
-  confidence: 0.92, pass: 'identifier', cohort: 'auto'
+  confidence: 0.92, pass: 'identifier', cohort: 'auto',
+  suggestedGroup: 'PREMISES', groupConfirmed: true,
 }));
+
+// --- Group-confirmed cohort (AI assigned group at >=0.85, no category yet) ---
+const groupConfirmedTransactions = [];
+
+// IT services — Opus grouped as OFFICE at 0.90
+for (let i = 0; i < 3; i++) {
+  groupConfirmedTransactions.push(makeTxn({
+    date: `2026-02-${String(6 + i * 10).padStart(2, '0')}`,
+    details: `CLANWILLIAM HPM SERVICES DD${9000 + i}`,
+    debit: 320 + Math.floor(Math.random() * 40),
+    confidence: 0.90, pass: 'none', cohort: 'group-confirmed',
+    suggestedGroup: 'OFFICE', groupConfirmed: true,
+  }));
+}
+
+// Locum payments — Opus grouped as STAFF at 0.88
+for (let i = 0; i < 2; i++) {
+  groupConfirmedTransactions.push(makeTxn({
+    date: `2026-02-${String(12 + i * 14).padStart(2, '0')}`,
+    details: `DR P CASEY LOCUM TFR${9100 + i}`,
+    debit: 1800,
+    confidence: 0.88, pass: 'none', cohort: 'group-confirmed',
+    suggestedGroup: 'STAFF', groupConfirmed: true,
+  }));
+}
 
 // --- Review-cohort transactions (lower confidence, need user input) ---
 const reviewTransactions = [];
 
-// CLUSTER 1: Medisec (medical indemnity) — 12 members, Finn doesn't know this one
+// CLUSTER 1: Medisec (medical indemnity) — 12 members, below threshold
 for (let i = 0; i < 12; i++) {
   reviewTransactions.push(makeTxn({
     date: `2026-02-${String(1 + i * 2).padStart(2, '0')}`,
     details: `MEDISEC IRELAND LTD DD REF${3000 + i}`,
     debit: 1575,
-    confidence: 0.45, pass: 'none', cohort: 'review'
+    confidence: 0.45, pass: 'none', cohort: 'review',
+    suggestedGroup: 'PROFESSIONAL', groupConfirmed: false,
   }));
 }
 
@@ -192,7 +228,8 @@ for (let i = 0; i < 8; i++) {
     date: `2026-02-${String(2 + i * 3).padStart(2, '0')}`,
     details: `JOHNSON CLEANING SERVICES TFR${4000 + i}`,
     debit: 375,
-    confidence: 0.55, pass: 'none', cohort: 'review'
+    confidence: 0.55, pass: 'none', cohort: 'review',
+    suggestedGroup: 'PREMISES', groupConfirmed: false,
   }));
 }
 
@@ -202,7 +239,8 @@ for (let i = 0; i < 6; i++) {
     date: `2026-02-${String(3 + i * 4).padStart(2, '0')}`,
     details: `VHI GROUP DAC PMT ${5000 + i}`,
     credit: 320 + Math.floor(Math.random() * 80),
-    confidence: 0.60, pass: 'none', cohort: 'review'
+    confidence: 0.60, pass: 'none', cohort: 'review',
+    suggestedGroup: 'INCOME', groupConfirmed: false,
   }));
 }
 
@@ -212,7 +250,8 @@ for (let i = 0; i < 4; i++) {
     date: `2026-02-${String(5 + i * 7).padStart(2, '0')}`,
     details: `STERIMED WASTE MGMT LTD DD${6000 + i}`,
     debit: 195,
-    confidence: 0.50, pass: 'none', cohort: 'review'
+    confidence: 0.50, pass: 'none', cohort: 'review',
+    suggestedGroup: 'MEDICAL', groupConfirmed: false,
   }));
 }
 
@@ -222,17 +261,18 @@ for (let i = 0; i < 3; i++) {
     date: `2026-02-${String(8 + i * 9).padStart(2, '0')}`,
     details: `VIKING DIRECT IE ORDER ${7000 + i}`,
     debit: 145 + Math.floor(Math.random() * 60),
-    confidence: 0.40, pass: 'none', cohort: 'review'
+    confidence: 0.40, pass: 'none', cohort: 'review',
+    suggestedGroup: 'OFFICE', groupConfirmed: false,
   }));
 }
 
 // SINGLETONS (1 member each) — 5 one-off transactions
 const singletons = [
-  { details: 'MCGRATH SOLICITORS TFR 8001', debit: 1200, date: '2026-02-10' },
-  { details: 'AMAZON.CO.UK PMT 8002', debit: 89.99, date: '2026-02-14' },
-  { details: 'UNKNOWN CREDIT REF 8003', credit: 500, date: '2026-02-18' },
-  { details: 'DR M FITZGERALD TFR 8004', credit: 750, date: '2026-02-22' },
-  { details: 'APPLE.COM/BILL 8005', debit: 9.99, date: '2026-02-25' },
+  { details: 'MCGRATH SOLICITORS TFR 8001', debit: 1200, date: '2026-02-10', group: 'PROFESSIONAL' },
+  { details: 'AMAZON.CO.UK PMT 8002', debit: 89.99, date: '2026-02-14', group: 'OFFICE' },
+  { details: 'UNKNOWN CREDIT REF 8003', credit: 500, date: '2026-02-18', group: null },
+  { details: 'DR M FITZGERALD TFR 8004', credit: 750, date: '2026-02-22', group: 'INCOME' },
+  { details: 'APPLE.COM/BILL 8005', debit: 9.99, date: '2026-02-25', group: 'OFFICE' },
 ];
 for (const s of singletons) {
   reviewTransactions.push(makeTxn({
@@ -242,7 +282,9 @@ for (const s of singletons) {
     credit: s.credit || null,
     confidence: 0.20,
     pass: 'none',
-    cohort: 'review'
+    cohort: 'review',
+    suggestedGroup: s.group || null,
+    groupConfirmed: false,
   }));
 }
 
@@ -257,6 +299,9 @@ const reviewClusters = [
     suggestedCategory: 'Medical Indemnity Insurance',
     suggestedCategoryCode: '7.2',
     suggestedConfidence: 0.75,
+    suggestedGroup: 'PROFESSIONAL',
+    opusGroupConfidence: 0.75,
+    opusReasoning: 'Medisec provides medical indemnity insurance for healthcare professionals',
     memberCount: 12,
     totalAmount: -18900,
   },
@@ -266,6 +311,9 @@ const reviewClusters = [
     suggestedCategory: 'Cleaning',
     suggestedCategoryCode: '4.6',
     suggestedConfidence: 0.80,
+    suggestedGroup: 'PREMISES',
+    opusGroupConfidence: 0.80,
+    opusReasoning: 'Cleaning services for practice premises',
     memberCount: 8,
     totalAmount: -3000,
   },
@@ -275,6 +323,9 @@ const reviewClusters = [
     suggestedCategory: 'Patient Fees',
     suggestedCategoryCode: '1.1',
     suggestedConfidence: 0.65,
+    suggestedGroup: 'INCOME',
+    opusGroupConfidence: 0.65,
+    opusReasoning: 'VHI is a private health insurer — payments to the practice',
     memberCount: 6,
     totalAmount: 2100,
   },
@@ -284,6 +335,9 @@ const reviewClusters = [
     suggestedCategory: 'Medical Waste Disposal',
     suggestedCategoryCode: '3.5',
     suggestedConfidence: 0.70,
+    suggestedGroup: 'MEDICAL',
+    opusGroupConfidence: 0.70,
+    opusReasoning: 'Sterimed provides medical waste disposal services',
     memberCount: 4,
     totalAmount: -780,
   },
@@ -293,6 +347,9 @@ const reviewClusters = [
     suggestedCategory: null,
     suggestedCategoryCode: null,
     suggestedConfidence: 0,
+    suggestedGroup: 'OFFICE',
+    opusGroupConfidence: 0.60,
+    opusReasoning: 'Viking Direct is an office supplies retailer',
     memberCount: 3,
     totalAmount: -480,
   },
@@ -303,6 +360,9 @@ const reviewClusters = [
     suggestedCategory: null,
     suggestedCategoryCode: null,
     suggestedConfidence: 0,
+    suggestedGroup: s.group || null,
+    opusGroupConfidence: s.group ? 0.50 : 0,
+    opusReasoning: s.group ? 'Low-confidence group suggestion' : null,
     memberCount: 1,
     totalAmount: s.debit ? -s.debit : s.credit,
   })),
@@ -312,7 +372,7 @@ const reviewClusters = [
 // Build the staged result file
 // ============================================================================
 
-const allTransactions = [...autoTransactions, ...reviewTransactions];
+const allTransactions = [...autoTransactions, ...groupConfirmedTransactions, ...reviewTransactions];
 const totalDebits = allTransactions.reduce((sum, t) => sum + (t.debit || 0), 0);
 const totalCredits = allTransactions.reduce((sum, t) => sum + (t.credit || 0), 0);
 
@@ -324,6 +384,7 @@ const stagedResult = {
   summary: {
     totalTransactions: allTransactions.length,
     auto: autoTransactions.length,
+    groupConfirmed: groupConfirmedTransactions.length,
     review: reviewTransactions.length,
     dateRange: { from: '2026-02-01', to: '2026-02-28' },
     totalDebits: Math.round(totalDebits * 100) / 100,
@@ -333,7 +394,7 @@ const stagedResult = {
       { iteration: 1, passA: 68, passB: 0, passC: 3, passD: 1, total: 72 },
       { iteration: 2, passA: 0, passB: 0, passC: 0, passD: 0, total: 0 },
     ],
-    opusPassTriggered: false,
+    opusPassTriggered: true,
     anomaliesDemoted: 0,
   },
 
@@ -360,8 +421,9 @@ console.log(`ID:      ${stagedResult.id}`);
 console.log(`Source:  ${stagedResult.sourceFile}`);
 console.log('');
 console.log(`Total transactions: ${allTransactions.length}`);
-console.log(`  Auto (high confidence): ${autoTransactions.length}`);
-console.log(`  Review (need user):     ${reviewTransactions.length}`);
+console.log(`  Auto (full category):     ${autoTransactions.length}`);
+console.log(`  Group-confirmed (AI):     ${groupConfirmedTransactions.length}`);
+console.log(`  Review (need user group): ${reviewTransactions.length}`);
 console.log('');
 console.log(`Review clusters: ${reviewClusters.length}`);
 reviewClusters.forEach((c, i) => {

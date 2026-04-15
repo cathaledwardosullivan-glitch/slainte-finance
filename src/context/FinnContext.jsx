@@ -407,6 +407,10 @@ export const FinnProvider = ({ children }) => {
       } else if (window.electronAPI?.isElectron) {
         // Check Electron storage first (preferred)
         savedKey = await window.electronAPI.getLocalStorage('claude_api_key');
+      } else if (isLANMode()) {
+        // LAN companion proxies through the Express server which has its own key.
+        // Set a sentinel so the !apiKey gate doesn't block chat.
+        savedKey = 'lan-proxy';
       }
 
       // Fallback to localStorage
@@ -476,8 +480,11 @@ export const FinnProvider = ({ children }) => {
         const status = lookupDataPoint('system_status');
         if (status.statusItems && status.statusItems.length > 0) {
           const nudgeContext = JSON.stringify(status.statusItems.slice(0, 3));
+          const companionNote = isLANMode()
+            ? ' IMPORTANT: The user is on a companion device (read-only). Do NOT suggest uploading data, downloading PCRS, or any action that requires the desktop app. Focus on insights, analysis, or advisory observations based on the existing data.'
+            : '';
           callClaude(
-            `You are Finn, a professional Irish financial advisor for GP practices. Based on the following system status items, write a brief 1-2 sentence greeting that naturally mentions the most important item. Be helpful, not nagging. Do NOT list all items — pick the single most actionable one. Do NOT use emojis. Use professional language — no slang or colloquialisms.\n\nStatus: ${nudgeContext}`,
+            `You are Finn, a professional Irish financial advisor for GP practices. Based on the following system status items, write a brief 1-2 sentence greeting that naturally mentions the most important item. Be helpful, not nagging. Do NOT list all items — pick the single most actionable one. Do NOT use emojis. Use professional language — no slang or colloquialisms.${companionNote}\n\nStatus: ${nudgeContext}`,
             { model: MODELS.FAST, maxTokens: 150, apiKey }
           ).then(response => {
             if (response && response.content) {
@@ -511,6 +518,14 @@ export const FinnProvider = ({ children }) => {
         setStagedResults(results);
       }
     }).catch(() => {});
+
+    // Listen for review panel cleanup — refresh stagedResults when a staging file is dismissed
+    const handleCleanupComplete = () => {
+      window.electronAPI.backgroundProcessor.getStagedResults().then(results => {
+        setStagedResults(results || []);
+      }).catch(() => {});
+    };
+    window.addEventListener('staged-review:cleanup-complete', handleCleanupComplete);
 
     // Real-time listener — file just finished processing
     window.electronAPI.backgroundProcessor.onResultsReady((data) => {
@@ -1119,20 +1134,26 @@ export const FinnProvider = ({ children }) => {
         return {
           hasStaged: true,
           fileCount: stagedResults.length,
-          files: stagedResults.map(s => ({
-            id: s.id,
-            sourceFile: s.sourceFile,
-            processedAt: s.processedAt,
-            totalTransactions: s.summary.totalTransactions,
-            auto: s.summary.auto,
-            groupConfirmed: s.summary.groupConfirmed || 0,
-            review: s.summary.review,
-            dateRange: s.summary.dateRange
-          })),
+          files: stagedResults.map(s => {
+            const review = s.summary.review || 0;
+            const reviewState = review > 0 ? 'needs_group_review' : 'ready_to_apply';
+            return {
+              id: s.id,
+              sourceFile: s.sourceFile,
+              processedAt: s.processedAt,
+              totalTransactions: s.summary.totalTransactions,
+              auto: s.summary.auto,
+              groupConfirmed: s.summary.groupConfirmed || 0,
+              review,
+              reviewState,
+              dateRange: s.summary.dateRange
+            };
+          }),
           totalTransactions: totalTxns,
           totalAuto,
           totalGroupConfirmed,
-          totalReview
+          totalReview,
+          overallReviewState: totalReview > 0 ? 'needs_group_review' : 'ready_to_apply'
         };
       }
       case 'system_status': {
@@ -1191,11 +1212,18 @@ export const FinnProvider = ({ children }) => {
           const totalAuto = stagedResults.reduce((sum, s) => sum + s.summary.auto, 0);
           const totalGroupConf = stagedResults.reduce((sum, s) => sum + (s.summary.groupConfirmed || 0), 0);
           const totalReview = stagedResults.reduce((sum, s) => sum + s.summary.review, 0);
+
+          // Determine review state: 'needs_group_review' vs 'ready_to_apply'
+          const reviewState = totalReview > 0 ? 'needs_group_review' : 'ready_to_apply';
+          const message = totalReview > 0
+            ? `${stagedResults.length} bank statement${stagedResults.length > 1 ? 's' : ''} processed — ${totalTxns} transactions (${totalAuto} auto-grouped, ${totalGroupConf} AI-grouped, ${totalReview} need group assignment)`
+            : `${stagedResults.length} bank statement${stagedResults.length > 1 ? 's' : ''} processed — all ${totalTxns} transactions grouped successfully (${totalAuto} auto, ${totalGroupConf} AI-grouped). Ready to apply.`;
+
           statusItems.push({
             type: 'staged_transactions',
-            severity: 'high',
-            message: `${stagedResults.length} bank statement${stagedResults.length > 1 ? 's' : ''} processed — ${totalTxns} transactions (${totalAuto} auto-grouped, ${totalGroupConf} AI-grouped, ${totalReview} need group assignment)`,
-            data: { fileCount: stagedResults.length, totalTxns, totalAuto, totalGroupConfirmed: totalGroupConf, totalReview }
+            severity: totalReview > 0 ? 'high' : 'medium',
+            message,
+            data: { fileCount: stagedResults.length, totalTxns, totalAuto, totalGroupConfirmed: totalGroupConf, totalReview, reviewState }
           });
         }
 
@@ -2067,14 +2095,27 @@ export const FinnProvider = ({ children }) => {
           return { success: true, message: `Downloading ${validExports[exportType]} for ${selectedYear}. The file download should begin shortly.` };
         }
 
-        // Companion mode: only data-viewing targets are supported
+        // Companion mode: only the three main tabs are available
         if (isLANMode()) {
-          const companionTargets = ['business-overview', 'gms-overview', 'advanced-insights', 'reports'];
-          if (!companionTargets.includes(target)) {
-            return { success: false, message: `The "${target}" feature is only available on the desktop app. On this companion device you can view the Dashboard, Reports, Charts, and talk to me here.` };
+          const companionTabMap = {
+            'business-overview': 'business-overview',
+            'finances-overview': 'business-overview',
+            'gms-overview': 'business-overview',
+            'gms-health-check': 'gms-health-check',
+            'advanced-insights': 'advanced-insights',
+            'advanced-insights:overview': 'advanced-insights',
+            'advanced-insights:gms': 'advanced-insights',
+            'advanced-insights:growth': 'advanced-insights',
+            'advanced-insights:costs': 'advanced-insights',
+            'advanced-insights:tax': 'advanced-insights',
+          };
+          const mappedTab = companionTabMap[target];
+          if (mappedTab) {
+            setCurrentView(mappedTab);
+            const tabLabels = { 'business-overview': 'Business Overview', 'gms-health-check': 'GMS Health Check', 'advanced-insights': 'Advanced Insights' };
+            return { success: true, message: `Navigated to ${tabLabels[mappedTab]}.` };
           }
-          // For supported targets, we can't navigate desktop pages — inform the user
-          return { success: true, message: `That information is available in the companion app. Check the relevant tab in the bottom navigation.` };
+          return { success: false, message: `The "${target}" feature is only available on the desktop app. On this companion device you can view the Business Overview, GMS Health Check, Advanced Insights, and talk to me here.` };
         }
 
         if (target.startsWith('settings:')) {
@@ -2356,6 +2397,7 @@ Keep your response to 1-3 sentences maximum. Be warm but concise.`;
     const gmsContext = buildGMSHealthCheckContext();
     const appKnowledge = isAppHelpQuestion(message) ? buildAppKnowledgeContext(message) : '';
 
+    const isCompanion = isLANMode();
     const systemPrompt = `You are Finn, a professional Irish financial advisor for GP practices. You work for Sláinte Finance. Be warm, concise, and professional. Never use emojis.
 
 CURRENT PAGE: ${pageContext}
@@ -2363,7 +2405,14 @@ TODAY'S DATE: ${new Date().toLocaleDateString('en-IE')}
 ${practiceContext ? `\nPRACTICE CONTEXT: ${practiceContext.substring(0, 300)}` : ''}
 ${gmsContext ? `\nGMS HEALTH CHECK SUMMARY: ${gmsContext.substring(0, 500)}` : ''}
 ${appKnowledge ? `\n${appKnowledge}` : ''}
-
+${isCompanion ? `
+COMPANION MODE: The user is on a companion device (not the main desktop app). Key limitations:
+- AVAILABLE TABS: Business Overview, GMS Health Check, Advanced Insights. These are the ONLY pages. You can navigate between them.
+- READ-ONLY: The companion can view data and talk to you, but CANNOT upload files, download PCRS statements, create tasks, create categories, run exports, modify transactions, start app tours, or change settings.
+- DATA REFRESH: Transaction data can only be updated by uploading new bank statements on the desktop app. Do NOT suggest the user refresh or upload data from this device.
+- When the user asks for something that requires the desktop app (uploads, downloads, exports, PCRS, settings, task creation, category creation), tell them clearly and concisely that it needs to be done on the desktop. Do NOT attempt to navigate there.
+- You CAN: answer financial questions, look up data, search transactions, generate custom reports, look up saved reports/analyses, and have full advisory conversations. Your analytical capabilities are fully available.
+` : ''}
 RULES:
 - Keep ALL responses brief — this is a chat widget, not a report. Maximum 3-4 sentences. When sharing data, highlight the 2-3 most important figures only. Do NOT list every category. If the user needs a comprehensive breakdown, suggest a pre-defined analysis or offer to generate a report.
 - Do NOT introduce yourself. The user already knows who you are. Never say "I am Finn" or "Welcome to Sláinte Finance".
@@ -2389,7 +2438,20 @@ RULES:
 - The app has a built-in PCRS/GMS statement downloader. Users do NOT need to log into the PCRS portal manually. Navigate to the PCRS downloader page if they ask about downloading statements.
 - Use start_app_tour when the user asks for a tour, wants to be shown around, or asks how the app works. The tour starts automatically — just call the tool.
 - If you cannot resolve a user's issue (bug, missing feature, or something outside your control), use send_feedback to open the feedback form pre-filled with a summary. Do NOT tell the user to contact support — use the tool to open the form for them.
-- STAGED TRANSACTION REVIEW: When staged transactions are pending (check via system_status or staged_results), guide the user through a review. IMPORTANT: When the user asks about pending transactions, says "review", or responds "yes" to your offer to review, immediately navigate to staged:review — do NOT ask for further confirmation. Process each staged file one at a time. Flow: (1) navigate staged:review with action "review" — this auto-applies any all-auto files and opens the Transaction Review panel for files that need review, (2) immediately call "apply-auto" to apply the high-confidence batch (do NOT ask for permission — just apply and report the count), (3) tell the user the remaining clusters are shown in the Transaction Review panel beside you, where they can Accept the suggested category or Change it using the buttons on each cluster. You do NOT need to list every cluster in chat — the panel shows them. Just summarise briefly (e.g. "5 clusters remaining — you can accept or change the suggestions in the panel"). If the user asks you about a specific transaction in chat, help them, but the panel is the primary interaction surface for categorisation. (4) If the user asks you to apply remaining or finish up, call "apply-remaining".`;
+- STAGED TRANSACTION REVIEW: When staged transactions are pending (check via system_status or staged_results), guide the user through review. IMPORTANT: When the user asks about pending transactions, says "review", or responds "yes" to your offer to review, immediately navigate to staged:review — do NOT ask for further confirmation.
+  TWO-PASS ARCHITECTURE — understand the distinction:
+    • Pass 1 (GROUP ASSIGNMENT): Assigns one of 10 high-level groups (Income, Staff, Premises, etc.) — sufficient for dashboard and overview. This is the first step after upload.
+    • Pass 2 (CATEGORY ASSIGNMENT): Assigns specific expense/income categories within groups — needed for P&L reports. Triggered on-demand via "categorise" action, only after groups are confirmed.
+  STATUS INTERPRETATION (from system_status/staged_results data):
+    • "needs_group_review" (review > 0): Staged transactions need the user to review group assignments. Offer to open the review panel.
+    • "ready_to_apply" (review === 0): All transactions have been grouped — ready to apply without review. Use action "review" which will auto-apply.
+    • "needs_category_assignment" (type in system_status): Transactions are imported and grouped but don't have detailed categories yet. Offer to run Pass 2 ("categorise" action) if the user needs P&L reports.
+    • No staged files + no uncategorised: Everything is complete. Don't tell the user there are transactions to review.
+  COMMUNICATION RULES:
+    • Say "group assignment" or "grouping" for Pass 1, "category assignment" or "categorisation" for Pass 2. Never conflate them.
+    • When reporting status, clearly say which pass is relevant: "X transactions need group assignment" vs "X transactions are grouped but need detailed categories for P&L".
+    • Category assignment is optional — groups are sufficient for the dashboard. Only suggest Pass 2 when the user asks about categories, P&L reports, or detailed breakdowns.
+  REVIEW FLOW: Process each staged file one at a time. (1) navigate staged:review with action "review" — this auto-applies any all-auto files and opens the Transaction Review panel for files that need review, (2) immediately call "apply-auto" to apply the high-confidence batch (do NOT ask for permission — just apply and report the count), (3) tell the user the remaining clusters are shown in the Transaction Review panel beside you, where they can Accept the suggested group or Change it using the buttons on each cluster. You do NOT need to list every cluster in chat — the panel shows them. Just summarise briefly (e.g. "5 clusters remaining — you can accept or change the suggestions in the panel"). If the user asks you about a specific transaction in chat, help them, but the panel is the primary interaction surface. (4) If the user asks you to apply remaining or finish up, call "apply-remaining".`;
 
     // Build messages array with conversation history
     const recentMessages = messages.slice(-6);
@@ -3141,27 +3203,56 @@ ${contactInfo ? `**CONTACT_INFO:**
     // Static report instructions (cacheable across multiple report generations)
     const reportSystemPrompt = `You are Finn, an expert financial advisor for Irish GP practices. ${isCommunicationDraft ? 'Draft a professional communication.' : 'Create a CONCISE, professional report.'}
 ${isCommunicationDraft ? communicationDraftPreamble : strategicPreamble}
+**VOICE AND TONE:**
+You write like a senior advisor at a consultancy specialising in Irish GP practices — direct, data-grounded, and respectful of the GP's expertise. You highlight what the numbers reveal; the GP decides what to do.
+- Use "The practice" for factual statements: "The practice spent €274,968 on staff."
+- Use "You/Your" for actions and recommendations: "You should review your PRSI structure."
+- Lead with conclusions, not process. Active voice. Keep sentences under 20 words in analytical sections.
+- Never introduce yourself ("As Finn..."). Never use marketing language ("Sláinte Finance's powerful analytics...").
+- Never compare to other specific practices — benchmark against published industry averages only.
+
 **CRITICAL FORMATTING RULES:**
 1. **MAXIMUM ${isCommunicationDraft ? '600' : (isStrategic ? '1,800' : '1,200')} WORDS** - GPs are busy. Be concise. Every sentence must add value.
    **Do NOT output <thinking> tags or chain-of-thought working.** Go straight to writing the report. All reasoning must happen internally — the output must contain ONLY the finished report.
 2. **NO REPETITION** - Never present the same data in multiple formats (e.g., table AND text AND chart showing identical information)
 3. **ACRONYMS** - On first use, write the full term followed by acronym in parentheses. Example: "General Medical Services (GMS)". After first use, use acronym only.
    Common acronyms to expand on first use: ${COMMON_ACRONYMS.slice(0, 8).join(', ')}
-4. **LEAD WITH INSIGHTS** - Executive summary should give the key takeaway in the first sentence
+4. **LEAD WITH INSIGHTS** - Key Findings should give the most important takeaway first
 5. **NEVER use emojis**
+
+**DATA FORMATTING RULES:**
+- **Monetary values in tables and key callouts:** Full precision with commas — €274,968
+- **Monetary values in narrative (€10K+):** Rounded with K suffix — €275K
+- **Monetary values in narrative (€1K–€10K):** Rounded to nearest hundred — €8,500
+- **Monetary values under €1,000:** Always show in full — €847
+- **Never mix formats within the same paragraph**
+- **Percentages:** One decimal place (38.2%), except whole numbers (25% not 25.0%)
+- **Year-on-year changes:** Always show direction with sign: "+12.3%" or "-4.1%", never unsigned
+- **Dates:** Use month names — "March 2025" not "03/2025". Ranges: "January to December 2025" or "Jan–Dec 2025"
+- **Negative amounts in tables:** Use accounting convention with parentheses: (€1,234) not -€1,234
+
+**CONFIDENCE AND UNCERTAINTY:**
+- Data from the practice's records: state as fact — "Staff costs are €274,968"
+- Calculations from practice data: "approximately" — "This gives a cost per hour of approximately €78"
+- Industry benchmarks: cite source — "Typical Irish GP practices spend 40-50% of income on staff [1]"
+- General knowledge: qualify — "Based on industry practice, a fixed cost ratio above 80% is considered high"
+- Projections: hedge — "If current trends continue, expenses could exceed income by 2028"
+- When data is incomplete, state the limitation once at the point where it matters — not as a blanket disclaimer at the top
+- When making assumptions, state the assumption inline and flag what would change if wrong
 
 **REFERENCE REQUIREMENTS:**
 - When citing industry benchmarks, standards, or statistics, add a footnote reference [1], [2], etc.
 - At the end of the report, include a "References" section with sources
-- If a claim is based on general industry knowledge without a specific source, note it as "Based on industry practice" rather than inventing a citation
+- Never invent a citation. If a claim is based on general industry knowledge without a specific source, note it as "Based on industry practice"
 - When using data from the user's own records, note it as "Source: Practice financial data"
+- Keep references compact — 3-6 entries maximum
 
 **CHART REQUIREMENTS:**
-Include 1-2 Vega-Lite charts where they add visual value. Embed charts INSIDE the report using this exact format:
+Include ${isStrategic ? '2-3' : '1-2'} Vega-Lite charts maximum where they add visual value. Embed charts INSIDE the report using this exact format:
 
 \`\`\`vega-lite
 {
-  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "width": 400,
   "height": 250,
   "title": "Chart Title Here",
@@ -3177,9 +3268,13 @@ Include 1-2 Vega-Lite charts where they add visual value. Embed charts INSIDE th
 **Chart best practices:**
 - Bar charts for comparing categories (expenses, income sources)
 - Line charts for trends over time (monthly income/expenses)
-- Pie/donut charts for composition (expense breakdown as percentages)
-- Always include meaningful titles and axis labels
-- Do NOT create a chart that just repeats what's already in a table - use one or the other
+- Donut charts for composition (expense breakdown as percentages) — avoid pie charts
+- Always include descriptive titles: "Monthly Income vs Expenses (2025)" not "Chart 1"
+- Always include axis labels with units: "Amount (€)" not just "Amount"
+- Do NOT create a chart that just repeats what's already in a table — use one or the other
+- If a table has more than 8 rows, consider whether a chart would communicate the point faster
+- **Y-axis must always start at zero.** Exception: very narrow data ranges (e.g. 95-100%) with explicit annotation "Note: Y-axis does not start at zero"
+- Maximum 5-6 data series per chart. Beyond that, aggregate into "Other"
 - **Format strings use d3-format syntax** — do NOT put currency symbols (€, $) in format strings. Use ",.0f" not "€,.0f". Put the currency symbol in the axis title instead (e.g., "title": "Value (€)")
 
 **CHART COLOUR PALETTE (you MUST use these exact hex values — no other colours):**
@@ -3194,6 +3289,12 @@ Include 1-2 Vega-Lite charts where they add visual value. Embed charts INSIDE th
 - For multi-series charts, use colours in this order: #4A90E2, #4ECDC4, #FF6B6B, #7C6EBF, #F9A826, #FFD23C, #8B5CF6, #EC4899
 - For income vs expense comparisons, always use #4ECDC4 for income and #FF6B6B for expense
 - For positive/negative indicators (e.g. profit vs loss), use #10B981 (green) and #FF6B6B (coral)
+
+**TABLE STYLING:**
+- Right-align numeric columns. Left-align text columns.
+- Bold the totals row.
+- Negative values in parentheses: (€1,234)
+- Maximum 8 rows before aggregating remaining items into "Other"
 
 **${isCommunicationDraft ? 'COMMUNICATION' : 'REPORT'} STRUCTURE:**
 Use the <artifact> tag format. Keep it tight and actionable:
@@ -3216,19 +3317,18 @@ After the artifact, add 2-3 bullet points of things to check before sending. Kee
 # Strategic Analysis Title
 
 ## Executive Summary
-[Clear statement of the question and the recommended course of action]
+[2-3 sentences. The answer to "what should I do?" in plain English. Lead with the conclusion.]
 
 ## Key Findings
-[3-4 bullet points with the most important insights]
+[3-4 bullet points with the most important insights — these get read even if nothing else does]
 
-## Scenario Analysis
-[Compare 2-3 realistic options/scenarios with projected financial impact. Use specific numbers from the practice data.]
-
-## Risk Assessment
-[Key risks for each scenario and mitigation strategies]
+## Analysis
+[Detailed but focused analysis with specific numbers from the practice data. One additional contextual section is permitted here if needed (e.g., "Scenario Comparison", "Risk Assessment") — but always return to the fixed structure.]
 
 ## Recommendations
-[3-5 prioritized, actionable recommendations with estimated timeline]
+1. **[Action verb] + [specific thing].**
+   [One sentence explaining why, with a euro figure if possible.]
+[3-5 prioritised recommendations. If more than 5 are valid, include the top 5 and note: "Additional areas worth reviewing include X and Y."]
 
 ## References
 [1] Source name, date (or "Based on practice financial data")
@@ -3238,13 +3338,15 @@ After the artifact, add 2-3 bullet points of things to check before sending. Kee
 # Concise Report Title
 
 ## Key Findings
-[2-3 bullet points with the most important insights - this is what the GP will read if nothing else]
+[2-3 bullet points with the most important insights — this is what the GP will read if nothing else]
 
 ## Analysis
 [Focused analysis with specific numbers. Include 1 chart if it adds clarity. One table maximum.]
 
 ## Recommendations
-[3-5 actionable, prioritized recommendations]
+1. **[Action verb] + [specific thing].**
+   [One sentence explaining why, with a euro figure if possible.]
+[3-5 prioritised recommendations. If more than 5 are valid, include the top 5 and note: "Additional areas worth reviewing include X and Y."]
 
 ## References
 [1] Source name, date (or "Based on practice financial data")
@@ -3471,7 +3573,8 @@ Generate the report now.`;
 
   // Save report to localStorage
   const saveReport = useCallback((report) => {
-    const savedReports = JSON.parse(localStorage.getItem('gp_finance_saved_reports') || '[]');
+    const parsed = JSON.parse(localStorage.getItem('gp_finance_saved_reports') || '[]');
+    const savedReports = Array.isArray(parsed) ? parsed : [];
 
     // Extract email subject and body for communication drafts
     let emailSubject = '';

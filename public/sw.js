@@ -1,7 +1,7 @@
 // Sláinte Finance Companion Service Worker
 // Provides offline functionality and app-like experience for PWA companion
 
-const CACHE_NAME = 'slainte-finance-v2.0.0';
+const CACHE_NAME = 'slainte-finance-v2.1.0';
 const RUNTIME_CACHE = 'slainte-runtime-v2';
 const API_CACHE = 'slainte-api-v1';
 
@@ -44,7 +44,7 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Activate event - clean up old caches
+// Activate event - clean up old caches and cache current assets
 self.addEventListener('activate', (event) => {
   console.log('[SW] Activating service worker...');
   const currentCaches = [CACHE_NAME, RUNTIME_CACHE, API_CACHE];
@@ -58,9 +58,52 @@ self.addEventListener('activate', (event) => {
             return caches.delete(name);
           })
       );
-    }).then(() => self.clients.claim()) // Take control immediately
+    })
+    .then(() => {
+      // Cache the current page's assets (JS, CSS) so offline works immediately
+      return cacheCurrentPageAssets();
+    })
+    .then(() => self.clients.claim()) // Take control immediately
   );
 });
+
+/**
+ * Fetch the current index.html and extract JS/CSS asset URLs to cache.
+ * This ensures offline mode works from the very first visit.
+ */
+async function cacheCurrentPageAssets() {
+  try {
+    const response = await fetch('/index.html');
+    if (!response.ok) return;
+    const html = await response.text();
+
+    // Extract asset URLs from <script src="..."> and <link href="...">
+    const assetUrls = [];
+    const scriptMatches = html.matchAll(/<script[^>]+src="([^"]+)"/g);
+    for (const m of scriptMatches) assetUrls.push(m[1]);
+    const linkMatches = html.matchAll(/<link[^>]+href="([^"]+\.css)"/g);
+    for (const m of linkMatches) assetUrls.push(m[1]);
+
+    if (assetUrls.length === 0) return;
+
+    const cache = await caches.open(RUNTIME_CACHE);
+    await Promise.all(
+      assetUrls.map(async url => {
+        try {
+          const res = await fetch(url);
+          if (res.ok) {
+            await cache.put(new Request(url), res);
+            console.log('[SW] Pre-cached asset:', url);
+          }
+        } catch (err) {
+          console.warn('[SW] Failed to pre-cache asset:', url, err.message);
+        }
+      })
+    );
+  } catch (err) {
+    console.warn('[SW] Asset pre-caching failed:', err.message);
+  }
+}
 
 // Fetch event - serve from cache when offline
 self.addEventListener('fetch', (event) => {
@@ -157,8 +200,12 @@ self.addEventListener('fetch', (event) => {
             console.error('[SW] Fetch failed:', error);
             // Return offline page if available
             if (request.destination === 'document') {
-              return caches.match('/offline.html');
+              return caches.match('/offline.html').then(cached => {
+                return cached || new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
+              });
             }
+            // Must return a valid Response for respondWith()
+            return new Response('Network error', { status: 503, statusText: 'Service Unavailable' });
           });
       })
   );
