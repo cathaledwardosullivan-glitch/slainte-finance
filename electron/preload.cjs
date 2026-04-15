@@ -118,6 +118,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     dismissStaged: (id) => ipcRenderer.invoke('background:dismiss-staged', id),
     removeFromStaged: (id, txIds) => ipcRenderer.invoke('background:remove-from-staged', id, txIds),
     rescoreStaged: (id) => ipcRenderer.invoke('background:rescore-staged', id),
+    sonnetRescoreStaged: (id, corrections) => ipcRenderer.invoke('background:sonnet-rescore-staged', id, corrections),
     runCategoryAssignment: (stagedIdOrApplied) => ipcRenderer.invoke('background:run-category-assignment', stagedIdOrApplied),
     getInboxPath: () => ipcRenderer.invoke('background:get-inbox-path'),
     openInbox: () => ipcRenderer.invoke('background:open-inbox'),
@@ -130,6 +131,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.removeAllListeners('background:processing-error');
       ipcRenderer.removeAllListeners('background:processing-progress');
     },
+  },
+
+  // Certificate Management (HTTPS LAN access)
+  certs: {
+    getInfo: () => ipcRenderer.invoke('certs:get-info'),
+    export: () => ipcRenderer.invoke('certs:export'),
+    regenerateServer: () => ipcRenderer.invoke('certs:regenerate-server'),
   },
 
   // Platform info

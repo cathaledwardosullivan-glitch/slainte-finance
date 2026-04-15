@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Database, HardDrive, Layers, Building2, BookOpen, Download, Briefcase, Shield, Wifi } from 'lucide-react';
+import { X, Database, HardDrive, Layers, Building2, BookOpen, Download, Briefcase, Shield, Wifi, ShieldCheck } from 'lucide-react';
 import COLORS from '../../utils/colors';
 import DataSection from './sections/DataSection';
 import BackupRestoreSection from './sections/BackupRestoreSection';
@@ -10,6 +10,7 @@ import AppUpdateSection from './sections/AppUpdateSection';
 import AccountantDataSection from './sections/AccountantDataSection';
 import PrivacySection from './sections/PrivacySection';
 import ConnectedPracticeSection from './sections/ConnectedPracticeSection';
+import CertificateSection from './sections/CertificateSection';
 
 /**
  * SettingsModal - Main settings modal with left sidebar navigation
@@ -61,6 +62,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
     { id: 'accountant', label: 'Data for Accountant', icon: Briefcase, tourId: 'settings-accountant-tab' },
     { id: 'backup', label: 'Backup & Restore', icon: HardDrive },
     { id: 'connected', label: 'Connected Practice', icon: Wifi },
+    { id: 'certificates', label: 'Certificates', icon: ShieldCheck },
     { id: 'update', label: 'App Update', icon: Download }
   ];
 
@@ -196,6 +198,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
             {activeSection === 'profile' && <PracticeProfileSection />}
             {activeSection === 'tour' && <TourOnboardingSection />}
             {activeSection === 'connected' && <ConnectedPracticeSection />}
+            {activeSection === 'certificates' && <CertificateSection />}
             {activeSection === 'update' && <AppUpdateSection />}
           </main>
         </div>

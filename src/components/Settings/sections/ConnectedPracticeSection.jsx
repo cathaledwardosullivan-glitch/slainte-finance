@@ -109,7 +109,7 @@ const ConnectedPracticeSection = () => {
     const addr = address.trim();
     // Add port if not specified
     const withPort = addr.includes(':') ? addr : `${addr}:3001`;
-    return `http://${withPort}`;
+    return `https://${withPort}`;
   };
 
   const checkHubReachable = async () => {

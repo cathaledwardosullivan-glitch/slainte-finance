@@ -16,6 +16,12 @@ const { PCRSAutomation } = require('./pcrs/pcrsAutomation.cjs');
 // Background Transaction Processor
 const BackgroundProcessor = require('./backgroundProcessor.cjs');
 
+// Certificate Manager for HTTPS LAN access
+const { initCerts, getAllLocalIPs, shouldRegenerateServerCert, getCACertPath } = require('./certManager.cjs');
+
+// HTTP landing page for CA cert download (port 3080)
+const { startCertLandingServer } = require('./certLandingPage.cjs');
+
 // Centralized model configuration
 const { MODELS } = require('./modelConfig.cjs');
 
@@ -794,11 +800,13 @@ const expressApp = express();
 
 // Security: Configure CORS to allow localhost and LAN access for mobile
 const allowedOrigins = [
-  'http://localhost:5173',   // Vite dev server
-  'http://localhost:3001',   // API server itself
+  'http://localhost:5173',    // Vite dev server
+  'http://localhost:3001',    // API server (HTTP)
+  'https://localhost:3001',   // API server (HTTPS)
   'http://127.0.0.1:5173',
   'http://127.0.0.1:3001',
-  'app://.'                  // Electron app origin
+  'https://127.0.0.1:3001',
+  'app://.'                   // Electron app origin
 ];
 
 // Add production API URL if configured
@@ -819,9 +827,9 @@ expressApp.use(cors({
     // Allow LAN access (192.168.x.x, 10.x.x.x, 172.16-31.x.x)
     // This enables mobile devices on the same network to access the app
     const lanPatterns = [
-      /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}(:\d+)?$/,
-      /^http:\/\/10\.\d{1,3}\.\d{1,3}\.\d{1,3}(:\d+)?$/,
-      /^http:\/\/172\.(1[6-9]|2[0-9]|3[01])\.\d{1,3}\.\d{1,3}(:\d+)?$/
+      /^https?:\/\/192\.168\.\d{1,3}\.\d{1,3}(:\d+)?$/,
+      /^https?:\/\/10\.\d{1,3}\.\d{1,3}\.\d{1,3}(:\d+)?$/,
+      /^https?:\/\/172\.(1[6-9]|2[0-9]|3[01])\.\d{1,3}\.\d{1,3}(:\d+)?$/
     ];
 
     if (lanPatterns.some(pattern => pattern.test(origin))) {
@@ -1150,6 +1158,17 @@ function safeParse(data, fallback) {
 // Health check
 expressApp.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// CA certificate download (public — CA certs are meant to be shared)
+expressApp.get('/api/ca-cert', (req, res) => {
+  const certPath = getCACertPath(app.getPath('userData'));
+  if (!fs.existsSync(certPath)) {
+    return res.status(404).json({ error: 'CA certificate not available' });
+  }
+  res.setHeader('Content-Type', 'application/x-pem-file');
+  res.setHeader('Content-Disposition', 'attachment; filename="slainte-finance-ca.pem"');
+  res.sendFile(certPath);
 });
 
 // Login endpoint - Generate JWT token for partners
@@ -1707,6 +1726,89 @@ ipcMain.handle('get-lan-ip', async () => {
   } catch (err) {
     console.error('[LAN IP] Failed to detect:', err);
     return null;
+  }
+});
+
+// ============================================
+// CERTIFICATE MANAGEMENT IPC
+// ============================================
+
+ipcMain.handle('certs:get-info', async () => {
+  try {
+    const certsDir = path.join(app.getPath('userData'), 'certs');
+    const caCertPath = path.join(certsDir, 'ca.pem');
+    const serverCertPath = path.join(certsDir, 'server.pem');
+    const serverIpsPath = path.join(certsDir, 'server-ips.json');
+
+    const result = { caExists: false, serverExists: false };
+
+    if (fs.existsSync(caCertPath)) {
+      const x509 = new crypto.X509Certificate(fs.readFileSync(caCertPath));
+      result.caExists = true;
+      result.caExpiry = x509.validTo;
+      result.caFingerprint = x509.fingerprint256;
+      result.caSubject = x509.subject;
+    }
+
+    if (fs.existsSync(serverCertPath)) {
+      const x509 = new crypto.X509Certificate(fs.readFileSync(serverCertPath));
+      result.serverExists = true;
+      result.serverExpiry = x509.validTo;
+      result.serverSANs = x509.subjectAltName;
+    }
+
+    if (fs.existsSync(serverIpsPath)) {
+      try {
+        result.serverIPs = JSON.parse(fs.readFileSync(serverIpsPath, 'utf-8'));
+      } catch { /* ignore */ }
+    }
+
+    return result;
+  } catch (err) {
+    console.error('[CertManager] Failed to get cert info:', err);
+    return { error: err.message };
+  }
+});
+
+ipcMain.handle('certs:export', async () => {
+  try {
+    const caCertPath = getCACertPath(app.getPath('userData'));
+    if (!fs.existsSync(caCertPath)) {
+      return { success: false, error: 'CA certificate not found' };
+    }
+
+    const { filePath, canceled } = await dialog.showSaveDialog(mainWindow, {
+      title: 'Export CA Certificate',
+      defaultPath: 'slainte-finance-ca.pem',
+      filters: [{ name: 'Certificate', extensions: ['pem', 'crt'] }]
+    });
+
+    if (canceled || !filePath) {
+      return { success: false, canceled: true };
+    }
+
+    fs.copyFileSync(caCertPath, filePath);
+    return { success: true, path: filePath };
+  } catch (err) {
+    console.error('[CertManager] Failed to export CA cert:', err);
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle('certs:regenerate-server', async () => {
+  try {
+    // Delete existing server cert to force regeneration
+    const certsDir = path.join(app.getPath('userData'), 'certs');
+    for (const f of ['server.pem', 'server-key.pem', 'server-ips.json']) {
+      const p = path.join(certsDir, f);
+      if (fs.existsSync(p)) fs.unlinkSync(p);
+    }
+    const newCerts = await initCerts(app.getPath('userData'));
+    // The 60s interval in whenReady will detect the change and hot-swap
+    return { success: true, SANs: new crypto.X509Certificate(newCerts.serverCert).subjectAltName };
+  } catch (err) {
+    console.error('[CertManager] Failed to regenerate server cert:', err);
+    return { success: false, error: err.message };
   }
 });
 
@@ -2380,15 +2482,60 @@ app.on('select-client-certificate', (event, webContents, url, certificateList, c
   }
 });
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   // Setup auto-updater (must be done after app is ready)
   setupAutoUpdater();
 
-  // Start Express API server
-  const server = expressApp.listen(API_PORT, '0.0.0.0', () => {
-    console.log(`[API Server] Running on http://0.0.0.0:${API_PORT} (accessible on LAN)`);
-    console.log(`[API Server] JWT Secret: ${JWT_SECRET.substring(0, 10)}...`);
-  });
+  // Generate/load TLS certificates for HTTPS LAN access
+  let certData;
+  try {
+    certData = await initCerts(app.getPath('userData'));
+    console.log('[CertManager] Certificates ready');
+  } catch (err) {
+    console.error('[CertManager] Failed to initialize certificates:', err);
+    console.warn('[CertManager] Falling back to plain HTTP');
+  }
+
+  // Start Express API server (HTTPS if certs available, HTTP fallback)
+  let server;
+  if (certData) {
+    const https = require('https');
+    server = https.createServer({
+      cert: certData.serverCert,
+      key: certData.serverKey
+    }, expressApp).listen(API_PORT, '0.0.0.0', () => {
+      console.log(`[API Server] Running on https://0.0.0.0:${API_PORT} (HTTPS, accessible on LAN)`);
+      console.log(`[API Server] JWT Secret: ${JWT_SECRET.substring(0, 10)}...`);
+    });
+
+    // Check for IP changes every 60 seconds and hot-swap certs
+    setInterval(() => {
+      const certsDir = path.join(app.getPath('userData'), 'certs');
+      const check = shouldRegenerateServerCert(certsDir);
+      if (check.needed) {
+        console.log(`[CertManager] Hot-swap triggered: ${check.reason}`);
+        initCerts(app.getPath('userData')).then(newCerts => {
+          server.setSecureContext({
+            cert: newCerts.serverCert,
+            key: newCerts.serverKey
+          });
+          console.log('[CertManager] Server certificates hot-swapped successfully');
+        }).catch(err => {
+          console.error('[CertManager] Hot-swap failed:', err);
+        });
+      }
+    }, 60000);
+  } else {
+    server = expressApp.listen(API_PORT, '0.0.0.0', () => {
+      console.log(`[API Server] Running on http://0.0.0.0:${API_PORT} (HTTP fallback, accessible on LAN)`);
+      console.log(`[API Server] JWT Secret: ${JWT_SECRET.substring(0, 10)}...`);
+    });
+  }
+
+  // Start HTTP landing page for CA cert download (only when HTTPS is active)
+  if (certData) {
+    startCertLandingServer(app.getPath('userData'), API_PORT);
+  }
 
   // Create window
   createWindow();
@@ -2462,6 +2609,10 @@ app.whenReady().then(() => {
   ipcMain.handle('background:rescore-staged', async (event, stagedId) => {
     if (!bgProcessor) return { success: false, error: 'Background processor not available' };
     return bgProcessor.rescoreStaged(stagedId);
+  });
+  ipcMain.handle('background:sonnet-rescore-staged', async (event, stagedId, corrections) => {
+    if (!bgProcessor) return { success: false, error: 'Background processor not available' };
+    return bgProcessor.sonnetRescoreStaged(stagedId, corrections);
   });
   ipcMain.handle('background:run-category-assignment', async (event, stagedId) => {
     if (!bgProcessor) return { success: false, error: 'Background processor not available' };
