@@ -11,15 +11,23 @@
 const fs = require('fs');
 const path = require('path');
 
-// pdfjs-dist legacy build works in Node.js without DOMMatrix/Canvas
-const pdfjsLib = require('pdfjs-dist/legacy/build/pdf.mjs');
+// Lazy-load pdfjs-dist to avoid DOMMatrix crash in Electron main process.
+// pdfjs-dist v5.x legacy build references DOMMatrix which doesn't exist in
+// Node.js / Electron main process context. Loading lazily ensures it's only
+// evaluated when actually parsing a PDF (in an async context).
+let _pdfjsLib = null;
+let _standardFontDataUrl = null;
 
-// Standard font data needed for PDFs that use built-in fonts
-// pdfjs-dist expects a URL-style path with forward slashes
-const STANDARD_FONT_DATA_URL = path.join(
-  path.dirname(require.resolve('pdfjs-dist/package.json')),
-  'standard_fonts'
-).replace(/\\/g, '/') + '/';
+function getPdfjsLib() {
+  if (!_pdfjsLib) {
+    _pdfjsLib = require('pdfjs-dist/legacy/build/pdf.mjs');
+    _standardFontDataUrl = path.join(
+      path.dirname(require.resolve('pdfjs-dist/package.json')),
+      'standard_fonts'
+    ).replace(/\\/g, '/') + '/';
+  }
+  return { pdfjsLib: _pdfjsLib, STANDARD_FONT_DATA_URL: _standardFontDataUrl };
+}
 
 // Pure parsing functions from the bundled engine
 const {
@@ -40,6 +48,7 @@ const {
  * @returns {Promise<string>} Full text content with lines separated by \n
  */
 async function extractPdfText(data) {
+  const { pdfjsLib, STANDARD_FONT_DATA_URL } = getPdfjsLib();
   const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(data), standardFontDataUrl: STANDARD_FONT_DATA_URL }).promise;
 
   let fullText = '';
@@ -94,6 +103,7 @@ async function extractPdfText(data) {
  * @returns {Promise<Array<{items: Array<{text, x, y}>, pageNum: number}>>}
  */
 async function extractPdfWithPositions(data) {
+  const { pdfjsLib, STANDARD_FONT_DATA_URL } = getPdfjsLib();
   const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(data), standardFontDataUrl: STANDARD_FONT_DATA_URL }).promise;
 
   const allLines = [];
