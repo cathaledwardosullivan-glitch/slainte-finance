@@ -52,7 +52,7 @@ const PROGRESS_STEPS = [
 
 export default function UnifiedOnboarding({ onComplete, onSkip }) {
   const { transactions, categoryMapping, setCategoryMapping, uploadTransactions, setTransactions, setPaymentAnalysisData, setUnidentifiedTransactions, setSelectedYear } = useAppContext();
-  const { updateProfile, completeSetup } = usePracticeProfile();
+  const { updateProfile, completeSetup, setupComplete } = usePracticeProfile();
 
   const [currentStep, setCurrentStep] = useState(null); // Start as null until we check API key
   const [apiKey, setApiKey] = useState('');
@@ -175,6 +175,15 @@ export default function UnifiedOnboarding({ onComplete, onSkip }) {
   };
 
   const handlePathDemo = () => {
+    // Guard: demo mode wipes and seeds fake data. Blocking it once setup is
+    // complete prevents an already-onboarded user from silently replacing
+    // their real ledger (previously caused a data-corruption incident).
+    if (setupComplete) {
+      console.warn('[UnifiedOnboarding] handlePathDemo blocked — setup already complete. Use Settings → Clear All Data first if demo mode is genuinely intended.');
+      alert('Demo mode is only available during initial onboarding. Your practice is already set up; demo mode would overwrite your real data.');
+      return;
+    }
+
     setIsDemoMode(true);
 
     const { transactions: demoTransactions, unidentified: demoUnidentified } = generateDemoTransactions();
