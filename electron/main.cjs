@@ -32,6 +32,25 @@ const INTERNAL_TOKEN = crypto.randomBytes(32).toString('hex');
 const isDev = process.env.NODE_ENV === 'development';
 const API_PORT = 3001;
 
+// Optional userData-path suffix — isolates per-worktree/dev Electron sessions
+// from the user's real installed-app data. When set, Electron writes to
+// `%APPDATA%\slainte-finance-v2-{suffix}\` instead of the shared path, so
+// `npm run electron-dev` launched from a Claude Code worktree (or any
+// throwaway branch) can't silently mutate the user's production ledger.
+//
+// Set SLAINTE_USERDATA_SUFFIX=<name> in the dev-launch env to opt in.
+// Unset (the installed-app default) preserves the original data path.
+// Must be called BEFORE app.whenReady() and any app.getPath('userData') call.
+if (process.env.SLAINTE_USERDATA_SUFFIX) {
+  const suffix = String(process.env.SLAINTE_USERDATA_SUFFIX).replace(/[^a-zA-Z0-9_-]/g, '');
+  if (suffix) {
+    const isolatedName = `slainte-finance-v2-${suffix}`;
+    app.setName(isolatedName);
+    app.setPath('userData', path.join(app.getPath('appData'), isolatedName));
+    console.log(`[Main] userData isolated to: ${app.getPath('userData')}`);
+  }
+}
+
 // ============================================
 // SECURE CREDENTIALS MANAGEMENT
 // ============================================

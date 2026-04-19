@@ -14,6 +14,7 @@
     "preview": "vite preview",
     "electron": "electron .",
     "electron-dev": "npm run build:engine && concurrently \"npm run dev\" \"wait-on http://localhost:5173 && cross-env NODE_ENV=development electron .\"",
+    "electron-dev:isolated": "npm run build:engine && concurrently \"npm run dev\" \"wait-on http://localhost:5173 && cross-env NODE_ENV=development SLAINTE_USERDATA_SUFFIX=dev electron .\"",
     "electron-build": "npm run build:engine && npm run build && electron-builder",
     "publish": "npm run build:engine && npm run build && electron-builder --publish always",
     "publish-dry": "npm run build:engine && npm run build && electron-builder --publish never",
