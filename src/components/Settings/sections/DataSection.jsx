@@ -695,7 +695,10 @@ const DataSection = () => {
         });
       }
     } else {
-      // No transactions found - show error
+      // Distinguish "all rows were duplicates" from a genuine parse failure.
+      // Without this, the user sees "Could not extract transactions from PDF"
+      // even when the parse succeeded and every row was already in the ledger.
+      const allWereDuplicates = totalDuplicates > 0 && !lastError;
       setBankPdfResult({
         success: 0,
         transactionCount: 0,
@@ -703,7 +706,9 @@ const DataSection = () => {
         unidentified: 0,
         duplicates: totalDuplicates,
         bank: detectedBank,
-        errorMessage: lastError || 'Could not extract transactions from PDF'
+        errorMessage: allWereDuplicates
+          ? `All ${totalDuplicates} transaction${totalDuplicates === 1 ? '' : 's'} from this statement ${totalDuplicates === 1 ? 'is' : 'are'} already in your ledger`
+          : (lastError || 'Could not extract transactions from PDF')
       });
     }
   };
