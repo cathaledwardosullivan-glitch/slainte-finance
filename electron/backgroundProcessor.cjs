@@ -1016,8 +1016,15 @@ class BackgroundProcessor {
       // Load current transactions from localStorage
       const currentTransactions = this._loadExistingTransactions();
 
-      // Append approved transactions
-      const merged = [...currentTransactions, ...approved];
+      // Dedup by id before merging — guards against double-apply of the same
+      // staged batch (UI double-click, retry after crash, concurrent apply).
+      const existingIds = new Set(currentTransactions.map(t => t.id));
+      const toAppend = approved.filter(t => !existingIds.has(t.id));
+      const skippedDupes = approved.length - toAppend.length;
+      if (skippedDupes > 0) {
+        console.warn(`[BackgroundProcessor] applyStagedTransactions: skipped ${skippedDupes} already-applied id(s) from ${stagedId}`);
+      }
+      const merged = [...currentTransactions, ...toAppend];
 
       // Write back to localStorage.json
       const storageData = fs.existsSync(this.localStoragePath)
@@ -1026,7 +1033,7 @@ class BackgroundProcessor {
       storageData.gp_finance_transactions = JSON.stringify(merged);
       fs.writeFileSync(this.localStoragePath, JSON.stringify(storageData, null, 2));
 
-      console.log('[BackgroundProcessor] Applied', approved.length, 'transactions from', stagedId);
+      console.log(`[BackgroundProcessor] Applied ${toAppend.length} transactions from ${stagedId} (${skippedDupes} already-applied id(s) skipped)`);
 
       // Remove applied transactions from staging, or delete if all applied
       const remaining = staged.transactions.filter(t => !approvedSet.has(t.id));

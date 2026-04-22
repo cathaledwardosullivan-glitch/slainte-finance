@@ -27,6 +27,20 @@ const getTransactionKey = (t) => {
     return `${dateStr}|${amount}|${details}`;
 };
 
+// Filter out items whose id already exists in the prev array. Guards against
+// re-uploading the same file producing ID collisions (since upload IDs are
+// {fileName}-{index} and restart at 0 on every upload).
+const dedupeById = (prev, incoming) => {
+    if (!incoming?.length) return incoming || [];
+    const existingIds = new Set(prev.map(t => t.id));
+    const kept = incoming.filter(t => !existingIds.has(t.id));
+    const skipped = incoming.length - kept.length;
+    if (skipped > 0) {
+        console.warn(`[TransactionUpload] Skipped ${skipped} row(s) with IDs already in the ledger (same file uploaded previously?)`);
+    }
+    return kept;
+};
+
 export default function TransactionUpload() {
     const {
         transactions,
@@ -113,8 +127,8 @@ export default function TransactionUpload() {
 
         if (action === 'skip') {
             // Only add unique transactions
-            setTransactions(prev => [...prev, ...duplicateCheck.unique.categorized]);
-            setUnidentifiedTransactions(prev => [...prev, ...duplicateCheck.unique.unidentified]);
+            setTransactions(prev => [...prev, ...dedupeById(prev, duplicateCheck.unique.categorized)]);
+            setUnidentifiedTransactions(prev => [...prev, ...dedupeById(prev, duplicateCheck.unique.unidentified)]);
             setUploadResult({
                 type: 'regular',
                 categorized: duplicateCheck.unique.categorized.length,
@@ -122,9 +136,10 @@ export default function TransactionUpload() {
                 skippedDuplicates: duplicateCheck.duplicates.total
             });
         } else if (action === 'add') {
-            // Add all transactions including duplicates
-            setTransactions(prev => [...prev, ...categorized]);
-            setUnidentifiedTransactions(prev => [...prev, ...unidentified]);
+            // Add all transactions including signature duplicates, but still
+            // dedupe by ID to prevent row-level collisions from same-file re-upload
+            setTransactions(prev => [...prev, ...dedupeById(prev, categorized)]);
+            setUnidentifiedTransactions(prev => [...prev, ...dedupeById(prev, unidentified)]);
             setUploadResult({
                 type: 'regular',
                 categorized: categorized.length,
@@ -170,8 +185,8 @@ export default function TransactionUpload() {
             const categorized = processedTransactions.filter(t => t.category);
             const unidentified = processedTransactions.filter(t => !t.category);
 
-            setTransactions(prev => [...prev, ...categorized]);
-            setUnidentifiedTransactions(prev => [...prev, ...unidentified]);
+            setTransactions(prev => [...prev, ...dedupeById(prev, categorized)]);
+            setUnidentifiedTransactions(prev => [...prev, ...dedupeById(prev, unidentified)]);
 
             setUploadResult({
                 type: 'training',
@@ -235,8 +250,8 @@ export default function TransactionUpload() {
                 // Don't set isProcessing to false yet - wait for user decision
             } else {
                 // No duplicates, proceed normally
-                setTransactions(prev => [...prev, ...allCategorized]);
-                setUnidentifiedTransactions(prev => [...prev, ...unidentified]);
+                setTransactions(prev => [...prev, ...dedupeById(prev, allCategorized)]);
+                setUnidentifiedTransactions(prev => [...prev, ...dedupeById(prev, unidentified)]);
 
                 setUploadResult({
                     type: 'regular',
@@ -455,8 +470,8 @@ export default function TransactionUpload() {
                 });
             } else {
                 // No duplicates - add directly
-                setTransactions(prev => [...prev, ...allCategorized]);
-                setUnidentifiedTransactions(prev => [...prev, ...unidentified]);
+                setTransactions(prev => [...prev, ...dedupeById(prev, allCategorized)]);
+                setUnidentifiedTransactions(prev => [...prev, ...dedupeById(prev, unidentified)]);
 
                 setBankPdfResult({
                     success: successCount,
